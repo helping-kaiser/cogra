@@ -56,7 +56,13 @@ query FeedTrace($viewer: UUID!, $target: UUID!) {
 # ids that carry a UUID"), the held thing among them when the tap handed no
 # cover (a reload). A person is a face and a handle; a post its title, its
 # author and how it starts; a comment its author and first words.
-query TraceNodes($ids: [UUID!]!, $includePending: Boolean! = true) {
+#
+# THE SELECTION IS WHAT THE COVER READS AND NOTHING MORE: the server prices
+# `nodes(ids:)` per id times the selection, so the big card fragment would
+# refuse a trace of 35 things. `fetchTraceNodes` sends the ids in chunks of
+# a hundred. A post's `id` and `options` on each attachment are here only
+# because the cover's post type requires them.
+query TraceNodes($ids: [UUID!]!) {
   nodes(ids: $ids) {
     __typename
     ... on User {
@@ -70,7 +76,49 @@ query TraceNodes($ids: [UUID!]!, $includePending: Boolean! = true) {
       }
     }
     ... on Post {
-      ...PostFields
+      id
+      title {
+        value
+        status
+      }
+      description {
+        value
+        status
+      }
+      content {
+        value
+        status
+      }
+      attachments {
+        id
+        url
+        status
+        mimeType
+        options {
+          aspectRatio
+          durationMs
+        }
+        coverMedia {
+          url
+          status
+        }
+      }
+      attachmentsStatus
+      author {
+        handle
+        displayName {
+          value
+        }
+        avatar {
+          url
+        }
+      }
+      createdAt
+      moderationStatus
+      removal {
+        at
+        by
+      }
     }
     ... on Comment {
       id
@@ -80,7 +128,6 @@ query TraceNodes($ids: [UUID!]!, $includePending: Boolean! = true) {
         status
       }
       author {
-        id
         handle
         displayName {
           value
@@ -88,9 +135,6 @@ query TraceNodes($ids: [UUID!]!, $includePending: Boolean! = true) {
         avatar {
           url
         }
-      }
-      landing {
-        state
       }
     }
   }

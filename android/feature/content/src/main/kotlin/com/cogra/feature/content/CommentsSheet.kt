@@ -54,6 +54,7 @@ import com.cogra.core.designsystem.CommentStanceTarget
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.LocalSnackbarHostState
+import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.dataNode
@@ -341,7 +342,7 @@ fun CommentsSheet(
     // host on the surface behind would render the confirmation for a
     // comment that landed in THIS thread behind the thread it landed in.
     val snackbar = remember { SnackbarHostState() }
-    val savedHost = rememberSavedHost(saved, snackbar, null, onRequireAccount, hidden)
+    val savedHost = rememberSavedHost(saved, snackbar, THREAD_SNACKBAR, onRequireAccount, hidden)
     AnnounceCommentSigned(state.commentSigned, snackbar, onCommentSignedShown)
     // AN APPLICANT'S TWO DOORS INTO THE COMPOSER ANSWER IN PLACE ([rememberCommentGuard]).
     val guard = rememberCommentGuard(state.commentLocked, snackbar)
@@ -448,7 +449,7 @@ private fun AnnounceCommentSigned(signed: Boolean, snackbar: SnackbarHostState, 
     val signedCopy = stringResource(R.string.content_post_saved)
     LaunchedEffect(signed) {
         if (signed) {
-            snackbar.showSnackbar(signedCopy)
+            snackbar.say(signedCopy)
             onShown()
         }
     }
@@ -534,12 +535,17 @@ private fun ThreadReport(
     onClose: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val notify: (String) -> Unit = { text -> scope.launch { snackbar.showSnackbar(text) } }
+    val notify: (String) -> Unit = { text -> scope.launch { snackbar.say(text) } }
     reportSheet(ReportAsk(commentId, ReportKind.Comment), onClose, notify)
 }
 
-/** The thread sheet's own snackbar: the design registers no node for it yet. */
-internal const val THREAD_SNACKBAR_TAG = "comments_snackbar"
+/**
+ * The thread sheet's own snackbar IS the page's registered `postDetail.snackbar`
+ * (CommentMenu.md:11), every line of it.
+ */
+internal val THREAD_SNACKBAR = POST_DETAIL / "snackbar"
+
+private suspend fun SnackbarHostState.say(text: String) = showSnackbar(NodeSnackbarVisuals(text, THREAD_SNACKBAR))
 
 /** The comment report confirm's fallback tag; the registered node is `postDetail.reportSheet`. */
 private const val THREAD_REPORT_SHEET = "comments_report_sheet"
@@ -586,7 +592,6 @@ private fun ThreadSheetFrame(
                     .align(Alignment.BottomCenter)
                     .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
                     .padding(bottom = SNACKBAR_FOOT),
-                testTag = THREAD_SNACKBAR_TAG,
             )
         }
     }
@@ -1317,6 +1322,6 @@ private val LocalReplyLocked = staticCompositionLocalOf { false }
 private fun rememberCommentGuard(locked: Boolean, snackbar: SnackbarHostState): (() -> Unit) -> () -> Unit {
     val scope = rememberCoroutineScope()
     val line = stringResource(R.string.content_comment_locked)
-    val answer: () -> Unit = { scope.launch { snackbar.showSnackbar(line) } }
+    val answer: () -> Unit = { scope.launch { snackbar.say(line) } }
     return { door -> if (locked) answer else door }
 }

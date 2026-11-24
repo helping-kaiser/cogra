@@ -121,7 +121,12 @@
 
    THE SURFACE BENEATH IS DRAWN WHOLE (`EditComposeBody`), the overlay rule from
    2026-09-08: a sheet covers the surface the reader came from, and that surface
-   is the real one, not a shortened stand-in of it. */
+   is the real one, not a shortened stand-in of it.
+
+   THE SHEET TAKES THE RAISED HEIGHT CLASS, as `RefPairEdit`'s pair sheet
+   does (jakob 2026-11-23, B3; seam 423): the readout, the field and the foot
+   need the room, and on a 360×640 phone `Done` stands inside the screen with
+   nothing scrolled. */
 export const PROPS = { opener: { editor: "enum", options: ["post", "comment"], default: "post" } };
 export const VALS = `signedWith: this.props.opener === "comment" ? "Signed with the comment, as its own action." : "Signed with the post, as its own action."`;
 
@@ -146,8 +151,8 @@ export function Screen() {
     <>
       <EditComposeBody />
 
-      <BottomSheet open ariaLabel="#saltmaps" node="pairSheet">
-        <SheetTitle node="title">#saltmaps</SheetTitle>
+      <BottomSheet open ariaLabel="#saltmaps" maxHeight="88%" node="pairSheet">
+        <SheetTitle node="title" cut>#saltmaps</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 4px" }}>
           <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
             Set exact values for #saltmaps

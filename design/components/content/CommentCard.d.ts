@@ -66,6 +66,10 @@ export interface CommentCardProps {
    * to `StanceControl`'s `pendingReview`.
    */
   stancePendingReview?: boolean;
+  /** A guest's borrowed view: pass-through to `StanceControl`'s `vantage`. */
+  stanceVantage?: string;
+  /** Pass-through to `StanceControl`'s `vantageHoles`, for a board that re-selects the reader. */
+  stanceVantageHoles?: { label?: string; held?: string; hollow?: string };
   onReply?: () => void;
   targetLabel?: string;
   /**
@@ -76,7 +80,15 @@ export interface CommentCardProps {
   target?: string;
   /** The target's kind, naming the glyph (`NODE_GLYPHS`). Defaults to `"post"`. */
   targetKind?: string;
-  /** Opens the target. Shown only when both `target` and this are set. */
+  /**
+   * The pointer's door, in either shape — the door to what it names, apart
+   * from the card's own door (`onOpen`, the thread at this comment). A
+   * pointer naming a post opens the post itself, at its top, its thread
+   * closed; a removed post or a deleted account's post still opens, its
+   * detail showing the mark. A pointer naming a comment (a reply's, `On
+   * @sol's comment`) opens the thread at the comment it names. Shown only
+   * when both `target` and this are set.
+   */
   onOpenTarget?: () => void;
   /**
    * How the card names what it answers: `"line"` (default — the one-line
@@ -145,7 +157,7 @@ export interface CommentCardProps {
   onOpenScore?: () => void;
   /** The comment's id, the lowercase UUID the wire carries — keys the card, and its `viewReplies` line, when it is named (round 33). Draws nothing. */
   id?: string;
-  /** The data-node name its placer gives this card — keyed by the comment's id (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its media: `media` (`frame` per item, keyed by its position from 1, a clip's `soundDisc` or `playDisc`; `dots`) and its affordance row: `actionRow`, holding `stance`, `score`, `reply` (the glyph form, or the thread's text button) and `share`; its author's `authorChip` and its ⋮ `menu`; and a removed comment's mark `removalMark`, `RedactedContent`'s `line`, `detail` and `when` inside it. */
+  /** The data-node name its placer gives this card — keyed by the comment's id (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its media: `media` (`frame` per item, keyed by its position from 1, a clip's `soundDisc` or `playDisc`; `dots`) and its affordance row: `actionRow`, holding `stance`, `score`, `reply` (the glyph form, or the thread's text button) and `share`; its author's `authorChip` and its ⋮ `menu`; its tags line `tagsLine`, `TopicsLine`'s `tag` (keyed by the tag's name) and `counts` inside it, as `PostCard`'s; and a removed comment's mark `removalMark`, `RedactedContent`'s `line`, `detail` and `when` inside it. */
   node?: string;
   /** The card's key, given by its placer in place of `id`. Given none, `id` keys the card. */
   nodeKey?: string;

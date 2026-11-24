@@ -4877,14 +4877,17 @@ The night rulings executed (readme §13) left these for jakob's eye:
   2026-10-06; stance-control, *A guest's view*). The printed words
   beside the hollow face on `ProfileOther` and `TagPage` name the
   viewpoint for a guest (the vantage law, 2026-10-13; their overflow
-  fallback is item 139's). Still open here: the at-rest spoken
-  string's exact remaining wording.
+  fallback is item 139's). The at-rest spoken string — CLOSED by
+  round 63 (jakob 2026-11-23, point 8 (a)): `@genesismod's opinion on
+  this post`, on the wide anchor and the narrow ones.
 - **The applicant's anchor — RULED same day.** Only a nobody borrows
   stances: an applicant's faces are their own, hollow where they hold
   none (jakob 2026-10-06; stance-control, *Only a nobody borrows
   stances*; the ApplicantFeed line is written).
-- **No board draws a borrowed stance.** Every guest board's posts hold
-  no stance from the viewpoint, so only the hollow face is drawn.
+- **No board draws a borrowed stance** — CLOSED by round 63 (jakob
+  2026-11-23, point 7 "build it"): `TagPage` and `ProfileOther` at
+  `reader` = `guest` and `FeedBare` draw the view holding one opinion,
+  read-only, the member's held fixture, and the hollow face on the rest.
 - **An untitled media post on a comment's head row.** The head row
   draws a title over its author; for a media post the stand-in
   `Pictures by @ada` already names the author, and no board draws it.
@@ -6602,7 +6605,7 @@ Closed by round 58 (jakob 2026-11-18, C2: "yes ofcourse deleted posts count" —
 counts every post the person published, a removed one included, never an edit (readme §7,
 `ProfileHeader`, the profile sidecars). Pending posts stay unspoken.
 
-### 282 · A comment's pointer to a removed post, in a list · *design* · **filed 2026-11-18**
+### 282 · A comment's pointer to a removed post, in a list · *design* · **filed 2026-11-18** · **closed 2026-11-19**
 
 Round 57. On `TagPageRemovedMenuOwn` the page beneath shows @sol's salt maps removed, and
 @ada's tagged comment below it still names the post by its title in its pointer (`“Salt maps of
@@ -6619,7 +6622,10 @@ draws a PROPOSAL on its own branch, `jakob/design/round59-removed-pointers`: a r
 by kind and author, `On @sol's removed post`, and `a deleted account's` for a deleted account's
 (copy-voice, *Naming a removed or deleted thing*). Open until he rules.
 
-### 286 · The pointers the round-59 proposal names but no board draws · *design* · **filed 2026-11-18**
+Closed by jakob 2026-11-19 (B "sound great blessed", C1 "as rec"): the proposal stands as drawn,
+its words blessed — (b), `On @sol's removed post`; recorded in round 61.
+
+### 286 · The pointers the round-59 proposal names but no board draws · *design* · **filed 2026-11-18** · **closed 2026-11-19**
 
 Round 59. If the proposal stands, its naming also reaches surfaces it did not draw: the comment
 edit's subtitle for a deleted account's target (`Your comment on a deleted account's removed
@@ -6629,6 +6635,12 @@ thing (`ReferenceRow`'s `removed`, seam 248); and notifications — the `in <tit
 mention or citation from a removed post (`in @mira's removed post`) and a deleted actor's row
 (`A deleted account cited your post`?). Each waits for jakob's word on round 59; the last is
 not in the proposal (an actor, not a pointer).
+
+Closed by round 61 (the proposal blessed, jakob 2026-11-19): drawn on `CommentEdit`'s `post`
+(`deleted`, `swept`), `Profile`'s `act` (an opinion, a tag, a citation on a removed post),
+`RefsSheet`'s `target` (a removed post, a deleted account), `CitedBy`'s `citing` (removed, swept)
+and `Notifications`' `piece` (`in @mira's removed post`). The cells the blessed table does not
+give are 293 and 294.
 
 ### 283 · A removed tagged comment on the tag page · *design* · **filed 2026-11-18** · **closed 2026-11-18**
 
@@ -6661,7 +6673,7 @@ Closed by round 60 (jakob 2026-11-19, C2 "as rec" — (a)): copy-voice *Menu row
 among the comment rows' hosts; `TagPageCommentMenu`, `…Own`, `TagPageCommentRemovedMenu` and `…Own`
 draw the four menus over the page, each its profile twin's rows.
 
-### 285 · `MediaAttachment`'s `maxHeight` has no caller left · *system* · **filed 2026-11-18**
+### 285 · `MediaAttachment`'s `maxHeight` has no caller left · *system* · **filed 2026-11-18** · **closed 2026-11-19**
 
 Round 58, item 6 (jakob 2026-11-18, the hand test: a shown comment's media is a square at the
 column's width, no height cap). `CommentCard` was the one surface passing `maxHeight`
@@ -6679,7 +6691,11 @@ two comments now name these callers. Options: (a) retire the prop AND drop both 
 media and the card stand at their true shape (a drawing change, jakob's); (b) keep the prop for
 those two, as now; (c) retire it from the masters and draw each cap in its caller.
 
-### 287 · Does the Posts figure count a still-settling post? · *design* · **filed 2026-11-19**
+Closed by round 61 as KEPT (jakob 2026-11-19, C "all fine" on round 60's told list, "the kept size
+setting" — (b)): the prop stays for its two callers, the post-MVP chat media and the sensitive
+veil's card; nothing to build.
+
+### 287 · Does the Posts figure count a still-settling post? · *design* · **filed 2026-11-19** · **closed 2026-11-19**
 
 Round 60. A still-settling post now stands on every profile's Posts tab (jakob 2026-11-19, C3), and
 the figure's law says it counts every post published, a removed one included, "so the figure and
@@ -6690,7 +6706,11 @@ counts. The app counts landed posts only (impl seam 371 (f)). Options: (a) the f
 settling post too, so figure and list agree; (b) the figure counts landed posts only and the "agree"
 clause names the exception.
 
-### 288 · A still-settling comment or act on the Comments and Everything tabs · *design* · **filed 2026-11-19**
+Closed by round 61 (jakob 2026-11-19, B1 "as rec" — (a)): the figure counts a still-settling post,
+written in the eight places above. The `posts` = `none` copies of `ProfilePosts` and
+`ProfilePostsOwn` now read `0` over their empty list.
+
+### 288 · A still-settling comment or act on the Comments and Everything tabs · *design* · **filed 2026-11-19** · **closed 2026-11-19**
 
 Round 60. "The profile should not lag behind" was ruled for the Posts tab. What the tree says
 today: Everything — `Profile.md:31` "a chronicle card reads Still settling GIVEN its act still
@@ -6699,6 +6719,11 @@ pends" (the own profile; `ProfileOther.md` is silent); Comments — `ProfileComm
 `ProfileCommentsMenuOwn.md:17` lets an edited own comment settle in place wearing `Still settling`.
 Options: (a) every tab lists a still-settling thing, own and anyone's, wearing `Still settling`, as
 the Posts tab now does; (b) the Posts tab alone; (c) as (a) for the reader's own profile only.
+
+Closed by round 61 (jakob 2026-11-19, B2 "as rec" — (a)): `ProfileComments` and
+`ProfileCommentsOwn` draw `comments` = `settling` (the thread's landed reply, `Still settling`,
+`now`); `Profile` and `ProfileOther` draw `chronicle` = `settling` (`ContentRow`'s `pending`, the
+newest act); the law in the four sidecars.
 
 ### 289 · The keyboard rule: three surfaces the board's field count does not settle · *design* · **filed 2026-11-19** · **closed 2026-11-19**
 
@@ -6729,7 +6754,7 @@ move another's figures under at 390. A renderer whose text measures 0.6px wider 
 Options: (a) leave it, the two clients mirroring the measured constant; (b) a figures gap or label
 decision that buys room (jakob's: it moves boards).
 
-### 292 · The pick tray's remove targets are still cut by the row · *system* · **filed 2026-11-19**
+### 292 · The pick tray's remove targets are still cut by the row · *system* · **filed 2026-11-19** · **closed 2026-11-19**
 
 Round 60. `MediaThumb`'s own clip is gone, and on `ReplyPictures` (88 tile) and `CommentEdit`
 (56 tile) a point 8px outside the tile's top-right corner now hits the remove button (it hit
@@ -6740,7 +6765,17 @@ takes the overlap. Options: (a) the row gains top padding equal to the overhang 
 board); (b) leave the board's row clip as a drawing convenience and say so (the clients build
 the whole target); jakob's if it moves pixels.
 
-### 291 · A rate-limited upload has no words in the law · *design* · **filed 2026-11-19**
+Closed by round 61, measured on the rendered boards (`r61/target.mjs`). On `ComposePicked` every
+probe lands on `PickedSheet`'s scrim, which no tap beneath it passes, so that board was never the
+measure; on `ComposePick` (three tiles, no clip) a point 8px above and right of a tile's corner, 6px
+above its top and 4px into the gap all hit the button. Two things did cut the target: the full
+tray's `clip` (`ComposePickedErrors`) was `overflow: hidden`, which clips both axes and cut the
+13px above the row — it is now `overflow-x: clip`, the band's edge alone; and 3px into the next
+tile, the next tile (painted later) took the overhang — the remove button now stands at `zIndex:
+1`, below every bar, sheet and wash. Every probe inside the target hits it; every board is
+pixel-identical to `7e0b3a086` at its default state.
+
+### 291 · A rate-limited upload has no words in the law · *design* · **filed 2026-11-19** · **closed 2026-11-19**
 
 Round 60 (impl seam 380, 4). copy-voice *Faults by code* names `RATE_LIMITED`'s hosts
 (`copy-voice.md:1657-1663`: sign-in, registration, the reset, the token confirms, the email change)
@@ -6750,3 +6785,248 @@ a rate limit passes, so the built reading — retryable, `One picture didn't upl
 follows that sentence's reason, but no line names the code. Options: (a) write it: a rate-limited
 upload is the fault shape, keeping Retry; (b) a line of its own, `Too many tries. Wait a little,
 then try again.` beside Retry.
+
+Closed by round 61 (jakob 2026-11-19, told, "all fine" — (a)): copy-voice *A clip that didn't
+upload* and *Faults by code* (`RATE_LIMITED`) name the upload on the fault side, its line with
+`Retry`; no new words.
+
+### 293 · A chronicle aside that names a deleted account without `on` · *design* · **filed 2026-11-19**
+
+Round 61. The blessed table gives `on a deleted account` for an opinion's (and so a walk-back's)
+aside. Two chronicle verbs carry the bare handle as their aside, with no `on`: `Mentioned`
+(`@ada`) and `Vouched for` (`@rafa`) (copy-voice *The chronicle's verbs*). Once that account is
+deleted the table gives no cell, so neither is drawn or written. Options: (a) the fragment alone,
+`Mentioned` `a deleted account` · `Vouched for` `a deleted account`, the opinion's aside less its
+`on`; (b) the aside dropped, as `ContentRow`'s `redacted` drops it, the verb standing alone; (c)
+`this account`, the label's own lowercase word. Recommendation (a): the one fragment the table
+already blesses, and it keeps saying whom the act was toward.
+
+Closed by round 62 (jakob 2026-11-23, B3 = (a)): `Mentioned` `a deleted account` · `Vouched for` `a
+deleted account` (copy-voice *Naming a removed or deleted thing* and *The chronicle's verbs*;
+`ProfileOther.md`), drawn on `ProfileOther`'s `aside` chip, the mention wearing the reserved disc.
+
+### 294 · A deleted account's notifications · *design* · **filed 2026-11-19**
+
+Round 61 (backlog 286's last: "an actor, not a pointer"). Every notification is a sentence with
+the actor's handle as its subject (`Notifications.md`); once the actor's account is deleted the
+blessed table gives no subject. Not drawn. Options: (a) `A deleted account cited your post`, the
+fragment capitalised at the sentence's head, the reserved disc in the picture's place; (b)
+`ContentRow`'s `redacted` as it is — `Deleted account` alone, the act's words dropped (it loses
+what happened); (c) the account's rows leave the list once it is deleted (a notification is not
+graph structure, but it is still the record of an act). Recommendation (a). The same row's `in …`
+line for a deleted account's swept piece would read `in a deleted account's removed post`.
+
+Closed by round 62 (jakob 2026-11-23, B4 = (a)): every kind's sentence opens `A deleted account` in
+the actor's place, the rest as it stands, the empty disc in the picture's place and a face kept; a
+swept piece reads `in a deleted account's removed post` (`Notifications.md`, copy-voice; drawn as
+`Notifications`' `actor` chip).
+
+### 295 · A comment's references sheet has no board · *system* · **filed 2026-11-19**
+
+Round 61 (impl seam 380: "a comment's tags line and its refs sheet"). The comment's tags line is
+registered (`…commentCard.tagsLine`, `.tag`, `.counts`); its count opens the tags-and-references
+sheet, and no board draws that sheet over the thread — the post's own sheet (`RefsSheet`) is
+drawn but unregistered (it exports no `NODE`), so there is no path to follow for a twin. Options:
+(a) register `RefsSheet` under `postDetail` (a `refsSheet`, its `title`, its rows) and draw the
+comment's sheet over the thread as `CommentCitedByEmpty` stacks its sheet, both naming one sheet
+told apart by board; (b) register the post's alone and leave the comment's to the clients, who
+build it from the same master.
+
+Closed by round 62 (jakob 2026-11-23, B5 = (a)): `RefsSheet` registers under `postDetail`
+(`refsSheet`, `title`, each `tag` keyed by its name, each `reference` by its place) and
+`CommentRefsSheet` draws the comment's sheet over the thread under the same paths; the thread's
+reference counts lead to it.
+
+### 296 · Where a tag's or a citation's chronicle act opens · *design* · **filed 2026-11-19**
+
+Round 61. copy-voice *The chronicle's verbs* gives a tag's and a citation's acts their words and
+discs, and no sidecar says where their card opens; `Profile`'s `act` chip draws them, removed
+target and all, inert like the opinion's act, so nothing is claimed. Options: (a) the tagged or
+cited thing's detail (its mark there once removed), as a published post's act opens its post; (b)
+inert, as an opinion's act.
+
+Closed by round 62 (jakob 2026-11-23, B2 = (a)): a tag's or a citation's chronicle card of a post
+opens the tagged or cited post's detail, its mark there once removed (`Profile.md`,
+`ProfileOther.md`, `ProfileDeleted.md`, `ProfileOtherHeld.md`); `Profile`'s `act` chip draws both
+cards as doors. A comment's (`Tagged a comment`, `Cited a comment`) is backlog 300.
+
+### 297 · A pending act's place when it is not the newest · *design* · **filed 2026-11-19**
+
+Round 61. The chronicle is newest first and a pending act wears the age `now`; the drawings settle
+the newest act (`Profile`, `ProfileOther` `chronicle` = `settling`), so the order holds. The Posts
+tab's settling copy draws the second post with `now` below a `2h` post (`ProfilePosts`), and the
+Comments tab's, its twin, the second comment `now` below a `1d` one (`ProfileComments`) — each
+reads out of order. Options: (a) a pending thing stands at the head of its list, wherever its
+landed twin would stand; (b) it keeps its place in the order by its signing time, its age `now`
+until it lands. Drawing-level: jakob's.
+
+Closed by round 62 (jakob 2026-11-23, B1 "in signing order"): a still-settling thing stands at the
+head of a newest-first list, newest signed first among the settling ones, and closes an oldest-first
+reply branch, taking its place in the order when it lands (`ProfilePosts.md`, `ProfilePostsOwn.md`,
+`ProfileComments.md`, `ProfileCommentsOwn.md`, `ReplyEntry.md`; the clock is the docs',
+`api-spec.md:226-232`). The four tabs' `settling` draws it at the head, `settling-two` two of them
+(`now`, then `3m`). The Everything tab's settling rows stand as they were (backlog 298).
+
+### 298 · The Everything tab's settling rows against the landed-only chronicle · *design* · **filed 2026-11-23**
+
+Round 62. Two passages disagree. The design, round 61 (jakob 2026-11-19, B2 (a)): a still-settling
+act shows on every tab of every profile — `Profile.md:31`, `ProfileOther.md:27` ("a chronicle card
+stands among the landed ones and reads Still settling under its age GIVEN its act still pends"),
+drawn as `Profile` / `ProfileOther` `chronicle` = `settling` (`profile.chronicle.act.pending`). The
+docs, `docs/implementation/api-spec.md:242-243`: "The chronicle takes no such argument: the record
+set has no pending namespace, so a record is listed exactly when it is ordered fact" (open-questions
+Q41, `open-questions.md:263-264`). Impl holds the Everything tab's settling rows (seam 408). Not
+resolved here: jakob's.
+
+Closed by round 63 (jakob 2026-11-23, point 6 (a), the docs to change — impl writes the api-spec
+sentence): the Everything tab shows a person's still-settling posts and comments, in their place by
+newness, and every other act once landed (`Profile.md`, `ProfileOther.md`); the drawn settling act is
+a published post, so nothing is redrawn.
+
+### 299 · A long tag outside lists — the places held for jakob · *design* · **filed 2026-11-23**
+
+Round 62 built the list places (the chronicle aside, Explore's recent row, the seal's Tags row, the
+filter sheet's `One tag` chip). The census (`tmp_dev/2026-11-23-design-round62/census-long-tags.md`)
+found these, none touched: (O-title) the tag page's own title — `PageHeader` with a `#tag` title
+overflows one line (its wrapper gets `minWidth: 0` only for an `@handle`, `PageHeader.jsx:35, :38`;
+law `PageHeader.jsx:68-73` says "…"; jakob's words say the full name wraps on its own page; impl
+seam 406, (a) the header wraps / (b) a wrapping heading under it); its `notFound` copy holds an
+illegal name (O6). (O1) the composer's tag pills (`TopicRemovable`): wrap at hyphens inside the pill,
+an unbroken name overflows. (O2) a tag inside wrapping text — snackbars and dialogs break anywhere
+(`overflowWrap: anywhere`), `WithdrawnLine` and the pad's sentences wrap at hyphens or overflow;
+case 3 does not say whether a tag is a name unit. (O3) the tag pad's sheet title (`SheetTitle`):
+wraps at hyphens, overflows unbroken. (O4) the score trace's topic block (`QuotedRow` title): breaks
+anywhere. (O5) the search field holding a long typed tag: static ellipsis, the live input scrolls.
+
+Closed by round 63 (jakob 2026-11-23, points 3 (b) and 4): the tag page's header cuts the title on
+one line and the whole name stands under it as a wrapping heading when it is too long (`TagPage`'s
+`name` chip, `tagPage.name`); the not-found header cuts too. Everywhere else a tag is one line —
+the composer's pills and their tags sheet (`TopicRemovable`), the tag pad's title (`SheetTitle`'s
+`cut`), and inside wrapping text a tag is one unit as a handle is (`nameInText`: snackbars, dialogs,
+the withdrawn line, the pad's sentences, the trace's topic block). Measured at 360 px with both
+128-character names. O5 (the live search field) is not a list and stays as drawn.
+
+### 300 · Where a comment's tag or citation chronicle act opens · *design* · **filed 2026-11-23**
+
+Round 62. jakob's B2 (a) opens the tagged or cited POST from its chronicle act; copy-voice also
+names `Tagged a comment` and `Cited a comment` (*The chronicle's verbs*), and backlog 296's option
+(a) said "the tagged or cited thing's detail". No board draws a comment's act. Options: (a) the
+comment in its thread, landed on, as a comment reference row opens (`RefsSheet.md`); (b) inert.
+
+Closed by round 63 (jakob 2026-11-23, B2 = (a)): `Tagged a comment` / `Cited a comment` opens the
+comment in its thread, landed on (`Profile.md`, `ProfileOther.md`, `ProfileDeleted.md`,
+`ProfileOtherHeld.md`). No board draws a comment's act.
+
+### 301 · A long settings value on a board · *design* · **filed 2026-11-23**
+
+Round 62. `SettingsRow`'s value now ends in "…" with its label whole (jakob 2026-11-23, E10),
+measured with an injected 68-character address at 360 px (value 195 px wide, cut; label 35 px,
+whole). No board draws a long value: the tree's longest address is `noor@fieldmail.org`, and a long
+one is a new string. Options: (a) a `value` chip on `Settings` with an address jakob names; (b) the
+measurement stands as the proof.
+
+Closed by round 63 (jakob 2026-11-23, B5 = (b)): the measurement stands as the proof; no board draws
+a long value.
+
+### 302 · Two settling cases impl kept: a hidden account's own profile, a settling post removed before it lands · *design* · **filed 2026-11-23**
+
+Round 63 (impl seam 412). Impl lists, as today: (1) a hidden account's still-settling entry on its own
+profile; (2) a still-settling post removed before it lands, listed with both marks. What the tree says:
+(1) `ProfileOtherHidden.md` — nothing on the profile marks that the person is hidden, and every part
+of it still opens; the list rules (`ProfilePosts.md`, `ProfileComments.md`) carry no exception for a
+hidden person, so the entry is listed as on any profile — the law covers it by having no exception,
+not by a sentence. (2) Nothing says it: the removed rules (`Removed by its author`, the mark in the
+content's place) and the settling rules (`Still settling`, the score slot bare) are written apart, and
+no sentence or board puts both on one card, nor says whether a removal can land before the post does
+or which mark yields. Open: whether (2) is reachable at all (a removal is an act on a landed post?),
+and if so what the card reads. Options: (a) both marks, the removal's in the content's place and
+`Still settling` under the age, as impl lists it; (b) the removal waits for the post to land, so the
+case never stands.
+
+Closed by round 64 (jakob 2026-11-23, B4 = (a)): both marks — the removal's mark in the content's
+place and `Still settling` where every settling card wears it, over the action row (`PostCard`'s own
+place for it; "under the age" above was the lane's gloss, not the master's), its score slot bare
+(readme §9; `ProfilePosts.md`, `ProfilePostsOwn.md`). Drawn: `ProfilePostsOwn` chip `posts` =
+`settling-removed`. (1), the hidden account's own profile, needs nothing: the list rules carry no
+exception.
+
+### 303 · Where a failed attach of the applicant's own key stands · *design* · **filed 2026-11-23**
+
+Round 63, item 7 (jakob 2026-11-23, point 5 (a)): the law is written (`ApplicantFeed.md` — the house
+line `That didn't go through.` with `Retry`, never a fresh key, never "another account"), and the
+card `This browser's key belongs to another account` is retired. Not drawn: no applicant board
+carries the house line with Retry, so there is no twin. Impl places it where the key card stands
+(seam 412). Options: (a) on `feed.keyCard`, its `Create my key` giving way to `That didn't go
+through.` and `Retry` (the Invites copy fault's shape, `SigningPending row` inside a card), the
+title and body as they stand — but `Create your key` then titles a key that exists; (b) as (a) with
+a title for a key that exists and is not attached (a new string, jakob's); (c) the feed's snackbar,
+`That didn't go through.` with `Retry`, the key card absent while the key waits. Recommendation (a)
+with jakob ruling the title.
+
+### 304 · Which handle the bare feed's borrowed view speaks · *design* · **filed 2026-11-23**
+
+Round 63, item 4. The genesis moderator's view is `@genesismod` on `TagPage` and `ProfileOther`
+(`GUEST_VANTAGE`, stance-control *A guest's view*), but `FeedBare`'s band names `@noa` (Noa
+Lindgren) as the same view. Round 63 speaks `FeedBare`'s anchors as `@noa's opinion on this post`,
+the board's own band. Options: (a) one handle for the genesis moderator on every guest board
+(`genesismod`, the band re-fixtured); (b) keep each board's own. Also not drawn: `Main` (an invite
+link's issuer, `@mira`) draws no borrowed opinion either; the law (`Main.md:11`) holds the same.
+
+Closed by round 64 (jakob 2026-11-23, B2 = (a), "genesis_mod"): the genesis moderator's view is
+`@genesis_mod` on every guest board — `TagPage`, `ProfileOther` and `FeedBare`, whose band and anchors
+now name it (`GUEST_VANTAGE`; the band's display name the tree's `Genesis Moderator`). On a profile
+the wide anchor cuts `@genesis…'s opinion` (390 px) and `@ge…'s opinion` (360 px), as it cut the
+old handle; on a tag page it stands whole (158 px). `Main` stays the issuer's view.
+
+### 305 · A comment's media on History and Saved — the registry's one-chip rule · *design* · **filed 2026-11-23**
+
+Round 64, item 5 (impl seam 424). `profile.comments.commentCard.media…` is registered (`ProfileComments`
+chip `comments` = `pictures` / `clip`); `history` and `saved` are not. Their one comment card, @tobias's
+(`TOBIAS_COMMENT_ID`), is already drawn three times by the `pick` chip (`PickCopies`), and the chip-copy
+law (`node-paths.mjs`, ruling 39) lets a keyed instance repeat under ONE chip only, with no chip copy
+nested in another's. Options: (a) the boards' `pick` chip takes `pictures` and `clip` too, a chip naming
+two kinds of state; (b) a `comment` chip that draws @ada's tagged comment (`ADA_TAGGED_COMMENT_ID`, the
+tag page's and the profile's media comment) in @tobias's place, the pick copies hidden — a different
+comment on the board; (c) widen ruling 39 so a keyed instance may repeat under each of two chips whose
+copies never show together — a build-law change, his. Until ruled impl knows the card emits
+`history.commentCard.media`, `.media.frame` (`<id>/<n>`), `.media.frame.soundDisc`, `.media.dots`
+(the same on `saved`) and registers none.
+
+Closed by round 65, as (b) inside ruling 39: the `comment` chip on `History` and `Saved` (`none`,
+`pictures`, `clip`) draws @ada's tag-page comment as the feed's card in @tobias's place, the `pick`
+copies standing only at `none`, and registers `commentCard.media`, `.media.dots`, `.media.frame`
+(`<id>/1`, `<id>/2`) and `.media.frame.soundDisc` (`<id>/1`) under `history` and `saved`.
+
+### 306 · The feed score @ada's media comment wears on History and Saved · *design* · **filed 2026-11-23**
+
+Round 65, item 1 (backlog 305 (b), seam 424). On `History` and `Saved` the comment is the feed's own
+card (`CommentFeedCard`), and its row reads the opinion, then the score (`History.md`: "the figure the
+latest fetch of its thing found — … a dash only where that fetch found none"; `Saved.md`: "the figure
+the same card wears on the feed"). The tree gives @ada's tagged comment (`ADA_TAGGED_COMMENT_ID`) no
+score: `TagPage` and `ProfileComments` draw it as a list card, which carries none. Its head row has
+words (`Salt maps of the coast road` over `@sol`, the feed's card answering @sol's post). Options:
+(a) the place's figure, `12.40`, the @tobias card's; (b) a figure jakob names (a new string); (c) the
+dash, History's "found none" (Saved has no dash case). Recommendation (a): no new string, and the
+board's other states keep every pixel.
+
+Closed by round 65 as (a), a sample fixture: the comment wears the place's figure, `12.40`, on both
+boards (`CommentMediaCopies`).
+
+### 307 · The pixel harness renders a board two ways under load · *system* · **filed 2026-11-23**
+
+Round 65, item 2. Round 64's unexplained differences are the harness, not the boards: one render in
+fifteen to twenty, with four renders running at once, comes out a few pixels off on BOTH trees
+(`152cddc34` and `ca0e6e7e5`, whose board text differs only by the hover gate). `CommentCitedByEmpty`
+(`120a3741…` against `6d95e128…`): 15 px, ±1–4 levels, on the antialiased edges under the sheet's
+scrim — the author avatar's circle (x 39–42, rows 406, 407, 429) and the veil's top corners (x 39–42
+and 346–347, rows 442, 443). `SeveranceConfirm` (`d6dc2c08…` against `a3412bb4…`): 7 px on the `Keep
+it` pill's rim (x 325–328, rows 552–557, and x 237 row 573). Round 64's reading of 14 px on "the
+review overlay's badge rim" came from `diffbox.mjs`, which keeps the flow badges; with them stripped,
+as the proof renders, the wobble is the pill's own rim. Over 100 serial renders never wobbled;
+`--num-raster-threads=1` does not stop it. Separately, about one render in fifty loses Figtree (the
+Google Fonts fetch errors) and the whole board draws in the fallback face. And no picture paints in
+the harness: a board names its images bare (`post-photo.jpg`), the canvas runtime finds them in
+`img/`, and the harness's `<base>` is the board's folder, so every image is broken on both sides and
+a proof cannot see a picture change. Options: (a) the proof re-renders a differing board once before
+it reports a difference; (b) serve Figtree to the harness locally; (c) both, and the harness's base
+at `img/`. Recommendation (c).

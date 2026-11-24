@@ -36,12 +36,27 @@
    the `chronicle` chip's `removed`: the 5d post's act, removed as
    `ProfilePosts`' `removed` draws its 5d post, its second line `Removed by
    its author` where the words were, the card still the door to the post's
-   detail (`ChronicleAct`).
+   detail (`ChronicleAct`). A POST STILL SETTLING ON EVERYTHING (round 61;
+   jakob 2026-11-19, B2 (a); posts and comments only, every other act once
+   landed, 2026-11-23, point 6 (a)) is the same chip's `settling`: the newest act, the
+   long way home's, signed and not yet landed, its age `now` and `Still
+   settling` under it, as the own tab draws it — at the head, the list
+   newest first.
 
    AN OPINION ON AN ACCOUNT SINCE DELETED (round 59, the proposal to jakob
    2026-11-18) is the `aside` chip's `deleted`: the opinion's act names its
    target `on a deleted account`, the pointers' own naming, the handle never
-   printed.
+   printed. `mentioned-deleted` and `vouched-deleted` (round 62; jakob
+   2026-11-23, B3 (a)) draw the two verbs that take the person bare on the
+   same act: `Mentioned` `a deleted account`, the reserved disc in the
+   picture's place, and `Vouched for` `a deleted account`, the record's face.
+   A GUEST (round 62, seam 404.3) is the `reader` chip's `guest`: the wide
+   anchor reads `@genesis_mod's opinion` beside the hollow face, the handle
+   cut first where it outgrows the anchor (`READER_CHIP`). The faces are the
+   borrowed view's (round 63; jakob 2026-11-23, point 7): it holds an opinion
+   on @ada's post on the Posts tab, the face the member's fixture draws, and
+   none on @ada, whose anchor wears the hollow face; each anchor is spoken
+   `@genesis_mod's opinion on …` (point 8 (a)).
    REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): another
    person's page is the same surface as your own, named by the same body
    names. */
@@ -51,9 +66,13 @@ export const PROPS = {
   name: { editor: "enum", options: ["sample", "two-lines", "fifty", "one-word", "widest"], default: "sample" },
   ...TAB_CHIP,
   ...CHRONICLE_CHIP,
-  aside: { editor: "enum", options: ["handle", "deleted"], default: "handle" },
+  aside: { editor: "enum", options: ["handle", "deleted", "mentioned-deleted", "vouched-deleted"], default: "handle" },
+  ...READER_CHIP,
 };
-export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed", displayName: this.props.name === "two-lines" ? "Maximiliana Wilhelmina Featherstonehaugh" : this.props.name === "fifty" ? "Maximiliana Wilhelmina Featherstonehaugh Okonkwoli" : this.props.name === "one-word" ? "MaximilianaWilhelminaFeatherstonehaughOkonkwoLiang" : this.props.name === "widest" ? "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" : "Ada Okonkwo", nameSize: this.props.name === "fifty" ? "19px" : this.props.name === "one-word" ? "20px" : this.props.name === "widest" ? "10px" : "var(--text-title-large)", nameLineHeight: this.props.name === "fifty" ? "24px" : this.props.name === "one-word" ? "25px" : this.props.name === "widest" ? "13px" : "var(--text-title-large--line-height)", ${TAB_VALS}, ${CHRONICLE_VALS}, asideHandle: this.props.aside === "deleted" ? "none" : "contents", asideDeleted: this.props.aside === "deleted" ? "contents" : "none"`;
+export const VALS = `backLabel: this.props.from === "profile" ? "Back to the profile" : "Back to feed", displayName: this.props.name === "two-lines" ? "Maximiliana Wilhelmina Featherstonehaugh" : this.props.name === "fifty" ? "Maximiliana Wilhelmina Featherstonehaugh Okonkwoli" : this.props.name === "one-word" ? "MaximilianaWilhelminaFeatherstonehaughOkonkwoLiang" : this.props.name === "widest" ? "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW" : "Ada Okonkwo", nameSize: this.props.name === "fifty" ? "19px" : this.props.name === "one-word" ? "20px" : this.props.name === "widest" ? "10px" : "var(--text-title-large)", nameLineHeight: this.props.name === "fifty" ? "24px" : this.props.name === "one-word" ? "25px" : this.props.name === "widest" ? "13px" : "var(--text-title-large--line-height)", ${TAB_VALS}, ${CHRONICLE_VALS}, asideHandle: this.props.aside === "handle" ? "contents" : "none", asideDeleted: this.props.aside === "deleted" ? "contents" : "none", asideMentioned: this.props.aside === "mentioned-deleted" ? "contents" : "none", asideVouched: this.props.aside === "vouched-deleted" ? "contents" : "none", ${READER_VALS}, ${readerNames([
+  ["readerPersonName", "@ada", undefined, undefined],
+  ["readerPostName", "this post", mkBundle(0.55, 0.2), mkBundle(0.55, 0.2)],
+])}`;
 export function Screen() {
-  return <ProfileOtherBody backLabel="{{backLabel}}" displayName="{{displayName}}" nameSize="{{nameSize}}" nameLineHeight="{{nameLineHeight}}" tab="chip" chronicle={CHRONICLE_REMOVED} aside />;
+  return <ProfileOtherBody backLabel="{{backLabel}}" displayName="{{displayName}}" nameSize="{{nameSize}}" nameLineHeight="{{nameLineHeight}}" tab="chip" chronicle={CHRONICLE_REMOVED} aside vantageHoles={READER_HOLES} />;
 }

@@ -510,13 +510,16 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
           the feed; Your tags holds everything held, and the page a row opens
           is where a topic is walked back.
 
-          LAST IN THE BODY, because it is the section that grows. */}
+          LAST IN THE BODY, because it is the section that grows. A name too
+          long for the row ends in "…" (`Chip`'s `cut`, round 62): a tag in
+          a list never wraps and never runs past the sheet. */}
       {topics.length > 0 && (
         <FilterSection label="One tag" hint="Tags you hold and are for." node={node && "topic"}>
           {topics.map((topic) => (
             <Chip
               key={topic}
               label={topic}
+              cut
               selected={value.topic === topic}
               onToggle={() => set({ topic: value.topic === topic ? null : topic })}
               node={node && "tag"}

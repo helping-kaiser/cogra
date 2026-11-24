@@ -6,15 +6,17 @@ ALWAYS the reader's own profile's Posts view keeps the own profile's head as the
 
 ALWAYS profile.posts lists the reader's own posts, each card the feed's own, fully live
 
-ALWAYS profile.posts lists a post the reader signed that is still settling among the landed ones, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does
+ALWAYS profile.posts lists a post the reader signed that is still settling at the head of the list, above every landed one, the settling posts newest signed first among themselves, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does, and it takes its place in the list's order when it lands
 
-ALWAYS profile.identity.figures.posts counts every post the reader published, a removed one included, so the figure and the list agree
+ALWAYS profile.identity.figures.posts counts every post the reader published, a removed one and a still-settling one included, and never an edit, so the figure and the list agree
 
 ALWAYS the ⋮ on a card holds the own post menu, Edit among its rows, and carries no Hide and no Report row
 
 WHEN tap the ⋮ on profile.posts.card -> profile.menuSheet rises over the reader's own profile with the own post menu's rows
 
 ALWAYS a removed post of the reader's own keeps its place in the list as the feed's removed card, profile.posts.card.removalMark reading Removed by its author with the removal's date, whatever the feed's filter holds, its ⋮ your own post's menu less Edit, Mark as sensitive and Remove
+
+ALWAYS a post of the reader's own removed before it lands wears both marks, profile.posts.card.removalMark in the content's place and Still settling over profile.posts.card.actionRow, its score slot bare, at the head of the list among the settling posts, its ⋮ your own removed post's menu, GIVEN the post is still settling
 
 WHEN tap profile.tabRow.commentsTab -> the reader's own comments stand below profile.tabRow AND the head above stays as it was
 

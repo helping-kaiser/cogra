@@ -68,6 +68,7 @@ const POST = {
     },
   ],
   references: [],
+  referenceCount: 0,
   viewerBookmarkedAt: null,
   sensitiveSelfMark: false,
   sensitiveReason: null,

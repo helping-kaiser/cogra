@@ -12,7 +12,7 @@
 # `post.attachments[0].mimeType` off the query type exactly as it did
 # when the selection was written out inline.
 #
-# The `includePending` argument on `topics`/`references` names the
+# The `includePending` argument on `topics`/`referenceCount` names the
 # OPERATION'S variable. Every document spreading `PostFields` or
 # `CommentFields` therefore declares `$includePending`, which all three
 # reads already do.
@@ -188,10 +188,11 @@ fragment PostFields on Post {
     pending
   }
   # The reference row (D12, D16): the author's own current citations
-  # only, on the same content-intrinsic channel.
-  references(includePending: $includePending) {
-    ...ReferenceClaimFields
-  }
+  # only, on the same content-intrinsic channel — as a COUNT. The list is a
+  # fold priced at fifty rows (1 400 a card), so a card carries the number
+  # it prints and the sheet reads the rows by id when it opens
+  # (`PostReferences`); the detail's own post selects the list beside it.
+  referenceCount(includePending: $includePending)
   # The post menu's Save / Unsave row: the only place a kept state shows.
   viewerBookmarkedAt
 }
@@ -258,9 +259,9 @@ fragment CommentFields on Comment {
     confidence
     pending
   }
-  references(includePending: $includePending) {
-    ...ReferenceClaimFields
-  }
+  # A count, as the post's: the editor reads the rows by id when it opens
+  # (`CommentReferences`).
+  referenceCount(includePending: $includePending)
   # The comment menu's Save / Unsave row.
   viewerBookmarkedAt
 }
@@ -370,6 +371,17 @@ fragment StanceBundleFields on StanceBundle {
     inert
     severed
   }
+}
+
+# The borrowed view's own landed bundle toward one node — what a guest's
+# face wears, read-only. No node id, no raw sums, no cost: nothing on it
+# can name or price an act.
+fragment BorrowedStanceFields on BorrowedStance {
+  pDirected
+  pInterest
+  recordCount
+  inert
+  severed
 }
 
 # An email change in flight — which sides landed, read by the settings

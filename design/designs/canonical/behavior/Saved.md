@@ -26,7 +26,11 @@ ALWAYS the first row of every card's ⋮ in Saved reads Unsave, the card's own S
 
 ALWAYS no card in Saved carries a saved mark and no card carries an unsave control of Saved's own
 
-WHEN saved.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to Saved
+WHEN tap saved.commentCard.tagsLine.counts -> the comment's tags-and-references sheet rises over Saved, as a feed card's count opens it
+
+WHEN saved.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to Saved
+
+WHEN saved.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
 
 WHEN saved.commentCard is tapped outside saved.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to Saved
 
@@ -88,7 +92,9 @@ WHEN scroll settles at Saved's hard top GIVEN a qualifying clip exists and the d
 
 WHEN an overscroll bounce settles back at Saved's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in Saved's order
 
-ALWAYS a veiled clip has no playback and no sound-disc presence
+ALWAYS a veiled clip has no playback
+
+ALWAYS saved.commentCard.media.frame.soundDisc is absent GIVEN saved.commentCard.media.frame's clip is veiled
 
 ALWAYS saved.searchField reads Search what you saved at rest
 

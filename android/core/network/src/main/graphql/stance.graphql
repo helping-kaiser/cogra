@@ -85,6 +85,63 @@ query HashtagStance($name: String!, $pick: StancePickInput, $includePending: Boo
   }
 }
 
+# A GUEST'S FACES WEAR THE BORROWED VIEW'S OWN STANCE (FeedBare.md:7,
+# TagPage.md:73, GuestGate.md:11): `borrowedStance`, read-only, null where
+# that view holds none and for any session. Its own four reads rather than a
+# field on the four above: a guest's request never asks `viewerStance` or a
+# `targetGraphId`, so nothing an act could be signed toward rides it, and a
+# member's reads stay as they were. Never in a card fragment (the price of
+# the card pages, seam 428). The root's `id` is what tells "this root does
+# not hold the id" (the probe moves on) from "it holds it and the view holds
+# no opinion" (the hollow face).
+
+# The borrowed view's own landed bundle toward one node — what a guest's face
+# wears. No node id, no raw sums, no cost: nothing on it can name or price an
+# act.
+fragment BorrowedStanceFields on BorrowedStance {
+  pDirected
+  pInterest
+  recordCount
+  inert
+  severed
+}
+
+query PostBorrowedStance($id: UUID!) {
+  post(id: $id) {
+    id
+    borrowedStance {
+      ...BorrowedStanceFields
+    }
+  }
+}
+
+query CommentBorrowedStance($id: UUID!) {
+  comment(id: $id) {
+    id
+    borrowedStance {
+      ...BorrowedStanceFields
+    }
+  }
+}
+
+query ProfileBorrowedStance($id: UUID!) {
+  user(id: $id) {
+    id
+    borrowedStance {
+      ...BorrowedStanceFields
+    }
+  }
+}
+
+query HashtagBorrowedStance($name: String!) {
+  hashtag(name: $name) {
+    id
+    borrowedStance {
+      ...BorrowedStanceFields
+    }
+  }
+}
+
 mutation PrepareSeverance($input: PrepareSeveranceInput!) {
   prepareSeverance(input: $input) {
     writes {

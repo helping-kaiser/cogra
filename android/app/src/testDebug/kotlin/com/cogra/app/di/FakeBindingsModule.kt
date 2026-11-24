@@ -61,6 +61,7 @@ import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.release.AnnouncedReleaseStore
 import com.cogra.domain.release.ReleaseRegistry
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.BorrowedStanceRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.DeviceLockRepository
 import com.cogra.domain.repo.OnboardingRepository
@@ -101,6 +102,7 @@ import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.LockCustodyStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
+import com.cogra.domain.testing.FakeBorrowedStanceRepository
 import com.cogra.domain.testing.FakeDeviceData
 import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.FakeDevicePreferences
@@ -680,6 +682,13 @@ object FakeBindingsModule {
 
     @Provides
     fun stanceRepository(fake: ScriptedStanceRepository): StanceRepository = fake
+
+    @Provides
+    @Singleton
+    fun fakeBorrowedStanceRepository(): FakeBorrowedStanceRepository = FakeBorrowedStanceRepository()
+
+    @Provides
+    fun borrowedStanceRepository(fake: FakeBorrowedStanceRepository): BorrowedStanceRepository = fake
 
     @Provides
     @Singleton

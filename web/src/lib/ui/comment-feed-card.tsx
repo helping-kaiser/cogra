@@ -7,7 +7,9 @@
 // answered thing's mark, its title, its author — and the comment hung under
 // it on a connector rule, the way a reply hangs under what it answers.
 //
-// THE DOUBLE DOOR. The head row opens what it names. The rest of the card
+// THE DOUBLE DOOR. The head row opens what it names — a post itself, at its
+// top with its comment section closed; a comment in its thread, landed on it
+// (jakob 2026-11-23, seams 405 and 417). The rest of the card
 // opens the comment's own place — the post's comment section, scrolled to
 // this comment. Things with their own meaning keep it: the author chip, the
 // chips, the row.
@@ -31,8 +33,8 @@
 // comments — the card leads with the one-line `On …` pointer instead of the
 // head row, its words stand whole, and its row is the thread's own: the
 // opinion, then the text `Reply`, with the collapsed "View n replies" line
-// under the card. Every door — the pointer, Reply and the replies line — opens
-// the thread the comment lives in.
+// under the card. The pointer is the head row's door, to what it names; Reply
+// opens the thread the comment lives in.
 //
 // IN BOTH SHAPES THE CARD IS THE DOOR TO THE COMMENT'S PLACE: a tap anywhere
 // outside what it answers and its own controls opens the post's comment
@@ -162,7 +164,12 @@ export type CommentTargetView =
       readonly removal?: { readonly at: string; readonly by: string } | null;
     };
 
-/** A comment as its feed card reads it: the thread's own fields, what it answers, its thread's post. */
+/**
+ * A comment as its feed card reads it: the comment whole (`CommentFields`, its
+ * topics and citations included, which its tags line draws and its Edit starts
+ * from), what it answers, its thread's post. Every host reads it so — the tag
+ * page too, through its own `TaggedComments` read.
+ */
 export type CommentFeedView = CommentFieldsFragment & {
   readonly target?: CommentTargetView | null;
   readonly post?: { readonly id: string } | null;
@@ -264,10 +271,14 @@ export function CommentFeedCard({
   scoreOrigin,
   shape = "thread",
   authorHere = false,
+  tagHere = null,
   reply = "open",
   onRemoved,
+  attach = false,
 }: {
   comment: CommentFeedView;
+  /** The card hangs under a row flag (`TaggedRow`) and squares its top-left corner (`Card`'s `attach`). */
+  attach?: boolean;
   /**
    * How the card names what it answers (`CommentCard`'s `targetShape`): the
    * feed's `thread` head row, or the `line` pointer of a comment listed away
@@ -279,6 +290,11 @@ export function CommentFeedCard({
    * open the page it is on: the chip is inert (ProfileComments.md:21).
    */
   authorHere?: boolean;
+  /**
+   * The canonical name of the tag whose page the card stands on: that tag's
+   * chip would open the page it is on, so it is inert (`PostCard`'s `tagHere`).
+   */
+  tagHere?: string | null;
   /** The line shape's text Reply, for this reader. */
   reply?: LineReply;
   /**
@@ -321,7 +337,7 @@ export function CommentFeedCard({
   // AN EDIT SIGNED FROM THIS CARD'S MENU: the comment as it reads afresh,
   // laid over what the host served, so the card settles in place.
   const [reread, setReread] = useState<CommentFieldsFragment | null>(null);
-  const current = reread === null ? given : { ...given, ...reread };
+  const current: CommentFeedView = reread === null ? given : { ...given, ...reread };
   const comment = taken === null ? current : withRemoval(current, taken);
   const own = viewerId !== null && comment.author?.id === viewerId;
   const comfort = useComfortLine(comment.id);
@@ -345,6 +361,11 @@ export function CommentFeedCard({
   const place =
     threadPost === null ? null : `/posts/${threadPost}?comment=${comment.id}&from=${origin}`;
   const head = comment.target ? headRowOf(comment.target) : null;
+  // THE POINTER OPENS WHAT IT NAMES, in both shapes and on every host (jakob
+  // 2026-11-23, seams 405 and 417; FeedKinds.md:27, TagPage.md:23,
+  // ProfileComments.md:45): a post is opened itself, at its top, its comment
+  // section closed — a removed post's as much, its detail shows the mark; a
+  // comment is opened in its thread, landed on it.
   const headHref =
     comment.target === null || comment.target === undefined
       ? null
@@ -352,12 +373,7 @@ export function CommentFeedCard({
         ? threadPost === null
           ? null
           : `/posts/${threadPost}?comment=${comment.target.id}&from=${origin}`
-        : line
-          // THE POINTER OPENS THE THREAD THE COMMENT LIVES IN
-          // (ProfileComments.md:23; graph.json: "the post, its thread open"),
-          // landed on the comment that answers it.
-          ? place
-          : `/posts/${comment.target.id}?from=${origin}`;
+        : `/posts/${comment.target.id}?from=${origin}`;
 
   const redacted = payloadIsRedacted(comment);
   const words = redacted ? "" : (comment.content.value ?? "");
@@ -390,29 +406,34 @@ export function CommentFeedCard({
   // it lives in is the card's `post`.
   const target = comment.target ?? null;
   const editThread = threadPost ?? (target?.__typename === "Post" ? target.id : null);
+  const openEditWith = (whole: CommentFieldsFragment) => {
+    if (openEditDoor === null || target === null || editThread === null) return;
+    openEditDoor({
+      comment: whole,
+      parentId: target.__typename === "Comment" ? target.id : null,
+      postId: editThread,
+      targetLabel: head?.kind === "post" ? head.title : (head?.label ?? "this post"),
+      onLeave: () => {},
+      onSigned: () =>
+        landSignedEdit({
+          settleInPlace: () => {
+            onNotify(COMMENT_SETTLING);
+            void fetchComment(client, comment.id).then((outcome) => {
+              if (outcome.kind === "success" && outcome.value !== null) setReread(outcome.value);
+            });
+          },
+          openThread: () => {
+            if (place !== null) router.push(place);
+          },
+        }),
+    });
+  };
+  // THE EDITOR STARTS FROM THE COMMENT WHOLE — its topics and citations are
+  // what it edits against — and every host hands the card the comment whole.
   const openEdit =
     !own || openEditDoor === null || target === null || editThread === null
       ? undefined
-      : () =>
-          openEditDoor({
-            comment,
-            parentId: target.__typename === "Comment" ? target.id : null,
-            postId: editThread,
-            targetLabel: head?.kind === "post" ? head.title : (head?.label ?? "this post"),
-            onLeave: () => {},
-            onSigned: () =>
-              landSignedEdit({
-                settleInPlace: () => {
-                  onNotify(COMMENT_SETTLING);
-                  void fetchComment(client, comment.id).then((outcome) => {
-                    if (outcome.kind === "success" && outcome.value !== null) setReread(outcome.value);
-                  });
-                },
-                openThread: () => {
-                  if (place !== null) router.push(place);
-                },
-              }),
-          });
+      : () => openEditWith(comment);
 
   // THE COMMIT SENDS THE MAIL; refused or unanswered, the sheet stays and the
   // snackbar never claims a report that did not go out (ReportConfirm.md:13-17).
@@ -653,15 +674,20 @@ export function CommentFeedCard({
           {unfolded ? "Less" : "More"}
         </button>
       )}
+      {/* THE ONE LINE A COMMENT CARD WEARS (`CommentCard.jsx`): two chips,
+          then the counts. It wears its host's registered node
+          (`feed.commentCard.tagsLine`, `tagPage.commentCard.tagsLine`). */}
       {!redacted && (
         <TopicsLine
           topics={comment.topics.map((claim) => ({
             name: claim.hashtag.name.value ?? "",
             pending: claim.pending,
           }))}
-          references={comment.references.length}
+          references={comment.referenceCount}
           testIdPrefix={testId}
+          node={part(node, "tagsLine")}
           from={from}
+          here={tagHere}
         />
       )}
     </>
@@ -671,15 +697,21 @@ export function CommentFeedCard({
     <Card
       testId={testId}
       node={node}
+      attach={attach}
       door={place !== null}
       onOpen={place === null ? undefined : () => router.push(place)}
     >
       {/* THE TARGET POINTER (`CommentCard`'s line shape; ProfileComments.md:5):
-          one line, one tap to the thread — the target kind's glyph, then
-          `On …` in the quiet ink, ellipsized. */}
+          one line, one tap to what it names — the target kind's glyph, then
+          `On …` in the quiet ink, ellipsized. Its own link beside the card's
+          others, never inside one (`Card`'s redundant-click pattern). */}
       {line && head !== null && headHref !== null && (
         <Link
           href={headHref}
+          // Named as it reads, as the head row is: the cut line's parts are
+          // flex items, which accessible-name rules may join without their
+          // space.
+          aria-label={`On ${head.label}`}
           {...testAttributes(part(node, "target"), `${testId}-target`)}
           className="cg-state cg-focus cg-hit flex max-w-full items-center gap-2 rounded-small text-left text-on-surface-variant"
         >
@@ -700,7 +732,8 @@ export function CommentFeedCard({
           <Link
             href={headHref}
             aria-label={`On ${head.label}`}
-            data-testid={`${testId}-head`}
+            // The master's `data-node="target"` in both shapes (CommentCard.jsx).
+            {...testAttributes(part(node, "target"), `${testId}-head`)}
             className="cg-state cg-focus flex items-center gap-3 rounded-small"
           >
             <NodeMark kind={head.kind} src={head.cover} redacted={head.removed} testId={`${testId}-head-mark`} />

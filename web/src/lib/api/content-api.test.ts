@@ -45,6 +45,7 @@ function post(id: string, overrides: Record<string, unknown> = {}) {
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
     references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: null,
     ...overrides,
   };
@@ -88,6 +89,7 @@ describe("fetchPostDetail", () => {
                             },
                             topics: [],
                             references: [],
+                            referenceCount: 0,
                           },
                         },
                       ],

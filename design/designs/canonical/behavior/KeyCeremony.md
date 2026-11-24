@@ -8,6 +8,8 @@ WHEN tap the Recovery code row or the Your key row in settings GIVEN an applican
 
 WHEN tap the Recovery code row or the Your key row in settings GIVEN an applicant before any key, in a browser that can't hold a key -> KeyCeremonyUnsupported opens AND NEVER anything is minted
 
+WHEN the key's route /key is opened by its address GIVEN a member who has a key -> what settings' Your key row opens opens, after the same asks that row asks first, AND NEVER KeyCeremony opens
+
 WHEN press Create my key or Make a new key -> the ceremony probes this browser for WebCrypto Ed25519 before anything is minted
 
 WHEN the probe finds no Ed25519 -> KeyCeremonyUnsupported opens in the ceremony's place AND nothing is minted

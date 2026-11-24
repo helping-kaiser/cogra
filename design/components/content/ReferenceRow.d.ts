@@ -100,6 +100,11 @@ export interface ReferenceRowProps {
    *  value, reads the mark in the system's voice, and opens nothing — it
    *  renders as a plain row, never a control (seam 248). */
   removed?: string;
+  /** The mark's payload or owner went (round 61): `NodeMark`'s `redacted` —
+   *  a removed post's tile empty and ringed; for a person, the reserved disc
+   *  and `Deleted account` in the name's place, in the system's voice. The
+   *  row stays a door unless `removed` is also given. */
+  redacted?: boolean;
   /** The row navigates to the node it names. */
   onOpen?: () => void;
   /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `mark`, `name`, `sub`, and its edge as `rank` (the drawn rank and its glyph), `value` (the plain value, the pair, the pending marker) or `trailing`. */

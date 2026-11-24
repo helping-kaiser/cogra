@@ -7,10 +7,13 @@
 // in place of the load-more control (web.md "Design guidelines").
 export type TransportFault = "refresh" | "append";
 
+/** The house line, for a read that got no answer at all. */
+export const NO_REACH_LINE = "Can't reach the server. Check your connection and try again.";
+
 export function TransportError({ testId, message }: { testId: string; message?: string }) {
   return (
     <p role="alert" data-testid={testId} className="text-body-medium text-error">
-      {message ?? "Can't reach the server. Check your connection and try again."}
+      {message ?? NO_REACH_LINE}
     </p>
   );
 }

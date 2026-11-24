@@ -55,6 +55,7 @@ import com.cogra.app.ui.DeviceLockKeeper
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.LocalGuestGate
 import com.cogra.core.designsystem.LocalOnOpenKeptPicks
 import com.cogra.core.designsystem.LocalOnRestoreKey
 import com.cogra.core.designsystem.LocalPadBottomInset
@@ -348,6 +349,29 @@ private fun CograNavGraphContent(
     val destination = backStackEntry?.destination
     val barShown = signedIn != null && destination.isReadSurface()
     SideEffect { onBarShown(barShown) }
+    // EVERY STANCE FACE A GUEST REACHES FOR RAISES THE GATE AND WEARS THE
+    // BORROWED VIEW (FeedBare.md:7, :27; GuestGate.md:3, :11) — the cards' faces
+    // included, which no host threads a gate to. The shell's own ask
+    // ([Shell.requireJoin]), remembered per phase so the faces' effects keyed
+    // on it do not restart with every recomposition of the shell.
+    val guestGate: (() -> Unit)? = remember(signedIn) {
+        if (signedIn == false) ({ shellState.joinPrompt = true }) else null
+    }
+    CompositionLocalProvider(LocalGuestGate provides guestGate) {
+        CograShellScaffold(navController, shell, shellState, shellSnackbar, destination, barShown)
+    }
+}
+
+/** The shell's one scaffold: the bar, the shell snackbar host, and the one NavHost. */
+@Composable
+private fun CograShellScaffold(
+    navController: NavHostController,
+    shell: Shell,
+    shellState: ShellState,
+    shellSnackbar: SnackbarHostState,
+    destination: NavDestination?,
+    barShown: Boolean,
+) {
     Scaffold(
         snackbarHost = {
             CograSnackbarHost(shellSnackbar, testTag = "shell_snackbar")

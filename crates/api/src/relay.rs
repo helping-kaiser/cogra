@@ -266,6 +266,11 @@ pub async fn submit_pre_signed<B: L1Boundary>(
 /// pass confirms it (architecture.md "Record ingestion"). Retry from
 /// `relaying` is accepted: the substrate's approve is idempotent.
 ///
+/// The send is marked on the row before the host is called
+/// ([`staged::mark_approval_sent`]), so a crash or an unknown outcome
+/// after the host took the approval still leaves the GC keeping the
+/// write; only a definite refusal takes the mark back.
+///
 /// The one leg the relay holds: an unchained admission Registration whose
 /// address's funding has not settled (auth.md "Funding"). Its witness is
 /// checked here, stored with the write in `relaying`, and relayed by the
@@ -301,14 +306,40 @@ pub async fn submit_approval<B: L1Boundary>(
         act_id: write.proposal.body.act_id(),
         approval_signature,
     };
+    staged::mark_approval_sent(pool, id).await?;
     match boundary.approve(witness).await {
         Ok(()) => {
             staged::record_relaying(pool, id).await?;
             Ok(())
         }
-        Err(BoundaryError::Authentication(m)) => Err(RelayError::SignatureInvalid(m)),
-        Err(e) => Err(RelayError::Boundary(e)),
+        Err(e) => Err(approval_failed(pool, id, e).await?),
     }
+}
+
+/// Settles a send the host did not accept, and names the failure. Only a
+/// definite refusal takes the send's mark back: the host answered and
+/// named why it would not take the approval — the witness does not verify
+/// (`Authentication`), the act is unknown to it (`UnknownAct`), or it
+/// refused the act's formation or identifier (`Formation`, `Conflict`).
+/// A `Substrate` failure (storage, transport, a timeout) leaves the
+/// outcome unknown, so the mark stands and the GC keeps the write
+/// (data-model.md "Staged writes").
+async fn approval_failed(
+    pool: &PgPool,
+    id: Uuid,
+    e: BoundaryError,
+) -> Result<RelayError, RelayError> {
+    match e {
+        BoundaryError::Substrate(_) => {}
+        BoundaryError::Authentication(_)
+        | BoundaryError::UnknownAct(_)
+        | BoundaryError::Formation(_)
+        | BoundaryError::Conflict(_) => staged::approval_refused(pool, id).await?,
+    }
+    Ok(match e {
+        BoundaryError::Authentication(m) => RelayError::SignatureInvalid(m),
+        e => RelayError::Boundary(e),
+    })
 }
 
 /// The relay's view of [crate::onboarding::awaits_funding].
@@ -366,13 +397,13 @@ pub async fn relay_held<B: L1Boundary>(
         act_id: write.proposal.body.act_id(),
         approval_signature: approval_signature.clone(),
     };
+    staged::mark_approval_sent(pool, id).await?;
     match boundary.approve(witness).await {
         Ok(()) => {
             staged::release_held_approval(pool, id, &approval_signature).await?;
             tracing::info!(staged = %id, "held admission Registration relayed after its funding settled");
             Ok(())
         }
-        Err(BoundaryError::Authentication(m)) => Err(RelayError::SignatureInvalid(m)),
-        Err(e) => Err(RelayError::Boundary(e)),
+        Err(e) => Err(approval_failed(pool, id, e).await?),
     }
 }

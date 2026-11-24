@@ -177,27 +177,23 @@ query AuthorRecords($author: UUID!, $first: Int!, $after: String) {
 }
 
 # THE POSTS VIEW (ProfilePosts.md:3: "the posts view lists the person's
-# posts as post cards, never as chronicle entries"): the records the
-# header's `Posts` figure counts — the person's posts' own Publish records,
-# never an edit (`genesis: true`) — in the mirror's own order, newest first
-# by landing, each carrying the post as the feed card draws it (`FeedPost`).
-# One filter for the figure and the list, so "a count and the rows it
-# counts never disagree" (api-spec.md, `Record.act`). A page of TEN, Saved's size and for
-# Saved's reason: every edge carries a whole card. The page size is a
-# literal so the client-operation guard prices the call the device makes.
+# posts as post cards, never as chronicle entries"): `User.posts`, the
+# connection the header's `Posts` figure counts — every post the person
+# published, a removed one and a still-settling one included, never an edit
+# (ProfilePosts.md:15) — so the figure and the list agree. Newest first in
+# the post listing's own order: the still-settling posts head it, newest
+# signed first, each card wearing `Still settling` off its own
+# `landing.state` (ProfilePosts.md:7), then the landed ones. Each edge's node
+# is the post as the feed card draws it (`FeedPost`). A page of TWENTY: every
+# edge carries a whole card. The page size is a literal so the
+# client-operation guard prices the call the device makes.
 query ProfilePosts($id: UUID!, $after: String, $includePending: Boolean! = true) {
   user(id: $id) {
     id
-    posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 10, after: $after) {
+    posts(first: 20, after: $after) {
       edges {
         node {
-          id
-          target {
-            __typename
-            ... on Post {
-              ...FeedPost
-            }
-          }
+          ...FeedPost
         }
       }
       pageInfo {
@@ -209,85 +205,74 @@ query ProfilePosts($id: UUID!, $after: String, $includePending: Boolean! = true)
 }
 
 # THE COMMENTS VIEW (ProfileComments.md:3: "the comments view lists the
-# person's comments as comment cards, each in reach of its thread"): the
-# records that made the person's comments — each comment's own Review,
-# never an edit (`genesis: true`), whether it answers a post or a comment
-# (no `toKind`: a Review's actor leg enters on the PARENT, so `toKind:
-# COMMENT` would keep the replies alone) — in the mirror's own order,
-# newest first by landing. The Review's terminal is the comment, carrying
-# what its card draws: the thread's own fields, what it answers (the
-# pointer it leads with, `CommentCard`'s line shape), the thread's post
-# (where its doors land) and its replies' count (the "View n replies"
-# line, priced at `first: 0` as the thread prices it). A page of TEN, the
-# posts view's size and for its reason: every edge carries a whole card.
-# The page size is a literal so the client-operation guard prices the call
-# the device makes.
+# person's comments as comment cards, each in reach of its thread"):
+# `User.comments`, every comment the person made, whatever it answers, a
+# removed one included, never an edit. Newest first in the thread read's own
+# order: the still-settling comments head it, newest signed first, each card
+# wearing `Still settling` off its own `landing.state` (ProfileComments.md:5),
+# then the landed ones. Each edge's node is the comment, carrying what its
+# card draws: the thread's own fields, what it answers (the pointer it leads
+# with, `CommentCard`'s line shape), the thread's post (where its doors
+# land). A page of TWENTY, the posts view's size: every edge carries a
+# whole card. The page size is a literal so the client-operation guard
+# prices the call the device makes.
 query ProfileComments($id: UUID!, $after: String, $includePending: Boolean! = true) {
   user(id: $id) {
     id
-    comments: outgoingRecords(family: REVIEW, genesis: true, first: 10, after: $after) {
+    comments(first: 20, after: $after) {
       edges {
         node {
-          id
-          terminal {
+          ...CommentFields
+          target {
             __typename
-            ... on Comment {
-              ...CommentFields
-              target {
-                __typename
-                ... on Post {
-                  id
-                  title {
-                    value
-                    status
-                  }
-                  content {
-                    value
-                    status
-                  }
-                  attachments {
-                    url
-                    status
-                    mimeType
-                    coverMedia {
-                      url
-                      status
-                    }
-                  }
-                  author {
-                    id
-                    handle
-                  }
-                  moderationStatus
-                  removal {
-                    at
-                    by
-                  }
-                }
-                ... on Comment {
-                  id
-                  content {
-                    value
-                    status
-                  }
-                  author {
-                    id
-                    handle
-                  }
-                  moderationStatus
-                  removal {
-                    at
-                    by
-                  }
+            ... on Post {
+              id
+              title {
+                value
+                status
+              }
+              content {
+                value
+                status
+              }
+              attachments {
+                url
+                status
+                mimeType
+                coverMedia {
+                  url
+                  status
                 }
               }
-              post {
+              author {
                 id
+                handle
               }
-              replies(first: 0, includePending: $includePending) {
-                totalCount
+              moderationStatus
+              removal {
+                at
+                by
               }
             }
+            ... on Comment {
+              id
+              content {
+                value
+                status
+              }
+              author {
+                id
+                handle
+              }
+              moderationStatus
+              removal {
+                at
+                by
+              }
+            }
+          }
+          post {
+            id
           }
         }
       }
@@ -303,15 +288,17 @@ query ProfileComments($id: UUID!, $after: String, $includePending: Boolean! = tr
 # count BUNDLES, never records (jakob 2026-11-10) — one person's opinions
 # toward one target are one, however often revised — each labelled and
 # never merged, each read with `first: 0`, the number without a page.
-# `Posts` is the records that minted the person's posts (`genesis: true`),
-# one per post, so its `totalCount` is its bundles; `Opinions on them` the
-# people holding an opinion on them and `Opinions by them` the people they
-# hold one on, each a `bundleCount` over the unmarked Opinion records —
+# `Posts` is the Posts tab's own connection counted (`User.posts`): every
+# post the person published, a removed one and a still-settling one
+# included, never an edit, one per post, so its `totalCount` is its bundles
+# and the figure and the list agree (ProfilePosts.md:15); `Opinions on them`
+# the people holding an opinion on them and `Opinions by them` the people
+# they hold one on, each a `bundleCount` over the unmarked Opinion records —
 # exactly the rows the opinions page folds and lists.
 query ProfileFigures($id: UUID!) {
   user(id: $id) {
     id
-    posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 0) {
+    posts(first: 0) {
       totalCount
     }
     opinionsOn: incomingRecords(family: OPINION, payloadMarked: false, first: 0) {

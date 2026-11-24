@@ -2,7 +2,13 @@
 
 ALWAYS profile.comments lists the person's comments, each a profile.comments.commentCard in reach of its thread
 
+ALWAYS profile.comments lists a comment the person signed that is still settling at the head of the list, above every landed one, the settling comments newest signed first among themselves, its card wearing Still settling, as the thread's landed reply does, and it takes its place in the list's order when it lands
+
 ALWAYS profile.comments.commentCard leads with profile.comments.commentCard.target, the pointer to what it answers
+
+ALWAYS profile.comments.commentCard carries profile.comments.commentCard.tagsLine, its tags as profile.comments.commentCard.tagsLine.tag and its count as profile.comments.commentCard.tagsLine.counts, as a comment carries it in the feed
+
+WHEN tap profile.comments.commentCard.tagsLine.counts -> the comment's tags-and-references sheet rises over the profile, as a feed card's count opens it
 
 ALWAYS profile.comments.commentCard.target reads On with the post's author's handle and removed post, as On @sol's removed post, and never the post's title GIVEN the post it answers was removed
 
@@ -40,7 +46,9 @@ WHEN tap profile.tabRow.commentsTab -> NEVER anything changes
 
 WHEN tap profile.comments.commentCard.authorChip on one of the person's own comments -> NEVER anything changes
 
-WHEN tap profile.comments.commentCard.target -> the thread it lives in opens scrolled to that comment
+WHEN profile.comments.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to the profile
+
+WHEN profile.comments.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
 
 WHEN tap Reply on a comment -> the thread the comment lives in opens scrolled to that comment
 

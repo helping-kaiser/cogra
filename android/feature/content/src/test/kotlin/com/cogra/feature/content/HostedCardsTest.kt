@@ -1,14 +1,16 @@
 // The feed's cards hosted on a profile's tabs (ProfilePosts.md, ProfileComments.md):
 // the post card unchanged but for its inert author chip, and the comment card in
-// its line shape — the `On …` pointer leading, the words whole and a door, the
-// thread's text Reply, the "View n replies" line under the card — every door
-// landing on the thread the comment lives in. web's twins are
+// its line shape — the `On …` pointer leading, the door to the post it names;
+// the words whole and a door, the thread's text Reply, the "View n replies"
+// line under the card — those landing on the thread at the comment. web's twins are
 // `profile-posts.test.tsx` and `profile-comments.test.tsx`.
 
 package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -75,14 +77,18 @@ class HostedCardsTest {
         removal = removal,
     )
 
-    private fun comment(removal: Removal? = null, replies: Int = 2) = ProfileComment(
+    private fun comment(
+        removal: Removal? = null,
+        replies: Int = 2,
+        landing: Landing = Landing.landed(2),
+    ) = ProfileComment(
         comment = CommentView(
             id = "c1",
             content = text(if (removal == null) "The glovebox camera earns its keep." else null),
             author = ada,
             createdAt = now.minusSeconds(86_400),
             updatedAt = now.minusSeconds(86_400),
-            landing = Landing.landed(2),
+            landing = landing,
             license = LicenseChoice.PublicDomain,
             replyCount = replies,
             removal = removal,
@@ -108,6 +114,7 @@ class HostedCardsTest {
         signedIn: Boolean = true,
         placement: HostedPlacement = HostedPlacement.Profile,
         viewerId: String = "u2",
+        tagHere: String? = null,
         body: @Composable (HostedCards) -> Unit,
     ) {
         compose.setContent {
@@ -127,6 +134,7 @@ class HostedCardsTest {
                 tag = if (placement == HostedPlacement.Profile) "profile" else "tagPage",
                 notify = {},
                 placement = placement,
+                tagHere = tagHere,
             ) { hosted -> Column { body(hosted) } }
         }
     }
@@ -163,15 +171,53 @@ class HostedCardsTest {
         assertThat(shown("profile_post_pending_p1")).isTrue()
     }
 
-    // ProfileComments.md:5, :23 — the card leads with its pointer to what it
-    // answers, and the pointer opens the thread the comment lives in,
-    // scrolled to that comment.
+    // ProfilePosts.md:11, ProfilePostsOwn.md:19 — a post removed before it
+    // lands wears both marks: the removal mark in the content's place and
+    // `Still settling`.
     @Test
-    fun theCommentsPointerLeadsAndOpensItsThread() {
+    fun aPostRemovedBeforeItLandsWearsBothMarks() {
+        host { it.post(post(landing = Landing.Pending, removal = Removal(now, RemovalAgent.AUTHOR)), posts) }
+        assertThat(shown("profile.posts.card.removalMark")).isTrue()
+        compose.onNodeWithTag("profile_post_pending_p1", useUnmergedTree = true).assertTextEquals("Still settling")
+    }
+
+    // ProfileComments.md:5, ProfileCommentsOwn.md:7 — a still-settling comment
+    // wears `Still settling`, as the thread's landed reply does; a landed one
+    // wears none.
+    @Test
+    fun aStillSettlingCommentWearsItsMarker() {
+        host {
+            it.comment(comment(landing = Landing.Pending), cards, replies, null)
+        }
+        compose.onNodeWithTag("profile_comment_c1_pending", useUnmergedTree = true).assertTextEquals("Still settling")
+    }
+
+    @Test
+    fun aLandedCommentWearsNoSettlingMarker() {
+        host { it.comment(comment(), cards, replies, null) }
+        assertThat(shown("profile_comment_c1_pending")).isFalse()
+    }
+
+    // ProfileComments.md:7 — the card leads with its pointer to what it
+    // answers; the pointer is the door to the post it names, never its comment
+    // section (jakob 2026-11-23, seam 405).
+    @Test
+    fun theCommentsPointerLeadsAndOpensThePost() {
         host { it.comment(comment(), cards, replies, null) }
         compose.onNodeWithText("On “Salt maps of the coast road” — @sol").assertIsDisplayed()
         compose.onNodeIn("profile.comments.commentCard:c1", "profile.comments.commentCard.target").performClick()
-        assertThat(opened).containsExactly("comment:p9/c1")
+        assertThat(opened).containsExactly("post:p9")
+    }
+
+    // A reply's pointer names the comment it answers, and opens the thread at
+    // it — never at the reply itself (CommentCard.jsx:397, "to what it names").
+    @Test
+    fun aRepliesPointerOpensTheThreadAtTheCommentItAnswers() {
+        val reply = comment().copy(target = CommentTarget.Comment("c0", text("Where was this?"), "sol"))
+        host { it.comment(reply, cards, replies, null) }
+        compose.onNodeWithText("On @sol's comment").assertIsDisplayed()
+        compose.onNodeIn("profile.comments.commentCard:c1", "profile.comments.commentCard.target").performClick()
+        assertThat(opened).containsExactly("comment:p9/c0")
     }
 
     // ProfileComments.md:35, :39 — Reply opens the thread aimed at the
@@ -255,6 +301,59 @@ class HostedCardsTest {
         compose.onNodeWithTag("profile_comment_c1_refs_reference_l1-user-mira").performClick()
         compose.onNodeWithTag("profile_comment_c1_refs_sheet").assertDoesNotExist()
         assertThat(opened).containsExactly("actor:mira")
+    }
+
+    // jakob 2026-11-23 — on a tag's own page its chip opens nothing, as the
+    // person's own name opens nothing on their profile: no second page of the
+    // tag, and the tap never falls through to the card's door. Every other tag
+    // still opens.
+    @Test
+    fun onATagsOwnPageItsChipIsInertAndAnotherStillOpens() {
+        val tagged = post().copy(topics = listOf(testTopicClaim("rust"), testTopicClaim("fieldnotes")))
+        host(placement = HostedPlacement.TagPage, tagHere = "rust") {
+            it.post(tagged, DataNode("tagPage") / "card")
+        }
+        // An inert chip is no control of its own: it merges into the card.
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust", useUnmergedTree = true)
+            .assertHasNoClickAction()
+            .performClick()
+        assertThat(opened).isEmpty()
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:fieldnotes").assertHasClickAction().performClick()
+        assertThat(opened).containsExactly("topic:fieldnotes")
+    }
+
+    // The same rule inside a sheet raised over the page: the tags-and-references
+    // sheet's row for the page's own tag is a plain row; another row still leaves.
+    @Test
+    fun overATagsOwnPageItsRowInTheTagsSheetOpensNothing() {
+        val listed = comment().let {
+            it.copy(
+                comment = it.comment.copy(
+                    topics = listOf(testTopicClaim("rust")),
+                    references = listOf(testReferenceClaim(testMentionTarget("mira"))),
+                ),
+            )
+        }
+        host(placement = HostedPlacement.TagPage, tagHere = "rust") {
+            it.comment(listed, DataNode("tagPage") / "commentCard", replies, null)
+        }
+        compose.onNodeWithTag("tagPage_comment_c1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("tagPage_comment_c1_refs_topic_rust", useUnmergedTree = true)
+            .assertHasNoClickAction()
+            .performClick()
+        compose.onNodeWithTag("tagPage_comment_c1_refs_sheet").assertExists()
+        assertThat(opened).isEmpty()
+        compose.onNodeWithTag("tagPage_comment_c1_refs_reference_l1-user-mira").performClick()
+        assertThat(opened).containsExactly("actor:mira")
+    }
+
+    // Off a tag page the same chip is a door, as it is everywhere.
+    @Test
+    fun offATagPageTheChipStillOpensItsTag() {
+        val tagged = post().copy(topics = listOf(testTopicClaim("rust")))
+        host { it.post(tagged, posts) }
+        compose.onNodeWithTag("profile.posts.card.tagsLine.tag:rust").performClick()
+        assertThat(opened).containsExactly("topic:rust")
     }
 
     // `CommentCard`'s line shape carries no score and no share.
@@ -423,7 +522,7 @@ class HostedCardsTest {
         assertThat(shown("tagPage.commentCard:c1")).isTrue()
         compose.onNodeWithText("View 2 replies").assertDoesNotExist()
         compose.onNodeIn("tagPage.commentCard:c1", "tagPage.commentCard.target").performClick()
-        assertThat(opened).containsExactly("comment:p9/c1")
+        assertThat(opened).containsExactly("post:p9")
     }
 
     // A tagged comment's author is a door too: the page is the tag's, not theirs.

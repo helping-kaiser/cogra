@@ -27,6 +27,7 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.Outcome
 import com.cogra.domain.ReaderStanding
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.BorrowedStanceRepository
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
@@ -34,6 +35,7 @@ import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.severance
 import com.cogra.domain.signing.stanceRecord
+import com.cogra.domain.stance.BorrowedStance
 import com.cogra.domain.stance.KeptFamily
 import com.cogra.domain.stance.KeptPick
 import com.cogra.domain.stance.KeptPickStore
@@ -204,6 +206,22 @@ data class StanceUiState(
     val applicant: Boolean = false,
 )
 
+/**
+ * WHAT A GUEST'S FACES WEAR (FeedBare.md:7, GuestGate.md:11): the borrowed
+ * view's handle and its own stance toward each target a guest's control drew.
+ *
+ * Kept APART from [StanceUiState] on purpose: nothing in this holder that
+ * signs, projects, severs or keeps a pick reads it, and it never enters a
+ * [TargetStance]. A reader with a session never asks for it, and the first
+ * read of their own standing clears it.
+ */
+data class GuestFaces(
+    /** The borrowed view's handle, once its read named one; until then the faces stay hollow. */
+    val vantage: String? = null,
+    /** Per target, the view's stance — null where it holds none (the hollow face). */
+    val faces: Map<StanceTarget, BorrowedStance?> = emptyMap(),
+)
+
 @HiltViewModel
 class StanceViewModel @Inject constructor(
     private val stances: StanceRepository,
@@ -217,6 +235,8 @@ class StanceViewModel @Inject constructor(
     private val keptPicks: KeptPickStore,
     /** The reader's own account state: an applicant's faces are locked. */
     private val standing: ReaderStanding,
+    /** A guest's faces: the borrowed view's own stance, display only ([GuestFaces]). */
+    private val borrowed: BorrowedStanceRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StanceUiState())
@@ -224,6 +244,21 @@ class StanceViewModel @Inject constructor(
 
     /** Targets whose standing read is in flight; a feed asks once, not per frame. */
     private val reading = mutableSetOf<StanceTarget>()
+
+    private val _guest = MutableStateFlow(GuestFaces())
+
+    /** A guest's faces — display only; see [GuestFaces]. */
+    val guest = _guest.asStateFlow()
+
+    /** Targets whose borrowed read is in flight. */
+    private val lending = mutableSetOf<StanceTarget>()
+
+    /**
+     * The reader's own standing has been asked here — they have a session. A
+     * destination's holder does not outlive a sign-in (the stack is cleared),
+     * but should one, it never borrows again.
+     */
+    private var ownView = false
 
     /**
      * Whether the account's first-ever pad open has happened on this
@@ -337,6 +372,11 @@ class StanceViewModel @Inject constructor(
      * leaves that card a mystery button for the rest of the session.
      */
     fun observe(target: StanceTarget) {
+        // A reader reading their own standing has a session: no borrowed
+        // face may stand beside it, now or from a read still in flight
+        // ("only a nobody borrows stances").
+        ownView = true
+        if (_guest.value != GuestFaces()) _guest.value = GuestFaces()
         if (_state.value.targets[target]?.standingRead == true) return
         if (!reading.add(target)) return
         _state.update { state ->
@@ -354,6 +394,30 @@ class StanceViewModel @Inject constructor(
             readStanding(target)
             reading.remove(target)
             if (target in _state.value.settling && settled.add(target)) settle(target)
+        }
+    }
+
+    /**
+     * A GUEST'S CONTROL: reads the borrowed view's handle (once it has
+     * answered) and its stance toward [target], into [guest] and nowhere
+     * else — no standing, no key, no kept pick, no node id. A read that
+     * answered is not asked again; one that failed leaves the hollow face and
+     * is asked again the next time the control comes into view.
+     */
+    fun observeAsGuest(target: StanceTarget) {
+        if (ownView || target in _guest.value.faces || !lending.add(target)) return
+        viewModelScope.launch {
+            if (_guest.value.vantage == null) {
+                val lender = (account.borrowedView() as? Outcome.Success)?.value
+                // A read that lands after the reader's own standing was asked
+                // is a guest's no longer: it is dropped, never shown.
+                if (lender != null && !ownView) _guest.update { it.copy(vantage = lender.handle) }
+            }
+            val read = borrowed.borrowedStance(target)
+            if (read is Outcome.Success && !ownView) {
+                _guest.update { it.copy(faces = it.faces + (target to read.value)) }
+            }
+            lending.remove(target)
         }
     }
 

@@ -8,7 +8,7 @@ ALWAYS the figures read Posts, Opinions on them and Opinions by them, each label
 
 ALWAYS the two opinion figures are two doors and the Posts figure is no door, each door spoken as its figure's number and visible words and nothing more, as 6 Opinions on them and 6 Opinions by them
 
-ALWAYS profile.identity.figures.posts counts every post the person published, a removed one included, and never an edit, so the figure and profile.posts agree
+ALWAYS profile.identity.figures.posts counts every post the person published, a removed one and a still-settling one included, and never an edit, so the figure and profile.posts agree
 
 ALWAYS the actions row reads the opinion on the person, worn wide, then Message sized by its word, then the ⋮ that closes the row
 
@@ -24,9 +24,17 @@ WHEN tap profile.tabRow.everythingTab -> the person's chronicle stands below pro
 
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
+ALWAYS a post or a comment the person signed that is still settling stands on the chronicle as its act's card, in its place by newness among the landed ones, and reads Still settling under its age
+
+ALWAYS every other act stands on the chronicle once it has landed, and never while it pends
+
 ALWAYS a chronicle card with no destination is the same card, inert
 
+ALWAYS profile.chronicle.act.second reads Removed by its author where the target's title or words would stand, and never the title, GIVEN the act is an opinion, a tag or a citation on a post or comment since removed, a deleted account's swept one included
+
 ALWAYS profile.chronicle.act.aside reads on a deleted account where the target's handle would stand GIVEN the act's target is an account since deleted
+
+ALWAYS profile.chronicle.act.aside reads a deleted account, with no on, after Mentioned or Vouched for GIVEN the person mentioned or vouched for has an account since deleted
 
 ALWAYS a chronicle card whose post or comment was removed keeps its place, its disc, its verb and its age, profile.chronicle.act.second reading Removed by its author where its words were, in the row's quiet second line, whatever the feed's filter holds
 
@@ -48,7 +56,9 @@ WHEN an opinion on the person is signed GIVEN the person vouched the reader in a
 
 WHEN a guest taps the wide anchor -> the guest gate opens
 
-ALWAYS the wide anchor's words beside the hollow face name the borrowed view, as @genesismod's opinion, its handle ellipsized before 's opinion where the name outgrows the anchor, as @genesismo…'s opinion, GIVEN the reader is a guest and the borrowed view holds no opinion on the person
+ALWAYS the wide anchor's words beside the hollow face name the borrowed view, as @genesis_mod's opinion, its handle ellipsized before 's opinion where the name outgrows the anchor, as @genesis…'s opinion, GIVEN the reader is a guest and the borrowed view holds no opinion on the person
+
+ALWAYS every stance anchor on the page is spoken as the borrowed view's opinion, as @genesis_mod's opinion on @ada, its reading after it where the view holds one, GIVEN the reader is a guest
 
 ALWAYS the wide anchor's accessible name keeps the borrowed view's full handle, never ellipsized GIVEN the reader is a guest
 
@@ -75,6 +85,10 @@ WHEN tap profile.tabRow.postsTab GIVEN another tab is lit -> the person's posts 
 WHEN tap profile.tabRow.commentsTab -> the person's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
 WHEN tap a chronicle card for a published post -> the post's detail opens AND its back arrow reads Back to the profile
+
+WHEN tap a chronicle card for a tag or a citation of a post -> the tagged or cited post's detail opens AND its back arrow reads Back to the profile
+
+WHEN tap a chronicle card for a tag or a citation of a comment -> the comment opens in its thread, landed on, as a comment's reference row opens it
 
 WHEN tap a chronicle card whose post or comment was removed -> it opens where the card opens for the act, the removed thing standing there as its mark
 

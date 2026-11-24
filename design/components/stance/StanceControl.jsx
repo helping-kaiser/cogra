@@ -1,6 +1,7 @@
 import React from "react";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { Icon } from "../navigation/Icon.jsx";
+import { nameInLine } from "../people/ActorChip.jsx";
 import { Snackbar } from "../core/Snackbar.jsx";
 import { JoinPrompt } from "../core/JoinPrompt.jsx";
 import { StancePad, STANCE_AXES } from "./StancePad.jsx";
@@ -237,6 +238,34 @@ function severanceCost(bundle) {
   return Math.max(1, Math.ceil(Math.round(reach * 100) / 100));
 }
 
+/* What the anchor rests on: the pair it shows (none while nothing stands) and
+   the face that reads it. A resting (0, 0) is walked back only when the
+   bundle says so; otherwise — an empty sign's standing, or a kept pick — it
+   says nothing. */
+function restingOf(bundle, pendingPick, axes) {
+  const restingPair = pendingPick ?? (bundle.records === 0 && !bundle.severed ? null : bundle.current);
+  const restingZero = !pendingPick && bundle.severed ? severanceWords(axes).zero : EMPTY_PICK_LABEL;
+  return { restingPair, restingFace: restingPair === null ? null : bundleReadout(restingPair, restingZero) };
+}
+
+/* THE ANCHOR'S ACCESSIBLE NAME, exported so a board that draws one anchor for
+   two readers (`vantageHoles.label`) speaks exactly what the anchor would.
+   A GUEST'S ANCHOR IS SPOKEN AS THE BORROWED VIEW'S OPINION (jakob
+   2026-11-23, point 8 (a); stance-control, *A guest's view*):
+   `@genesis_mod's opinion on this post`, the view's handle whole, and where
+   the view holds one, its reading after it as a member's anchor reads its
+   own — read-only, so never the press-and-hold hint. */
+export function anchorName({ targetLabel = "this post", bundle = EMPTY_BUNDLE, pendingPick, pendingReview, axes = STANCE_AXES, vantage }) {
+  const { restingPair, restingFace } = restingOf(bundle, pendingPick, axes);
+  if (vantage) return restingFace === null ? `@${vantage}'s opinion on ${targetLabel}` : `@${vantage}'s opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}.`;
+  if (restingFace === null) return `Give your opinion on ${targetLabel}`;
+  if (pendingPick) return `Your opinion on ${targetLabel}, waiting for your ${pendingReview ? "review" : "key"}: ${restingFace.label}, ${formatStancePair(restingPair)}.`;
+  return `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`;
+}
+/* The same, under the name a screen can reach (only capitalized exports reach
+   a board's namespace). */
+export const ANCHOR_NAME = anchorName;
+
 function parkedPadStyle(inset = 16) {
   return {
     position: "fixed",
@@ -260,6 +289,21 @@ function parkedPadStyle(inset = 16) {
    words drawn beside the face, because here the opinion IS the row's one action
    and a lone face at full width reads as lost. Tap, hold, pad, severance: all
    unchanged — the variant restyles the anchor and nothing else.
+
+   `vantage` (round 62, seam 404.3) is the borrowed view's handle for a guest:
+   the wide anchor's words read `@genesis_mod's opinion` in `Your opinion`'s
+   place (stance-control.md, the guest's viewpoint; `TagPage.md`,
+   `ProfileOther.md`), the handle the part cut before `'s opinion`, which stays
+   whole (`nameInLine`, the long-names law's case 2).
+   `vantageHoles` — `{ guest, member }`, each a `{{hole}}` the board's VALS
+   fills with a display value — draws both words for a board whose `reader`
+   chip re-selects the reader. Its `label` is the anchor's accessible name as
+   a hole (`anchorName` gives each reader's), and on an anchor whose member
+   holds an opinion where the borrowed view holds none (round 63; jakob
+   2026-11-23, point 7), `held` and `hollow` — display holes — draw the held
+   face and its exact pair for the member and the hollow face for the guest
+   inside the one `face`, so the anchor's paths stay one. Given `vantage`
+   alone, a narrow anchor is a guest's: its spoken name is the view's.
 
    `axes` (the topic round, 2026-09-14) NAMES THE FOUR POLES, for the reason
    `StancePad` already takes them as a prop: this control is not the stance
@@ -287,6 +331,8 @@ export function StanceControl({
   padInset = 16,
   padNote,
   wide = false,
+  vantage,
+  vantageHoles,
   overMedia = false,
   /* THE VOUCH CARD'S EMPTY FACE IS A LINE FACE IN THE CARD'S INK (jakob
      2026-10-14). The 🫥 emoji draws in its own fixed pale greys and cannot
@@ -541,11 +587,7 @@ export function StanceControl({
     }, LONG_PRESS_MS);
   };
 
-  const restingPair = pendingPick ?? (bundle.records === 0 && !bundle.severed ? null : bundle.current);
-  /* A resting (0, 0) is walked back only when the bundle says so; otherwise —
-     an empty sign's standing, or a kept pick — it says nothing. */
-  const restingZero = !pendingPick && bundle.severed ? severanceWords(axes).zero : EMPTY_PICK_LABEL;
-  const restingFace = restingPair === null ? null : bundleReadout(restingPair, restingZero);
+  const { restingPair, restingFace } = restingOf(bundle, pendingPick, axes);
   /* Whose state `signing` is: the surface that sent the act. A dialog raised
      over the pad — the walk-back, the empty sign — sends its own, so the
      signing is the dialog's while one is up; the pad's while it is open
@@ -600,13 +642,7 @@ export function StanceControl({
       <div style={{ display: "flex", alignItems: "center", gap: overMedia ? 0 : "var(--space-2)", width: wide ? "100%" : undefined }}>
         <button
           type="button"
-          aria-label={
-            restingFace === null
-              ? `Give your opinion on ${targetLabel}`
-              : pendingPick
-                ? `Your opinion on ${targetLabel}, waiting for your ${pendingReview ? "review" : "key"}: ${restingFace.label}, ${formatStancePair(restingPair)}.`
-                : `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
-          }
+          aria-label={vantageHoles ? (vantageHoles.label ?? anchorName({ targetLabel, bundle, pendingPick, pendingReview, axes })) : anchorName({ targetLabel, bundle, pendingPick, pendingReview, axes, vantage })}
           onClick={anchorBusy ? undefined : onTap}
           onPointerDown={anchorBusy ? undefined : onPointerDown}
           aria-busy={anchorBusy || undefined}
@@ -674,14 +710,38 @@ export function StanceControl({
               }}
               data-node={node && "face"}
             >
-              {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
+              {restingFace !== null && vantageHoles?.held ? (
+                <>
+                  <span style={{ display: vantageHoles.held }}>{restingFace.emoji}</span>
+                  <span style={{ display: vantageHoles.hollow, opacity: "var(--opacity-resting-face)", filter: "grayscale(1)" }}>{RESTING_FACE_EMOJI}</span>
+                </>
+              ) : restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
             </span>
           ))}
           {wide && restingPair === null && (
-            /* The wide anchor's words — only where there is no pair to show. */
-            <span aria-hidden="true" style={{ whiteSpace: "nowrap" }}>
-              Your opinion
-            </span>
+            /* The wide anchor's words — only where there is no pair to show; a
+               guest's name the borrowed view's opinion (`vantage`). */
+            vantageHoles ? (
+              /* A board whose `reader` chip re-selects the reader draws both,
+                 each behind its display hole (`Chip`'s `selectedHoles` idiom),
+                 so the anchor's registered paths stay one. */
+              <>
+                <span aria-hidden="true" style={{ display: vantageHoles.guest, minWidth: 0, whiteSpace: "nowrap" }}>
+                  {nameInLine(`@${vantage}'s opinion`)}
+                </span>
+                <span aria-hidden="true" style={{ display: vantageHoles.member, whiteSpace: "nowrap" }}>
+                  Your opinion
+                </span>
+              </>
+            ) : vantage ? (
+              <span aria-hidden="true" style={{ display: "flex", minWidth: 0, whiteSpace: "nowrap" }}>
+                {nameInLine(`@${vantage}'s opinion`)}
+              </span>
+            ) : (
+              <span aria-hidden="true" style={{ whiteSpace: "nowrap" }}>
+                Your opinion
+              </span>
+            )
           )}
           {restingPair !== null && (
             /* NEVER WRAPS. This is the post card's affordance row, which is one
@@ -695,7 +755,7 @@ export function StanceControl({
             <span
               className="cg-exact"
               aria-hidden="true"
-              style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+              style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)", whiteSpace: "nowrap", ...(vantageHoles?.held ? { display: vantageHoles.held } : null) }}
               data-node={node && "exact"}
             >
               {formatStancePair(restingPair)}

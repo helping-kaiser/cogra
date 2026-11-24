@@ -12,11 +12,13 @@
 // instead of silently shedding a badge.
 
 const nav = (base) => [
-  { n: base, find: ">Feed</button>", tag: "button" },
-  { n: base + 1, find: ">Explore</button>", tag: "button" },
+  // Each slot's accessible name is its word (round 63: the word is dropped
+  // above 1.3×, the name never is).
+  { n: base, find: 'aria-label="Feed"', tag: "button" },
+  { n: base + 1, find: 'aria-label="Explore"', tag: "button" },
   { n: base + 2, find: 'aria-label="New post"', tag: "button" },
-  { n: base + 3, find: ">Wallet</button>", tag: "button" },
-  { n: base + 4, find: ">Profile</button>", tag: "button" },
+  { n: base + 3, find: 'aria-label="Wallet"', tag: "button" },
+  { n: base + 4, find: 'aria-label="Profile"', tag: "button" },
 ];
 
 // The shared per-post anatomy; `at` maps slot -> number for the board.
@@ -161,7 +163,10 @@ export const FLOW_MARKERS = {
   FeedBare: [
     filter,
     ...guestBand,
-    ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }),
+    // The borrowed view's faces (round 63): each anchor is spoken as the
+    // view's opinion, `@genesis_mod's opinion on this post`, held or hollow.
+    ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }).filter((m) => m.n !== 10),
+    { n: 10, find: 'aria-label="@genesis_mod&#x27;s opinion on this post', tag: "button", all: true },
     secondComments(12),
     ...nav(13),
   ],
@@ -1825,9 +1830,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: '<a href="/t/', tag: "a", all: true },
     { n: 13, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 13, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    // The `posts` chip's settling-two second post (round 62) holds no opinion yet.
+    { n: 13, find: 'aria-label="Give your opinion on this post"', tag: "button", all: true },
     { n: 14, find: ">Feed score</span>", tag: "button", all: true },
     // Both copies of the `posts` chip's card (round 57).
     { n: 16, find: 'aria-label="2 comments"', tag: "button", all: true },
+    { n: 16, find: 'aria-label="1 comment"', tag: "button", all: true },
     { n: 17, find: 'aria-label="Share this post"', tag: "button", all: true },
     ...nav(18),
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
@@ -1851,11 +1859,13 @@ Object.assign(FLOW_MARKERS, {
   Profile: [
     ...ownProfile(),
     { n: 17, find: ' Opinions by you"', tag: "button" },
-    { n: 9, find: "Salt maps of the coast road — rubbings", tag: "button" },
+    // `all`: the `chronicle` chip's settling act (round 61) is the same door.
+    { n: 9, find: "Salt maps of the coast road — rubbings", tag: "button", all: true },
     { n: 9, find: "The third headland light is real", tag: "button" },
     { n: 9, find: "Three weekends of walking the same stretch", tag: "button" },
-    // The `chronicle` chip's removed act (round 58) opens as the live one does.
-    { n: 9, find: ">Removed by its author</span></span>", tag: "button" },
+    // The `chronicle` chip's removed act (round 58) opens as the live one does;
+    // `all`: the `act` chip's tag and citation acts open their post (round 62).
+    { n: 9, find: ">Removed by its author</span></span>", tag: "button", all: true },
     ...nav(10),
     // The `change` chip's failed line under the head (round 41, S3): the next
     // free number after the bell's 15.
@@ -1897,20 +1907,23 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: ' Opinions on them"', tag: "button" },
     { n: 13, find: ' Opinions by them"', tag: "button" },
-    { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
+    // The `reader` chip (round 63): the anchor's spoken name is a hole.
+    { n: 4, find: 'aria-label="{{readerPersonName}}"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button", all: true },
     { n: 6, find: 'aria-label="Comments"', tag: "button", all: true },
     { n: 6, find: 'aria-label="Everything"', tag: "button", all: true },
-    { n: 7, find: "The long way home — the light does something", tag: "button" },
+    // `all`: the `chronicle` chip's settling act (round 61) is the same door.
+    { n: 7, find: "The long way home — the light does something", tag: "button", all: true },
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
     // The whole line, end and all: the landing's card description opens the same way (round 49).
     { n: 7, find: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.</span", tag: "button" },
     // The `chronicle` chip's removed act (round 58) opens as the live one does.
     { n: 7, find: ">Removed by its author</span></span>", tag: "button" },
     ...nav(8),
-    ...otherLandingCard(14),
+    ...otherLandingCard(14).filter((m) => !m.find.startsWith('aria-label="Your opinion on this post')),
+    { n: 19, find: 'aria-label="{{readerPostName}}"', tag: "button" },
   ],
   // The page a moment after Hide @ada (ruling 65): `ProfileOther`'s numbers,
   // to the number, and the snackbar's Undo as the next free one.
@@ -1984,8 +1997,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 12, find: 'aria-label="Give your opinion on this post"', tag: "button", all: true },
     { n: 13, find: ">Feed score</span>", tag: "button", all: true },
-    { n: 14, find: ">· 1 reference<", tag: "button" },
-    { n: 15, find: 'aria-label="3 comments"', tag: "button" },
+    // `all`: the `posts` chip's settling-two copy of the first post (round 62).
+    { n: 14, find: ">· 1 reference<", tag: "button", all: true },
+    { n: 15, find: 'aria-label="3 comments"', tag: "button", all: true },
     { n: 15, find: 'aria-label="1 comment"', tag: "button", all: true },
     ...nav(16),
     // The load chip's failed first page (round 45): its Retry.
@@ -2014,14 +2028,23 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: ">Reply</button>", tag: "button", all: true },
     // A list's comment card carries no replies' line (jakob 2026-11-13): via 11
     // is the card itself, the door to its thread.
-    { n: 11, find: ">The glovebox camera earns its keep", tag: "a" },
-    { n: 11, find: ">Low tide is kinder to the rubbings", tag: "a" },
+    // `all`: the `comments` chip's settling-two copy (round 62) is the same door.
+    { n: 11, find: ">The glovebox camera earns its keep", tag: "a", all: true },
+    // `all`: the `comments` chip's settling copy (round 61) is the same door.
+    { n: 11, find: ">Low tide is kinder to the rubbings", tag: "a", all: true },
     { n: 17, find: ">On “", tag: "button", all: true },
     // The `target` chip's hole (round 59): the second card's pointer, both copies.
     { n: 17, find: ">On {{targetLine}}", tag: "button", all: true },
     ...nav(12),
     // The load chip's failed first page (round 45): its Retry.
     { n: 19, find: ">Retry</button>", tag: "button" },
+    // The second comment's tags line (round 63, seam 419): its tag and its
+    // count, the next free numbers; `all`, its settling copy too.
+    { n: 20, find: '<a href="/t/', tag: "a", all: true },
+    { n: 21, find: ">· 1 reference</button>", tag: "button", all: true },
+    // The `comments` chip's clip (round 64, seam 424): its sound, as
+    // `TagPage`'s 17, the next free number.
+    { n: 22, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -2208,6 +2231,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 17, find: 'aria-label="More about @mira"', tag: "button" },
     { n: 18, find: ">Runs the stand by the sea wall", tag: "a" },
     ...nav(19),
+    // The `comment` chip (round 65, seam 424): @ada's comment in the comment
+    // card's place, its door and reply the comment's 15 and 16, both copies;
+    // its clip's sound, as `ProfileComments`' 22, the next free number.
+    { n: 15, find: ">Low tide is kinder to the rubbings", tag: "a", all: true },
+    { n: 16, find: 'aria-label="Reply to @ada"', tag: "button", all: true },
+    { n: 24, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   /* Saved a moment after an unsave: the top viewport of the same page with
      the post that went gone — the field, the comment, the person and the
@@ -2236,6 +2265,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: 'aria-label="1 comment"', tag: "button" },
     { n: 16, find: ">Undo</button>", tag: "button" },
     ...nav(17),
+    // The @tobias comment's count (round 64), as `Saved`'s 8: the next free number.
+    { n: 22, find: ">· 1 reference<", tag: "button" },
   ],
   /* Saved searched to people (round 14, sectioned search): the arrow, the
      field, then the people section top-down — each card's own controls one
@@ -2310,6 +2341,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 21, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
     { n: 22, find: 'aria-label="Tag a new post with it"', tag: "button" },
     ...nav(23),
+    // The `comment` chip (round 65, seam 424): @ada's comment in the first
+    // comment card's place, its door and reply the comment's 7 and 10, both
+    // copies; its clip's sound, as `ProfileComments`' 22, the next free number.
+    { n: 7, find: ">Low tide is kinder to the rubbings", tag: "a", all: true },
+    { n: 10, find: 'aria-label="Reply to @ada"', tag: "button", all: true },
+    { n: 28, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   /* History a moment after a hide (item 83): the top viewport of the same
      page — the header trio, the day divider, the comment card and the post
@@ -2334,7 +2371,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 14, find: ">More</button>", tag: "button" },
     { n: 15, find: "aspect-ratio:1.91 / 1", tag: "div" },
-    { n: 16, find: ">· 1 reference<", tag: "button" },
+    // `all` (round 64): the @tobias comment's count is the same door.
+    { n: 16, find: ">· 1 reference<", tag: "button", all: true },
     { n: 17, find: 'aria-label="3 comments"', tag: "button" },
     { n: 18, find: ">Undo</button>", tag: "button" },
     ...nav(19),
@@ -3113,22 +3151,34 @@ Object.assign(FLOW_MARKERS, {
   Notifications: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: "> commented on your post</span>", tag: "button" },
+    { n: 2, find: ">A deleted account commented on your post</span>", tag: "button" },
     { n: 3, find: "> replied to your comment</span>", tag: "button" },
+    { n: 3, find: ">A deleted account replied to your comment</span>", tag: "button" },
     { n: 4, find: "> gave an opinion on you</span>", tag: "button" },
+    { n: 4, find: ">A deleted account gave an opinion on you</span>", tag: "button" },
+    // Each kind twice: the `actor` chip's deleted copy (round 62) is the same
+    // door, its sentence opening `A deleted account`.
     { n: 5, find: "> mentioned you</span>", tag: "button" },
+    { n: 5, find: ">A deleted account mentioned you</span>", tag: "button" },
     { n: 6, find: "> cited your post</span>", tag: "button" },
+    { n: 6, find: ">A deleted account cited your post</span>", tag: "button" },
     { n: 7, find: "> landed through your invite</span>", tag: "button" },
+    { n: 7, find: ">A deleted account landed through your invite</span>", tag: "button" },
     { n: 8, find: "> approved your application</span>", tag: "button" },
+    { n: 8, find: ">A deleted account approved your application</span>", tag: "button" },
     ...nav(9),
     // The eighth kind arrived after the list was numbered, and a row inserted
     // mid-list would renumber five nav edges to say nothing new: the badge is
     // an identity, not a position (the settings page's own rule).
     { n: 14, find: "> is ready for your approval</span>", tag: "button" },
+    { n: 14, find: ">A deleted account is ready for your approval</span>", tag: "button" },
     // The ninth, the eighth's twin (the reject extension), taking its next
     // free number for the same reason.
     { n: 15, find: "> closed your application</span>", tag: "button" },
+    { n: 15, find: ">A deleted account closed your application</span>", tag: "button" },
     // The tenth, the opinion row's sibling (PR-72), the next free number.
     { n: 16, find: "> walked back their opinion on you</span>", tag: "button" },
+    { n: 16, find: ">A deleted account walked back their opinion on you</span>", tag: "button" },
     // The `load` chip's two Retries (seam 248), the next free numbers.
     { n: 17, find: 'data-node="notifications.list.moreFault.retry"', tag: "button" },
     { n: 18, find: 'data-node="notifications.list.fault.retry"', tag: "button" },
@@ -3182,6 +3232,14 @@ Object.assign(FLOW_MARKERS, {
   ],
   CommentCitedByEmpty: [
     { n: 1, find: `class="cg-scrim-in"`, tag: "div", all: true },
+  ],
+  // The comment's tags-and-references sheet over the thread (round 62, B5):
+  // `RefsSheet`'s doors, the thread's wash the way back.
+  CommentRefsSheet: [
+    { n: 1, find: ">glovebox<", tag: "button" },
+    { n: 1, find: ">coastroad<", tag: "button" },
+    { n: 2, find: ">Salt maps of the coast road<", tag: "button" },
+    { n: 3, find: `class="cg-scrim-in"`, tag: "div", all: true },
   ],
   NotificationsEmpty: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   /* The chats coming-soon screen (item 68) numbers like the bell's empty list:
@@ -3424,14 +3482,24 @@ const tagPageBody = ({ topicStance }) => [
   { n: 13, find: 'aria-label="More on this comment"', tag: "button", all: true },
   { n: 14, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
   { n: 15, find: topicStance, tag: "button" },
+  // The tagged comment's tags line (round 63): its count, the door to the
+  // comment's tags-and-references sheet — after `TagPage`'s 16 and 17.
+  { n: 18, find: ">· 1 reference</button>", tag: "button", all: true },
 ];
 
 Object.assign(FLOW_MARKERS, {
   // The `load` chip's `failed` copy (round 48) repeats the header's back and adds Retry.
   TagPage: [
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a", all: true },
-    ...tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }).filter((m) => m.n !== 1),
+    // The `reader` chip (round 63): each anchor's spoken name is a hole, the
+    // member's or the borrowed view's (`ANCHOR_NAME`), so its find is the hole.
+    ...tagPageBody({ topicStance: 'aria-label="{{readerTopicName}}"' }).filter((m) => m.n !== 1 && m.n !== 14),
+    { n: 8, find: 'aria-label="{{readerTobiasName}}"', tag: "button" },
+    { n: 8, find: 'aria-label="{{readerSolName}}"', tag: "button" },
+    { n: 14, find: 'aria-label="{{readerAdaName}}"', tag: "button", all: true },
     { n: 16, find: ">Retry</button>", tag: "button" },
+    // The `comment` chip's clip (round 62): its sound, the next free number.
+    { n: 17, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   /* The page a moment after a hide (item 83): the same body, so the same
      markers; the snackbar's Undo takes the next free number. */

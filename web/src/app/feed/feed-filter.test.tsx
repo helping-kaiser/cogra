@@ -84,7 +84,7 @@ function post(id: string, change: Record<string, unknown> = {}): Node {
     genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
     ...change,
   };
 }
@@ -110,7 +110,7 @@ function comment(id: string): Node {
     genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: null,
     target: {
       __typename: "Post",
@@ -727,6 +727,22 @@ describe("the feed filter", () => {
         ["feed.menuSheet.license", "License terms"],
         ["feed.menuSheet.report", "Report"],
       ]);
+    });
+
+    // THE POINTER DOOR (FeedKinds.md:27, :29; jakob 2026-11-23, seam 405): the
+    // head row naming the post is its own link to the post itself — no
+    // comment section opened — wearing its registered name; the words open
+    // the thread at the comment.
+    it("a comment card's pointer opens the post it answers, its words the thread at the comment", async () => {
+      const r = reads();
+      server.use(...rankedFeed([post("p1"), comment("k1")], r));
+      writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, kinds: ["posts", "comments"] });
+      renderFeed();
+      const pointer = await screen.findByTestId(byNode("feed.commentCard.target", "k1"));
+      expect(pointer.tagName).toBe("A");
+      expect(pointer).toHaveAttribute("href", "/posts/p1?from=feed");
+      expect(pointer).toHaveAccessibleName("On “The long way home” — @ada");
+      expect(screen.getByTestId("feed-comment-k1-link")).toHaveAttribute("href", "/posts/p1?comment=k1&from=feed");
     });
 
     // FeedCommentMenu.md:7 (round 51 act 2, B1) — Hide from a comment card:

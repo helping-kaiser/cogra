@@ -71,7 +71,12 @@
    keyed by the `state` value whose face it is; the face's line is
    `rail.stanceLine` and the caption's head `caption.notice`, each keyed by
    its value, a Retry in it its `retry`. `ReelSensitive` is the same surface in
-   its veiled state and registers under the same prefix. */
+   its veiled state and registers under the same prefix.
+
+   THE CAPTION'S TITLE IS ONE LINE (round 62; jakob 2026-11-23, E9 (a)): the
+   `title` chip's `long` draws a title too long for the caption — @tobias's
+   canoe crossing's, longer than the caption's line — cut at its end with "…",
+   the handle and the words below it in place. */
 export const NODE = "reel";
 export const PROPS = {
   state: {
@@ -79,8 +84,9 @@ export const PROPS = {
     options: ["playing", "suppressed", "settling", "moved", "end", "fault", "unsigned", "refused", "copied", "unloaded"],
     default: "playing",
   },
+  title: { editor: "enum", options: ["as-written", "long"], default: "as-written" },
 };
-export const VALS = `soundDisc: this.props.state === "suppressed" ? "none" : "contents", playDisc: this.props.state === "suppressed" ? "contents" : "none", railFigure: this.props.state === "settling" || this.props.state === "moved" ? "none" : "contents", railSettling: this.props.state === "settling" ? "contents" : "none", railDash: this.props.state === "moved" ? "contents" : "none", lineUnsigned: this.props.state === "unsigned" ? "block" : "none", lineRefused: this.props.state === "refused" ? "block" : "none", lineEnd: this.props.state === "end" ? "block" : "none", lineFault: this.props.state === "fault" ? "block" : "none", snackbarShown: this.props.state === "copied" ? "contents" : "none", clipShown: this.props.state === "unloaded" ? "none" : "block", coverShown: this.props.state === "unloaded" ? "flex" : "none", seekShown: this.props.state === "unloaded" ? "none" : "block"`;
+export const VALS = `soundDisc: this.props.state === "suppressed" ? "none" : "contents", playDisc: this.props.state === "suppressed" ? "contents" : "none", railFigure: this.props.state === "settling" || this.props.state === "moved" ? "none" : "contents", railSettling: this.props.state === "settling" ? "contents" : "none", railDash: this.props.state === "moved" ? "contents" : "none", lineUnsigned: this.props.state === "unsigned" ? "block" : "none", lineRefused: this.props.state === "refused" ? "block" : "none", lineEnd: this.props.state === "end" ? "block" : "none", lineFault: this.props.state === "fault" ? "block" : "none", snackbarShown: this.props.state === "copied" ? "contents" : "none", clipShown: this.props.state === "unloaded" ? "none" : "block", coverShown: this.props.state === "unloaded" ? "flex" : "none", seekShown: this.props.state === "unloaded" ? "none" : "block", captionTitle: this.props.title === "long" ? ${JSON.stringify(TOBIAS_CANOE_POST.title)} : ${JSON.stringify(MIRA_CLIP_POST.title)}`;
 
 const stateCopy = (value) => ({ "data-node-chip": "state", "data-node-key": value });
 
@@ -167,7 +173,7 @@ export function Screen() {
       <ReelCaption
         node="caption"
         handle={MIRA.handle}
-        title={MIRA_CLIP_POST.title}
+        title="{{captionTitle}}"
         description={MIRA_CLIP_POST.description}
         bottom={BAND_HEIGHT + 66}
         notice={

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM staged_writes\n         WHERE state = 'expired' AND expired_epoch + $2 <= $1\n           AND kept_at IS NULL\n           AND NOT ((approved_at IS NOT NULL OR approval_sends_open > 0)\n                    AND (payload IS NULL OR length(payload) > 0))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "67c34abba0953c0955d8d8000c5cd490cb6b60ea85753677c27939cce4e467bd"
+}

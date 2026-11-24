@@ -104,8 +104,9 @@ export async function fetchMyProfile(
 /**
  * THE HEADER'S THREE FIGURES (ProfileHeader; open-questions.md Q35, ruled by
  * jakob 2026-11-10): they count BUNDLES, never records — each labelled and
- * never merged — the posts published (one genesis Publish record each, never
- * an edit), the people holding an opinion on the person, and the people they
+ * never merged — the posts published (the Posts tab's own connection, a
+ * removed and a still-settling post included, never an edit —
+ * ProfilePosts.md:15), the people holding an opinion on the person, and the people they
  * hold one on. One person's opinions toward one target are one, however often
  * revised (`RecordConnection.bundleCount`).
  */
@@ -131,7 +132,7 @@ export async function fetchProfileFigures(
   const user = fetched.value.user;
   if (user === null || user === undefined) return success(null);
   return success({
-    posts: user.posts.totalCount ?? null,
+    posts: user.posts.totalCount,
     opinionsOn: user.opinionsOn.bundleCount ?? null,
     opinionsBy: user.opinionsBy.bundleCount ?? null,
   });
@@ -139,10 +140,10 @@ export async function fetchProfileFigures(
 
 /**
  * THE POSTS VIEW'S PAGE (ProfilePosts.md:3): the person's posts as the feed
- * card draws them, newest first by landing — the records the `Posts` figure
- * counts, so the list and the figure agree. Ten a page, the document's own
- * literal (`profile.graphql`); a record whose post CoGra does not carry is
- * skipped, never drawn as a blank card.
+ * card draws them (`User.posts`), the still-settling ones at the head
+ * (ProfilePosts.md:7), then the landed ones newest first — the connection the
+ * `Posts` figure counts, so the list and the figure agree (:15). Twenty a page,
+ * the document's own literal (`profile.graphql`).
  */
 export async function fetchProfilePosts(
   client: ApolloClient,
@@ -160,10 +161,7 @@ export async function fetchProfilePosts(
   const posts = fetched.value.user?.posts;
   if (posts === undefined) return success({ items: [], endCursor: null, hasNextPage: false });
   return success({
-    items: posts.edges.flatMap((edge) => {
-      const target = edge.node.target;
-      return target?.__typename === "Post" ? [target] : [];
-    }),
+    items: posts.edges.map((edge) => edge.node),
     endCursor: posts.pageInfo.endCursor ?? null,
     hasNextPage: posts.pageInfo.hasNextPage,
   });
@@ -172,16 +170,16 @@ export async function fetchProfilePosts(
 /**
  * A comment as the comments view's card draws it: the feed card's own view
  * of it (`CommentFeedView` — the thread's fields, what it answers, the
- * thread's post) and the count its "View n replies" line promises.
+ * thread's post).
  */
-export type ProfileCommentView = CommentFeedView & { readonly replyCount: number };
+export type ProfileCommentView = CommentFeedView;
 
 /**
  * THE COMMENTS VIEW'S PAGE (ProfileComments.md:3): the person's comments as
- * their cards draw them, newest first by landing — each comment's own Review
- * record, never an edit, whatever it answers. Ten a page, the document's own
- * literal (`profile.graphql`); a record whose comment CoGra does not carry is
- * skipped, never drawn as a blank card.
+ * their cards draw them (`User.comments`), whatever they answer, never an
+ * edit — the still-settling ones at the head (ProfileComments.md:5), then the
+ * landed ones newest first. Twenty a page, the document's own literal
+ * (`profile.graphql`).
  */
 export async function fetchProfileComments(
   client: ApolloClient,
@@ -199,12 +197,7 @@ export async function fetchProfileComments(
   const comments = fetched.value.user?.comments;
   if (comments === undefined) return success({ items: [], endCursor: null, hasNextPage: false });
   return success({
-    items: comments.edges.flatMap((edge) => {
-      const comment = edge.node.terminal;
-      return comment?.__typename === "Comment"
-        ? [{ ...comment, replyCount: comment.replies.totalCount }]
-        : [];
-    }),
+    items: comments.edges.map((edge) => edge.node),
     endCursor: comments.pageInfo.endCursor ?? null,
     hasNextPage: comments.pageInfo.hasNextPage,
   });

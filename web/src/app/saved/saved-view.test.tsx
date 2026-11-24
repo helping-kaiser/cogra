@@ -88,7 +88,7 @@ function postNode(id: string, title: string | null, savedAt: string, writtenDays
     genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: tags.map(topic),
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: savedAt,
     comments: { __typename: "CommentConnection", totalCount: 0 },
   };
@@ -113,7 +113,7 @@ function commentNode(id: string, savedAt: string, tags: string[] = []) {
     genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: tags.map(topic),
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: savedAt,
     target: {
       __typename: "Post",
@@ -303,9 +303,10 @@ describe("SavedScreen — a feed of kept things", () => {
     renderWithProviders(<SavedScreen />, { store: signedIn() });
     await screen.findByTestId("saved-list");
     expect(screen.getByTestId("saved-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=saved");
-    // The comment card's double door: its head row opens the post it answers,
-    // the rest of it the post's comment section landed on it.
-    expect(screen.getByTestId("saved-comment-c1-head")).toHaveAttribute("href", "/posts/p1?from=saved");
+    // THE POINTER DOOR (Saved.md:29, :31): the head row, under its registered
+    // name, opens the post it answers itself; the rest of the card the post's
+    // comment section landed on the comment.
+    expect(screen.getByTestId(byNode("saved.commentCard.target", "c1"))).toHaveAttribute("href", "/posts/p1?from=saved");
     expect(screen.getByTestId("saved-comment-c1-link")).toHaveAttribute("href", "/posts/p1?comment=c1&from=saved");
     // Its comment glyph: the same landing with the reply composer aimed at it.
     const reply = screen.getByTestId(byNode("saved.commentCard.actionRow.reply", "c1"));
@@ -377,6 +378,24 @@ describe("SavedScreen — the unsave is the card's own ⋮ first row", () => {
     expect(commentMenu()[0]).toHaveTextContent("Unsave");
     fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
     expect(personMenu()[0]).toHaveTextContent("Unsave");
+  });
+
+  // ONE REGISTERED NODE NAMES ONE OPEN SHEET: a post's menu, opened and closed,
+  // no longer wears `saved.menuSheet` beside the comment's open one.
+  it("a_closed_post_menu_does_not_share_saved_menuSheet_with_the_comments_open_one", async () => {
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    postMenu();
+    // The reader's own close (what the dialog reports on Escape or the scrim).
+    fireEvent(screen.getByTestId("saved.menuSheet"), new Event("close"));
+    await waitFor(() => expect((screen.getByTestId("saved-menu-sheet") as HTMLDialogElement).open).toBe(false));
+    const rows = commentMenu();
+    const sheets = screen.getAllByTestId("saved.menuSheet");
+    expect(sheets).toHaveLength(1);
+    expect((sheets[0] as HTMLDialogElement).open).toBe(true);
+    expect(sheets[0]).not.toBe(screen.getByTestId("saved-menu-sheet"));
+    expect(within(sheets[0]!).getAllByRole("button")).toEqual(rows);
   });
 
   // ProfileMenu.md:17, on the profile card's own ⋮ (FeedProfileShapes.md).

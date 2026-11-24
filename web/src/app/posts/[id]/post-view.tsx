@@ -15,7 +15,8 @@ import { useCallback, useEffect, useReducer, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 
-import { fetchPostDetail, readCachedPost, type PostView as Post } from "@/lib/api/content-api";
+import { fetchPostDetail, readCachedPost, type PostView as CardPost } from "@/lib/api/content-api";
+import type { ReferenceClaimNode } from "@/lib/references/claims";
 import { fetchHeldOpinions, type HeldOpinionView } from "@/lib/api/opinions-api";
 import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
@@ -48,6 +49,14 @@ import { streamClipOf, streamHref } from "@/lib/reel/stream-origin";
 
 import { freezeReducer, type Freeze } from "./detail-freeze";
 import { NewerVersionLine } from "./newer-version-line";
+
+/**
+ * The post the page holds: the card's shape, painted off the feed's cache, or
+ * the detail's own answer, which carries the citation list as well — the one
+ * post a page reads it for (`PostDetail`). A cached paint has the count only,
+ * and its sheet reads the rows by id if it rises before the answer lands.
+ */
+type Post = CardPost & { readonly references?: readonly ReferenceClaimNode[] };
 
 export function PostView({
   postId,

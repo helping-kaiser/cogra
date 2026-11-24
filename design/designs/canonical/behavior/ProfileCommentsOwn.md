@@ -4,13 +4,17 @@ ALWAYS the reader's own profile's Comments view keeps the own profile's head as 
 
 ALWAYS profile.comments lists the reader's own comments, each a profile.comments.commentCard in reach of its thread
 
+ALWAYS profile.comments lists a comment the reader signed that is still settling at the head of the list, above every landed one, the settling comments newest signed first among themselves, its card wearing Still settling, as the thread's landed reply does, and it takes its place in the list's order when it lands
+
 ALWAYS a comment's ⋮ holds the own comment menu, Edit among its rows and no Report row, and the card carries no Edit button
 
 WHEN tap the ⋮ on profile.comments.commentCard -> profile.menuSheet rises over the reader's own profile with the own comment menu's rows
 
 ALWAYS a removed comment of the reader's own keeps its place in the list, profile.comments.commentCard.removalMark.line reading Removed by its author where its words were, with the removal's date, and nothing more under it, whatever the feed's filter holds, its ⋮ the own comment menu less Edit and Remove
 
-WHEN tap profile.comments.commentCard.target -> the thread it lives in opens scrolled to that comment
+WHEN profile.comments.commentCard.target is tapped GIVEN it names a post -> the post it answers opens AND its back arrow reads Back to your profile
+
+WHEN profile.comments.commentCard.target is tapped GIVEN it names a comment -> the post's comment section opens scrolled to the comment it names
 
 ALWAYS a profile.comments.commentCard carries no view-replies line
 

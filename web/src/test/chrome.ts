@@ -9,7 +9,9 @@
 // own.
 
 import { HttpResponse } from "msw/http";
+import { borrowedViewHandler } from "./borrowed-view";
 import { gqlLink } from "./gql-link";
+import { borrowedStanceHandlers } from "./stance";
 
 export const QUIET_CHROME = [
   gqlLink.query("AppVersions", () =>
@@ -40,4 +42,10 @@ export const QUIET_CHROME = [
       },
     }),
   ),
+  // A guest's wide anchor asks whose view it borrows (the vantage law); the
+  // answer that draws nothing is a view of one's own.
+  borrowedViewHandler(null),
+  // A guest's faces ask the borrowed view's stance; the answer that draws
+  // nothing new is none held, the hollow face.
+  ...borrowedStanceHandlers(),
 ];

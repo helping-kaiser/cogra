@@ -47,8 +47,9 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    figures, each labelled, each plain — never one merged "followers" number,
    because there is no following here and borrowing the word would describe a
    different product. A Posts figure leads the row, inert, counting every post
-   the person published, a removed one included, never an edit — the figure
-   and the Posts tab's list agree (jakob 2026-11-18); each opinion figure
+   the person published, a removed one included (jakob 2026-11-18) and a
+   still-settling one included (jakob 2026-11-19), never an edit — the
+   figure and the Posts tab's list agree; each opinion figure
    is its own door to the opinions page, opened on the direction it counts
    (jakob 2026-11-11) — both directions separated there too, never merged.
 
@@ -160,6 +161,10 @@ export function ProfileHeader({
   stancesTaken,
   own = false,
   signedIn = true,
+  /* A guest's borrowed view (round 62): the wide anchor's `vantage` and,
+     for a board that re-selects the reader, its `vantageHoles`. */
+  vantage,
+  vantageHoles,
   taught = true,
   bundle,
   onCommit,
@@ -389,6 +394,8 @@ export function ProfileHeader({
               <StanceControl
                 wide
                 targetLabel={redacted ? "this account" : "@" + handle}
+                vantage={vantage}
+                vantageHoles={vantageHoles}
                 bundle={bundle ?? undefined}
                 signedIn={signedIn}
                 taught={taught}

@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH keys AS (\n               SELECT DISTINCT k.artifact, k.author, k.with_pending\n               FROM unnest($1::text[], $2::text[], $3::bool[])\n                    AS k(artifact, author, with_pending)\n           ),\n           candidates AS (\n               SELECT k.artifact, k.author, k.with_pending,\n                      l.target AS target,\n                      l.p_i    AS relevance,\n                      l.p_d    AS support,\n                      FALSE    AS pending\n               FROM keys k\n               JOIN mirror_record_legs l\n                 ON l.source = k.artifact\n                AND l.leg = 't' AND l.family = 'reference'\n                AND NOT l.census_unknown\n               JOIN mirror_records r\n                 ON r.record_id = l.record_id\n                AND r.author = k.author\n                AND NOT r.payload_marked\n             UNION ALL\n               SELECT k.artifact, k.author, k.with_pending,\n                      s.target, s.p_d, s.p_i, TRUE\n               FROM keys k\n               JOIN staged_writes s\n                 ON k.with_pending\n                AND s.family = 'reference'\n                AND s.middle = k.artifact\n                AND s.author = k.author\n                AND octet_length(s.payload) = 0\n                AND s.pre_signed_at IS NOT NULL\n                AND s.state NOT IN ('landed', 'expired')\n           )\n           SELECT artifact                            AS \"artifact!\",\n                  author                              AS \"author!\",\n                  with_pending                        AS \"with_pending!\",\n                  target                              AS \"target!\",\n                  SUM(relevance::text::numeric)::text AS \"relevance!\",\n                  SUM(support::text::numeric)::text   AS \"support!\",\n                  COUNT(*)::bigint                    AS \"records!\",\n                  BOOL_OR(pending)                    AS \"pending!\"\n           FROM candidates\n           GROUP BY artifact, author, with_pending, target",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "artifact!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "author!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "with_pending!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "target!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "relevance!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "support!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "records!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "pending!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray",
+        "BoolArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "fd28c032341bfb33b6b796a903018806c182a20ac2daa64f4d751f0321d0d0fc"
+}

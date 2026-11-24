@@ -103,20 +103,27 @@ guest were this user right now, but unable to act as them. The stance
 anchor is the member anchor at its drawn 48px geometry, wearing the
 viewpoint's stance; wherever the viewpoint holds no stance it wears the
 hollow face, the muted 🫥. Its accessible name reads
-`@genesismod's stance on this post` — the viewpoint's handle, never
-`Your opinion` (jakob 2026-10-06). The tap opens `GuestGate`: nothing is
-staged and nothing signs.
+`@genesis_mod's opinion on this post` — the viewpoint's handle, never
+`Your opinion` (jakob 2026-10-06; the word `opinion`, 2026-11-23) — on
+the wide anchor and the narrow ones alike, and where the viewpoint holds
+an opinion its reading follows, as a member's anchor reads its own:
+`@genesis_mod's opinion on this post: <face>, <pair>.`, never the
+press-and-hold hint (`StanceControl`'s `anchorName`). The tap opens
+`GuestGate`: nothing is staged and nothing signs.
 
 **Its printed words speak the viewpoint's name too** (the vantage law,
 jakob 2026-10-13; readme §13). Where an anchor draws its words — the
 wide anchor on a profile and on a tag page, beside the hollow face — a
-guest reads `@genesismod's opinion`, never `Your opinion`. The wide
-anchor has no overflow law of its own, and on a profile it leaves its
-words about 134px, which `@genesismod's opinion` already outgrows (150px
+guest reads `@genesis_mod's opinion`, never `Your opinion`. The
+genesis moderator's view is `@genesis_mod` on every guest board, the
+bare feed's band included (jakob 2026-11-23). The wide anchor has no
+overflow law of its own, and on a profile it leaves its words 134px at
+390px and 104px at 360px, which `@genesis_mod's opinion` outgrows (158px
 measured); a name that outgrows the anchor ellipsizes, the handle
-truncating before its `'s opinion` — `@genesismo…'s opinion` — so the
-words always name whose view it is (jakob 2026-10-14). The ellipsis is
-print only: the anchor's accessible name keeps the full handle.
+truncating before its `'s opinion` — `@genesis…'s opinion`, at 360px
+`@ge…'s opinion` — so the words always name whose view it is (jakob
+2026-10-14). On a tag page the words stand whole. The ellipsis is print
+only: the anchor's accessible name keeps the full handle.
 
 **The vouch card's empty face is a line face in the card's ink** (jakob
 2026-10-14). The 🫥 emoji draws in its own fixed pale greys and cannot

@@ -48,6 +48,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -115,6 +116,7 @@ import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -312,6 +314,15 @@ data class StanceControlState(
      * (PadPendingReview.md:21) — never under a pick still kept.
      */
     val settling: Boolean = false,
+    /**
+     * A GUEST'S BORROWED VIEW, by handle (the master's `vantage`; FeedBare.md:9,
+     * TagPage.md:75-79, ProfileOther.md:59-63): [standing] is then that view's
+     * own, read-only; every anchor is spoken `@<handle>'s opinion on <label>`,
+     * its reading after it where the view holds one, and the wide anchor's
+     * words read `@<handle>'s opinion` in `Your opinion`'s place. Null for
+     * every reader with a session — their anchor is their own.
+     */
+    val vantage: String? = null,
 )
 
 /** What a kept pick's anchor shows: the pick, and whether it waits on the reader's review or the key. */
@@ -336,6 +347,16 @@ val LocalOnRestoreKey = compositionLocalOf<(() -> Unit)?> { null }
  * for the same reason: the face is a leaf, the route is the graph's.
  */
 val LocalOnOpenKeptPicks = compositionLocalOf<(() -> Unit)?> { null }
+
+/**
+ * THE GUEST GATE, while the reader is signed out — the shell's join ask
+ * (GuestGate.md:3), provided beside [LocalOnRestoreKey] for the same reason:
+ * a stance face is a leaf inside a card inside a list, and whether the reader
+ * has a session is the shell's to know. Null for a reader with a session, and
+ * while the session is still being read. A face that finds it raises the gate
+ * on its tap and hold and wears the borrowed view's stance (FeedBare.md:7, :27).
+ */
+val LocalGuestGate = compositionLocalOf<(() -> Unit)?> { null }
 
 /**
  * A PAD OPENED AS SOMETHING IN PARTICULAR — the vouch-back
@@ -479,8 +500,23 @@ private fun targetDescription(
     zeroWords: StanceZeroWords,
     target: String,
     kept: KeptFace? = null,
+    vantage: String? = null,
 ): String =
-    if (kept != null) {
+    if (vantage != null) {
+        // THE BORROWED VIEW'S OPINION, its handle whole (the master's
+        // `anchorName`): read-only, so never the press-and-hold hint.
+        if (standing == null) {
+            stringResource(R.string.stance_target_vantage, vantage, target)
+        } else {
+            stringResource(
+                R.string.stance_target_vantage_given,
+                vantage,
+                target,
+                stringResource(restingReadout(standing, severed, zeroWords).label),
+                standing.pair(),
+            )
+        }
+    } else if (kept != null) {
         // A kept pick says what it waits on, with its own word and pair — no
         // hold invitation: a hold signs nothing while it waits (PadPending.md:11).
         stringResource(
@@ -564,6 +600,12 @@ fun StanceControl(
     /** The pad opened as something in particular; see [StancePadVariant]. */
     variant: StancePadVariant? = null,
     /**
+     * The registered pad of a plain pad (`tagPage.actionRow.stance.pad`,
+     * TagPageHeldPad): the pad and the parts it draws itself wear its paths,
+     * as a variant's [StancePadVariant.padNode] does. A variant's own wins.
+     */
+    padNode: DataNode? = null,
+    /**
      * A host that IS the opening gesture — the vouch card's `Vouch back`
      * (VouchBack.md:31) — draws no resting target of its own: only the pad,
      * whose open state the holder already carries.
@@ -601,7 +643,7 @@ fun StanceControl(
 ) {
     val target = targetWords(targetLabel)
     val chooseLabel = stringResource(R.string.stance_target_choose, target)
-    val description = targetDescription(state.standing, state.severed, zeroWords, target, state.kept)
+    val description = targetDescription(state.standing, state.severed, zeroWords, target, state.kept, state.vantage)
     // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (PadStanding.md:23-25): a
     // pad over nothing signed carries three controls, over a standing four.
     // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11).
@@ -635,6 +677,7 @@ fun StanceControl(
             targetLabel = targetLabel,
             severable = severable,
             variant = variant,
+            padNode = variant?.padNode ?: padNode,
             onKeepPending = onKeepPending,
         )
         if (state.pad == StancePadMode.ALTERNATES) {
@@ -721,6 +764,7 @@ fun StanceControl(
                         holding = holding,
                         ringClosed = holdWait,
                         wide = wide,
+                        vantage = state.vantage,
                     )
                     considered()
                 }
@@ -1016,6 +1060,7 @@ private fun StancePadWindow(
     targetLabel: String?,
     severable: Boolean,
     variant: StancePadVariant?,
+    padNode: DataNode?,
     onKeepPending: () -> Unit,
 ) {
     val open = state.pad == StancePadMode.STICKY
@@ -1075,6 +1120,7 @@ private fun StancePadWindow(
                     targetLabel = targetLabel,
                     severable = severable,
                     variant = variant,
+                    padNode = padNode,
                     onKeepPending = onKeepPending,
                 )
             }
@@ -1099,9 +1145,10 @@ private fun StancePadCard(
     targetLabel: String?,
     severable: Boolean,
     variant: StancePadVariant?,
+    /** The registered pad: the variant's, else the plain pad's own. */
+    padNode: DataNode?,
     onKeepPending: () -> Unit,
 ) {
-    val padNode = variant?.padNode
     val helpLabel = variant?.title ?: stringResource(R.string.stance_explain)
     val padName = variant?.title ?: stringResource(R.string.stance_pad_name, targetWords(targetLabel))
     var explaining by rememberSaveable { mutableStateOf<Explaining?>(null) }
@@ -1139,6 +1186,7 @@ private fun StancePadCard(
                     zeroWords = zeroWords,
                     targetLabel = targetLabel,
                     variant = variant,
+                    padNode = padNode,
                 )
                 PadFoot(
                     state = state,
@@ -1181,8 +1229,8 @@ private fun PadBody(
     zeroWords: StanceZeroWords,
     targetLabel: String?,
     variant: StancePadVariant?,
+    padNode: DataNode?,
 ) {
-    val padNode = variant?.padNode
     val back = stringResource(R.string.stance_explain_back)
     val backTag = padNode?.div("back")?.tag ?: "${testTagPrefix}_stance_explain_back"
     StanceStanding(
@@ -1573,6 +1621,8 @@ private fun StanceRestingFace(
     /** The hold went through and its signing runs: the ring stands closed (seam 355). */
     ringClosed: Boolean,
     wide: Boolean,
+    /** A guest's borrowed view: the wide words name it ([StanceControlState.vantage]). */
+    vantage: String? = null,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -1611,14 +1661,7 @@ private fun StanceRestingFace(
             if (holding || ringClosed) HoldRing(closed = ringClosed, tag = "${testTagPrefix}_stance_ring")
         }
         if (standing == null) {
-            if (wide) {
-                Text(
-                    text = stringResource(R.string.stance_wide_words),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                )
-            }
+            if (wide) WideWords(vantage)
         } else if (LocalShowExactValues.current) {
             Text(
                 text = standing.pair(),
@@ -1631,6 +1674,50 @@ private fun StanceRestingFace(
         }
     }
 }
+
+/**
+ * The wide anchor's words, only where there is no pair to show: `Your opinion`
+ * — or, for a guest, the borrowed view's (TagPage.md:75, ProfileOther.md:59),
+ * `@genesis_mod's opinion`. A name that outgrows the anchor cuts its HANDLE,
+ * never its `'s opinion`, so the words always say whose view it is
+ * (`@genesis…'s opinion`; the master's `nameInLine`). The accessible name
+ * keeps the handle whole, so the guest's print is hidden from it.
+ */
+@Composable
+private fun RowScope.WideWords(vantage: String?) {
+    val style = MaterialTheme.typography.labelLarge
+    val ink = MaterialTheme.colorScheme.primary
+    if (vantage == null) {
+        Text(text = stringResource(R.string.stance_wide_words), style = style, color = ink, maxLines = 1)
+        return
+    }
+    Row(
+        modifier = Modifier
+            .weight(1f, fill = false)
+            .semantics { hideFromAccessibility() }
+            .testTag(VANTAGE_WORDS_TAG),
+    ) {
+        Text(
+            text = "@$vantage",
+            style = style,
+            color = ink,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        Text(
+            text = stringResource(R.string.stance_wide_vantage_tail),
+            style = style,
+            color = ink,
+            maxLines = 1,
+            softWrap = false,
+        )
+    }
+}
+
+/** The guest's wide words, for a test to find (no registered node draws them). */
+const val VANTAGE_WORDS_TAG = "stance_vantage_words"
 
 /**
  * The hold's ring (`HoldRing`): 40dp, a 4dp `primary` stroke, no track, filling

@@ -162,9 +162,24 @@ function comment(attachments: Record<string, unknown>[] = []): CommentView {
     sensitiveSelfMark: false,
     sensitiveReason: null,
     topics: [],
-    references: [],
+    // A card read carries the count; the rows are the edit's own read.
+    referenceCount: 0,
     license: { __typename: "License", attribution: 0, provenance: 0 },
   } as unknown as CommentView;
+}
+
+/** Answers `CommentReferences` for c1 with `rows`, counting the reads. */
+function servedCitations(rows: unknown[], answer: "rows" | "fail" = "rows") {
+  const log = { reads: 0, answer };
+  server.use(
+    gqlLink.query("CommentReferences", ({ variables }) => {
+      log.reads += 1;
+      expect(variables).toMatchObject({ id: "c1", includePending: true });
+      if (log.answer === "fail") return HttpResponse.error();
+      return HttpResponse.json({ data: { comment: { __typename: "Comment", id: "c1", references: rows } } });
+    }),
+  );
+  return log;
 }
 
 function draw(target: CommentView, signer = fakeWriteSigner()) {
@@ -586,9 +601,77 @@ describe("CommentEditor — the pickers' cap", () => {
   });
 
   it("ReferencePicker.md:37 holds at ten: Up to 10 citations per comment.", async () => {
-    draw(holding({ references: Array.from({ length: 10 }, (_, i) => reference(`u-${i}`)) }));
+    servedCitations(Array.from({ length: 10 }, (_, i) => reference(`u-${i}`)));
+    draw(holding({ referenceCount: 10 }));
     fireEvent.click(await screen.findByTestId("commentEdit.references.add"));
     await screen.findByRole("searchbox", { name: "Cite something" });
     expect(screen.getByTestId("referencePicker.cap")).toHaveTextContent("Up to 10 citations per comment.");
+  });
+});
+
+// THE EDIT OPENS ON THE WHOLE CITATION SET (api-spec.md "Query budgets"): a
+// comment's card carries the count, so the edit reads the rows by id as it
+// opens, and holds its fields back until they are in — an edit that opened on
+// fewer citations than stand would sign a set the author never chose.
+describe("CommentEditor — the citations it reads as it opens", () => {
+  const cited = (id: string) => ({
+    __typename: "ReferenceClaim",
+    targetId: `l1-${id}`,
+    relevance: 0.1,
+    support: 0.1,
+    withdrawalCost: 1,
+    rawRelevance: 0.1,
+    rawSupport: 0.1,
+    pending: false,
+    target: { __typename: "User", id, handle: id, displayName: { __typename: "ModeratedText", value: id } },
+  });
+  const counted = (n: number) => ({ ...comment(), referenceCount: n }) as unknown as CommentView;
+
+  it("holds all three citations of a card counting three, read by id, and stages none of them", async () => {
+    const log = servedCitations([cited("ada"), cited("bo"), cited("cy")]);
+    draw(counted(3));
+    // Nothing to edit before the rows are in: the fields wait.
+    expect(screen.queryByTestId("commentEdit.words.input")).toBeNull();
+    const list = await screen.findByTestId("comment-edit-reference-list");
+    expect(within(list).getAllByRole("listitem")).toHaveLength(3);
+    expect(log.reads).toBe(1);
+    expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent("Nothing to sign yet");
+  });
+
+  it("reads nothing, and opens at once, on a comment that cites nothing", async () => {
+    const log = servedCitations([]);
+    draw(counted(0));
+    expect(screen.getByTestId("commentEdit.words.input")).toBeInTheDocument();
+    await act(async () => {});
+    expect(log.reads).toBe(0);
+  });
+
+  it("says Loading… past 200ms while the rows are out", async () => {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    server.use(
+      gqlLink.query("CommentReferences", async () => {
+        await held;
+        return HttpResponse.json({ data: { comment: { __typename: "Comment", id: "c1", references: [cited("ada")] } } });
+      }),
+    );
+    draw(counted(1));
+    expect(await screen.findByTestId("comment-edit-loading", {}, { timeout: 1000 })).toHaveTextContent("Loading…");
+    release();
+    expect(await screen.findByTestId("commentEdit.words.input")).toBeInTheDocument();
+    expect(screen.queryByTestId("comment-edit-loading")).toBeNull();
+  });
+
+  it("says the house line over Retry when the read gets no answer, and opens on the retry's rows", async () => {
+    const log = servedCitations([cited("ada"), cited("bo")], "fail");
+    const { onLeave } = draw(counted(2));
+    expect(await screen.findByTestId("comment-edit-load-failed")).toHaveTextContent("Can't reach the server.");
+    expect(screen.queryByTestId("commentEdit.words.input")).toBeNull();
+    log.answer = "rows";
+    fireEvent.click(screen.getByTestId("comment-edit-load-retry"));
+    const list = await screen.findByTestId("comment-edit-reference-list");
+    expect(within(list).getAllByRole("listitem")).toHaveLength(2);
+    expect(log.reads).toBe(2);
+    expect(onLeave).not.toHaveBeenCalled();
   });
 });

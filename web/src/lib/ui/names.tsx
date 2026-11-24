@@ -26,6 +26,12 @@ import { Fragment, type ReactNode } from "react";
 
 const HANDLE = "(?<![\\w@])@[A-Za-z0-9_]+";
 const HANDLE_IN_LINE = new RegExp(HANDLE);
+// A TAG IS THE SAME ONE UNIT in wrapping text (ActorChip.jsx `HANDLE_IN_TEXT`,
+// round 63; jakob 2026-11-23: "everywhere the tag is one-line at most"): a
+// `#name` moves whole to the next line and is cut past a full line. A name may
+// hold dots, so it ends on a non-dot and a dot after it rides as punctuation.
+const TAG = "(?<![\\w#&])#[A-Za-z0-9_-](?:[A-Za-z0-9._-]*[A-Za-z0-9_-])?";
+const IN_TEXT = `${HANDLE}|${TAG}`;
 const UNIT_TAIL = /^(?:['’]s\b|[?.,!:;)’]+)/;
 
 /** Marks a wrapping-text unit, for tests and the conformance harness. */
@@ -70,7 +76,7 @@ export function nameInText(text: ReactNode, names: readonly string[] = []): Reac
   }
   if (typeof text !== "string") return text;
   const given = names.filter((name) => name.trim() !== "").map(escapeName);
-  const pattern = new RegExp(given.length > 0 ? `${HANDLE}|${given.join("|")}` : HANDLE, "g");
+  const pattern = new RegExp(given.length > 0 ? `${IN_TEXT}|${given.join("|")}` : IN_TEXT, "g");
   const out: ReactNode[] = [];
   let last = 0;
   for (let found = pattern.exec(text); found !== null; found = pattern.exec(text)) {

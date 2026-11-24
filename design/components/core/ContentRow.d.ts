@@ -76,6 +76,12 @@ export interface ContentRowProps {
    * is gone, and printing anything in its place would invent one.
    */
   redacted?: boolean;
+  /**
+   * The reserved disc alone: the row's disc was a person's picture and that
+   * account is gone, while the row's own words stand — the chronicle's
+   * `Mentioned` `a deleted account`.
+   */
+  discRedacted?: boolean;
 }
 
 export declare function ContentRow(props: ContentRowProps): JSX.Element;

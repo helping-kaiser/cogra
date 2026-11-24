@@ -33,15 +33,20 @@
 import type { ApolloClient } from "@apollo/client";
 
 import {
+  CommentBorrowedStanceDocument,
   CommentStanceDocument,
+  HashtagBorrowedStanceDocument,
   HashtagStanceDocument,
   KeptPickCommentDocument,
   KeptPickPostDocument,
   KeptPickProfileDocument,
   KeyBackupStateDocument,
+  PostBorrowedStanceDocument,
   PostStanceDocument,
+  ProfileBorrowedStanceDocument,
   ProfileStanceDocument,
 } from "@/__generated__/graphql";
+import { fetchBorrowedView } from "@/lib/api/auth-api";
 import { failed, fetchOutcome, refused, success, viewerField, type Outcome } from "@/lib/api/outcome";
 import { DeviceRefusalError } from "@/lib/signing/device-refusal";
 import {
@@ -69,6 +74,7 @@ import {
 import type { StancePair } from "./model";
 import {
   INCLUDE_PENDING_DEFAULT,
+  type BorrowedStance,
   type StanceBundle,
   type StanceCommit,
   type StanceData,
@@ -170,6 +176,50 @@ function wireBundle(
           }),
         (data) => data.hashtag?.viewerStance,
       );
+  }
+}
+
+/** The `borrowedStance` selection (`BorrowedStanceFields`). */
+type WireBorrowed = {
+  readonly pDirected: number;
+  readonly pInterest: number;
+  readonly recordCount: number;
+  readonly inert: boolean;
+  readonly severed: boolean;
+};
+
+/**
+ * A GUEST'S READ NEVER TOUCHES THE CACHE (`no-cache`, Apollo's "doesn't check
+ * the cache before making a network request, and doesn't write the result to
+ * the cache"): the cache is not partitioned by reader, so a borrowed stance
+ * written there could outlive the sign-in that ends the guest's visit.
+ *
+ * Not through the guard: the read is a guest's by definition — there is no
+ * token to refresh and nothing to replay — and its null is an answer (the
+ * view holds none), never a refusal.
+ */
+const BORROWED_POLICY = "no-cache";
+
+function borrowedRead(client: ApolloClient, target: StanceTarget): Promise<Outcome<WireBorrowed | null>> {
+  const lift = <T,>(outcome: Outcome<T>, pick: (data: T) => WireBorrowed | null | undefined) =>
+    outcome.kind === "success" ? success(pick(outcome.value) ?? null) : outcome;
+  switch (target.kind) {
+    case "post":
+      return fetchOutcome(() =>
+        client.query({ query: PostBorrowedStanceDocument, variables: { id: target.id }, fetchPolicy: BORROWED_POLICY }),
+      ).then((outcome) => lift(outcome, (data) => data.post?.borrowedStance));
+    case "comment":
+      return fetchOutcome(() =>
+        client.query({ query: CommentBorrowedStanceDocument, variables: { id: target.id }, fetchPolicy: BORROWED_POLICY }),
+      ).then((outcome) => lift(outcome, (data) => data.comment?.borrowedStance));
+    case "profile":
+      return fetchOutcome(() =>
+        client.query({ query: ProfileBorrowedStanceDocument, variables: { id: target.id }, fetchPolicy: BORROWED_POLICY }),
+      ).then((outcome) => lift(outcome, (data) => data.user?.borrowedStance));
+    case "topic":
+      return fetchOutcome(() =>
+        client.query({ query: HashtagBorrowedStanceDocument, variables: { name: target.id }, fetchPolicy: BORROWED_POLICY }),
+      ).then((outcome) => lift(outcome, (data) => data.hashtag?.borrowedStance));
   }
 }
 
@@ -287,6 +337,34 @@ export function createApolloStanceData(deps: {
       // Unknown is not "no backup": a read that did not answer keeps the
       // restore on offer, the way the notice reads when a backup exists.
       return outcome.kind === "success" ? outcome.value.keyBackupCreatedAt != null : null;
+    },
+
+    async borrowedViewHandle(): Promise<string | null> {
+      // The band's own read (auth-api.ts): a read that did not answer names
+      // nobody, so the anchor draws no name rather than guessing one. Every
+      // guest anchor asks it; the ones a page mounts together share one
+      // request through Apollo's in-flight deduplication (`queryDeduplication`,
+      // on by default), and nothing is kept once it answers.
+      const outcome = await guard.run(() => fetchBorrowedView(client));
+      return outcome.kind === "success" ? (outcome.value?.handle ?? null) : null;
+    },
+
+    async borrowedStance(target): Promise<Outcome<BorrowedStance | null>> {
+      // Its own read, outside `read`: it names no node, so `graphIds` — what
+      // an act points at — never learns anything from it.
+      const outcome = await borrowedRead(client, target);
+      if (outcome.kind !== "success") return outcome;
+      const wire = outcome.value;
+      return success(
+        wire === null
+          ? null
+          : {
+              current: { pDirected: wire.pDirected, pInterest: wire.pInterest },
+              records: wire.recordCount,
+              inert: wire.inert,
+              severed: wire.severed,
+            },
+      );
     },
 
     async commitBatch(entries): Promise<Outcome<StanceCommit>> {

@@ -107,6 +107,11 @@ export function PostCard({
      — the shell's fact, as `signedIn` is). */
   stanceExplaining,
   stanceBorrowed,
+  /* A GUEST'S BORROWED VIEW (round 63): forwarded to `StanceControl`'s
+     `vantage` and `vantageHoles` — the face is the view's own, read-only,
+     and the anchor is spoken as the view's opinion. */
+  stanceVantage,
+  stanceVantageHoles,
   /* AN APPLICANT'S ANCHOR IS LOCKED, NOT GONE (PR-103, round 16): forwarded
      to `StanceControl`'s `anchorOpacity`, the shell's fact about its reader
      as `signedIn` is. */
@@ -585,6 +590,8 @@ export function PostCard({
               knobHeld={stanceKnobHeld}
               defaultExplaining={stanceExplaining}
               borrowed={stanceBorrowed}
+              vantage={stanceVantage}
+              vantageHoles={stanceVantageHoles}
               anchorOpacity={stanceOpacity}
               {...(stanceAxes ? { axes: stanceAxes } : null)}
               node={node && "stance"}

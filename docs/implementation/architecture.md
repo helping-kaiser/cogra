@@ -339,7 +339,11 @@ steps:
    dependency commitment over the dependency list, then signs the
    **approval witness** over the verified act and its seal — only then is
    the act orderable. The backend relays the approval and drives
-   retries across epoch boundaries. Both signatures cover the
+   retries across epoch boundaries. It records on the staged write
+   that an approval is being sent before it calls the host, and only
+   the host's definite refusal takes that mark back: a crash or an
+   unknown outcome leaves the write marked as possibly orderable.
+   Both signatures cover the
    act, so the relay can neither alter it nor author one unasked.
 5. **Confirm** (ingestion). When the accepted act arrives in the
    mirror, the staged write is promoted: the content pair and its
@@ -348,9 +352,11 @@ steps:
    handshake and lands is garbage-collected — staged payload
    included — after a bounded number of epochs (an operational
    parameter, [data-model.md](data-model.md)). The host can still
-   order an approved act later, so the collection moves an approved
-   write's content pair into carriage instead of dropping it, and
-   its late record promotes like any other
+   order an act whose approval was sent, so the collection keeps
+   such a write's row as the act's structure, with its dependency
+   opening, and moves its content pair into carriage instead of
+   dropping it; a write a redaction already emptied keeps its row
+   too. Its late record promotes like any other, whole or reduced
    ([data-model.md "Staged writes"](data-model.md#staged-writes)).
 
 Staged content is served, not withheld. From the pre-commitment

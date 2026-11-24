@@ -344,8 +344,10 @@ size**. A width ruled in pixels is its width at 1×, scaling with the
 type — the filter trigger's 154px band is the room its words have at
 any scale, so the summary collapses where its words stop fitting, never
 where they would have stopped at 1×. A clamp counts lines, never
-pixels: the text body's 18 lines are 18 lines at 2×. The bottom bar's
-labels may wrap to a second line above 1.3×. **The tags line keeps its
+pixels: the text body's 18 lines are 18 lines at 2×. **The bottom bar's
+words drop above 1.3×** (jakob 2026-11-23, (c)): the icons stand alone,
+the bar never grows past its 64px, a word never wraps and is never cut,
+and each slot keeps its word as its accessible name (`BottomNav`). **The tags line keeps its
 count whole** (jakob 2026-10-05): measured at the rendered size, the chips
 give way — the last folds into the count, then the first — and the count
 is never clipped (`TopicsLine`). **The intro's stages scale
@@ -549,7 +551,11 @@ Defined here, and **not** in the source — see §11. The values are Material's
 own state-layer opacities, applied as a `currentColor` overlay so one
 rule covers all three button variants:
 
-- **Hover** — state layer at **8%**.
+- **Hover** — state layer at **8%**, and only where the primary input can
+  hover (`@media (hover: hover)`; jakob 2026-11-23). On a touch screen a
+  control is lit only while the finger is on it — the press layer — and
+  once the finger lifts or the act is done nothing stays lit. With a
+  cursor, hover stands. Every hover rule in the tree's CSS is gated so.
 - **Press** — state layer at **10%**. Never a scale-down, never a shadow
   change: the direction is calm, and a control that shrinks under the
   thumb performs.
@@ -979,7 +985,8 @@ paper over:
   a different product, where a link is one-way and carries no opinion.
   Each figure counts bundles, never records (jakob 2026-11-10): the
   posts published, never their edits, a removed post included (jakob
-  2026-11-18), so the figure and the Posts tab's list agree; `Opinions on them` the people who
+  2026-11-18) and a still-settling one included (jakob 2026-11-19), so
+  the figure and the Posts tab's list agree; `Opinions on them` the people who
   hold an opinion on the person; `Opinions by them` the people they hold
   an opinion on. One person's opinions toward one target are one
   bundle, counted once however often they were revised; a revision count
@@ -1141,6 +1148,13 @@ Nothing vanishes silently, and none of these use `error` colouring.
   A redacted node is **not feed material**: it is reached by direct link,
   by structure still pointing at it, or by a reader whose filter admits
   it. — `RedactedContent`, and `PostCard`'s `redacted` prop
+
+  **A still-settling post removed before it lands wears both marks**
+  (jakob 2026-11-23): the removal's mark in the content's place and
+  `Still settling` where every settling card wears it, over the action
+  row, its score slot bare; it stands among the settling posts until it
+  lands, and the removal's rules rule its ⋮ (`ProfilePostsOwn`'s
+  `settling-removed`).
 - **Sensitive** — a gentle blur with tap to reveal, warm wording.
   **The whole body veils as one**: media, text and description under a
   single veil, the title and tags outside it and readable, so a
@@ -8099,7 +8113,21 @@ jakob's rulings closing the day's rounds, executed in one lane.
      handle is the line's one shrinking part (`nameInLine`, beside
      `ActorChip`). `PageHeader`, `SheetItem`, `OverflowMenu`'s popover
      (Material's 280dp maximum), `ContentRow` and `ProfileHeader`'s handle
-     line carry it.
+     line carry it, and `SettingsRow`'s value, cut while its label keeps
+     its whole width (jakob 2026-11-23, E10). A TAG IS ONE LINE AT MOST
+     everywhere but its own page (jakob 2026-11-23: "everywhere the tag is
+     one-line at most"): a 128-character name is a case-2 line — the
+     chronicle's aside, Explore's recent row, the filter sheet's `One tag`
+     chip, the composer's tag pills (`TopicRemovable`, in the composers and
+     their tags sheet), the tag pad's sheet title (`SheetTitle`'s `cut`) and
+     a tag page's header title end in "…", the words, the pair and the ×
+     around it keeping their room — and the seal's Tags row falls to its
+     count when a chip would not fit whole. THE ONE PLACE A TAG WRAPS is
+     its own page: where the name is too long for the header's one line,
+     the whole name stands under the header as a wrapping heading above
+     the topic's row (`TagPage`'s `name`, the title role, breaking at its
+     hyphens and inside the name where a run has none); a name that fits
+     is not printed twice.
   3. *Text that wraps* — headings, card titles and bodies, dialog titles
      and bodies, snackbars, notices, the borrowed-view band: the sentence
      wraps at its spaces and is never cut as a whole, and A HANDLE OR A
@@ -8109,16 +8137,20 @@ jakob's rulings closing the day's rounds, executed in one lane.
      with "…", case 2's clip; punctuation right after it (`?`, `.`,
      `,`, `'s`) rides with it, whole, never swallowed by the cut
      (`nameInText`, beside `nameInLine`). A display name with spaces is the
-     same one unit. `overflow-wrap: anywhere` stays only for other unbroken
+     same one unit, and so is a TAG (jakob 2026-11-23): `#saltmaps` in a
+     snackbar, a dialog, the withdrawn line, a pad's sentence or the score
+     trace's topic block moves whole and is cut past a full line, a dot
+     that ends it riding as punctuation. `overflow-wrap: anywhere` stays only for other unbroken
      tokens — an email in a settings status, a pasted URL. `DialogSurface`,
      `Snackbar`, `TaskCard`, `BorrowedViewBand`, `QuotedRow`'s title,
      `SettingsRow`'s status, the pads' and the intro's lines carry it, and
-     `VouchBack`'s card (round 48). A screen reader hears the unit as ONE
+     `VouchBack`'s card (round 48), the withdrawn line (round 63). A screen reader hears the unit as ONE
      string, the name and its punctuation with no space between: where a
      client draws the unit in parts, the parts are hidden from assistive
      tech and the whole string is spoken once in their place (round 48).
      The one-line law's lines also carry `StanceRow`'s name and handle,
-     `ReelCaption`'s handle and the person card's lead (round 48).
+     `ReelCaption`'s handle and title (round 48; the title jakob
+     2026-11-23, E9) and the person card's lead (round 48).
 - **The comment card's ⋮ is the comment's menu** (`CommentMenu`, or
   `CommentMenuOwn` on your own), never the post card's.
 - **The score hangs on the thing it scores.** At the top of the trace
@@ -12748,6 +12780,234 @@ drawing.
   figure and settling (287); the other tabs (288); another's figures'
   0.6px (290); a rate-limited upload's words (291); the pick tray's row
   still clips its remove targets (292). Backlog 284 and 289 close.
+
+### Round 61, settling things on every profile tab, the pointer wording on its remaining surfaces — 2026-11-19
+
+- **Ruled** (jakob 2026-11-19, round 60's review): B1 "as rec" — the Posts
+  figure counts a still-settling post, figure and list agreeing; B2 "as
+  rec" — a still-settling comment or act shows on every tab of every
+  profile ("the profile should not lag behind just because sth is still
+  settling"); and, from the same day's review of rounds 58–59, B "sound
+  great blessed" — the pointer proposal taken as drawn, its words
+  blessed. Told and "all fine": a rate-limited upload keeps `Retry`; the
+  kept size setting (`maxHeight`, backlog 285).
+- **Drawn**: `ProfileComments`' and `ProfileCommentsOwn`'s `comments` =
+  `settling` (the thread's landed reply, `Still settling`, `now`);
+  `Profile`'s and `ProfileOther`'s `chronicle` = `settling` (the newest
+  act, `ContentRow`'s `pending`); the pointer rule's remaining surfaces —
+  `CommentEdit`'s `post` (`deleted`, `swept`), `Profile`'s `act` (an
+  opinion, a tag and a citation on a removed post, their second line the
+  mark), `RefsSheet`'s `target` (a removed post, a deleted account),
+  `CitedBy`'s `citing` (removed, swept) and `Notifications`' `piece` (`in
+  @mira's removed post`). The `posts` = `none` copies of `ProfilePosts`
+  and `ProfilePostsOwn` read the figure `0` over the empty list.
+- **The law that moved**: readme §7, `ProfileHeader` and the five profile
+  sidecars (the figure); `ProfileComments.md`, `ProfileCommentsOwn.md`,
+  `Profile.md`, `ProfileOther.md` (a settling thing in each list; an act on
+  a removed target); `CommentEdit.md`, `RefsSheet.md`, `CitedBy.md`,
+  `Notifications.md`; copy-voice *The comment edit*, *The chronicle's
+  verbs* (a tag's and a citation's removed target), the notifications'
+  `in …` line, *Naming a removed or deleted thing* (blessed, its surfaces
+  listed), and the upload's `RATE_LIMITED` on the fault side (*A clip that
+  didn't upload*, *Faults by code*). `ReferenceRow` gains `redacted` (the
+  empty tile; a deleted account's disc and name, the row still a door);
+  `MediaThumb`'s remove button stands one layer up, so a row's next tile
+  no longer takes its target's overhang.
+- **Registered** (impl seam 380): a comment's tags line, `…commentCard.
+  tagsLine` with its `tag` and `counts`, as the post's; `CommentCitedByEmpty`
+  and `CommentOpinionsEmpty` under `postDetail`, the sheets the post's own
+  (`citedBySheet`, `opinionsSheet`).
+- **Held**: a chronicle aside on a deleted account without `on` (backlog
+  293); a deleted account's notifications (294); a comment's references
+  sheet (295); where a tag's or a citation's act opens (296); a pending
+  thing's place in a list's order (297). Backlog 282, 285, 286, 287, 288,
+  291 and 292 close; 290 stays.
+
+### Round 62, settling things in signing order, pointer doors, deleted-account words, long tags in lists, the registry's gaps — 2026-11-23
+
+- **Ruled** (jakob 2026-11-23, round 61's review): B1 — a still-settling
+  thing stands in signing order ("(a) is not a solution for if someone has
+  multiple settling contents"); the clock is the docs' (`api-spec.md:226-232`:
+  pending entries above every landed one, ordered among themselves by their
+  authoring instant — not Lamport time, which is assigned at landing).
+  B2–B5 as recommended: a tag's and a citation's chronicle act opens its
+  post; `Mentioned` / `Vouched for` `a deleted account`; `A deleted account
+  cited your post` with the empty disc; the comment's tags-and-references
+  sheet drawn over the thread and both sheets registered. D6: the comment
+  card's `On …` line is the door to the post, the rest of the card opens the
+  thread at the comment. E9, E10: the reel caption's title and a settings
+  row's value are one line, cut with "…". Told: no wrapping for tags in
+  lists.
+- **Drawn**: the profile tabs' `settling` with the settling item at the head,
+  and `settling-two` on `ProfilePosts`, `ProfilePostsOwn`,
+  `ProfileComments` and `ProfileCommentsOwn` (two settling items, `now` then
+  `3m`); `Profile`'s `act` tag and citation cards as doors; `ProfileOther`'s
+  `aside` = `mentioned-deleted` / `vouched-deleted`; `Notifications`' `actor`
+  = `deleted` (every kind); `CommentRefsSheet` (new, over the thread);
+  `Reel`'s `title` = `long`; `TagPage`'s `comment` = `pictures` / `clip` and
+  `reader` = `guest`, and `ProfileOther`'s `reader` = `guest` (the wide
+  anchor `@genesismod's opinion`).
+- **The law that moved**: the list order in `ProfilePosts.md`,
+  `ProfilePostsOwn.md`, `ProfileComments.md`, `ProfileCommentsOwn.md`,
+  `ReplyEntry.md`; the chronicle door in `Profile.md`, `ProfileOther.md`,
+  `ProfileDeleted.md`, `ProfileOtherHeld.md`; the pointer's one sentence on
+  `ProfileComments.md`, `ProfileCommentsOwn.md`, `FeedKinds.md`,
+  `TagPage.md` (as `History.md` and `Saved.md` had it); copy-voice *Naming a
+  removed or deleted thing*, *The chronicle's verbs* and the notifications'
+  deleted actor; *long names* case 2 (a settings value, the caption's title,
+  a tag in a list). Masters: `ContentRow` (an aside with no handle ends in
+  "…", `discRedacted`), `SettingsRow` (the value yields, the label keeps its
+  width), `ReelCaption` (one-line title), `Chip`'s `cut` (the filter sheet's
+  `One tag`), `StanceControl`'s `vantage` / `vantageHoles` and
+  `ProfileHeader`'s pass-through; the seal's Tags row folds when its chips
+  stop fitting (`1 tag` for one too long), Explore's recent row ends in "…".
+  `TagPageCommentMenuOwn.md`: Edit whose read gets no answer says the house
+  line in the page's snackbar.
+- **Registered**: `KeyCeremonyUnsupported` (the web's seven names),
+  `TagPageEmpty` (`tagPage.header`, `.actionRow`, `.empty`), `RefsSheet` and
+  `CommentRefsSheet` (`postDetail.refsSheet`, `.title`, `.tag`, `.reference`),
+  `tagPage.commentCard.media` and its parts, `ProfileOtherHeld` (its anchor's
+  `exact`).
+- **Measured** at 360 px with two 128-character tags (hyphens, none): the
+  chronicle aside 128 px wide and cut, its title whole; the recent row's
+  query 282 px, cut; the `One tag` chip 312 px inside the 360 sheet, cut;
+  every one one line. The seal's slot 181 px at 360 (211 px in the frame).
+- **Held**: the Everything tab's settling rows against the landed-only
+  chronicle (backlog 298); the tag places outside lists (299); a comment's
+  tag or citation act (300); a long settings value on a board (301). Backlog
+  293–297 close.
+
+### Round 63, the tag's full name, one-line tags, the bottom bar at large text, a guest's borrowed opinions — 2026-11-23
+
+- **Ruled** (jakob 2026-11-23, round 62's open points and review): 1 (c) —
+  above 1.3× the bottom bar's words drop; 2 — `/key` by URL for a keyed
+  member is what `Your key` opens; 3 (b) — the tag page's header cuts the
+  title and the whole name stands under it; 4 — a tag is one line
+  everywhere else, one unit inside a sentence; 5 (a) — the other-account
+  key card is retired; 6 (a) — the Everything tab shows still-settling
+  posts and comments (the docs change, impl's); 7 — build the guest's
+  borrowed opinions; 8 (a) — `@genesismod's opinion on this post`; 9 (a)
+  — a tagged comment keeps its tags line on a tag page. From the review
+  of round 62: B1 (B) — a reply's pointer opens the thread at the comment
+  it names; B2 (a) — a comment's tag or citation act opens the comment in
+  its thread; B5 (b) — the long settings value stays measured.
+- **Drawn**: `TagPage`'s `name` chip (`long`, `long-hyphens`: a
+  128-character tag without and with hyphens) — the header cut, the
+  heading `tagPage.name` under it; the tagged comment's tags line on every
+  board of the tag page; the borrowed view holding one opinion on
+  `TagPage` and `ProfileOther` at `reader` = `guest` and on `FeedBare`,
+  the hollow face elsewhere, every anchor spoken as the view's opinion.
+- **The law that moved**: `TagPage.md` (the header, the heading, the tags
+  line, a guest's spoken names), the long-names law's cases 2 and 3 (a
+  tag), readme §4 *Type* (the bar's words), stance-control *A guest's
+  view*, `FeedBare.md`, `ProfileOther.md`; `Profile.md` and
+  `ProfileOther.md` (the Everything tab's settling posts and comments; a
+  comment's tag or citation act, also `ProfileDeleted.md`,
+  `ProfileOtherHeld.md`); the pointer's two cases on every host;
+  `FeedCommentShapes.md` (its pointer door, a removed post's pointer
+  still a door); `KeyCeremony.md` (`/key`); `ApplicantFeed.md` (a failed
+  attach); copy-voice loses the retired card's stock phrase. Masters:
+  `PageHeader` (a tag title yields and cuts), `TopicRemovable` (one line),
+  `SheetTitle`'s `cut`, `nameInText` (a tag is a unit), the pads' lines and
+  the withdrawn line through it, `BottomNav` (each slot named, its word
+  the part a client drops), `StanceControl`'s `anchorName` / `ANCHOR_NAME`
+  and `vantageHoles` (`label`, `held`, `hollow`), `PostCard` /
+  `CommentCard` `stanceVantage` / `stanceVantageHoles`, `CommentCard`'s
+  head row on a 48dp target.
+- **Registered**: `tagPage.name`; `tagPage.commentCard.tagsLine`, `.tag`,
+  `.counts`; and, by impl's seam 419 (the comment card's count on every
+  host), `profile.comments.commentCard.tagsLine`, `.tag`, `.counts` —
+  @ada's tag-page comment on `ProfileComments`, its line the tag page's —
+  and `history.commentCard.tagsLine.counts`, `saved.commentCard.tagsLine.
+  counts` — @tobias's comment with the feed's one reference.
+- **Measured** at 360 px with two 128-character tags (hyphens, none): the
+  tag page's header title 280 px, one line, cut, and the heading five
+  lines inside the screen; the not-found header 280 px, cut; the
+  composer's pill 312 px inside its row, its name 266 px, cut, the ×
+  inside; the tag pad's title one line, cut; the trace's topic block
+  264 px, cut; the withdrawn line's unit 312 px, one line, cut. The feed
+  shape's head row answers 48 dp (66–114) and the author row's ink starts
+  at 120, 6 px clear, at 360 and 390.
+- **Held**: where the failed attach stands (backlog 303); the bare feed's
+  borrowed handle (304); impl's two settling cases (302). Backlog 298,
+  299, 300 and 301 close, and the night-rulings lines on the borrowed
+  stance.
+
+### Round 64, one borrowed-view handle, the taller tag pair sheet, both marks, hover off on touch — 2026-11-23
+
+- **Ruled** (jakob 2026-11-23, his review of round 63): B2 (a) with his
+  spelling — the genesis moderator's view is `@genesis_mod` on every guest
+  board; B3 (b) — the composer's tag pair sheets take the raised 88 %
+  class; B4 (a) — a still-settling post removed before it lands wears both
+  marks. To impl (seam 427): on a touch screen a control is lit only while
+  the finger is on it, and nothing stays lit once it lifts; with a cursor
+  hover stands.
+- **Drawn**: `FeedBare`'s band and anchors name `@genesis_mod` (display
+  name the tree's `Genesis Moderator`), as `TagPage` and `ProfileOther` at
+  `reader` = `guest` do (`GUEST_VANTAGE`); `TagPad` and `TagPadCompose`
+  at 88 %; `ProfilePostsOwn` `posts` = `settling-removed` — @sol's salt
+  maps, the removal's mark in the content's place, `Still settling` over
+  the action row where every settling card wears it, the score slot bare,
+  the own removed post's ⋮; `ProfileComments` `comments` = `pictures` /
+  `clip` — the tag page's media comment with `REPLY_MEDIA_*`; the @tobias
+  comment's `· 1 reference` on `HistoryFilter`, `HistoryHidden`,
+  `SavedUndo`, `HistoryCommentMenu`, `SavedCommentMenu` and
+  `FeedCommentMenu`, as `History`, `Saved` and `FeedKinds` print it.
+- **Registered** (impl's seam 424): `profile.comments.commentCard.media`,
+  `.media.dots`, `.media.frame` (`<id>/1`, `<id>/2`), `.media.frame.
+  soundDisc` — @ada's tag-page comment on `ProfileComments`; and the
+  count on the sibling boards, `history.commentCard.tagsLine.counts`
+  (`HistoryFilter`, `HistoryHidden`, `HistoryCommentMenu`),
+  `saved.commentCard.tagsLine.counts` (`SavedUndo`, `SavedCommentMenu`),
+  `feed.commentCard.tagsLine.counts` (`FeedCommentMenu`). Nothing gone.
+- **The law that moved**: stance-control *A guest's view*, `TagPage.md`,
+  `ProfileOther.md`, `FeedBare.md` (the handle and its cut); `TagPad.md`,
+  `TagPadCompose.md` (88 %); readme §9, `ProfilePosts.md`,
+  `ProfilePostsOwn.md` (both marks); readme §4 *Interaction states* and
+  the interaction-states card (hover). Tokens: `states.css`'s two hover
+  rules and `base.css`'s link hover sit inside `@media (hover: hover)`, as
+  does the sensitive card's link hover; the press rules are unchanged.
+- **Measured**: the profile's wide anchor leaves its words 134 px at 390 px
+  and 104 px at 360 px — `@genesis…'s opinion` and `@ge…'s opinion`, the
+  same cut the old handle took; on a tag page `@genesis_mod's opinion`
+  stands whole, 158 px. `FeedBare`'s band line takes three lines at 390
+  px (two with `@noa`) and three at 360. At 360×640 the pair sheets stand
+  475 px (`TagPad`) and 449 px (`TagPadCompose`), `Done` 28 px above the
+  screen's foot, nothing scrolled (at 62 % both scrolled 397 px with
+  `Done` below the edge); at the boards' own 390×844 nothing changes —
+  505 and 479 px are under both caps.
+- **Held**: a comment's media on `History` and `Saved` (backlog 305 — the
+  registry's one-chip rule). Backlog 302 and 304 close.
+
+### Round 65, a comment's media on History and Saved, the harness's two renders — 2026-11-23
+
+- **Ruled**: backlog 305 (b) — a `comment` chip on `History` and `Saved`
+  draws @ada's tag-page media comment in @tobias's place, the `pick`
+  copies hidden; ruling 39 stands as written.
+- **Drawn**: `History` and `Saved` `comment` = `pictures` / `clip` (default
+  `none`) — @ada's comment as the feed's card, answering @sol's post, with
+  `REPLY_MEDIA_*`, `#saltmaps · 1 reference`, and the place's figure
+  `12.40` as its score (the fixture, backlog 306); the @tobias card's
+  `pick` copies stand only at `none` (`PickCopies`' `hole`,
+  `CommentMediaCopies`).
+- **Registered** (seam 424): `history.commentCard.media`, `.media.dots`,
+  `.media.frame` (`<id>/1`, `<id>/2`), `.media.frame.soundDisc` (`<id>/1`),
+  and the same under `saved`. Nothing gone; no string added.
+- **The law that moved**: `History.md` and `Saved.md` — the veiled clip's
+  sentence splits in two, `ALWAYS a veiled clip has no playback` and the
+  disc named, `Feed.md`'s form: `ALWAYS history.commentCard.media.frame.
+  soundDisc is absent GIVEN history.commentCard.media.frame's clip is
+  veiled` (the same for `saved`). Backlog 305 and 306 close.
+- **Found**: round 64's unexplained differences on `CommentCitedByEmpty`
+  (15 px) and `SeveranceConfirm` (7 px) are the harness — antialiased
+  rounded edges (the avatar and the veil under the sheet's scrim, the
+  `Keep it` pill's rim) render a few levels apart in about one render in
+  fifteen under load, on `152cddc34` as on round 64's tip, and never in
+  over 100 serial renders. The 14 px "badge rim" were the flow badge,
+  which `diffbox.mjs` keeps and the proof strips. About one render in
+  fifty loses the Google Fonts fetch and draws the fallback face, and no
+  picture paints in the harness (a board's bare image names miss `img/`).
+  Filed as backlog 307; no board changes.
 ---
 
 ## 14. The canvases

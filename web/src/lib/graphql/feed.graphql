@@ -61,15 +61,15 @@ query Feed($orderedIds: [UUID!]!, $first: Int!, $includePending: Boolean! = true
 # same selections History's cards read (`history.graphql` `HistoryPage`), so
 # one card renders the same thing on both surfaces.
 #
-# A READ OF ITS OWN, AT TEN. Every edge here carries whole card selections —
+# A READ OF ITS OWN, AT TWENTY. Every edge here carries whole card selections —
 # a comment's with its head row's target, a topic's with a glimpse of three
-# — so it is priced at History's page of ten rather than the post window's
-# twenty, and the page size is a literal so the client-operation guard
+# — so it is priced on its own, at the same page of twenty as the post
+# window, and the page size is a literal so the client-operation guard
 # prices the call the device actually makes. The post rows keep riding
 # `Feed` above; the device splits a window's ids by the kind the ranking
 # already named and asks each read for its own (`feed-api.ts`).
 query FeedCards($orderedIds: [UUID!]!, $includePending: Boolean! = true) {
-  feed(orderedIds: $orderedIds, first: 10) {
+  feed(orderedIds: $orderedIds, first: 20) {
     edges {
       node {
         __typename

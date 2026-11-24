@@ -43,10 +43,37 @@
    now.`, over an outlined `Retry` (`ProfileUnreachable`'s grammar). `more`
    is the next page that did not come while rows stand: the list scrolled to
    its foot, and `Couldn't load more — Retry` ending it at the list's own
-   rung, never `--error` (`ProfileMoreFailed`'s row). */
+   rung, never `--error` (`ProfileMoreFailed`'s row).
+   THE `piece` CHIP DRAWS A REMOVED PIECE (round 61; the pointer rule blessed
+   2026-11-19): the mention's post removed by its author, its second line
+   `in @mira's removed post` — the piece named by kind and author, never by
+   its title, as every pointer names it. The row still opens the post, its
+   mark there. THE `actor` CHIP DRAWS A DELETED ACTOR (round 62; jakob
+   2026-11-23, B4 (a)): see `Notification` below. */
 export const NODE = "notifications";
-export const PROPS = { load: { editor: "enum", options: ["loaded", "loading", "failed", "more"], default: "loaded" } };
-export const VALS = `headShown: this.props.load === "loaded" ? "flex" : "none", footShown: this.props.load === "loaded" || this.props.load === "more" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", moreShown: this.props.load === "more" ? "block" : "none"`;
+export const PROPS = { piece: { editor: "enum", options: ["live", "removed"], default: "live" }, load: { editor: "enum", options: ["loaded", "loading", "failed", "more"], default: "loaded" }, actor: { editor: "enum", options: ["live", "deleted"], default: "live" } };
+export const VALS = `headShown: this.props.load === "loaded" ? "flex" : "none", footShown: this.props.load === "loaded" || this.props.load === "more" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", moreShown: this.props.load === "more" ? "block" : "none", pieceLine: this.props.piece === "removed" ? "in @mira's removed post" : "in Salt maps of the coast road", pieceLineGone: this.props.piece === "removed" ? "in a deleted account's removed post" : "in Salt maps of the coast road", actorLive: this.props.actor === "deleted" ? "none" : "contents", actorGone: this.props.actor === "deleted" ? "contents" : "none"`;
+/* A DELETED ACTOR'S ROW (round 62; jakob 2026-11-23, B4 (a)) is the `actor`
+   chip's `deleted`: every kind's sentence opens `A deleted account` in the
+   actor's place, the rest of it as it stands, and the empty disc stands in the
+   picture's place — a face stays, being the record's and not the person's.
+   The mention's piece, the deleted account's post, keeps its title while it
+   is there and reads `in a deleted account's removed post` once swept, the
+   pointers' naming. Each row is drawn twice behind the chip, keyed by its
+   place in both copies. */
+function Notification({ actor, act, second, goneSecond = second, face, nodeKey, ...row }) {
+  const shared = { variant: "chronicle", chevron: false, face, onOpen: () => {}, node: "notification", nodeKey, ...row };
+  return (
+    <>
+      <div style={{ display: "{{actorLive}}" }} data-node-chip="actor" data-node-key="live">
+        <ContentRow {...shared} title={`${actor} ${act}`} second={second} />
+      </div>
+      <div style={{ display: "{{actorGone}}" }} data-node-chip="actor" data-node-key="deleted">
+        <ContentRow {...shared} discRedacted={!face} title={`A deleted account ${act}`} second={goneSecond} />
+      </div>
+    </>
+  );
+}
 const NOTIFICATIONS_ROWS = { display: "flex", flexDirection: "column", gap: 8 };
 const NOTIFICATIONS_TAIL = {
   margin: 0,
@@ -63,50 +90,42 @@ export function Screen() {
       <PageHeader title="Notifications" backHref="#" backLabel="Back to feed" node="header" />
       <ChronicleList node="list">
         <div style={{ ...NOTIFICATIONS_ROWS, display: "{{headShown}}" }}>
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
+        <Notification
           unread
           name="Ada Okonkwo"
-          title="@ada commented on your post"
+          actor="@ada"
+          act="commented on your post"
           second="The third headland light is real — I have a print from 2019 that almost catches it."
           trailing="35m"
-          onOpen={() => {}}
-          node="notification"
           nodeKey="1"
         />
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
+        <Notification
           unread
           name="Tobias Lindqvist"
-          title="@tobias replied to your comment"
+          actor="@tobias"
+          act="replied to your comment"
           second="Crust held all the way past the slipway today."
           trailing="2h"
-          onOpen={() => {}}
-          node="notification"
           nodeKey="2"
         />
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
+        <Notification
           unread
           face={{ pDirected: 0.4, pInterest: 0.5 }}
-          title="@sol gave an opinion on you"
+          actor="@sol"
+          act="gave an opinion on you"
           trailing="6h"
-          onOpen={() => {}}
-          node="notification"
           nodeKey="3"
         />
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
+        {/* The piece that carries the mention, removed by its author (round
+            61; the pointer rule blessed 2026-11-19): named by kind and
+            author, never by its title — the `piece` chip's line. */}
+        <Notification
           image="inviter.jpg"
-          title="@mira mentioned you"
-          second="in Salt maps of the coast road"
+          actor="@mira"
+          act="mentioned you"
+          second="{{pieceLine}}"
+          goneSecond="{{pieceLineGone}}"
           trailing="1d"
-          onOpen={() => {}}
-          node="notification"
           nodeKey="4"
         />
         {/* THE EIGHTH KIND (the invites round, 2026-09-15): an application of
@@ -126,47 +145,35 @@ export function Screen() {
             contradiction: the bell asks whether anything is new, and the
             profile's Invites dot asks whether anybody is waiting. The second
             outlives the first. */}
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
+        <Notification
           name="rafa"
-          title="@rafa is ready for your approval"
+          actor="@rafa"
+          act="is ready for your approval"
           trailing="2d"
-          onOpen={() => {}}
-          node="notification"
           nodeKey="5"
         />
         </div>
         <div style={{ ...NOTIFICATIONS_ROWS, display: "{{footShown}}" }}>
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
+        <Notification
           name="Ada Okonkwo"
-          title="@ada cited your post"
+          actor="@ada"
+          act="cited your post"
           second="in Sunday at the tide market"
           trailing="3d"
-          onOpen={() => {}}
-          node="notification"
           nodeKey="6"
         />
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
+        <Notification
           name="Juno Baptiste"
-          title="@juno landed through your invite"
+          actor="@juno"
+          act="landed through your invite"
           trailing="9d"
-          onOpen={() => {}}
-          node="notification"
           nodeKey="7"
         />
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
+        <Notification
           image="inviter.jpg"
-          title="@mira approved your application"
+          actor="@mira"
+          act="approved your application"
           trailing="12d"
-          onOpen={() => {}}
-          node="notification"
           nodeKey="8"
         />
         {/* THE NINTH KIND (the invites round's extension, 2026-09-15): a
@@ -185,14 +192,11 @@ export function Screen() {
             IT NAMES THE PERSON AND USES THE CONTROL'S OWN WORD. `closed` is
             what the button said; a notification that softened it to something
             else would be the product telling two stories about one act. */}
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
+        <Notification
           name="Kel Moreau"
-          title="@kel closed your application"
+          actor="@kel"
+          act="closed your application"
           trailing="14d"
-          onOpen={() => {}}
-          node="notification"
           nodeKey="9"
         />
         {/* THE TENTH KIND (jakob 2026-10-14, PR-72): a withdrawal — someone
@@ -205,14 +209,11 @@ export function Screen() {
             THE ORDER TELLS A STORY TOO: @sol walked an opinion back sixteen
             days ago and gave a new one six hours ago — two pointings, two
             rows, each the act it was. */}
-        <ContentRow
-          variant="chronicle"
-          chevron={false}
+        <Notification
           face="walkedBack"
-          title="@sol walked back their opinion on you"
+          actor="@sol"
+          act="walked back their opinion on you"
           trailing="16d"
-          onOpen={() => {}}
-          node="notification"
           nodeKey="10"
         />
         </div>

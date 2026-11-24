@@ -11,7 +11,19 @@
    2026-11-18, C1 "as rec") is the `chronicle` chip's `removed`: the salt
    maps' act, removed as `ProfilePostsOwn`'s `removed` draws the post, its
    second line `Removed by its author` where the words were, the card still
-   the door to the post's detail (`ChronicleAct`). Sol has no
+   the door to the post's detail (`ChronicleAct`). YOUR POST STILL SETTLING
+   (round 61; jakob 2026-11-19, B2 (a); the tab shows a still-settling post
+   or comment, every other act once landed, 2026-11-23, point 6 (a)) is the
+   same chip's `settling`: the
+   salt maps' act signed and not yet landed, at the head, its age `now` and
+   `Still settling` under it, as `ProfilePostsOwn`'s `settling` draws the
+   post. AN ACT WHOSE TARGET WAS REMOVED (round 61; the pointer rule
+   blessed 2026-11-19) is the `act` chip, on the third act: `opinion-removed`
+   `Gave an opinion` `on a post`, `tag-removed` `Tagged a post` `#saltmaps`,
+   `citation-removed` `Cited a post`, each its second line `Removed by its
+   author` where the post's title would stand (`ChronicleTargetActs`); the
+   tag's and the citation's card is the door to the post (round 62; jakob
+   2026-11-23, B2 (a)), the opinion's inert. Sol has no
    picture: the monogram is the designed fallback, and the badge on it reads as
    "add one".
 
@@ -37,14 +49,16 @@ export const PROPS = {
   change: { editor: "enum", options: ["none", "signing", "failed"], default: "none" },
   ...TAB_CHIP,
   ...CHRONICLE_CHIP,
+  ...ACT_CHIP,
 };
-export const VALS = `changeSigningShown: this.props.change === "signing" ? "block" : "none", changeFailedShown: this.props.change === "failed" ? "block" : "none", ${TAB_VALS}, ${CHRONICLE_VALS}`;
+export const VALS = `changeSigningShown: this.props.change === "signing" ? "block" : "none", changeFailedShown: this.props.change === "failed" ? "block" : "none", ${TAB_VALS}, ${CHRONICLE_VALS}, ${ACT_VALS}`;
 const HEAD_LINE = { padding: "var(--space-2) var(--space-4) var(--space-3)" };
 export function Screen() {
   return (
     <ProfileOwnBody
       tab="chip"
-      chronicle={CHRONICLE_REMOVED}
+      chronicle={CHRONICLE_OWN_FIRST}
+      act
       headLine={
         <>
           <div style={{ display: "{{changeSigningShown}}", ...HEAD_LINE }}>

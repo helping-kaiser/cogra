@@ -25,8 +25,12 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.cogra.core.designsystem.dataNode
 import com.cogra.crypto.Family
+import com.cogra.domain.Landing
 import com.cogra.domain.ProfileComment
+import com.cogra.domain.ProfileFigures
 import com.cogra.domain.RecordRow
+import com.cogra.domain.Removal
+import com.cogra.domain.RemovalAgent
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testPost
 import com.cogra.domain.testing.testProfile
@@ -140,6 +144,67 @@ class ProfileTabsScreenTest {
         compose.onNodeWithTag("profile.comments.commentCard:c1").performScrollTo().assertExists()
         compose.onNodeWithTag("profile.comments.viewReplies:c1").assertExists()
         compose.onAllNodesWithTag("chronicle_row").assertCountEquals(0)
+    }
+
+    /** The tops of [tags], top to bottom as the list draws them. */
+    private fun tops(tags: List<String>) = tags.map {
+        compose.onNodeWithTag(it).performScrollTo().fetchSemanticsNode().boundsInRoot.top
+    }
+
+    // ProfilePosts.md:7, :9, :15; ProfilePostsOwn.md:9, :11 — on another's
+    // profile and the reader's own, a still-settling post stands at the head of
+    // the Posts list, a removed one keeps its place, and the Posts figure
+    // counts every card the list holds.
+    @Test
+    fun aSettlingPostHeadsThePostsListAndTheFigureCountsEveryCardOnEveryProfile() {
+        var own by mutableStateOf(false)
+        val listed = listOf(
+            testPost("s1", landing = Landing.Pending),
+            testPost("r1").copy(removal = Removal(now, RemovalAgent.AUTHOR)),
+            testPost("p1"),
+        )
+        compose.setContent {
+            ProfileScreen(
+                state = loaded(own = own).copy(
+                    tab = ProfileTab.POSTS,
+                    posts = listed,
+                    figures = ProfileFigures(posts = listed.size, opinionsOn = 0, opinionsBy = 0),
+                ),
+                profileSavedResult = false,
+                onProfileSavedResultConsumed = {},
+                onTabChange = {},
+                onLoadMore = {},
+                onRetry = {},
+                onEdit = {},
+                onOpenSettings = {},
+                onOpenInvites = {},
+                onOpenPost = {},
+                onBack = {},
+                cardsHost = cardsDrawn,
+                now = now,
+            )
+        }
+        for (reader in listOf(false, true)) {
+            own = reader
+            compose.waitForIdle()
+            assertThat(tops(listOf("profile.posts.card:s1", "profile.posts.card:r1", "profile.posts.card:p1")))
+                .isInStrictOrder()
+            compose.onNodeWithTag("profile.identity.figures.posts.value", useUnmergedTree = true)
+                .assertTextEquals("3")
+        }
+    }
+
+    // ProfileComments.md:5, ProfileCommentsOwn.md:7 — a still-settling comment
+    // stands at the head of the Comments list.
+    @Test
+    fun aSettlingCommentHeadsTheCommentsList() {
+        val listed = listOf(
+            ProfileComment(testComment("s1", landing = Landing.Pending), target = null, threadPostId = "p1"),
+            ProfileComment(testComment("c1"), target = null, threadPostId = "p1"),
+        )
+        render(loaded().copy(tab = ProfileTab.COMMENTS, comments = listed))
+        assertThat(tops(listOf("profile.comments.commentCard:s1", "profile.comments.commentCard:c1")))
+            .isInStrictOrder()
     }
 
     // Profile.md:23 — the chronicle stands on Everything, the right-most tab, alone.

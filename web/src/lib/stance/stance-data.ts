@@ -122,6 +122,20 @@ export type StanceLanding = {
   readonly empty?: boolean;
 };
 
+/**
+ * The borrowed view's own landed bundle toward one target — what a guest's
+ * face wears (FeedBare.md:7, GuestGate.md:11; `BorrowedStance`). DISPLAY
+ * ONLY: it carries no node an act could name, no raw sums a landing could
+ * fold against and no cost, so nothing read from it can reach a projection,
+ * a severance or a kept pick.
+ */
+export type BorrowedStance = {
+  readonly current: StancePair;
+  readonly records: number;
+  readonly inert: boolean;
+  readonly severed: boolean;
+};
+
 /** What a completed gesture staged — one record for a pick, N for a severance. */
 export type StanceCommit = {
   readonly records: number;
@@ -191,6 +205,22 @@ export interface StanceData {
    * key` and says so (KeyElsewhereNoBackup.md, PadKeyAbsent.md).
    */
   keyBackedUp(): Promise<boolean | null>;
+
+  /**
+   * The handle of the view this reader borrows (`Query.borrowedView`), or
+   * null when their view is their own or the read did not answer. A guest's
+   * wide anchor speaks it (stance-control.md, *A guest's view*: the vantage
+   * law) — a name from the contract's ladder, never a guess.
+   */
+  borrowedViewHandle(): Promise<string | null>;
+
+  /**
+   * The borrowed view's own stance toward `target`, for a reader with no
+   * session — null where that view holds none (the hollow face). Asked only
+   * while signed out, never answered from or written to a cache: a member's
+   * tab must never hold one, nor a later sign-in see it.
+   */
+  borrowedStance(target: StanceTarget): Promise<Outcome<BorrowedStance | null>>;
 
   /**
    * The kept picks, signed together (KeptPicksSeal.md): each pick prepared

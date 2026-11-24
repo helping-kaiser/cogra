@@ -10,6 +10,8 @@ import type { ApolloClient } from "@apollo/client";
 
 import {
   CitingRecordsDocument,
+  CommentReferencesDocument,
+  PostReferencesDocument,
   PrepareReferenceDocument,
   PrepareReferenceWithdrawalDocument,
   ReferenceCandidatesDocument,
@@ -25,6 +27,7 @@ import {
   type CitingArtifact,
   type ReferenceRecord,
 } from "@/lib/references/citing-fold";
+import type { ReferenceClaimNode } from "@/lib/references/claims";
 import { isQueryable, targetView } from "@/lib/references/normalize";
 import { fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
@@ -70,6 +73,44 @@ export async function fetchReferenceCandidates(
       ),
     ),
   );
+}
+
+/**
+ * One node's standing citations, read by id when a surface that shows them
+ * opens (api-spec.md "Query budgets"): a card carries `referenceCount`, and
+ * the rows it counts arrive here — the post's references sheet, the comment's
+ * edit. NETWORK-ONLY, as every read this client makes of a list it is about
+ * to show: the sheet states what stands now, never a cached copy older than
+ * the card's own count. `includePending` is the card read's own (every card
+ * read sends the default, `true`), so the rows are the set the count counts.
+ *
+ * null: the id names no node any more.
+ */
+export async function fetchNodeReferences(
+  client: ApolloClient,
+  node: { readonly kind: "Post" | "Comment"; readonly id: string },
+  includePending: boolean = true,
+): Promise<Outcome<readonly ReferenceClaimNode[] | null>> {
+  if (node.kind === "Post") {
+    const fetched = await fetchOutcome(() =>
+      client.query({
+        query: PostReferencesDocument,
+        variables: { id: node.id, includePending },
+        fetchPolicy: "network-only",
+      }),
+    );
+    if (fetched.kind !== "success") return fetched;
+    return success(fetched.value.post?.references ?? null);
+  }
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: CommentReferencesDocument,
+      variables: { id: node.id, includePending },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  return success(fetched.value.comment?.references ?? null);
 }
 
 /**

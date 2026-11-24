@@ -3,6 +3,7 @@ package com.cogra.feature.profile
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.Landing
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostView
@@ -10,6 +11,8 @@ import com.cogra.domain.ProfileComment
 import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
+import com.cogra.domain.Removal
+import com.cogra.domain.RemovalAgent
 import com.cogra.domain.UserProfile
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.testing.FakeTokenStore
@@ -34,6 +37,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelTest {
@@ -383,7 +387,77 @@ class ProfileViewModelTest {
         assertThat(history.calls).containsExactly(listOf("p1", "c1"))
     }
 
-    private fun listed(id: String) = ProfileComment(testComment(id), target = null, threadPostId = "p1")
+    // ProfilePosts.md:7, :9, :15 on another's profile; ProfilePostsOwn.md:9,
+    // :11 on the own — the listing's own order stands: a still-settling post
+    // at the head, a removed one in its place, the landed ones below, across
+    // pages; the figure the header shows is the listing's count, settling and
+    // removed included.
+    @Test
+    fun thePostsTabKeepsASettlingPostFirstAndARemovedOneListedAcrossPagesOnEveryProfile() = runTest(dispatcher) {
+        profiles.byHandle["ada"] = Outcome.Success(testProfile(id = "u2", handle = "ada"))
+        listOf(null, "ada").forEach { handle ->
+            profiles.figures = Outcome.Success(ProfileFigures(posts = 4, opinionsOn = 0, opinionsBy = 0))
+            profiles.posts = Outcome.Success(
+                Page(
+                    listOf(testPost("s1", landing = Landing.Pending), testPost("r1").copy(removal = removal)),
+                    endCursor = "c1",
+                    hasNextPage = true,
+                ),
+            )
+            val vm = viewModel()
+            vm.start(handle)
+            dispatcher.scheduler.advanceUntilIdle()
+            vm.onTabChange(ProfileTab.POSTS)
+            dispatcher.scheduler.advanceUntilIdle()
+            profiles.posts = postsPage("p2", "p1")
+            vm.onLoadMore()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val s = vm.state.value
+            assertThat(s.own).isEqualTo(handle == null)
+            assertThat(s.posts.map { it.id }).containsExactly("s1", "r1", "p2", "p1").inOrder()
+            assertThat(s.posts.first().landing.isPending).isTrue()
+            assertThat(s.posts[1].removal).isEqualTo(removal)
+            assertThat(s.figures?.posts).isEqualTo(s.posts.size)
+        }
+    }
+
+    // ProfileComments.md:5, ProfileCommentsOwn.md:7 — a still-settling comment
+    // stands at the head of the Comments tab on every profile, and keeps its
+    // place when it lands between two pages and the walk meets it again.
+    @Test
+    fun theCommentsTabKeepsASettlingCommentFirstAndMeetsItOnceAcrossPages() = runTest(dispatcher) {
+        profiles.byHandle["ada"] = Outcome.Success(testProfile(id = "u2", handle = "ada"))
+        listOf(null, "ada").forEach { handle ->
+            profiles.comments = Outcome.Success(
+                Page(
+                    listOf(listed("s1", Landing.Pending), listed("c2")),
+                    endCursor = "c1",
+                    hasNextPage = true,
+                ),
+            )
+            val vm = viewModel()
+            vm.start(handle)
+            dispatcher.scheduler.advanceUntilIdle()
+            vm.onTabChange(ProfileTab.COMMENTS)
+            dispatcher.scheduler.advanceUntilIdle()
+            // s1 landed meanwhile and the next page meets it again below the cursor.
+            profiles.comments = Outcome.Success(
+                Page(listOf(listed("s1"), listed("c1")), endCursor = null, hasNextPage = false),
+            )
+            vm.onLoadMore()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val s = vm.state.value
+            assertThat(s.comments.map { it.comment.id }).containsExactly("s1", "c2", "c1").inOrder()
+            assertThat(s.comments.first().comment.landing.isPending).isTrue()
+        }
+    }
+
+    private val removal = Removal(Instant.EPOCH, RemovalAgent.AUTHOR)
+
+    private fun listed(id: String, landing: Landing = Landing.landed(1)) =
+        ProfileComment(testComment(id, landing = landing), target = null, threadPostId = "p1")
 
     /** One page of posts, ending on [next] when more follow. */
     private fun postsPage(vararg ids: String, next: String? = null): Outcome<Page<PostView>> =

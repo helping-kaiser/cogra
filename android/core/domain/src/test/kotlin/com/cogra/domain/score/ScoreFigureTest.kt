@@ -13,7 +13,19 @@ class ScoreFigureTest {
         assertThat(cardFigure(15.2)).isEqualTo("15.20")
         assertThat(cardFigure(-0.5)).isEqualTo("−0.50")
         assertThat(cardFigure(0.0)).isEqualTo("0.00")
-        assertThat(cardFigure(0.004)).isEqualTo("0.00")
+    }
+
+    // FeedKinds.md:19, TagPage.md:33 — a computed figure that is not zero and
+    // under 0.005 either way reads 0.01 or −0.01: 0.00 is a severed one's alone.
+    @Test
+    fun `a tiny card figure rounds away from zero`() {
+        assertThat(cardFigure(0.0031)).isEqualTo("0.01")
+        assertThat(cardFigure(-0.00042)).isEqualTo("−0.01")
+        assertThat(cardFigure(0.0000003)).isEqualTo("0.01")
+        assertThat(cardFigure(0.004999)).isEqualTo("0.01")
+        assertThat(cardFigure(0.005)).isEqualTo("0.01")
+        assertThat(cardFigure(-0.005)).isEqualTo("−0.01")
+        assertThat(cardFigure(0.0149)).isEqualTo("0.01")
     }
 
     @Test

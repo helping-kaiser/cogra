@@ -16,6 +16,7 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { borrowedViewHandler } from "@/test/borrowed-view";
 import { byNode } from "@/test/data-node";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
@@ -274,7 +275,7 @@ describe("ProfileScreen", () => {
             user: {
               __typename: "User",
               id: "u2",
-              posts: { __typename: "RecordConnection", totalCount: 12 },
+              posts: { __typename: "PostConnection", totalCount: 12 },
               opinionsOn: { __typename: "RecordConnection", bundleCount: 1204 },
               opinionsBy: { __typename: "RecordConnection", bundleCount: 7 },
             },
@@ -307,7 +308,7 @@ describe("ProfileScreen", () => {
             user: {
               __typename: "User",
               id,
-              posts: { __typename: "RecordConnection", totalCount: 12 },
+              posts: { __typename: "PostConnection", totalCount: 12 },
               opinionsOn: { __typename: "RecordConnection", bundleCount: 1204 },
               opinionsBy: { __typename: "RecordConnection", bundleCount: 7 },
             },
@@ -443,6 +444,55 @@ describe("ProfileScreen", () => {
     renderWithProviders(<ProfileScreen handle="ada" from="saved" />, { store: signedInStore() });
     fireEvent.click(await screen.findByTestId(byNode("profile.identity.actionRow.message")));
     expect(push).toHaveBeenCalledWith("/chats?from=u%3Aada%2Fsaved");
+  });
+
+  // ProfileOther.md:51 — a guest's wide anchor names the borrowed view beside
+  // the hollow face, its handle ellipsized before `'s opinion`.
+  it("profileother_md_51_a_guests_wide_anchor_words_name_the_borrowed_view", async () => {
+    server.use(
+      borrowedViewHandler("genesismod"),
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const anchor = await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor"));
+    await waitFor(() => expect(anchor).toHaveTextContent("@genesismod's opinion"));
+    expect(anchor).not.toHaveTextContent("Your opinion");
+    expect(screen.getByTestId(byNode("profile.identity.actionRow.stance.anchor.face"))).toHaveTextContent("🫥");
+    expect(screen.getByTestId("profile-stance-words-handle").className).toContain("truncate");
+    expect(screen.getByTestId("profile-stance-words-suffix").className).toContain("flex-none");
+  });
+
+  // ProfileOther.md:53 — its accessible name keeps the full handle.
+  it("profileother_md_53_a_guests_wide_anchor_name_keeps_the_full_handle", async () => {
+    server.use(
+      borrowedViewHandler("genesismod"),
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const anchor = await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor"));
+    await waitFor(() => expect(anchor).toHaveAccessibleName("@genesismod's opinion on @ada"));
+  });
+
+  // ProfileOther.md:49 — the guest's tap still opens the gate under the new words.
+  it("profileother_md_49_a_guests_tap_on_the_named_anchor_opens_the_gate", async () => {
+    server.use(
+      borrowedViewHandler("genesismod"),
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const anchor = await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor"));
+    await waitFor(() => expect(anchor).toHaveTextContent("@genesismod's opinion"));
+    fireEvent.click(anchor);
+    expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
   });
 
   it("asks a guest to join on Message", async () => {

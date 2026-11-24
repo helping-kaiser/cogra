@@ -1,8 +1,10 @@
-import { fireEvent, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PostView } from "@/lib/api/content-api";
 import { fakeClampLayout } from "@/test/fake-clamp-layout";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { expectWrapsLongWords } from "@/test/written";
 import { createTokenStore } from "@/lib/session/token-store";
@@ -59,7 +61,7 @@ function post(over: Record<string, unknown> = {}): PostView {
     genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
     comments: { __typename: "CommentConnection", totalCount: 0 },
     ...over,
   } as unknown as PostView;
@@ -96,23 +98,43 @@ const tagged = () => ({
       pending: false,
     },
   ],
-  references: [
-    {
-      __typename: "ReferenceClaim",
-      targetId: "l1-mira",
-      relevance: 0.1,
-      support: 0.1,
-      withdrawalCost: 1,
-      pending: false,
-      target: {
-        __typename: "User",
-        id: "u2",
-        handle: "mira",
-        displayName: moderated("Mira Voss"),
-      },
-    },
-  ],
+  // A card read carries the count; the rows are the sheet's own read.
+  referenceCount: 1,
 });
+
+/** The one citation `tagged` counts, as `PostReferences` serves it. */
+const MIRA = {
+  __typename: "ReferenceClaim",
+  targetId: "l1-mira",
+  relevance: 0.1,
+  support: 0.1,
+  withdrawalCost: 1,
+  rawRelevance: 0.1,
+  rawSupport: 0.1,
+  pending: false,
+  target: {
+    __typename: "User",
+    id: "u2",
+    handle: "mira",
+    displayName: moderated("Mira Voss"),
+  },
+};
+
+const server = startMswServer();
+
+/** Answers `PostReferences` with `rows`, counting the reads it is asked. */
+function servedReferences(rows: unknown[], hold?: Promise<void>) {
+  const log = { reads: 0 };
+  server.use(
+    gqlLink.query("PostReferences", async ({ variables }) => {
+      log.reads += 1;
+      expect(variables).toMatchObject({ id: "p1", includePending: true });
+      await hold;
+      return HttpResponse.json({ data: { post: { __typename: "Post", id: "p1", references: rows } } });
+    }),
+  );
+  return log;
+}
 
 function mount(
   node: PostView,
@@ -320,7 +342,8 @@ describe("PostCard", () => {
   // THE COUNTS ARE THE WAY IN (graph.json: every `reference count` edge
   // advances to `RefsSheet`), and which control opens it is the master's own
   // split between a summary card and a detail surface.
-  it("opens the tags-and-references sheet from the counts on a summary card", () => {
+  it("opens the tags-and-references sheet from the counts on a summary card", async () => {
+    servedReferences([MIRA]);
     mount(post(tagged()));
     expect(screen.getByTestId("card-refs-sheet")).not.toHaveAttribute("open");
     fireEvent.click(screen.getByTestId("card-topics-counts"));
@@ -329,12 +352,88 @@ describe("PostCard", () => {
     expect(screen.getByTestId("card-refs-sheet-topic-photography-pair")).toHaveTextContent(
       "+0.40 / 0.90",
     );
+    expect(await screen.findByTestId("card-refs-sheet-reference-l1-mira")).toBeInTheDocument();
   });
 
   it("makes the whole line the opener on the detail surface", () => {
-    mount(post(tagged()), { variant: "detail" });
+    const log = servedReferences([MIRA]);
+    mount(post({ ...tagged(), references: [MIRA] }), { variant: "detail" });
     fireEvent.click(screen.getByTestId("card-topics"));
     expect(screen.getByTestId("card-refs-sheet")).toHaveAttribute("open");
+    // The detail's own read carried the list: the sheet holds it and reads nothing.
+    expect(screen.getByTestId("card-refs-sheet-reference-l1-mira")).toBeInTheDocument();
+    expect(log.reads).toBe(0);
+  });
+
+  // THE CARD CARRIES THE COUNT; THE SHEET READS THE ROWS AS IT RISES (api-spec.md
+  // "Query budgets", jakob 2026-11-23). What the reader sees is the same number
+  // and the same rows — only WHEN the rows are read moves.
+  describe("a card's citations, counted on the card and read by the sheet", () => {
+    it("prints the card's referenceCount on its line, as the list's length did", () => {
+      mount(post({ ...tagged(), referenceCount: 3 }));
+      expect(screen.getByTestId("card-topics-counts")).toHaveTextContent("3 references");
+    });
+
+    it("reads the rows by id when the sheet opens, never before, and the Loading… line stands meanwhile", async () => {
+      let release!: () => void;
+      const log = servedReferences([MIRA], new Promise<void>((resolve) => (release = resolve)));
+      mount(post(tagged()));
+      await act(async () => {});
+      expect(log.reads).toBe(0);
+      fireEvent.click(screen.getByTestId("card-topics-counts"));
+      await waitFor(() => expect(log.reads).toBe(1));
+      // The house ladder: past 200ms the wait says Loading… where the rows go.
+      expect(await screen.findByTestId("card-refs-sheet-loading", {}, { timeout: 1000 })).toHaveTextContent(
+        "Loading…",
+      );
+      expect(screen.queryByTestId("card-refs-sheet-reference-l1-mira")).toBeNull();
+      release();
+      expect(await screen.findByTestId("card-refs-sheet-reference-l1-mira")).toBeInTheDocument();
+      expect(screen.queryByTestId("card-refs-sheet-loading")).toBeNull();
+      expect(screen.getByText("References")).toBeInTheDocument();
+    });
+
+    it("reads afresh every time the sheet rises", async () => {
+      const log = servedReferences([MIRA]);
+      mount(post(tagged()));
+      fireEvent.click(screen.getByTestId("card-topics-counts"));
+      await screen.findByTestId("card-refs-sheet-reference-l1-mira");
+      // Following a row drops the sheet (`RefsSheet`); the next rise is a new read.
+      fireEvent.click(screen.getByRole("link", { name: /@mira/ }));
+      fireEvent.click(screen.getByTestId("card-topics-counts"));
+      await waitFor(() => expect(log.reads).toBe(2));
+    });
+
+    it("says the house line over Retry when the read gets no answer, and Retry reads again", async () => {
+      let fail = true;
+      let reads = 0;
+      server.use(
+        gqlLink.query("PostReferences", () => {
+          reads += 1;
+          if (fail) return HttpResponse.error();
+          return HttpResponse.json({ data: { post: { __typename: "Post", id: "p1", references: [MIRA] } } });
+        }),
+      );
+      mount(post(tagged()));
+      fireEvent.click(screen.getByTestId("card-topics-counts"));
+      expect(await screen.findByTestId("card-refs-sheet-error")).toHaveTextContent("Can't reach the server.");
+      fail = false;
+      fireEvent.click(screen.getByTestId("card-refs-sheet-retry"));
+      expect(await screen.findByTestId("card-refs-sheet-reference-l1-mira")).toBeInTheDocument();
+      expect(screen.queryByTestId("card-refs-sheet-error")).toBeNull();
+      expect(reads).toBe(2);
+    });
+
+    it("reads nothing for a card that cites nothing", async () => {
+      const log = servedReferences([]);
+      // The detail painted off the cache holds no list; its whole line opens the sheet.
+      mount(post({ ...tagged(), referenceCount: 0 }), { variant: "detail" });
+      fireEvent.click(screen.getByTestId("card-topics"));
+      expect(screen.getByTestId("card-refs-sheet")).toHaveAttribute("open");
+      await act(async () => {});
+      expect(log.reads).toBe(0);
+      expect(screen.queryByText("References")).toBeNull();
+    });
   });
 
   // THE ⋮ IS ON EVERY NON-DETAIL CARD (`PostCard.jsx:262`), and the menu it

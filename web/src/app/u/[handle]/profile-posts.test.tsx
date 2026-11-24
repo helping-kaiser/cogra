@@ -110,12 +110,10 @@ function servePosts(pages: Record<string, { posts: PostView[]; next: string | nu
           user: {
             __typename: "User",
             id: read.id,
+            // `User.posts`: each edge's node is the post itself.
             posts: {
-              __typename: "RecordConnection",
-              edges: page.posts.map((post) => ({
-                __typename: "RecordEdge",
-                node: { __typename: "Record", id: `rec-${post.id}`, target: post },
-              })),
+              __typename: "PostConnection",
+              edges: page.posts.map((post) => ({ __typename: "PostEdge", cursor: `cur-${post.id}`, node: post })),
               pageInfo: { __typename: "PageInfo", hasNextPage: page.next !== null, endCursor: page.next },
             },
           },
@@ -581,6 +579,121 @@ describe("ProfilePosts — a post card's menu (ProfilePostsMenu.md)", () => {
       ["profile.menuSheet.opinions", "Opinions on this"],
       ["profile.menuSheet.license", "License terms"],
     ]);
+  });
+});
+
+// A STILL-SETTLING POST ON A PROFILE (design rounds 61/62; ProfilePosts.md:7,
+// :11, :15; ProfilePostsOwn.md:9, :11, :19; seam 395 items 1-2): it heads the
+// newest-first list on every profile, own and anyone's, wearing Still settling
+// with its score slot bare, and the Posts figure counts it — the figure and
+// the list read one connection, so paged to its end the list reaches the
+// figure.
+describe("ProfilePosts — a still-settling post heads the list (rounds 61/62)", () => {
+  const settling = (id: string, over: Record<string, unknown> = {}) =>
+    reelPost(id, "photo", { author: ADA, landing: { __typename: "Landing", state: "PENDING" }, ...over });
+
+  const removedAt = () => new Date(Date.now() - 3 * 3_600_000).toISOString();
+  const removedOver = () => ({
+    title: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+    description: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+    attachments: [],
+    removal: { __typename: "Removal", at: removedAt(), by: "AUTHOR" },
+  });
+
+  function serveFigures(posts: number) {
+    server.use(
+      gqlLink.query("ProfileFigures", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            user: {
+              __typename: "User",
+              id: variables.id,
+              posts: { __typename: "PostConnection", totalCount: posts },
+              opinionsOn: { __typename: "RecordConnection", bundleCount: 0 },
+              opinionsBy: { __typename: "RecordConnection", bundleCount: 0 },
+            },
+          },
+        }),
+      ),
+    );
+  }
+
+  function expectSettling(id: string) {
+    expect(screen.getByTestId(`profile-post-${id}-pending`)).toHaveTextContent(/^Still settling$/);
+    // Its score slot bare — a door with no figure in it (ProfilePosts.md:7).
+    expect(screen.getByTestId(byNode("profile.posts.card.actionRow.score", id))).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("profile.posts.card.actionRow.score.value", id))).toBeNull();
+  }
+
+  it("a_settling_post_heads_anothers_profile_wearing_still_settling_its_score_slot_bare", async () => {
+    // ProfilePosts.md:7.
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [settling("p3"), adas("p2"), adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
+    await openPostsTab();
+    expect(cardIds()).toEqual(["p3", "p2", "p1"]);
+    expectSettling("p3");
+    expect(screen.queryByTestId("profile-post-p2-pending")).toBeNull();
+    expect(screen.queryByTestId("profile-post-p1-pending")).toBeNull();
+  });
+
+  it("a_settling_post_heads_your_own_profile_wearing_still_settling_its_score_slot_bare", async () => {
+    // ProfilePostsOwn.md:9.
+    serveOwn();
+    serveChronicle();
+    servePosts({ "": { posts: [settling("p3"), settling("p2"), adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedIn("u-ada") });
+    await openPostsTab();
+    expect(cardIds()).toEqual(["p3", "p2", "p1"]);
+    expectSettling("p3");
+    expectSettling("p2");
+    expect(screen.queryByTestId("profile-post-p1-pending")).toBeNull();
+  });
+
+  it("a_post_removed_before_it_lands_wears_both_marks_at_the_head", async () => {
+    // ProfilePosts.md:11; ProfilePostsOwn.md:19.
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [settling("p2", removedOver()), adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
+    await openPostsTab();
+    expect(cardIds()).toEqual(["p2", "p1"]);
+    expect(screen.getByTestId(byNode("profile.posts.card.removalMark.line", "p2"))).toHaveTextContent(
+      /^Removed by its author$/,
+    );
+    expectSettling("p2");
+  });
+
+  it("the_posts_figure_counts_settling_and_removed_posts_and_the_list_paged_to_its_end_reaches_it", async () => {
+    // ProfilePosts.md:15; ProfilePostsOwn.md:11; the figure and the list agree.
+    serveAda();
+    serveChronicle();
+    serveFigures(4);
+    const reads = servePosts({
+      "": { posts: [settling("p4"), adas("p3")], next: "c1" },
+      // A page that repeats a post already drawn (one that landed between the
+      // two reads) adds no second card — no duplicate, no gap.
+      c1: { posts: [adas("p3"), reelPost("p2", "photo", { author: ADA, ...removedOver() }), adas("p1")], next: null },
+    });
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <ProfileScreen handle="ada" />
+      </ScrollHostProvider>,
+      { store: signedIn() },
+    );
+    const figure = await screen.findByTestId(byNode("profile.identity.figures.posts"));
+    expect(figure).toHaveTextContent("4Posts");
+    await openPostsTab();
+    const { intersect } = await import("@/test/media-env");
+    act(() => intersect(true));
+    await waitFor(() => expect(reads.at(-1)).toEqual({ id: "u-ada", after: "c1" }));
+    await waitFor(() => expect(cardIds()).toEqual(["p4", "p3", "p2", "p1"]));
+    expect(cardIds()).toHaveLength(4);
+    expectSettling("p4");
+    scroller.remove();
   });
 });
 

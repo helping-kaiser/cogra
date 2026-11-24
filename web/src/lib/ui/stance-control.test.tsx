@@ -22,11 +22,12 @@ import { declared } from "@/test/css";
 import { byNode } from "@/test/data-node";
 import { renderWithProviders } from "@/test/providers";
 import { CarriedSnackbar } from "./carried-snackbar";
+import { SHIELD_TEST_ID } from "./outside-press";
 import type { DataNode } from "./data-node";
 import { PAD_PARK_INSET_PX, PadParkingProvider } from "./pad-parking";
 import { NO_STANDING_LABEL, SEVERED_LABEL } from "./stance-readout";
 import { LONG_PRESS_MS, SETTING_AFTER_MS, StanceControl } from "./stance-control";
-import { AFFINITY_AXES, type StanceAxes } from "./stance-format";
+import { AFFINITY_AXES, formatStancePair, type StanceAxes } from "./stance-format";
 
 const TARGET: StanceTargetRef = { id: "post-1", kind: "post", label: "this post" };
 const PREFIX = "stance-post-1";
@@ -442,6 +443,91 @@ describe("the stance control at rest", () => {
     await settle();
     expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
     expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent("+0.55 / +0.20");
+  });
+
+  // THE VANTAGE LAW (stance-control.md, *A guest's view*, jakob 2026-10-13/14;
+  // readme §13; TagPage.md:55-57, ProfileOther.md:51-53).
+  describe("a guest's wide anchor names the borrowed view", () => {
+    const words = () => screen.getByTestId(`${PREFIX}-words`);
+    const guestWide = async (options: StubStanceOptions = {}) => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+        stanceData: createStubStanceData(options),
+      });
+      await settle();
+    };
+
+    it("stance_control_md_116_a_guest_reads_the_viewpoints_name_never_your_opinion", async () => {
+      await guestWide({ borrowedView: "genesismod" });
+      expect(words()).toHaveTextContent("@genesismod's opinion");
+      expect(control()).not.toHaveTextContent("Your opinion");
+      // Beside the hollow face.
+      expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("🫥");
+    });
+
+    it("stance_control_md_116_the_name_comes_from_the_borrowed_view_never_a_fixed_one", async () => {
+      await guestWide({ borrowedView: "mira" });
+      expect(words()).toHaveTextContent("@mira's opinion");
+      expect(control()).toHaveAccessibleName("@mira's opinion on this post");
+    });
+
+    it("stance_control_md_116_the_handle_truncates_before_its_s_opinion_which_stays_whole", async () => {
+      await guestWide({ borrowedView: "genesismod" });
+      const handle = screen.getByTestId(`${PREFIX}-words-handle`);
+      const suffix = screen.getByTestId(`${PREFIX}-words-suffix`);
+      expect(handle).toHaveTextContent(/^@genesismod$/);
+      expect(suffix).toHaveTextContent(/^'s opinion$/);
+      // The handle is the one part that gives: it shrinks and ellipsizes…
+      expect(handle.className).toContain("truncate");
+      expect(handle.className).toContain("min-w-0");
+      // …and the suffix never does, so the words always name whose view it is.
+      expect(suffix.className).toContain("flex-none");
+      expect(words().className).toContain("min-w-0");
+      // The row stays one line.
+      expect(words().className).toContain("whitespace-nowrap");
+    });
+
+    it("stance_control_md_118_the_ellipsis_is_print_only_the_accessible_name_keeps_the_full_handle", async () => {
+      const long = "genesismoderator_of_the_whole_graph";
+      await guestWide({ borrowedView: long });
+      expect(control()).toHaveAccessibleName(`@${long}'s opinion on this post`);
+      // Drawn, never a second name.
+      expect(words()).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("a_read_that_names_nobody_draws_the_face_alone_never_your_opinion", async () => {
+      await guestWide({ borrowedView: null });
+      expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
+      expect(control()).not.toHaveTextContent("Your opinion");
+    });
+
+    it("a_server_render_draws_no_words_until_the_reader_is_known", async () => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+        stanceData: createStubStanceData({ borrowedView: "genesismod" }),
+        hydrate: true,
+      });
+      // The first commit reads the session's server snapshot (`resolving`).
+      expect(screen.queryByText("Your opinion")).toBeNull();
+      await settle();
+      expect(words()).toHaveTextContent("@genesismod's opinion");
+    });
+
+    it("a_signed_in_readers_wide_anchor_keeps_your_opinion_whoever_their_feed_borrows", async () => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+        store: signedInStore(),
+        stanceData: createStubStanceData({ borrowedView: "genesismod" }),
+      });
+      await settle();
+      expect(words()).toHaveTextContent(/^Your opinion$/);
+      expect(control()).toHaveAccessibleName("Give your opinion on this post");
+    });
+
+    it("a_guests_narrow_anchor_draws_no_words", async () => {
+      renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, {
+        stanceData: createStubStanceData({ borrowedView: "genesismod" }),
+      });
+      await settle();
+      expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
+    });
   });
 
   it("keeps the standing it has when a re-read faults", async () => {
@@ -1121,6 +1207,30 @@ describe("the release that never commits", () => {
         fireEvent.pointerUp(beneath, { pointerId: 3 });
         tail("click", 3);
       });
+      expect(opened).toBe(0);
+    });
+
+    // NOTHING BENEATH LIGHTS FROM THAT PRESS (jakob, 2026-11-23: the share
+    // button beneath lit as if pressed and stayed lit). A touch browser moves
+    // `:hover` to whatever it hit-tests at the tap, so the wash's place is held
+    // by a transparent shield until the gesture's click (`outside-press.ts`).
+    it("holds the wash's place until the gesture's click, so the tap lights nothing beneath", async () => {
+      mount();
+      await settle();
+      await openPad();
+      await release();
+      await act(async () => {
+        fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+      });
+      expect(screen.queryByTestId(`${PREFIX}-scrim`)).toBeNull();
+      const shield = screen.getByTestId(SHIELD_TEST_ID);
+      // The wash's own parent (the portal into the body), so its stacking.
+      expect(shield.parentElement).toBe(document.body);
+      await act(async () => {
+        fireEvent.pointerUp(shield, { pointerId: 3 });
+        fireEvent(shield, new PointerEvent("click", { bubbles: true, cancelable: true, pointerId: 3 }));
+      });
+      expect(screen.queryByTestId(SHIELD_TEST_ID)).toBeNull();
       expect(opened).toBe(0);
     });
 
@@ -3568,5 +3678,150 @@ describe("an applicant's stance face", () => {
     await openPad();
     expect(screen.getByTestId("join-prompt")).toBeInTheDocument();
     expect(carried()).toBeNull();
+  });
+});
+
+// A GUEST'S FACES WEAR THE BORROWED VIEW'S OWN STANCE (FeedBare.md:7-9,
+// TagPage.md:73-81, GuestGate.md:11; the master's `anchorName`), read-only:
+// display, never a bundle, a projection, a severance, a kept pick or a write.
+describe("a guest's face wears the borrowed view's stance", () => {
+  const HELD = { current: { pDirected: 0.55, pInterest: 0.2 }, records: 2, inert: false, severed: false };
+  const face = () => screen.getByTestId(`${PREFIX}-resting-face`);
+  const guestMount = (options: StubStanceOptions = {}, wide = false) => {
+    const data = createStubStanceData(options);
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide={wide} />, {
+      stanceData: data,
+    });
+    return data;
+  };
+
+  it("feedbare_md_7_a_held_borrowed_stance_wears_its_face_and_exact_pair", async () => {
+    guestMount({ borrowed: { "post-1": HELD } });
+    await settle();
+    expect(face()).toHaveTextContent("😊");
+    expect(face().className).not.toContain("grayscale");
+    expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent("+0.55 / +0.20");
+  });
+
+  it("feedbare_md_9_a_held_borrowed_stance_is_spoken_as_the_views_opinion_with_its_reading", async () => {
+    guestMount({ borrowed: { "post-1": HELD } });
+    await settle();
+    expect(control()).toHaveAccessibleName(/^@genesismod's opinion on this post: .+, \+0\.55 \/ \+0\.20\.$/);
+    expect(control()).not.toHaveAccessibleName(/Press and hold/);
+  });
+
+  it("feedbare_md_7_no_borrowed_stance_is_the_hollow_face", async () => {
+    guestMount();
+    await settle();
+    expect(face()).toHaveTextContent("🫥");
+    expect(face().className).toContain("grayscale");
+    expect(screen.queryByTestId(`${PREFIX}-resting-exact`)).toBeNull();
+    expect(control()).toHaveAccessibleName("@genesismod's opinion on this post");
+  });
+
+  it("feedbare_md_9_a_narrow_anchor_speaks_the_views_name_and_draws_no_words", async () => {
+    guestMount();
+    await settle();
+    expect(control()).toHaveAccessibleName("@genesismod's opinion on this post");
+    expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
+  });
+
+  it("an_inert_borrowed_stance_reads_as_a_members_own_unreachable_face", async () => {
+    guestMount({ borrowed: { "post-1": { current: { pDirected: 0, pInterest: 0.4 }, records: 1, inert: true, severed: false } } });
+    await settle();
+    expect(face()).toHaveTextContent("🤔");
+  });
+
+  it("a_severed_borrowed_stance_reads_as_a_members_own_walked_back_face", async () => {
+    guestMount({ borrowed: { "post-1": { current: ORIGIN, records: 3, inert: true, severed: true } } });
+    await settle();
+    expect(face()).toHaveTextContent("🤷");
+    expect(control()).toHaveAccessibleName(`@genesismod's opinion on this post: ${SEVERED_LABEL}, ${formatStancePair(ORIGIN)}.`);
+  });
+
+  it("tagpage_md_75_a_held_borrowed_stance_on_the_wide_anchor_draws_its_pair_not_the_words", async () => {
+    guestMount({ borrowed: { "post-1": HELD } }, true);
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent("+0.55 / +0.20");
+  });
+
+  it("a_view_nobody_named_keeps_the_hollow_face", async () => {
+    guestMount({ borrowed: { "post-1": HELD }, borrowedView: null });
+    await settle();
+    expect(face()).toHaveTextContent("🫥");
+  });
+
+  it("guestgate_md_11_feedbare_md_27_a_tap_raises_the_guest_gate_and_stages_nothing", async () => {
+    const data = guestMount({ borrowed: { "post-1": HELD } });
+    await settle();
+    await openPad();
+    await settle();
+    expect(screen.getByTestId("join-prompt")).toBeInTheDocument();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    // NOTHING IS READ AS THE READER'S OWN, PROJECTED, SEVERED, KEPT OR SIGNED.
+    expect(data.viewerCalls).toEqual([]);
+    expect(data.sent).toEqual([]);
+    expect(data.severed).toEqual([]);
+  });
+
+  it("a_hold_signs_nothing_for_a_guest", async () => {
+    const data = guestMount({ borrowed: { "post-1": HELD } });
+    await settle();
+    await hold();
+    expect(data.viewerCalls).toEqual([]);
+    expect(data.sent).toEqual([]);
+  });
+
+  it("a_signed_in_reader_never_asks_for_a_borrowed_stance", async () => {
+    const data = mount({ borrowed: { "post-1": HELD } });
+    await settle();
+    expect(data.borrowedReads).toEqual([]);
+    expect(face()).toHaveTextContent("🫥");
+    expect(control()).toHaveAccessibleName("Give your opinion on this post");
+  });
+
+  it("signing_in_afterwards_shows_the_members_own_stance_never_the_borrowed_one", async () => {
+    const store = createTokenStore();
+    const data = createStubStanceData({
+      borrowed: { "post-1": HELD },
+      seed: { "post-1": { records: [{ pDirected: -0.6, pInterest: 0.5 }] } },
+    });
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    expect(face()).toHaveTextContent("😊");
+    await act(async () => {
+      store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "u1" });
+    });
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent(formatStancePair({ pDirected: -0.6, pInterest: 0.5 }));
+    expect(control()).toHaveAccessibleName(/^Your opinion on this post: /);
+    expect(control()).not.toHaveAccessibleName(/genesismod/);
+    // The member's tab never kept anything the guest saw.
+    expect(await listKeptPicks("u1")).toEqual([]);
+  });
+
+  it("a_guests_vouching_face_borrows_nothing_and_keeps_its_own_name", async () => {
+    const data = createStubStanceData({ borrowed: { "post-1": HELD } });
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} vouchesIn />, { stanceData: data });
+    await settle();
+    expect(data.borrowedReads).toEqual([]);
+    expect(face()).toHaveTextContent("🫥");
+    expect(control()).toHaveAccessibleName("Give your opinion on this post");
+  });
+
+  it("a_signed_in_member_with_no_stance_never_sees_the_borrowed_face", async () => {
+    const store = createTokenStore();
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, {
+      store,
+      stanceData: createStubStanceData({ borrowed: { "post-1": HELD } }),
+    });
+    await settle();
+    await act(async () => {
+      store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "u1" });
+    });
+    await settle();
+    expect(face()).toHaveTextContent("🫥");
+    expect(screen.queryByTestId(`${PREFIX}-resting-exact`)).toBeNull();
   });
 });

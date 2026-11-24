@@ -74,11 +74,15 @@ const TYPE = {
 };
 
 /* How the aside yields (round 40): a bare handle as the chip's handle does,
-   words naming a handle by giving up the handle first, plain words never. */
+   words naming a handle by giving up the handle first, and words with no
+   handle — a tag up to 128 characters, `#saltmaps` — by ending in "…" while
+   the title keeps its room (round 62, the long-names law's case 2; seam 399).
+   An aside that is not a string keeps its width. */
 const ASIDE_FLEX = {
   none: { flex: "none" },
   bare: { flexShrink: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
   words: { flexShrink: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  text: { flexShrink: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
 };
 
 const TONES = {
@@ -186,12 +190,16 @@ export function ContentRow({
   node,
   nodeKey,
   redacted = false,
+  discRedacted = false,
 }) {
   const shape = VARIANTS[variant] ?? VARIANTS.ledger;
   /* A DELETED ACCOUNT'S ROW (jakob 2026-10-07, HA-3): the reserved disc and
      `REDACTED_ACTOR_NAME` in the system's voice, the aside dropped — the
      handle a row would print is gone, and anything in its place would invent
-     one. `ActorChip`'s law, at row scale. */
+     one. `ActorChip`'s law, at row scale. `discRedacted` is the disc alone:
+     a row whose disc is a person's picture and whose person's account is
+     gone — the chronicle's `Mentioned` `a deleted account` — keeps its own
+     words and wears the reserved disc. */
   const title = redacted ? REDACTED_ACTOR_NAME : titleGiven;
   const titleAside = redacted ? undefined : asideGiven;
   /* A row is a control unless it is declared not to be. `inert` is the
@@ -199,11 +207,11 @@ export function ContentRow({
      destination — the same card, with nothing to press. */
   const Tag = inert ? "div" : "button";
   const ellipsis = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
-  const asideHandle = typeof titleAside !== "string" ? "none" : /^@[A-Za-z0-9_]+$/.test(titleAside) ? "bare" : /(?<![\w@])@[A-Za-z0-9_]/.test(titleAside) ? "words" : "none";
+  const asideHandle = typeof titleAside !== "string" ? "none" : /^@[A-Za-z0-9_]+$/.test(titleAside) ? "bare" : /(?<![\w@])@[A-Za-z0-9_]/.test(titleAside) ? "words" : "text";
   const heading = (
     <span
       style={{
-        ...(asideHandle === "bare" ? { flexShrink: 999 } : asideHandle === "words" ? { flex: "none", maxWidth: "100%" } : null),
+        ...(asideHandle === "bare" ? { flexShrink: 999 } : asideHandle === "words" || asideHandle === "text" ? { flex: "none", maxWidth: "100%" } : null),
         fontSize: "var(--text-label-large)",
         lineHeight: "var(--text-label-large--line-height)",
         letterSpacing: "var(--text-label-large--letter-spacing)",
@@ -246,7 +254,7 @@ export function ContentRow({
       data-node-key={action ? undefined : node && nodeKey}
     >
       <span style={{ position: "relative", flex: "none", width: "40px", height: "40px" }} data-node={node && "disc"}>
-        <Disc redacted={redacted} image={image} imageShape={shape.image} name={name} face={face} letter={letter} glyph={glyph} tone={shape.disc} />
+        <Disc redacted={redacted || discRedacted} image={image} imageShape={shape.image} name={name} face={face} letter={letter} glyph={glyph} tone={shape.disc} />
         {direction && (
           <span
             aria-hidden="true"
@@ -279,7 +287,8 @@ export function ContentRow({
             name) ellipsizes first, the handle stays whole until it alone
             cannot fit. An aside whose words name a handle — `Gave an opinion
             on @mira` — gives up its handle first, the words on both sides
-            kept (`nameInLine`). An aside with no handle keeps its width. */}
+            kept (`nameInLine`). An aside with no handle — a tag — ends in "…", the
+            title keeping its room (round 62). */}
         {titleAside ? (
           <span style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)", minWidth: 0 }}>
             {heading}

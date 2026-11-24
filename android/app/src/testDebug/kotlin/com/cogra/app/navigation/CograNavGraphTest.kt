@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasContentDescription
@@ -282,10 +283,12 @@ class CograNavGraphTest {
         waitForTag("feed.card.tagsLine.tag:rust")
 
         compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
-        waitForTag("topic_title")
+        waitForTag("tagPage.header.title")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
+        // TagPage.md:49 — from the feed, the arrow reads `Back to feed`.
+        compose.onNodeWithContentDescription("Back to feed").assertExists()
 
-        compose.onNodeWithTag("topic_back").performClick()
+        compose.onNodeWithTag("tagPage.header.back").performClick()
         waitForTag("feed.card:p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
@@ -302,21 +305,43 @@ class CograNavGraphTest {
                 topics = listOf(com.cogra.domain.testing.testTopicClaim("rust")),
             ),
         )
-        // The row sits inside the populated branch, so the topic needs
-        // something tagged for it to stand at all.
         topics.content["rust"] = listOf(com.cogra.domain.testing.testTaggedContent("p1"))
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed.card.tagsLine.tag:rust")
         compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
-        waitForTag("topic_stance_row")
+        // TagPage.md:59 — the registered row's face (`tagPage.actionRow.stance`).
+        waitForTag("tagPage.actionRow.stance.anchor")
 
-        compose.onNodeWithTag("topic_affinity_stance").performClick()
+        compose.onNodeWithTag("tagPage.actionRow.stance.anchor").performClick()
 
         waitForTag("join_prompt")
         // Asked, never bounced: the reader is still on the topic page.
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
+    }
+
+    // FeedBare.md:27 — WHEN tap a stance face GIVEN signed out -> the guest
+    // gate rises AND NEVER the pad opens; FeedBare.md:9 — the card's anchor
+    // speaks as the borrowed view's. The card's face is a leaf no host threads
+    // a gate to: the shell provides it (`LocalGuestGate`).
+    @Test
+    fun aGuestTapOnAFeedCardsFaceRaisesTheGateAndSpeaksTheBorrowedView() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed.card.actionRow.stance.anchor")
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodes(hasContentDescription("@genesis_mod's opinion on this post"))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        compose.onNodeWithTag("feed.card.actionRow.stance.anchor").performClick()
+
+        waitForTag("join_prompt")
+        assertThat(compose.onAllNodesWithTag("feed_post_p1_stance_pad").fetchSemanticsNodes()).isEmpty()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
     // TagPage.md:15, :41 — the tag page draws the feed's own post card under
@@ -350,6 +375,62 @@ class CograNavGraphTest {
                 ?.toRoute<Topic>()?.name == "fieldnotes"
         }
         compose.onNodeWithContentDescription("Back to #rust").assertExists()
+    }
+
+    // jakob 2026-11-23: on a tag's own page its chip does nothing — as a
+    // person's own name does nothing on their profile (ProfilePosts.md:25) —
+    // so no second page of the same tag stacks, and one Back leaves; the tap
+    // never falls through to the card's door either.
+    @Test
+    fun onATagsPageItsOwnChipIsInertAndOneBackLeaves() {
+        val tagged = com.cogra.domain.testing.testPost("p1").copy(
+            topics = listOf(
+                com.cogra.domain.testing.testTopicClaim("rust"),
+                com.cogra.domain.testing.testTopicClaim("fieldnotes"),
+            ),
+        )
+        content.listing = listOf(tagged)
+        topics.content["rust"] = listOf(
+            com.cogra.domain.testing.testTaggedContent("p1").copy(node = com.cogra.domain.TaggedNode.Post(tagged)),
+        )
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed.card.tagsLine.tag:rust")
+        compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
+        waitForTag("tagPage.card:p1")
+
+        // Inert, the chip merges into its card: it is reached in the unmerged tree.
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust", useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+
+        assertThat(navController.currentBackStack.value.count { it.destination.hasRoute<Topic>() }).isEqualTo(1)
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust", useUnmergedTree = true).assertHasNoClickAction()
+
+        compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        waitForTag("feed.card:p1")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    // TagPage.md:31 — a tagged card wears its score as the feed's cards do,
+    // the slot a door to its trace over the tag page.
+    @Test
+    fun theTagPagesCardsWearTheirScore() {
+        val tagged = com.cogra.domain.testing.testPost("p1").copy(
+            topics = listOf(com.cogra.domain.testing.testTopicClaim("rust")),
+        )
+        content.listing = listOf(tagged)
+        topics.content["rust"] = listOf(
+            com.cogra.domain.testing.testTaggedContent("p1").copy(node = com.cogra.domain.TaggedNode.Post(tagged)),
+        )
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed.card.tagsLine.tag:rust")
+        compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
+        waitForTag("tagPage.card:p1")
+        compose.onNodeWithTag("tagPage.card.actionRow.score", useUnmergedTree = true).assertExists()
     }
 
     // Backlog item 68, ruled 2026-09-14: chats moved down the release

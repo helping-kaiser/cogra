@@ -21,6 +21,7 @@ import com.cogra.domain.history.HistoryRepository
 import com.cogra.domain.history.ViewHistoryRepository
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.BorrowedStanceRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.DeviceLockRepository
 import com.cogra.domain.repo.ProfileRepository
@@ -59,6 +60,7 @@ import com.cogra.network.auth.SessionGate
 import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.AccountDeletionRepositoryImpl
 import com.cogra.network.repo.AccountRepositoryImpl
+import com.cogra.network.repo.BorrowedStanceRepositoryImpl
 import com.cogra.network.repo.ContentRepositoryImpl
 import com.cogra.network.repo.DeviceLockRepositoryImpl
 import com.cogra.network.repo.MediaRepositoryImpl
@@ -213,6 +215,9 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun stanceRepository(impl: StanceRepositoryImpl): StanceRepository
+
+    @Binds
+    abstract fun borrowedStanceRepository(impl: BorrowedStanceRepositoryImpl): BorrowedStanceRepository
 
     @Binds
     abstract fun topicRepository(impl: TopicRepositoryImpl): TopicRepository
