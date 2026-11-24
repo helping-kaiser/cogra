@@ -1159,19 +1159,23 @@ pub async fn count_posts(
 /// const-folding the parameter, which it does under a custom plan and
 /// cannot do under a generic one. Written per direction, the sort is the
 /// index's own order and no plan mode can lose it.
-async fn merge_walk<T, Landed, Pending, LFut, PFut>(
+///
+/// The error type is the branches' own, so a walk whose landed branch is
+/// the record mirror (the chronicle) shares the merge with the content
+/// listings.
+async fn merge_walk<T, E, Landed, Pending, LFut, PFut>(
     cursor: Option<ContentCursor>,
     backward: bool,
     limit: i64,
     include_pending: bool,
     landed: Landed,
     pending: Pending,
-) -> Result<Vec<T>, ContentError>
+) -> Result<Vec<T>, E>
 where
     Landed: Fn(Option<LandingOrder>, bool, i64) -> LFut,
     Pending: Fn((Option<Timestamp>, Option<Uuid>), bool, i64) -> PFut,
-    LFut: std::future::Future<Output = Result<Vec<T>, ContentError>>,
-    PFut: std::future::Future<Output = Result<Vec<T>, ContentError>>,
+    LFut: std::future::Future<Output = Result<Vec<T>, E>>,
+    PFut: std::future::Future<Output = Result<Vec<T>, E>>,
 {
     let in_pending = cursor.is_some_and(|c| c.order.is_pending());
     let mut out = Vec::new();
@@ -2380,12 +2384,16 @@ mod tests {
             |c, back, n| {
                 calls.borrow_mut().landed.push((c, back, n));
                 let rows = landed_rows.clone();
-                async move { Ok(rows.into_iter().take(n.max(0) as usize).collect()) }
+                async move {
+                    Ok::<_, ContentError>(rows.into_iter().take(n.max(0) as usize).collect())
+                }
             },
             |c, back, n| {
                 calls.borrow_mut().pending.push((c, back, n));
                 let rows = pending_rows.clone();
-                async move { Ok(rows.into_iter().take(n.max(0) as usize).collect()) }
+                async move {
+                    Ok::<_, ContentError>(rows.into_iter().take(n.max(0) as usize).collect())
+                }
             },
         )
         .await
