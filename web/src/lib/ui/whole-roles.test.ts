@@ -54,6 +54,9 @@ const LICENSED: Record<string, string> = {
   "lib/ui2/feed-filter-sheet.tsx fontWeight:": "FeedFilter.jsx sign words: fontWeight chosen ? 500 : 400",
   "lib/ui/profile-header.tsx fontSize:": "ProfileHeader.jsx name: fontSize nameSize, the two-line rule's fitted size",
   "lib/ui/profile-header.tsx lineHeight:": "ProfileHeader.jsx name: lineHeight nameLineHeight, round(size × 28 / 22)",
+  "lib/ui/name-fit.ts lineHeight:": "ProfileHeader.jsx nameFitSize: the rule's { size, lineHeight }, read by the two hosts below",
+  "app/topics/[name]/topic-view.tsx fontSize:": "_shared.jsx TagFullName: fontSize size, the two-line rule's fitted size, floor 12px",
+  "app/topics/[name]/topic-view.tsx lineHeight:": "_shared.jsx TagFullName: lineHeight, round(size × 28 / 22)",
 };
 
 /** Comments say why; only code sets type. */

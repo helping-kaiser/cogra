@@ -51,12 +51,12 @@
 // badge answers to 48px through `cg-hit` without moving a pixel.
 
 import Link from "next/link";
-import { useRef, useState, type ReactNode, type RefObject } from "react";
+import type { ReactNode } from "react";
 
 import type { OpinionDirection } from "@/lib/profile/opinions-route";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
-import { useMeasureEffect } from "@/lib/ui/measure-effect";
+import { useNameFit } from "@/lib/ui/name-fit";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
 import { REDACTED_ACTOR_NAME } from "@/lib/ui2/content-row";
 import { WRITTEN } from "./written";
@@ -141,90 +141,6 @@ type Figures = {
   readonly opinionsBy: number | null;
 };
 
-/** The name's size and leading, in whole pixels. */
-export type NameFit = { readonly size: number; readonly lineHeight: number };
-
-/** The title-large role's own size and leading, where every name starts. */
-const ROLE_SIZE = 22;
-const ROLE_LEADING = 28;
-
-/**
- * THE NAME'S TWO-LINE RULE (ProfileHeader.jsx `nameFitSize`; Profile.md:87):
- * the largest whole-pixel size from 22 down, in steps of 1, at which the name
- * takes at most two lines, its leading round(size × 28 / 22) px, half up.
- * `lines` counts the name's lines at a size and leading. No smallest size is
- * ruled: two lines are the hard cap.
- */
-export function nameFitSize(lines: (size: number, lineHeight: number) => number): NameFit {
-  for (let size = ROLE_SIZE; size > 1; size -= 1) {
-    const lineHeight = Math.round((size * ROLE_LEADING) / ROLE_SIZE);
-    if (lines(size, lineHeight) <= 2) return { size, lineHeight };
-  }
-  return { size: 1, lineHeight: 1 };
-}
-
-/**
- * The fitted size of the name heading, as `[nameRef, fit]`: hand `nameRef`
- * to the heading, which always renders; `fit` is null while the name holds
- * two lines at the role's own size, else the size the rule gives it.
- *
- * THE BROWSER COUNTS THE LINES. The heading is a block whose height is its
- * lines times its leading, so each candidate size is set on it and its height
- * read (MDN, `Element.getBoundingClientRect`), all before the paint
- * (`useMeasureEffect`; react.dev, *useLayoutEffect*: "measure layout before
- * the browser repaints the screen"), and the inline size it had is put back
- * for React to render the result. The fit follows the line's width (MDN,
- * `ResizeObserver`) and the web font's arrival (MDN, `FontFaceSet.ready`).
- */
-function useNameFit(name: string): [nameRef: RefObject<HTMLHeadingElement | null>, fit: NameFit | null] {
-  const nameRef = useRef<HTMLHeadingElement>(null);
-  const [fit, setFit] = useState<NameFit | null>(null);
-
-  useMeasureEffect(() => {
-    const element = nameRef.current;
-    if (element === null) return;
-    const measure = () => {
-      const { fontSize, lineHeight } = element.style;
-      const next = nameFitSize((size, leading) => {
-        element.style.fontSize = `${size}px`;
-        element.style.lineHeight = `${leading}px`;
-        return Math.round(element.getBoundingClientRect().height / leading);
-      });
-      element.style.fontSize = fontSize;
-      element.style.lineHeight = lineHeight;
-      setFit((previous) => {
-        if (next.size === ROLE_SIZE) return null;
-        return previous?.size === next.size && previous.lineHeight === next.lineHeight ? previous : next;
-      });
-    };
-    measure();
-
-    // Only a change of the line's WIDTH refits: the fit's own height change
-    // is the observer's echo, never a reason to measure again.
-    let width = element.getBoundingClientRect().width;
-    const observer =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(() => {
-            const now = element.getBoundingClientRect().width;
-            if (now === width) return;
-            width = now;
-            measure();
-          });
-    observer?.observe(element);
-    let live = true;
-    void document.fonts?.ready.then(() => {
-      if (live) measure();
-    });
-    return () => {
-      live = false;
-      observer?.disconnect();
-    };
-  }, [name]);
-
-  return [nameRef, fit];
-}
-
 /**
  * Where the website link goes. The stored value is what its owner typed —
  * `solferreira.art` reads as a page RELATIVE to this one in an href — so a
@@ -284,7 +200,7 @@ export function ProfileHeader({
     : displayName?.trim()
       ? displayName
       : handle;
-  const [nameRef, nameFit] = useNameFit(name);
+  const [nameRef, nameFit] = useNameFit<HTMLHeadingElement>(name);
   return (
     <header
       {...testAttributes(node, "profile-identity")}
