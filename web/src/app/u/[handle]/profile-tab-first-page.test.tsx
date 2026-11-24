@@ -181,7 +181,11 @@ beforeEach(() => {
   forgetAllProfileViews();
 });
 
-afterEach(() => {
+// A timer started under the fake clock is run out before the real one comes
+// back: dropped, it would leave the fetch it schedules in flight for the
+// suite's settle to wait out.
+afterEach(async () => {
+  if (vi.isFakeTimers()) await act(async () => void (await vi.runOnlyPendingTimersAsync()));
   vi.useRealTimers();
 });
 
