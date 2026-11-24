@@ -205,9 +205,15 @@ export function PairSheet({
           // short phone (jakob's hand test, 2026-11-23). A keyboard's open
           // still shows it: the browser's focus-visible heuristic follows the
           // last input (HTML, § "The :focus-visible pseudo-class"; MDN).
-          className={`sr-only focus-visible:not-sr-only ${buttonClassName({ variant: "text", size: "sm" })}`}
+          //
+          // ONE LINE, THE TAG CUT (`cg-sr-focusable` keeps `nowrap` when it
+          // shows, TagPadCompose.jsx:52-54; jakob 2026-11-23, a tag is one line
+          // at most): the name ends the line, so the end clip cuts it with "…"
+          // and keeps the words; the route never runs past the sheet. The
+          // words stay whole in the DOM, so its accessible name does too.
+          className={`sr-only focus-visible:not-sr-only max-w-full ${buttonClassName({ variant: "text", size: "sm" })}`}
         >
-          Set exact values for {title}
+          <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">Set exact values for {title}</span>
         </button>
 
         {/* THE PICK'S READOUT STANDS ABOVE THE FIELD — a thumb on the field

@@ -1,12 +1,16 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
-import type { RegistrationProgress } from "@/lib/signing/registration-signer";
+import { useRegistrationProgress } from "@/lib/signing/provider";
+import type { AttachFault, RegistrationProgress } from "@/lib/signing/registration-signer";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
-import { fakeFlow } from "@/test/registration";
+import { fakeCeremony, fakeFlow } from "@/test/registration";
 import { ApplicantStatus } from "./applicant-status";
 
 const server = startMswServer();
@@ -60,6 +64,7 @@ function approval(overrides: Partial<{
   emailVerified: boolean;
   keyAttached: boolean;
   keyOnDevice: boolean;
+  attachFault: AttachFault;
 }> = {}): RegistrationProgress {
   return {
     kind: "awaitingApproval",
@@ -76,10 +81,11 @@ function signedInStore() {
   return store;
 }
 
-function renderStatus(progress: RegistrationProgress | null, flow = fakeFlow().flow) {
+function renderStatus(progress: RegistrationProgress | null, flow = fakeFlow().flow, ceremony = fakeCeremony()) {
   return renderWithProviders(<ApplicantStatus progress={progress} />, {
     store: signedInStore(),
     flow,
+    ceremony,
   });
 }
 
@@ -183,11 +189,106 @@ describe("ApplicantStatus", () => {
   it("names the foreign key when the browser's key was refused at the attach", () => {
     // keyOnDevice without keyAttached: another account's key sits in the
     // store and the silent repair-attach was refused (ACTOR_KEY_IN_USE).
-    renderStatus(approval({ emailVerified: true, keyOnDevice: true }));
+    renderStatus(approval({ emailVerified: true, keyOnDevice: true, attachFault: "keyInUse" }));
     expect(screen.getByTestId("home_key_elsewhere")).toBeInTheDocument();
     expect(screen.getByTestId("home_fresh_key")).toHaveAttribute("href", "/key");
     expect(screen.queryByTestId("feed.keyCard.create")).not.toBeInTheDocument();
     expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
+  });
+
+  // ApplicantFeed.md:19-21, 37-39 (round 66) — the applicant's own key, on
+  // this browser, did not reach the application: `Attach your key`, the
+  // house line and Retry in `Create my key`'s place; never a fresh key, never
+  // "another account".
+  describe("the key that did not attach", () => {
+    const failed = () => approval({ emailVerified: true, keyOnDevice: true, attachFault: "failed" });
+
+    it("reads_attach_your_key_with_the_fault_line_and_retry_in_create_my_keys_place", () => {
+      renderStatus(failed());
+      expect(screen.getByTestId("feed.keyCard.title")).toHaveTextContent("Attach your key");
+      expect(screen.getByTestId("feed.keyCard.body")).toHaveTextContent(
+        "Your key is on this browser. It hasn't reached your application yet.",
+      );
+      const fault = screen.getByTestId("feed.keyCard.attachFault");
+      expect(fault).toHaveAttribute("data-testid-key", "attach");
+      expect(fault).toHaveAttribute("role", "alert");
+      expect(fault).toHaveTextContent("That didn't go through. Retry");
+      expect(screen.queryByTestId("feed.keyCard.create")).toBeNull();
+      expect(screen.queryByTestId("home_key_elsewhere")).toBeNull();
+      expect(screen.queryByTestId("home_fresh_key")).toBeNull();
+      expect(document.body).not.toHaveTextContent(/another account|fresh key/i);
+    });
+
+    it("retry_attaches_the_same_key_again_and_polls_now", async () => {
+      const { flow } = fakeFlow();
+      const ceremony = fakeCeremony();
+      renderStatus(failed(), flow, ceremony);
+      fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+      await waitFor(() => expect(flow.ensureAdvancing).toHaveBeenCalledTimes(1));
+      expect(ceremony.attachActorKey).toHaveBeenCalledTimes(1);
+      expect(ceremony.createActorKey).not.toHaveBeenCalled();
+      // it went through: the fault line leaves; the card leaves with the pass
+      expect(screen.queryByTestId("feed.keyCard.attachFault")).toBeNull();
+    });
+
+    it("the_card_leaves_once_the_pass_reads_the_key_attached", () => {
+      const live = fakeFlow(failed());
+      function Live() {
+        return <ApplicantStatus progress={useRegistrationProgress()} />;
+      }
+      renderWithProviders(<Live />, { store: signedInStore(), flow: live.flow, ceremony: fakeCeremony() });
+      expect(screen.getByTestId("feed.keyCard")).toBeInTheDocument();
+      act(() => live.emit(approval({ emailVerified: true, keyOnDevice: true, keyAttached: true })));
+      expect(screen.queryByTestId("feed.keyCard")).toBeNull();
+    });
+
+    it("a_retry_that_fails_again_keeps_the_line_and_retry", async () => {
+      const ceremony = fakeCeremony({
+        attachActorKey: vi.fn(() => Promise.resolve({ kind: "failed" as const, cause: new Error("net") })),
+      });
+      const { flow } = fakeFlow();
+      renderStatus(failed(), flow, ceremony);
+      fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+      await waitFor(() => expect(ceremony.attachActorKey).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(screen.getByRole("button", { name: "Retry" })).not.toHaveAttribute("aria-busy"));
+      expect(screen.getByTestId("feed.keyCard.attachFault")).toHaveTextContent("That didn't go through.");
+      expect(flow.ensureAdvancing).not.toHaveBeenCalled();
+    });
+
+    it("a_retry_the_server_refuses_as_another_accounts_key_moves_to_that_card", async () => {
+      const ceremony = fakeCeremony({
+        attachActorKey: vi.fn(() =>
+          Promise.resolve({
+            kind: "refused" as const,
+            errors: [{ message: "in use", code: "ACTOR_KEY_IN_USE" as const, field: null }],
+          }),
+        ),
+      });
+      renderStatus(failed(), fakeFlow().flow, ceremony);
+      fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+      expect(await screen.findByTestId("home_key_elsewhere")).toBeInTheDocument();
+      expect(screen.queryByTestId("feed.keyCard")).toBeNull();
+    });
+
+    // nodes.json `ApplicantFeed`, round 66: the one new path, worn at its key.
+    it("wears_every_keyCard_path_the_registry_gives_ApplicantFeed_at_attach_but_create", () => {
+      const registry = JSON.parse(
+        readFileSync(join(process.cwd(), "..", "design", "designs", "canonical", "nodes.json"), "utf8"),
+      ) as { screens: Record<string, { nodes: Record<string, string[]> }> };
+      const paths = Object.entries(registry.screens.ApplicantFeed!.nodes).filter(([path]) =>
+        path.startsWith("feed.keyCard"),
+      );
+      expect(paths.map(([path]) => path)).toContain("feed.keyCard.attachFault");
+      renderStatus(failed());
+      for (const [path, keys] of paths) {
+        if (path === "feed.keyCard.create") {
+          expect(screen.queryByTestId(path)).toBeNull();
+          continue;
+        }
+        const element = screen.getByTestId(path);
+        for (const key of keys) expect(element).toHaveAttribute("data-testid-key", key);
+      }
+    });
   });
 
   it("stands the application card once both proofs are in (ApplicantWaiting.md:3)", async () => {

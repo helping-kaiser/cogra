@@ -23,6 +23,35 @@ import { stanceHandlers } from "@/test/stance";
 import { tagPageHandlers, type TaggedCommentsLog } from "@/test/tag-page";
 import { TAG_EMPTY, TAG_NOT_FOUND, TAG_UNREACHABLE, TopicView } from "./topic-view";
 
+/*
+ * A STAND-IN LAYOUT FOR THE FULL-NAME HEADING. jsdom lays nothing out, so the
+ * heading's box is faked from its own text and inline size: each character
+ * 0.6 of the font size wide, the line `width` px long, the box as tall as its
+ * lines times its leading. Whether a browser wraps the same name the same way
+ * is the lane's headless sweep's claim and the harness's, not this one.
+ * `resize` changes the line and fires the observers `fakeLineLayout` holds.
+ */
+function fakeHeadingLayout(initialWidth: number, fire: () => void = () => {}) {
+  let width = initialWidth;
+  const native = HTMLElement.prototype.getBoundingClientRect;
+  HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
+    if (this.dataset.testid !== "tagPage.name") return native.call(this);
+    const size = parseFloat(this.style.fontSize) || 22;
+    const leading = parseFloat(this.style.lineHeight) || 28;
+    const lines = Math.max(1, Math.ceil(((this.textContent ?? "").length * size * 0.6) / width));
+    return { width, height: lines * leading, top: 0, left: 0, right: width, bottom: lines * leading, x: 0, y: 0, toJSON() {} } as DOMRect;
+  };
+  return {
+    resize(next: number) {
+      width = next;
+      fire();
+    },
+    restore() {
+      HTMLElement.prototype.getBoundingClientRect = native;
+    },
+  };
+}
+
 function signedInStore() {
   const store = createTokenStore();
   store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "u1" });
@@ -378,6 +407,61 @@ describe("TopicView", () => {
       expect(screen.queryByTestId("tagPage.name")).toBeNull();
       lines.resize(332);
       expect(screen.getByTestId("tagPage.name")).toBeInTheDocument();
+    });
+
+    // TagPage.md:9-11, round 66 — the heading shrinks to fit: the largest whole
+    // px from 22 down that holds the whole name on two lines, never below 12,
+    // its leading round(size × 28 / 22). `fakeHeadingLayout` lays the heading
+    // out at 0.6 em a character on a line `width` px wide.
+    describe("shrinking to fit two lines", () => {
+      const MIDDLE = "salt_maps_of_the_coast_road_and_the_third_headland_light_and_the_third_headland_light";
+      const FULL = `${MIDDLE}_and_the_third_headland_light_and_the_third`;
+      let heading: ReturnType<typeof fakeHeadingLayout>;
+      afterEach(() => heading.restore());
+
+      it("a_name_that_holds_two_lines_at_the_roles_22px_keeps_the_role", async () => {
+        heading = fakeHeadingLayout(450);
+        serve(LONG, []);
+        renderWithProviders(<TopicView name={LONG} />, { writeSigner: fakeWriteSigner() });
+        const name = await screen.findByTestId("tagPage.name");
+        expect(name.style.fontSize).toBe("");
+        expect(name.style.lineHeight).toBe("");
+        expect(name.className).toContain("text-title-large");
+      });
+
+      // 86 characters at 0.6 em on 450 px: 17px takes 877 px (two lines),
+      // 18px takes 929 (three).
+      it("a_name_three_lines_long_at_22px_takes_the_largest_size_that_holds_two", async () => {
+        heading = fakeHeadingLayout(450);
+        serve(MIDDLE, []);
+        renderWithProviders(<TopicView name={MIDDLE} />, { writeSigner: fakeWriteSigner() });
+        const name = await screen.findByTestId("tagPage.name");
+        expect(name.style.fontSize).toBe("17px");
+        expect(name.style.lineHeight).toBe("22px");
+        expect(name).toHaveTextContent(`#${MIDDLE}`);
+        expect(name).toHaveAttribute("aria-hidden", "true");
+      });
+
+      // 129 characters on 332 px hold two lines only at 8px: the floor, 12 on 15.
+      it("a_name_that_holds_two_lines_at_no_size_down_to_12px_stands_at_12_on_15", async () => {
+        heading = fakeHeadingLayout(332);
+        serve(FULL, []);
+        renderWithProviders(<TopicView name={FULL} />, { writeSigner: fakeWriteSigner() });
+        const name = await screen.findByTestId("tagPage.name");
+        expect(FULL).toHaveLength(128);
+        expect(name.style.fontSize).toBe("12px");
+        expect(name.style.lineHeight).toBe("15px");
+      });
+
+      it("the_fit_follows_the_line_a_narrower_screen_shrinks_the_name_further", async () => {
+        heading = fakeHeadingLayout(450, () => lines.resize(332));
+        serve(MIDDLE, []);
+        renderWithProviders(<TopicView name={MIDDLE} />, { writeSigner: fakeWriteSigner() });
+        const name = await screen.findByTestId("tagPage.name");
+        expect(name.style.fontSize).toBe("17px");
+        heading.resize(400);
+        expect(screen.getByTestId("tagPage.name").style.fontSize).toBe("15px");
+      });
     });
 
     it("the_not_found_header_cuts_and_no_full_name_stands", async () => {
