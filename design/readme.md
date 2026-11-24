@@ -13071,6 +13071,35 @@ drawing.
   draws the sample `@genesis_mod`, keeps the monogram until he picks;
   no guest board draws the view's disc elsewhere and `ExploreSearch`
   draws no genesis result.
+
+### Round 67, the mark as a picture, the settling line and the bare feed registered, the harness repaired — 2026-11-24
+
+- **Ruled** (jakob 2026-11-24, "(a) orange tile"): wherever the CoGra
+  mark is an account's picture it is the brand's orange tile,
+  `icon.svg`, clipped round.
+- **Drawn**: `FeedBare`'s band wears it for `@genesis_mod` at 24 px in
+  place of the monogram `G` (`MonogramAvatar`'s `mark`, the tile copied
+  verbatim as `Icon`'s mark copies `cogra-mark.svg`; `BorrowedViewBand`'s
+  `avatarMark`), the same in light and dark. Law: §4 *Imagery*,
+  `FeedBare.md`. Backlog 308 closes.
+- **Registered** (seams 450.2, 451): the cards' `Still settling` line is
+  `pending`, the name the list rows already give it (`ContentRow`,
+  `TaggedRow`) — `profile.posts.card.pending` on `ProfilePosts` and
+  `ProfilePostsOwn`, `profile.comments.commentCard.pending` on
+  `ProfileComments` and `ProfileCommentsOwn`; the feed registers no
+  settling card, so no feed path is added. `FeedBare` is registered
+  under `feed`: `Feed`'s `band`, `filterTrigger`, `card` and `bottomBar`,
+  and `ApplicantFeed`'s `borrowedViewBand` (with `.action`, which only
+  this board draws). The APK line carries no name; no board registers
+  it. Nothing gone; no string added.
+- **Held**: the references sheet's failed read (seam 451.1) — the thread
+  sheet's own failed read, its twin, is drawn nowhere (backlog 309).
+- **Found**: the proof harness is repaired in a copy, dev-state
+  `design-orchestrator-tools/pixel/`: a differing combination renders
+  once more on both sides, Figtree is served from `assets/fonts`, the
+  page's base is `img/`, and a bad chip stops the run. With eight proofs
+  at once, 3 of 60 `SeveranceConfirm` comparisons wobbled once and
+  matched on the second render. Backlog 307 closes.
 ---
 
 ## 14. The canvases

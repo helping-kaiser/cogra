@@ -7065,3 +7065,17 @@ Closed by round 67 as (a) (jakob 2026-11-24, "(a) orange tile"): the mark as an 
 is `icon.svg` filling the disc, clipped round, at every size and in both themes (readme §4
 *Imagery*; `MonogramAvatar`'s `mark`, the tile copied verbatim). `FeedBare`'s band draws
 `@genesis_mod` so at 24 px in place of the monogram `G`.
+
+### 309 · The references sheet when its read fails · *design* · **filed 2026-11-24**
+
+Round 67, item 5 (impl seam 451.1). Impl builds the failed read of `RefsSheet` and `CommentRefsSheet`
+as "the thread sheet's house line" over an outline `Retry` in the rows' place, but the tree draws no
+failed read of the thread sheet: no `postDetail.threadSheet` fault path, no board, no sidecar line.
+The nearest drawn twin is the tag picker's results fault (`TagPicker` `state` = `fault`): in the rows'
+place, `Can't reach the server — tags can't load right now.` over an outline `Retry` (`fault`,
+`fault.retry`); the search picker's is the same with `results`. Options: (a) that shape with the noun
+form `Can't reach the server — references can't load right now.` (a new string, his); (b) that
+shape over `TransportError`'s default line `Can't reach the server. Check your connection and try
+again.` (existing words, but beside `Retry` it says try again twice); (c) draw the thread sheet's
+own failed read first (`… comments can't load right now.`, an existing line) and the references
+sheet as its twin. Recommendation (a).
