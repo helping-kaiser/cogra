@@ -25,11 +25,12 @@ import type { Page, PostView } from "./content-api";
 export type ProfileView = NonNullable<UserProfileQuery["user"]>;
 
 /**
- * The profile's tabs (`CHRONICLE_TABS`). Every profile board draws the
- * reader landing on Everything, the one tab the chronicle stands on: Posts
+ * The profile's tabs (`CHRONICLE_TABS`). Every profile lands on Posts, from
+ * any door (ProfilePosts.md:5, ProfileOther.md:21, Profile.md:25): Posts
  * lists the person's posts as post cards (ProfilePosts.md:3,
  * `fetchProfilePosts`), Comments their comments as comment cards
- * (ProfileComments.md:3, `fetchProfileComments`).
+ * (ProfileComments.md:3, `fetchProfileComments`), Everything is the one tab
+ * the chronicle stands on.
  */
 export type ChronicleFilter = "posts" | "comments" | "everything";
 
