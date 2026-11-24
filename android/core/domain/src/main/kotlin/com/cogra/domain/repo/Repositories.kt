@@ -28,6 +28,8 @@ import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.ReferenceClaimView
+import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.SelfMarkView
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentView
@@ -633,6 +635,14 @@ interface ReferenceRepository {
         limit: Int? = null,
         kinds: Set<FeedKind> = emptySet(),
     ): Outcome<List<ReferenceCandidateView>>
+
+    /**
+     * One node's standing citations, read by id when a surface that shows
+     * them opens (api-spec.md "Query budgets"): a card carries only the
+     * count, and the rows it counts arrive here — the same default view the
+     * card's read used. Null: the id names no node any more.
+     */
+    suspend fun referencesOf(kind: ReferenceContentKind, id: String): Outcome<List<ReferenceClaimView>?>
 
     /**
      * Stages one standalone citation on existing content — the edit

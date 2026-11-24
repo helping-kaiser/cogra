@@ -4,6 +4,9 @@
 // the returned card; the one search law over the saved set, run on the server
 // (`bookmarks(query:)`); hidden accounts' things staying.
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { delay } from "msw/utils/delay";
@@ -1000,5 +1003,111 @@ describe("the stream from Saved", () => {
     expect(reads.map((read) => read.after)).toEqual([null, "c3"]);
     expect(stream!.snapshot.hasMore).toBe(false);
     forgetStream();
+  });
+});
+
+// A COMMENT'S MEDIA ON SAVED (round 65, seam 424/444; Saved.jsx:66-70, :101;
+// `_shared.jsx` `CommentMediaCopies`, :503-529): History's twin — a kept media
+// comment stands as the feed's own comment card, registering
+// `saved.commentCard.media`, `.media.dots`, `.media.frame` keyed
+// `<comment id>/<position>` and `.media.frame.soundDisc`.
+describe("SavedScreen — a comment's media, as the feed's comment card draws it (Saved.md:35, :95, :97)", () => {
+  const REGISTRY = JSON.parse(
+    readFileSync(join(process.cwd(), "..", "design", "designs", "canonical", "nodes.json"), "utf8"),
+  ) as { screens: Record<string, { nodes: Record<string, string[]> }> };
+  const mediaPaths = Object.keys(REGISTRY.screens.Saved!.nodes).filter((path) =>
+    path.startsWith("saved.commentCard.media"),
+  );
+
+  const picture = (n: number) => ({
+    __typename: "MediaAttachment",
+    id: `m${n}`,
+    url: `https://media.test/${n}.jpg`,
+    altText: null,
+    status: "NORMAL",
+    mimeType: "image/jpeg",
+    options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+    coverMedia: null,
+    coverTaken: false,
+  });
+  const clip = () => ({
+    ...picture(9),
+    url: "https://media.test/9.mp4",
+    mimeType: "video/mp4",
+    options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 12_000 },
+  });
+  const withMedia = (id: string, attachments: unknown[], extra: Record<string, unknown> = {}): Entry => ({
+    node: { ...commentNode(id, SAVED[1]), attachments, ...extra },
+    bookmarkedAt: SAVED[1],
+  });
+  const keys = (path: string) => screen.queryAllByTestId(path).map((element) => element.getAttribute("data-testid-key"));
+  const show = (entries: Entry[]) => {
+    serve(entries);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+  };
+
+  it("registers_the_four_media_paths_the_round_65_board_names", () => {
+    expect(mediaPaths.sort()).toEqual([
+      "saved.commentCard.media",
+      "saved.commentCard.media.dots",
+      "saved.commentCard.media.frame",
+      "saved.commentCard.media.frame.soundDisc",
+    ]);
+  });
+
+  it("a_comment_with_pictures_and_one_with_a_clip_wear_every_media_path_with_its_key", async () => {
+    show([withMedia("c-pictures", [picture(1), picture(2)]), withMedia("c-clip", [clip()]), THREE[0]!]);
+    const pictures = await screen.findByTestId(byNode("saved.commentCard", "c-pictures"));
+    expect(keys("saved.commentCard.media")).toEqual(["c-pictures", "c-clip"]);
+    expect(keys("saved.commentCard.media.frame")).toEqual(["c-pictures/1", "c-pictures/2", "c-clip/1"]);
+    expect(keys("saved.commentCard.media.dots")).toEqual(["c-pictures"]);
+    expect(keys("saved.commentCard.media.frame.soundDisc")).toEqual(["c-clip/1"]);
+    expect(within(pictures).getByTestId(byNode("saved.commentCard.media.dots", "c-pictures"))).toBeInTheDocument();
+    const worn = new Set([...document.querySelectorAll("[data-testid^='saved.commentCard.media']")].map((e) => e.getAttribute("data-testid")));
+    expect(mediaPaths.filter((path) => !worn.has(path))).toEqual([]);
+  });
+
+  it("a_comment_with_four_pictures_frames_each_by_its_position", async () => {
+    show([withMedia("c-four", [picture(1), picture(2), picture(3), picture(4)])]);
+    await screen.findByTestId(byNode("saved.commentCard", "c-four"));
+    expect(keys("saved.commentCard.media.frame")).toEqual(["c-four/1", "c-four/2", "c-four/3", "c-four/4"]);
+    expect(keys("saved.commentCard.media.dots")).toEqual(["c-four"]);
+  });
+
+  it("a_veiled_clip_has_no_sound_disc_until_the_reader_shows_it", async () => {
+    // Saved.md:73, :95, :97.
+    show([withMedia("c-veiled", [clip()], { attachmentsStatus: "SENSITIVE", sensitiveSelfMark: true })]);
+    await screen.findByTestId(byNode("saved.commentCard", "c-veiled"));
+    expect(screen.getByTestId("saved-comment-c-veiled-veil")).toBeInTheDocument();
+    expect(keys("saved.commentCard.media.frame.soundDisc")).toEqual([]);
+    fireEvent.click(screen.getByTestId("saved-comment-c-veiled-veil-reveal"));
+    await waitFor(() => expect(keys("saved.commentCard.media.frame.soundDisc")).toEqual(["c-veiled/1"]));
+  });
+
+  it("a_comment_without_media_wears_no_media_path", async () => {
+    show(THREE);
+    await screen.findByTestId(byNode("saved.commentCard", "c1"));
+    expect(document.querySelectorAll("[data-testid^='saved.commentCard.media']")).toHaveLength(0);
+  });
+
+  it("a_removed_media_comment_wears_its_mark_and_none_of_its_media", async () => {
+    // Saved.md:67.
+    show([
+      withMedia("c-gone", [{ ...picture(1), status: "REDACTED" }], {
+        content: moderated(null, "REDACTED"),
+        removal: { __typename: "Removal", at: at(0.01), by: "AUTHOR" },
+      }),
+    ]);
+    await screen.findByTestId(byNode("saved.commentCard", "c-gone"));
+    expect(screen.getByTestId("saved-comment-c-gone-removed")).toHaveTextContent("Removed by its author");
+    expect(document.querySelectorAll("[data-testid^='saved.commentCard.media']")).toHaveLength(0);
+  });
+
+  it("tapping_a_comments_pictures_opens_its_thread_landed_on_it_with_back_to_saved", async () => {
+    // Saved.md:35.
+    show([withMedia("c-pictures", [picture(1), picture(2)])]);
+    const frame = await screen.findByTestId(byNode("saved.commentCard.media.frame", "c-pictures/1"));
+    fireEvent.click(frame);
+    expect(push).toHaveBeenCalledWith("/posts/p1?comment=c-pictures&from=saved");
   });
 });

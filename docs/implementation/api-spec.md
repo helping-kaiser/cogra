@@ -238,8 +238,12 @@ stay opaque: what rides inside is the server's business, and a
 client reads no structure into them. Every content listing takes
 `includePending` (default true): false serves only what has landed
 on L1 — including, on a landed node carrying an unlanded edit, the
-version that landed — for a reader who wants the settled graph. The
-chronicle takes no such argument: the record set has no pending
+version that landed — for a reader who wants the settled graph. A
+person's chronicle (`User.chronicle`) takes it too: the posts and
+comments they signed that are still settling lead it, and false
+serves their records alone, whose targets read as any node read does
+([Q41](../open-questions.md#q41--a-settled-content-serving-mode-for-the-chronicles-targets)).
+The record set (`records`) takes no such argument: it has no pending
 namespace, so a record is listed exactly when it is ordered fact.
 
 **A page is a snapshot, not a live view.** A listing read computes
@@ -580,7 +584,8 @@ enum ErrorCode {
   INVALID_CREDENTIALS          # email / password pair did not match
   INVITE_UNUSABLE              # invite link invalid, expired, revoked, or consumed
   ASK_LINK_UNUSABLE            # ask link unknown, or its applicant is landed or already waiting in your own queue
-  HANDLE_TAKEN                 # the requested handle is already in use
+  HANDLE_TAKEN                 # the requested handle is already in use, or reserved (auth.md "Reserved names")
+  DISPLAY_NAME_RESERVED        # the display name is one CoGra reserves (auth.md "Reserved names")
   WEAK_PASSWORD                # under the length floor or in the breach corpus
   EMAIL_IN_USE                 # the email already belongs to an account
   ACTOR_KEY_IN_USE             # the actor key is bound to a different account
@@ -1264,6 +1269,13 @@ type User implements Node & Actor {
    they answer, in the thread read's newest-first order: pending
    entries first, a removed comment included, never an edit."
   comments(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
+  "The person's chronicle — the profile's Everything view: every
+   record they authored, newest first in landing order, the posts and
+   comments they signed that are still settling ahead of them in the
+   content listings' order, each wearing its `landing`. Any other act
+   joins once it has landed, as its record; a settling post or comment,
+   once landed, stands as its minting record."
+  chronicle(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): ChronicleEntryConnection!
 
   # Private viewer state — each field resolves only when the authenticated
   # viewer is this User; null otherwise (see "Private viewer state" below).
@@ -1440,6 +1452,11 @@ type User implements Node & Actor {
    account."
   deletionPath: AccountDeletionPath
 }
+
+"One entry of a person's chronicle: a record that is ordered fact, or
+ a post or a comment they signed that is still settling, read off its
+ own `landing`. A union, as the members share no interface."
+union ChronicleEntry = Record | Post | Comment
 
 "A group acting through one graph identity (household, band, co-op,
  company, …) — one L1 Actor + Profile like any other; membership is

@@ -37,7 +37,9 @@ import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testGraphId
 import com.cogra.domain.testing.testHashtag
+import com.cogra.domain.testing.testMentionTarget
 import com.cogra.domain.testing.testParentOf
+import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.feature.content.edit.GatedMedia
 import com.cogra.feature.content.edit.ScriptedClips
 import com.cogra.feature.content.edit.ScriptedPictures
@@ -260,6 +262,47 @@ class CommentEditViewModelTest {
 
         assertThat(vm.state.value.transportFailed).isTrue()
         assertThat(vm.state.value.refusal).isNull()
+    }
+
+    /**
+     * A card counting 3 opens an edit holding exactly those 3 citations: the
+     * card carries only the count, and the edit's own read (`CommentForEdit`)
+     * carries the list beside it — the set the edit is reckoned against.
+     */
+    @Test
+    fun anEditOpenedFromACardCountingThreeHoldsAllThreeCitations() = runTest(dispatcher) {
+        val cited = listOf("ada", "mira", "sol").map { testReferenceClaim(testMentionTarget(it)) }
+        content.loaded = Outcome.Success(
+            CommentForEdit(
+                comment = testComment(TEST_COMMENT_ID, references = cited).copy(referenceCount = 3),
+                selfMark = SelfMarkView(sensitive = false, reason = null),
+            ),
+        )
+        val vm = opened()
+
+        val section = vm.state.value.referenceSection
+        // The rows name their targets by L2 id — what a write addresses.
+        assertThat(section.references.map { it.targetId }).containsExactly("user-ada", "user-mira", "user-sol")
+        assertThat(section.loaded.map { it.targetId }).containsExactly("user-ada", "user-mira", "user-sol")
+        // Loaded as the baseline: nothing staged, nothing withdrawn.
+        assertThat(section.adds).isEmpty()
+        assertThat(vm.state.value.canSign).isFalse()
+    }
+
+    /** A read that carried the count without the list never opens an edit that would lose citations. */
+    @Test
+    fun aReadWithoutTheListOpensNoEdit() = runTest(dispatcher) {
+        content.loaded = Outcome.Success(
+            CommentForEdit(
+                comment = testComment(TEST_COMMENT_ID, references = null).copy(referenceCount = 3),
+                selfMark = SelfMarkView(sensitive = false, reason = null),
+            ),
+        )
+        val vm = opened()
+
+        assertThat(vm.state.value.loading).isFalse()
+        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.referenceSection.loaded).isEmpty()
     }
 
     // -- Signing --

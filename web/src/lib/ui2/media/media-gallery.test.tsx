@@ -70,6 +70,17 @@ describe("MediaGallery", () => {
     expect(dots.textContent).toBe("");
   });
 
+  it("stands the dots row across the gallery's width, the master's row (MediaAttachment.jsx:583-585)", () => {
+    // The master's wrapper is a plain block padded 8px on top and its row a
+    // centred flex line at full width, so the registered `….media.dots` box is
+    // the gallery's width; a flex wrapper would shrink it to the dots.
+    render(<MediaGallery items={items(3)} />);
+    const row = screen.getByTestId("media-gallery-dots");
+    expect(row.className).toContain("justify-center");
+    expect(row.parentElement!.className.split(" ")).not.toContain("flex");
+    expect(row.parentElement!.className.split(" ")).toContain("pt-2");
+  });
+
   it("moves through the set with the arrow keys, so the swipe is not the only route", () => {
     render(<MediaGallery items={items(3)} />);
     const strip = screen.getByTestId("media-gallery-strip");

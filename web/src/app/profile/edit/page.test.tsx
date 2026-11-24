@@ -385,6 +385,78 @@ describe("ProfileEditPage", () => {
     });
   });
 
+  // ProfileEdit.md:81,85: a reserved display name is refused on the field, the
+  // name stays typed, the line stands through typing and goes at the next Save.
+  it("says a reserved display name on its field and clears the line at the next Save", async () => {
+    let calls = 0;
+    server.use(
+      myProfileHandler(),
+      gqlLink.mutation("PrepareProfileUpdate", () => {
+        calls += 1;
+        if (calls === 1) {
+          return HttpResponse.json({
+            data: {
+              prepareProfileUpdate: {
+                __typename: "PreparePayload",
+                writes: null,
+                userErrors: [
+                  {
+                    __typename: "UserError",
+                    code: "DISPLAY_NAME_RESERVED",
+                    message: "the display name is reserved",
+                    field: ["displayName"],
+                  },
+                ],
+              },
+            },
+          });
+        }
+        return HttpResponse.json({
+          data: {
+            prepareProfileUpdate: {
+              __typename: "PreparePayload",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "REGISTRATION",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: signer });
+
+    const name = (await screen.findByTestId("profile-edit-display-name")) as HTMLInputElement;
+    fireEvent.change(name, { target: { value: "CoGra" } });
+    fireEvent.click(screen.getByTestId("profile-edit-save"));
+
+    const line = await screen.findByText("That name isn't available.");
+    expect(line).toHaveAttribute("role", "alert");
+    expect(name).toHaveAttribute("aria-invalid", "true");
+    expect(name).toHaveAttribute("aria-describedby", expect.stringContaining(line.id));
+    expect(name.value).toBe("CoGra");
+    expect(screen.queryByTestId("profile-edit-refused")).toBeNull();
+    expect(screen.queryByTestId("profile-edit-seal-sign")).toBeNull();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+
+    // Typing never takes the line away; only the next press of Save does.
+    fireEvent.change(name, { target: { value: "CoGra Two" } });
+    expect(screen.getByText("That name isn't available.")).toBeInTheDocument();
+    expect(screen.getByTestId("profile-edit-save")).toBeEnabled();
+
+    fireEvent.click(screen.getByTestId("profile-edit-save"));
+    expect(await screen.findByTestId("profile-edit-seal-sign")).toBeInTheDocument();
+    expect(screen.queryByText("That name isn't available.")).toBeNull();
+  });
+
   // The three fields now draw through the ruled TextField atom
   // (web/src/lib/ui2/text-field.tsx), so they carry its late counter and
   // over-cap refusal exactly as any other capped field does — caps read
