@@ -5,7 +5,9 @@
 //! serialization rules make that state hard to reach end to end — the
 //! store's contract has to hold on its own.
 
-use postgres_store::content::{self, Comment, ContentCursor, LandingOrder, Post, ThreadOrder};
+use postgres_store::content::{
+    self, Comment, ContentCursor, LandingOrder, Listed, Listing, Post, ThreadOrder,
+};
 use postgres_store::genesis;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -127,16 +129,13 @@ async fn pending_versions(pool: &PgPool, post_id: Uuid) -> Vec<(Timestamp, bool)
     .expect("versions")
 }
 
-/// The cursor a resolver would hand back for a listing entry: its sort
-/// key and its own id.
-fn cursor_of(p: &Post) -> ContentCursor {
-    ContentCursor {
-        order: p.sort_key(),
-        id: Some(p.id),
-    }
+/// The cursor a resolver would hand back for entry `i` of a page: its
+/// place in the walk, its own id, and the walk's horizon.
+fn cursor_at<T: Listed>(page: &Listing<T>, i: usize) -> ContentCursor {
+    ContentCursor::of(&page.items[i], page.horizon)
 }
 
-async fn page(pool: &PgPool, cursor: Option<ContentCursor>, limit: i64) -> Vec<Post> {
+async fn page(pool: &PgPool, cursor: Option<ContentCursor>, limit: i64) -> Listing<Post> {
     content::list_posts(pool, cursor, false, limit, true)
         .await
         .expect("lists")
@@ -157,24 +156,24 @@ async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
     let two = post(&pool, author, None, at(0), "two").await;
 
     let all = page(&pool, None, 10).await;
-    assert_eq!(all.len(), 2, "both pending entries are listed");
+    assert_eq!(all.items.len(), 2, "both pending entries are listed");
 
     let first = page(&pool, None, 1).await;
-    assert_eq!(first.len(), 1);
-    let second = page(&pool, Some(cursor_of(&first[0])), 1).await;
+    assert_eq!(first.items.len(), 1);
+    let second = page(&pool, Some(cursor_at(&first, 0)), 1).await;
     assert_eq!(
-        second.len(),
+        second.items.len(),
         1,
         "the same-instant sibling must survive the page boundary"
     );
 
-    let mut walked = vec![first[0].id, second[0].id];
+    let mut walked = vec![first.items[0].id, second.items[0].id];
     walked.sort();
     let mut expected = vec![one, two];
     expected.sort();
     assert_eq!(walked, expected);
 
-    assert!(page(&pool, Some(cursor_of(&second[0])), 1).await.is_empty());
+    assert!(page(&pool, Some(cursor_at(&second, 0)), 1).await.items.is_empty());
 }
 
 /// A page boundary can fall inside the pending set and then have its own
@@ -195,10 +194,10 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
 
     let page1 = page(&pool, None, 2).await;
     assert_eq!(
-        page1.iter().map(|p| p.id).collect::<Vec<_>>(),
+        page1.items.iter().map(|p| p.id).collect::<Vec<_>>(),
         vec![pending_second, pending_first]
     );
-    let boundary = cursor_of(&page1[1]);
+    let boundary = cursor_at(&page1, 1);
 
     let mut tx = pool.begin().await.expect("tx");
     content::land_post(&mut tx, pending_first, order(2, 1))
@@ -211,7 +210,7 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
 
     let page2 = page(&pool, Some(boundary), 10).await;
     assert_eq!(
-        page2.iter().map(|p| p.id).collect::<Vec<_>>(),
+        page2.items.iter().map(|p| p.id).collect::<Vec<_>>(),
         vec![new, old],
         "an entry that landed between pages must not be served again"
     );
@@ -442,8 +441,8 @@ async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
     );
 
     let listed = page(&pool, None, 10).await;
-    assert_eq!(listed.len(), 1);
-    assert_eq!(listed[0].content, "landed later");
+    assert_eq!(listed.items.len(), 1);
+    assert_eq!(listed.items[0].content, "landed later");
 }
 
 /// The same for a comment, whose edits take their own read path.
@@ -496,9 +495,9 @@ async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgP
     )
     .await
     .expect("thread");
-    assert_eq!(thread.len(), 1);
+    assert_eq!(thread.items.len(), 1);
     assert_eq!(
-        thread[0].content, "landed later",
+        thread.items[0].content, "landed later",
         "the thread read resolves the same version as the single read"
     );
 }
@@ -553,9 +552,9 @@ async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool:
     let landed_only = content::list_posts(&pool, None, false, 10, false)
         .await
         .expect("lists");
-    assert_eq!(landed_only.len(), 1);
-    assert_eq!(landed_only[0].content, "landed");
-    assert!(!landed_only[0].version_pending);
+    assert_eq!(landed_only.items.len(), 1);
+    assert_eq!(landed_only.items[0].content, "landed");
+    assert!(!landed_only.items[0].version_pending);
 }
 
 /// A version row written before the coordinates existed carries none, and
@@ -646,7 +645,7 @@ async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
         .await
         .expect("count");
     assert_eq!(total, 3);
-    assert_eq!(total, served.len() as i64, "the count answers for the page");
+    assert_eq!(total, served.items.len() as i64, "the count answers for the page");
 
     let landed = content::comments_for_target(
         &pool,
@@ -666,7 +665,7 @@ async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
         landed_total, 2,
         "the unlanded entry is out of the landed-only count"
     );
-    assert_eq!(landed_total, landed.len() as i64);
+    assert_eq!(landed_total, landed.items.len() as i64);
 }
 
 /// A target nobody has answered counts zero under either filter — the
@@ -735,21 +734,14 @@ async fn thread(
     backward: bool,
     limit: i64,
     order: ThreadOrder,
-) -> Vec<Comment> {
+) -> Listing<Comment> {
     content::comments_for_target(pool, host, cursor, backward, limit, true, order)
         .await
         .expect("thread")
 }
 
-fn ids(page: &[Comment]) -> Vec<Uuid> {
-    page.iter().map(|c| c.id).collect()
-}
-
-fn comment_cursor(c: &Comment) -> ContentCursor {
-    ContentCursor {
-        order: c.sort_key(),
-        id: Some(c.id),
-    }
+fn ids(page: &Listing<Comment>) -> Vec<Uuid> {
+    page.items.iter().map(|c| c.id).collect()
 }
 
 /// Oldest-first is the newest-first sequence read the other way: the
@@ -792,7 +784,7 @@ async fn an_oldest_first_walk_pages_across_both_namespaces(pool: PgPool) {
     let page2 = thread(
         &pool,
         b.host,
-        Some(comment_cursor(&page1[1])),
+        Some(cursor_at(&page1, 1)),
         false,
         2,
         oldest,
@@ -802,7 +794,7 @@ async fn an_oldest_first_walk_pages_across_both_namespaces(pool: PgPool) {
     let page3 = thread(
         &pool,
         b.host,
-        Some(comment_cursor(&page2[1])),
+        Some(cursor_at(&page2, 1)),
         false,
         2,
         oldest,
@@ -815,7 +807,7 @@ async fn an_oldest_first_walk_pages_across_both_namespaces(pool: PgPool) {
     let before = thread(
         &pool,
         b.host,
-        Some(comment_cursor(&tail[0])),
+        Some(cursor_at(&tail, 0)),
         true,
         2,
         oldest,
@@ -874,14 +866,14 @@ async fn walk(
     cursor: Option<ContentCursor>,
     backward: bool,
     limit: i64,
-) -> Vec<Post> {
+) -> Listing<Post> {
     content::list_posts(pool, cursor, backward, limit, true)
         .await
         .expect("lists")
 }
 
-fn post_ids(page: &[Post]) -> Vec<Uuid> {
-    page.iter().map(|p| p.id).collect()
+fn post_ids(page: &Listing<Post>) -> Vec<Uuid> {
+    page.items.iter().map(|p| p.id).collect()
 }
 
 /// Page one ends on a settling post that then lands, while the older
@@ -898,7 +890,7 @@ async fn the_boundary_landing_keeps_the_settling_entries_below_it(pool: PgPool) 
 
     let page1 = page(&pool, None, 2).await;
     assert_eq!(post_ids(&page1), vec![p3, p2]);
-    let boundary = cursor_of(&page1[1]);
+    let boundary = cursor_at(&page1, 1);
 
     land_posts(&pool, &[(p2, order(2, 1))]).await;
 
@@ -923,7 +915,7 @@ async fn an_entry_above_the_boundary_landing_is_not_served_again(pool: PgPool) {
 
     let page1 = page(&pool, None, 2).await;
     assert_eq!(post_ids(&page1), vec![p3, p2]);
-    let boundary = cursor_of(&page1[1]);
+    let boundary = cursor_at(&page1, 1);
 
     land_posts(&pool, &[(p3, order(2, 1))]).await;
 
@@ -947,7 +939,7 @@ async fn landings_around_the_boundary_in_either_order_serve_each_entry_once(pool
 
     let page1 = page(&pool, None, 2).await;
     assert_eq!(post_ids(&page1), vec![p3, p2]);
-    let boundary = cursor_of(&page1[1]);
+    let boundary = cursor_at(&page1, 1);
 
     land_posts(&pool, &[(p3, order(2, 1)), (p2, order(2, 2))]).await;
 
@@ -969,7 +961,7 @@ async fn an_entry_below_the_boundary_landing_is_served_once(pool: PgPool) {
 
     let page1 = page(&pool, None, 2).await;
     assert_eq!(post_ids(&page1), vec![p3, p2]);
-    let boundary = cursor_of(&page1[1]);
+    let boundary = cursor_at(&page1, 1);
 
     land_posts(&pool, &[(p1, order(2, 1))]).await;
 
@@ -992,7 +984,7 @@ async fn every_settling_entry_landing_between_pages_is_served_once(pool: PgPool)
 
     let page1 = page(&pool, None, 2).await;
     assert_eq!(post_ids(&page1), vec![p3, p2]);
-    let boundary = cursor_of(&page1[1]);
+    let boundary = cursor_at(&page1, 1);
 
     land_posts(
         &pool,
@@ -1023,9 +1015,9 @@ async fn a_walk_with_landings_between_every_page_serves_each_entry_once(pool: Pg
     let mut cursor = None;
     loop {
         let one = page(&pool, cursor, 1).await;
-        let Some(entry) = one.first() else { break };
+        let Some(entry) = one.items.first() else { break };
         walked.push(entry.id);
-        cursor = Some(cursor_of(entry));
+        cursor = Some(cursor_at(&one, 0));
         if let Some(landing) = schedule.next() {
             land_posts(&pool, &[landing]).await;
         }
@@ -1048,9 +1040,9 @@ async fn a_backward_walk_serves_an_entry_landing_above_its_boundary(pool: PgPool
 
     let back1 = walk(&pool, None, true, 2).await;
     assert_eq!(post_ids(&back1), vec![l2, l1]);
-    let back2 = walk(&pool, Some(cursor_of(&back1[0])), true, 2).await;
+    let back2 = walk(&pool, Some(cursor_at(&back1, 0)), true, 2).await;
     assert_eq!(post_ids(&back2), vec![p2, p1]);
-    let boundary = cursor_of(&back2[0]);
+    let boundary = cursor_at(&back2, 0);
 
     land_posts(&pool, &[(p3, order(2, 1))]).await;
 
@@ -1074,9 +1066,9 @@ async fn a_backward_walk_survives_its_boundary_landing(pool: PgPool) {
 
     let back1 = walk(&pool, None, true, 2).await;
     assert_eq!(post_ids(&back1), vec![l2, l1]);
-    let back2 = walk(&pool, Some(cursor_of(&back1[0])), true, 2).await;
+    let back2 = walk(&pool, Some(cursor_at(&back1, 0)), true, 2).await;
     assert_eq!(post_ids(&back2), vec![p2, p1]);
-    let boundary = cursor_of(&back2[0]);
+    let boundary = cursor_at(&back2, 0);
 
     land_posts(&pool, &[(p2, order(2, 1))]).await;
 
@@ -1105,7 +1097,7 @@ async fn a_persons_comments_keep_the_settling_entry_below_a_landed_boundary(pool
         .await
         .expect("comments");
     assert_eq!(ids(&page1), vec![newest, boundary_entry]);
-    let boundary = comment_cursor(&page1[1]);
+    let boundary = cursor_at(&page1, 1);
 
     land_one_comment(&pool, boundary_entry, order(2, 1)).await;
 
@@ -1131,7 +1123,7 @@ async fn an_oldest_first_branch_serves_a_reply_landing_past_its_boundary(pool: P
     let page2 = thread(
         &pool,
         b.host,
-        Some(comment_cursor(&page1[1])),
+        Some(cursor_at(&page1, 1)),
         false,
         2,
         oldest,
@@ -1144,7 +1136,7 @@ async fn an_oldest_first_branch_serves_a_reply_landing_past_its_boundary(pool: P
     let page3 = thread(
         &pool,
         b.host,
-        Some(comment_cursor(&page2[1])),
+        Some(cursor_at(&page2, 1)),
         false,
         2,
         oldest,

@@ -9,7 +9,7 @@ use common::l1::Family;
 use common::l1::census::{LegRole, leg_params};
 use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::content::{self, ChronicleEntry, ContentCursor, LandingOrder};
+use postgres_store::content::{self, ChronicleEntry, ContentCursor, LandingOrder, Listing};
 use postgres_store::{genesis, mirror};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -178,12 +178,10 @@ fn seen(entry: &ChronicleEntry) -> Seen {
     }
 }
 
-/// The cursor the resolver hands back for an entry.
-fn cursor_of(entry: &ChronicleEntry) -> ContentCursor {
-    ContentCursor {
-        order: entry.sort_key(),
-        id: entry.id(),
-    }
+/// The cursor the resolver hands back for entry `i` of a page: its place
+/// in the walk, its id if it has one, and the walk's horizon.
+fn cursor_at(page: &Listing<ChronicleEntry>, i: usize) -> ContentCursor {
+    ContentCursor::of(&page.items[i], page.horizon)
 }
 
 async fn page(
@@ -193,7 +191,7 @@ async fn page(
     backward: bool,
     limit: i64,
     include_pending: bool,
-) -> Vec<ChronicleEntry> {
+) -> Listing<ChronicleEntry> {
     content::chronicle(
         pool,
         author,
@@ -207,8 +205,8 @@ async fn page(
     .expect("chronicle")
 }
 
-fn ids(entries: &[ChronicleEntry]) -> Vec<Seen> {
-    entries.iter().map(seen).collect()
+fn ids(entries: &Listing<ChronicleEntry>) -> Vec<Seen> {
+    entries.items.iter().map(seen).collect()
 }
 
 /// Walks the whole chronicle one entry at a time, forward.
@@ -217,9 +215,9 @@ async fn walk_one_by_one(pool: &PgPool, author: Uuid) -> Vec<Seen> {
     let mut cursor = None;
     loop {
         let one = page(pool, author, cursor, false, 1, true).await;
-        let Some(entry) = one.first() else { break };
+        let Some(entry) = one.items.first() else { break };
         walked.push(seen(entry));
-        cursor = Some(cursor_of(entry));
+        cursor = Some(cursor_at(&one, 0));
         assert!(walked.len() <= 16, "the walk must end: {walked:?}");
     }
     walked
@@ -304,12 +302,12 @@ async fn the_chronicle_pages_across_both_namespaces(pool: PgPool) {
 
     let all = page(&pool, f.author, None, false, 10, true).await;
     let mut back = Vec::new();
-    let mut cursor = all.last().map(cursor_of);
+    let mut cursor = Some(cursor_at(&all, all.items.len() - 1));
     loop {
         let one = page(&pool, f.author, cursor, true, 1, true).await;
-        let Some(entry) = one.first() else { break };
+        let Some(entry) = one.items.first() else { break };
         back.push(seen(entry));
-        cursor = Some(cursor_of(entry));
+        cursor = Some(cursor_at(&one, 0));
         assert!(back.len() <= 16, "the walk back must end: {back:?}");
     }
     back.reverse();
@@ -334,7 +332,7 @@ async fn an_entry_landing_under_the_boundary_is_served_once(pool: PgPool) {
             Seen::Post(f.settling_post)
         ]
     );
-    let boundary = cursor_of(&first[1]);
+    let boundary = cursor_at(&first, 1);
 
     let minting = act(4, Family::Publish);
     ingest(&pool, 2, vec![publish(minting, 2, 1)]).await;
@@ -436,7 +434,7 @@ async fn the_chronicle_boundary_landing_keeps_the_settling_entries_below_it(pool
     let host_record = act(9, Family::Publish).to_string();
     let first = page(&pool, f.author, None, false, 2, true).await;
     assert_eq!(ids(&first), vec![Seen::Comment(f.c3), Seen::Post(f.p2)]);
-    let boundary = cursor_of(&first[1]);
+    let boundary = cursor_at(&first, 1);
 
     ingest(&pool, 2, vec![publish(act(4, Family::Publish), 2, 1)]).await;
     let mut tx = pool.begin().await.expect("tx");
@@ -471,7 +469,7 @@ async fn a_chronicle_entry_above_the_boundary_landing_is_not_served_again(pool: 
     let host_record = act(9, Family::Publish).to_string();
     let first = page(&pool, f.author, None, false, 2, true).await;
     assert_eq!(ids(&first), vec![Seen::Comment(f.c3), Seen::Post(f.p2)]);
-    let boundary = cursor_of(&first[1]);
+    let boundary = cursor_at(&first, 1);
 
     ingest(&pool, 2, vec![publish(act(5, Family::Review), 2, 1)]).await;
     let mut tx = pool.begin().await.expect("tx");

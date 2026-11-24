@@ -71,10 +71,7 @@ async fn landed_post(pool: &PgPool, author: Uuid, at_key: LandingOrder, body: &s
 }
 
 fn cursor_of(p: &Post) -> ContentCursor {
-    ContentCursor {
-        order: p.sort_key(),
-        id: Some(p.id),
-    }
+    ContentCursor::of(p, None)
 }
 
 /// The landed listing pages newest first by position inside one epoch,
@@ -95,7 +92,7 @@ async fn the_listing_pages_by_the_key_of_record(pool: PgPool) {
         let page = content::list_posts(&pool, cursor, false, 1, false)
             .await
             .expect("lists");
-        let Some(p) = page.first() else { break };
+        let Some(p) = page.items.first() else { break };
         walked.push(p.id);
         cursor = Some(cursor_of(p));
     }
@@ -109,7 +106,7 @@ async fn the_listing_pages_by_the_key_of_record(pool: PgPool) {
         .await
         .expect("lists back");
     assert_eq!(
-        back.iter().map(|p| p.id).collect::<Vec<_>>(),
+        back.items.iter().map(|p| p.id).collect::<Vec<_>>(),
         vec![second],
         "the backward walk resumes at the next position, not the next instant"
     );
