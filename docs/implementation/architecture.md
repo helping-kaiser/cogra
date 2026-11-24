@@ -407,8 +407,9 @@ Per epoch, the backend ingests the accepted ordered act sequence
 `𝒬_k` through the L1 boundary and appends it to the mirror
 tables — each record with its key of record (epoch, position), the
 act time it carries and its replay floor (the approved body, the
-signed pre-commitment, both commitments with their formation
-editions, the host seal and the approval witness), each epoch with
+public key the record maps both signatures to, the signed
+pre-commitment, both commitments with their formation editions, the
+host seal and the approval witness), each epoch with
 its asserted boundary timestamp
 (the host's assertion, checkable only for consistency with the
 published duration bounds) —

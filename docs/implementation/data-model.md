@@ -56,13 +56,17 @@ Conventions:
   payload-witness reference.
 - **The replay floor.** Beside the payload witness — the content
   commitment — each record keeps what its published record carries
-  so that authorship and formation verify from it alone: the
-  approved body in its canonical encoding, the author key, the
-  signed pre-commitment, the dependency commitment, the formation
-  edition each commitment names, the host seal and the approval
-  witness
-  ([layer1-interface.md §8.4](../primitive/layer1-interface.md#84-the-act-record-and-payload-carriage),
-  "Act envelope"). A record holds all of them or none: a record
+  so that its signatures and its formation verify from it alone:
+  the approved body in its canonical encoding, the public key the
+  record maps the proposal signature and the approval signature
+  to, the signed pre-commitment, the dependency commitment, the
+  formation edition each commitment names, the host seal and the
+  approval witness
+  ([layer1-interface.md §13.3](../primitive/layer1-interface.md#133-the-replay-floor-and-the-declared-cases),
+  "Published Epoch Replay Floor";
+  [§8.4](../primitive/layer1-interface.md#84-the-act-record-and-payload-carriage),
+  "Act envelope"). No record check relates that key to the stated
+  Actor. A record holds all of them or none: a record
   mirrored before the package carried them holds none until the
   next ingestion pass fills it from the published sequence, through
   the seam. Ingestion verifies none of them.
