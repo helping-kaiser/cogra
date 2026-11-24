@@ -24,14 +24,17 @@ export function MonogramAvatar({
   name,
   size = "sm",
   src,
+  mark = false,
   node,
 }: {
   name: string;
   size?: keyof typeof SIZES;
   src?: string | null;
+  /** The CoGra mark as the account's picture — the orange tile, clipped round (`ui2/monogram-avatar`). */
+  mark?: boolean;
   node?: DataNode;
 }) {
-  return <Avatar name={name} src={src} size={SIZES[size]} tier={size} node={node} />;
+  return <Avatar name={name} src={src} mark={mark} size={SIZES[size]} tier={size} node={node} />;
 }
 
 /**

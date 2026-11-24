@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { MonogramAvatar as NamedAvatar } from "@/lib/ui/actor-chip";
+
 import { MonogramAvatar, monogramOf, monogramRole } from "./monogram-avatar";
 
 describe("monogramOf", () => {
@@ -118,6 +120,16 @@ describe("MonogramAvatar", () => {
     it("yields to a redaction: a deleted account's disc stays empty", () => {
       render(<MonogramAvatar name="x" mark redacted testId="avatar" />);
       expect(screen.getByTestId("avatar").querySelector("svg")).toBeNull();
+    });
+
+    it("rides the named-size master too, at sm and lg", () => {
+      for (const [size, px] of [["sm", 24], ["lg", 64]] as const) {
+        const { container, unmount } = render(<NamedAvatar name="x" size={size} mark />);
+        const disc = container.firstElementChild as HTMLElement;
+        expect(disc.style.width).toBe(`${px}px`);
+        expect(disc.querySelector("svg rect")!.getAttribute("fill")).toBe("#EF6C1A");
+        unmount();
+      }
     });
 
     it("is never drawn unless asked for", () => {
