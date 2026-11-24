@@ -663,6 +663,8 @@ private fun ProfileColumn(
                 paging = state.rowsLoading,
                 failed = state.pageFailed,
                 onRetry = actions.onRetryPage,
+                read = state.tab,
+                firstPage = firstPageOf(state, view),
             )
         }
     }
@@ -707,6 +709,18 @@ private fun viewNode(tab: ProfileTab): DataNode = when (tab) {
     ProfileTab.POSTS -> PROFILE / "posts"
     ProfileTab.COMMENTS -> PROFILE / "comments"
     ProfileTab.EVERYTHING -> PROFILE / "chronicle"
+}
+
+/**
+ * The card tab still waiting for its first page (`ProfileTabFirstPage`,
+ * ProfilePosts.md:21-27, ProfileComments.md:25-31). Everything's first page
+ * is drawn by no board, so it keeps the next page's tail.
+ */
+private fun firstPageOf(state: ProfileUiState, view: DataNode): TabFirstPage? = when {
+    state.listed > 0 -> null
+    state.tab == ProfileTab.POSTS -> TabFirstPage(view, R.string.profile_posts_first_failed)
+    state.tab == ProfileTab.COMMENTS -> TabFirstPage(view, R.string.profile_comments_first_failed)
+    else -> null
 }
 
 /** A post card's list key, apart from a comment's and an act's. */
