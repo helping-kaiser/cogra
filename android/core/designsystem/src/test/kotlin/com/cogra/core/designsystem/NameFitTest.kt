@@ -5,6 +5,7 @@
 package com.cogra.core.designsystem
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
@@ -89,7 +90,7 @@ class NameFitTest {
             MaterialTheme {
                 val style = MaterialTheme.typography.titleLarge
                 val measurer = rememberTextMeasurer()
-                FittedName(name, style, Modifier.width(360.dp).padding(horizontal = 16.dp), floor = 12)
+                FittedName(name, style, Modifier.requiredWidth(360.dp).padding(horizontal = 16.dp), floor = 12)
                 val width = with(LocalDensity.current) { 328.dp.roundToPx() }
                 lines = { fit ->
                     measurer.measure(name, style.at(fit), constraints = Constraints(maxWidth = width)).lineCount
