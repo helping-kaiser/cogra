@@ -710,7 +710,7 @@ fn every_nodes_read_has_its_batch() {
 /// with its batch bound and with it unbound; the bound price has to be the
 /// dearer, or the guard is not seeing the rows.
 ///
-/// A `nodes(ids:)` read is priced at the batch its client sends, never at nothing.
+/// A batch read of nodes by id is priced at the batch its client sends, never at nothing.
 /// ´claim:budgets:a-nodes-read-is-priced-at-its-batch´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_nodes_read_is_priced_at_its_batch(pool: PgPool) {
