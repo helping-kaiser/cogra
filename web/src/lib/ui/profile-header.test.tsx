@@ -7,7 +7,8 @@ import { act, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { expectWrapsLongWords } from "@/test/written";
-import { ProfileHeader, nameFitSize } from "./profile-header";
+import { nameFitSize } from "./name-fit";
+import { ProfileHeader } from "./profile-header";
 
 const IDENTITY = { path: "profile.identity" };
 const HANDLE = "maximiliana_featherstone_haugh";
