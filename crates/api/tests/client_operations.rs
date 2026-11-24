@@ -697,8 +697,8 @@ fn every_nodes_read_has_its_batch() {
 }
 
 /// A complexity expression that cannot resolve its variable prices its
-/// field at nothing and raises a validation error the guard once filtered
-/// away, so the `nodes(ids:)` reads went unpriced. Each one is measured
+/// field at nothing and raises a validation error a budget-only filter
+/// drops, so an unbound `ids` leaves the rows unpriced. Each one is measured
 /// with its batch bound and with it unbound; the bound price has to be the
 /// dearer, or the guard is not seeing the rows.
 ///
