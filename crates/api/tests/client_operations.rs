@@ -696,6 +696,37 @@ fn every_nodes_read_has_its_batch() {
     assert_eq!(reads, rows, "the nodes(ids:) reads and ID_BATCHES disagree");
 }
 
+/// A complexity expression that cannot resolve its variable prices its
+/// field at nothing and raises a validation error the guard once filtered
+/// away, so the `nodes(ids:)` reads went unpriced. Each one is measured
+/// with its batch bound and with it unbound; the bound price has to be the
+/// dearer, or the guard is not seeing the rows.
+///
+/// A `nodes(ids:)` read is priced at the batch its client sends, never at nothing.
+/// ´claim:budgets:a-nodes-read-is-priced-at-its-batch´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_nodes_read_is_priced_at_its_batch(pool: PgPool) {
+    let unbound = async_graphql::Variables::from_json(page_variables());
+    let mut seen = 0;
+    for (client, relative) in CORPORA {
+        for operation in client_operations(relative) {
+            if nodes_id_variables(&operation.document).is_empty() {
+                continue;
+            }
+            seen += 1;
+            let (name, document) = (&operation.name, &operation.document);
+            let bound = client_variables(name, document);
+            let priced = measured(&pool, name, document, &bound, complexity_probe).await;
+            let unpriced = measured(&pool, name, document, &unbound, complexity_probe).await;
+            assert!(
+                priced > unpriced,
+                "the {client} client's {name} costs {priced} with its ids bound and {unpriced} without"
+            );
+        }
+    }
+    assert!(seen > 0, "no corpus carries a nodes(ids:) read");
+}
+
 /// The extraction is load-bearing — an operation silently dropped would
 /// make the guards above pass by not looking. Both corpora carry the
 /// post-detail read, which is the heaviest document either client sends.
