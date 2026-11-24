@@ -535,17 +535,17 @@ const UNBOUND_VARIABLE: (&str, &str) = (
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_guard_reports_an_invalid_client_document(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::release());
+    let mut passed = Vec::new();
     for (name, document) in INVALID_DOCUMENTS {
         let request = async_graphql::Request::new(document)
             .operation_name(name)
             .data(Option::<api::auth::Viewer>::None);
         let refused = schema.execute(request).await.errors;
         assert!(!refused.is_empty(), "the schema accepts {name}");
-        let reported = validation_errors(&schema, name, document).await;
-        assert!(
-            !reported.is_empty(),
-            "the guard passes {name}, which the schema refuses with {refused:?}"
-        );
+        if validation_errors(&schema, name, document).await.is_empty() {
+            let messages: Vec<&str> = refused.iter().map(|e| e.message.as_str()).collect();
+            passed.push(format!("{name}: {messages:?}"));
+        }
     }
     let (name, document) = UNBOUND_VARIABLE;
     let request = async_graphql::Request::new(document)
@@ -559,6 +559,10 @@ async fn the_guard_reports_an_invalid_client_document(pool: PgPool) {
     assert!(
         reported.is_empty(),
         "the guard reports {name}'s unbound variable: {reported:?}"
+    );
+    assert!(
+        passed.is_empty(),
+        "the guard passes documents the schema refuses: {passed:?}"
     );
 }
 
