@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -106,19 +107,8 @@ fun CograChip(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val labelTag = if (testTag != null) Modifier.testTag("${testTag}_label") else Modifier
-        if (cut) {
-            // Weighted, so the × beside it is measured first and keeps its room.
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                color = ink,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false).then(labelTag),
-            )
-        } else {
-            Text(text = label, style = MaterialTheme.typography.labelLarge, color = ink, modifier = labelTag)
-        }
+        // Weighted when cut, so the × beside it is measured first and keeps its room.
+        ChipLabel(label, ink, cut, if (cut) Modifier.weight(1f, fill = false).then(labelTag) else labelTag)
         if (onRemove != null) {
             Icon(
                 imageVector = Icons.Filled.Close,
@@ -133,6 +123,19 @@ fun CograChip(
             )
         }
     }
+}
+
+/** A filter chip's label: whole, or [cut] to one line ending in "…" (`Chip.jsx` `cut`). */
+@Composable
+private fun ChipLabel(label: String, ink: Color, cut: Boolean, modifier: Modifier) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelLarge,
+        color = ink,
+        maxLines = if (cut) 1 else Int.MAX_VALUE,
+        overflow = if (cut) TextOverflow.Ellipsis else TextOverflow.Clip,
+        modifier = modifier,
+    )
 }
 
 /**
