@@ -67,7 +67,7 @@ class ProfileLandingTest {
             return Outcome.Success(Page(emptyList(), endCursor = null, hasNextPage = false))
         }
 
-        override suspend fun authorRecords(authorId: String, first: Int, after: String?): Outcome<Page<RecordRow>> {
+        override suspend fun chronicle(authorId: String, first: Int, after: String?): Outcome<Page<RecordRow>> {
             reads += "records"
             return Outcome.Success(Page(emptyList(), endCursor = null, hasNextPage = false))
         }

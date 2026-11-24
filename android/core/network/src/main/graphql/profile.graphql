@@ -46,109 +46,184 @@ query MyProfile {
   }
 }
 
-# The chronicle — the tab row's right-most tab, Everything — rendered
-# as labelled rows: family + genesis mark, a snippet of the touched
-# content, and the post to open. The Posts and Comments tabs draw the
-# feed's own cards on reads of their own (ProfilePosts, ProfileComments).
-# A record is a genesis when its target/terminal is the mint of its own
-# act id. `act` is the server's reading of what the record did beyond
-# its family — GENESIS (a post published, a comment made, the account's
-# joining), WALK_BACK (every record a walk-back signed), VOUCH (the
-# vouch that landed someone), ORDINARY — the chronicle verbs' data.
-query AuthorRecords($author: UUID!, $first: Int!, $after: String) {
-  records(author: $author, first: $first, after: $after) {
-    edges {
-      node {
-        id
-        family
-        act
-        targetId
-        terminalId
-        # A Type is no Node, so a topic the record ends at — a Tag's, or an
-        # opinion's on a topic — is read here: the card's `#saltmaps` aside.
-        topic {
-          name {
-            value
-          }
-        }
-        # The chronicle card's age, and an opinion's own face (Profile.md:23).
-        landedAt
-        pDirected
-        pInterest
-        severed
-        target {
+# THE EVERYTHING TAB: the person's chronicle (`User.chronicle`), one act
+# to a row. Its order is the server's (Profile.md:31, ProfileOther.md:27):
+# the posts and comments still settling lead, newest signed first, then
+# the landed records newest first; once one lands it stands ONCE, as its
+# minting record. Every other act joins only once landed (Profile.md:33).
+# The Posts and Comments tabs draw the feed's own cards on reads of their
+# own (ProfilePosts, ProfileComments). Each kind of entry is a fragment of
+# its own, so its row reads one generated type.
+query ProfileChronicle($id: UUID!, $first: Int!, $after: String) {
+  user(id: $id) {
+    id
+    chronicle(first: $first, after: $after) {
+      edges {
+        node {
           __typename
-          # The person an opinion was given on: the card's `on @mira`.
-          ... on User {
-            handle
-          }
-          # A removed post or comment keeps its row in the chronicle;
-          # `removal` is what its mark reads (web's twin carries the same).
-          ... on Post {
-            id
-            title {
-              value
-            }
-            content {
-              value
-            }
-            removal {
-              at
-              by
-            }
-          }
-          ... on Comment {
-            id
-            content {
-              value
-            }
-            removal {
-              at
-              by
-            }
-            target {
-              __typename
-              ... on Post {
-                id
-              }
-            }
-          }
+          ...ChronicleRecordFields
+          ...ChronicleSettlingPostFields
+          ...ChronicleSettlingCommentFields
         }
-        # A citation's cited thing is its terminal leg: a post or a comment
-        # (`Cited a post`, the title under it) or a person (`Mentioned`).
-        terminal {
-          __typename
-          ... on User {
-            handle
-          }
-          ... on Post {
-            id
-            title {
-              value
-            }
-            content {
-              value
-            }
-          }
-          ... on Comment {
-            id
-            content {
-              value
-            }
-            target {
-              __typename
-              ... on Post {
-                id
-              }
-            }
-          }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# A LANDED ACT: family + genesis mark, a snippet of the touched content,
+# and the post to open. A record is a genesis when its target/terminal is
+# the mint of its own act id. `act` is the server's reading of what the
+# record did beyond its family — GENESIS (a post published, a comment
+# made, the account's joining), WALK_BACK (every record a walk-back
+# signed), VOUCH (the vouch that landed someone), ORDINARY — the
+# chronicle verbs' data.
+fragment ChronicleRecordFields on Record {
+  id
+  family
+  act
+  targetId
+  terminalId
+  # A Type is no Node, so a topic the record ends at — a Tag's, or an
+  # opinion's on a topic — is read here: the card's `#saltmaps` aside.
+  topic {
+    name {
+      value
+    }
+  }
+  # The chronicle card's age, and an opinion's own face (Profile.md:23).
+  landedAt
+  pDirected
+  pInterest
+  severed
+  target {
+    __typename
+    # The person an opinion was given on: the card's `on @mira`.
+    ... on User {
+      handle
+    }
+    # A removed post or comment keeps its row in the chronicle;
+    # `removal` is what its mark reads (web's twin carries the same).
+    ... on Post {
+      id
+      title {
+        value
+      }
+      content {
+        value
+      }
+      removal {
+        at
+        by
+      }
+    }
+    ... on Comment {
+      id
+      content {
+        value
+      }
+      removal {
+        at
+        by
+      }
+      target {
+        __typename
+        ... on Post {
+          id
         }
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
+  }
+  # A citation's cited thing is its terminal leg: a post or a comment
+  # (`Cited a post`, the title under it) or a person (`Mentioned`); a
+  # Review's terminal is the comment it minted. Its `removal` reads the
+  # mark in its words' place (Profile.md:37, :39).
+  terminal {
+    __typename
+    ... on User {
+      handle
     }
+    ... on Post {
+      id
+      title {
+        value
+      }
+      content {
+        value
+      }
+      removal {
+        at
+        by
+      }
+    }
+    ... on Comment {
+      id
+      content {
+        value
+      }
+      removal {
+        at
+        by
+      }
+      target {
+        __typename
+        ... on Post {
+          id
+        }
+      }
+    }
+  }
+}
+
+# A STILL-SETTLING POST, read as light as its row: a union row prices at
+# the sum of its kinds, so it carries only what the row draws and its
+# door — its `landing`, its signing instant (the age: `createdAt` is when
+# its minting record was authored), its words, and `genesisRecordId`, the
+# record it lands as, which keys the row so the settling entry and its
+# record are one row. Its id rides an alias: a `Record`'s `id` is a
+# `RecordId`, a node's a `UUID`, and one response name may not carry both
+# (GraphQL spec §5.3.2, *Field Selection Merging*).
+fragment ChronicleSettlingPostFields on Post {
+  postId: id
+  genesisRecordId
+  createdAt
+  landing {
+    state
+  }
+  title {
+    value
+  }
+  content {
+    value
+  }
+  # A removed one reads its mark where its words were (Profile.md:39).
+  removal {
+    at
+    by
+  }
+}
+
+# A STILL-SETTLING COMMENT, as light: its thread's post is its door, the
+# one the Comments tab's card opens.
+fragment ChronicleSettlingCommentFields on Comment {
+  commentId: id
+  genesisRecordId
+  createdAt
+  landing {
+    state
+  }
+  content {
+    value
+  }
+  removal {
+    at
+    by
+  }
+  post {
+    id
   }
 }
 
