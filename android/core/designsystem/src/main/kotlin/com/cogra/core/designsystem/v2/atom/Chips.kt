@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
@@ -48,6 +49,10 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * @param enabled false draws the master's `disabled` chip (`Chip.jsx`: the
  *   locked look, `--state-disabled`) and takes no tap — the forms of post
  *   while neither posts nor comments are in (FeedFilter.jsx `postsish`).
+ * @param cut keeps the chip inside its row (`Chip.jsx` `cut`, round 62): a
+ *   label too long for the row — a 128-character tag in the filter sheet's
+ *   `One tag` — ends in "…" on one line; one that fits draws as before. The
+ *   node still speaks the whole label.
  */
 @Composable
 fun CograChip(
@@ -58,6 +63,7 @@ fun CograChip(
     onRemove: (() -> Unit)? = null,
     testTag: String? = null,
     enabled: Boolean = true,
+    cut: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val container = if (selected) {
@@ -99,7 +105,20 @@ fun CograChip(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = label, style = MaterialTheme.typography.labelLarge, color = ink)
+        val labelTag = if (testTag != null) Modifier.testTag("${testTag}_label") else Modifier
+        if (cut) {
+            // Weighted, so the × beside it is measured first and keeps its room.
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = ink,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false).then(labelTag),
+            )
+        } else {
+            Text(text = label, style = MaterialTheme.typography.labelLarge, color = ink, modifier = labelTag)
+        }
         if (onRemove != null) {
             Icon(
                 imageVector = Icons.Filled.Close,
@@ -122,6 +141,9 @@ fun CograChip(
  */
 private val ReadoutChipMinHeight = 24.dp
 private val ReadoutChipVerticalPadding = 2.dp
+
+/** A readout chip's side padding (`READOUT`'s `2px 8px`): what a pill costs each side of its label. */
+val ReadoutChipHorizontalPadding = Space.x2
 
 /**
  * The readout tone (jakob's ruling, the conformance round — `Chip.jsx` lines
@@ -152,7 +174,7 @@ fun CograReadoutChip(
         modifier = modifier
             .defaultMinSize(minHeight = ReadoutChipMinHeight)
             .background(colors.secondaryContainer, CircleShape)
-            .padding(horizontal = Space.x2, vertical = ReadoutChipVerticalPadding)
+            .padding(horizontal = ReadoutChipHorizontalPadding, vertical = ReadoutChipVerticalPadding)
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
