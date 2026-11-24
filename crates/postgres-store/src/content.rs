@@ -2108,6 +2108,217 @@ pub async fn count_comments_by_author(
     .await?)
 }
 
+/// One entry of a person's chronicle (api-spec.md `User.chronicle`): a
+/// record they authored that is ordered fact, or a post or comment they
+/// signed that is still settling. Every other act joins only as its
+/// record, once it has landed.
+#[derive(Debug, Clone)]
+pub enum ChronicleEntry {
+    Record(crate::mirror::RecordFull),
+    Post(Post),
+    Comment(Comment),
+}
+
+impl ChronicleEntry {
+    /// The listing sort key, in the content listings' two namespaces: a
+    /// record's key of record, a settling entry's pending key.
+    pub fn sort_key(&self) -> LandingOrder {
+        match self {
+            Self::Record(r) => LandingOrder {
+                landed_epoch: r.epoch,
+                position: r.position,
+            },
+            Self::Post(p) => p.sort_key(),
+            Self::Comment(c) => c.sort_key(),
+        }
+    }
+
+    /// The entry's own id, which a pending cursor carries so the walk can
+    /// find it again once it lands. A record carries none, as on the
+    /// record set's own cursors.
+    pub fn id(&self) -> Option<Uuid> {
+        match self {
+            Self::Record(_) => None,
+            Self::Post(p) => Some(p.id),
+            Self::Comment(c) => Some(c.id),
+        }
+    }
+}
+
+/// A settling post or comment, keyed for the pending branch's merge.
+struct Settling {
+    created_at: Timestamp,
+    id: Uuid,
+    l1_node_id: String,
+    entry: ChronicleEntry,
+}
+
+impl Settling {
+    fn key(&self) -> (Timestamp, Uuid) {
+        (self.created_at, self.id)
+    }
+
+    /// The record that will mint this node: a genesis act's target is the
+    /// mint of its own identifier (`mirror::genesis_records`).
+    fn genesis_record(&self) -> Option<&str> {
+        self.l1_node_id.strip_prefix("mint:")
+    }
+}
+
+/// A person's chronicle — the profile's Everything view: their records
+/// in landing order, newest first, with the posts and comments they
+/// signed that are still settling ahead of them, in the content
+/// listings' order and their two cursor namespaces (api-spec.md
+/// "Pagination"). `address` is the person's L1 address, the records'
+/// author; `author` their account, the content rows' author.
+/// `include_pending` false serves the records alone.
+///
+/// The cursor is re-resolved against its entry's current state before
+/// the walk, as the content listings' are, so an entry that lands under
+/// the page boundary is not served a second time out of the landed
+/// branch.
+pub async fn chronicle(
+    pool: &PgPool,
+    author: Uuid,
+    address: &str,
+    cursor: Option<ContentCursor>,
+    backward: bool,
+    limit: i64,
+    include_pending: bool,
+) -> Result<Vec<ChronicleEntry>, crate::mirror::MirrorError> {
+    let cursor = resolve_chronicle_cursor(pool, cursor).await?;
+    let filter = crate::mirror::RecordFilter {
+        author: Some(address.to_string()),
+        ..Default::default()
+    };
+    let filter = &filter;
+    merge_walk(
+        cursor,
+        backward,
+        limit,
+        include_pending,
+        |c, back, n| async move {
+            let key = c.map(|o| (o.landed_epoch, o.position));
+            let rows = crate::mirror::records(pool, filter, key, back, n).await?;
+            Ok::<_, crate::mirror::MirrorError>(
+                rows.into_iter().map(ChronicleEntry::Record).collect(),
+            )
+        },
+        |c, back, n| chronicle_settling(pool, author, c, back, n),
+    )
+    .await
+}
+
+/// Where a chronicle cursor's entry sits now: a settling cursor names a
+/// post or a comment, and whichever table holds its id answers.
+async fn resolve_chronicle_cursor(
+    pool: &PgPool,
+    cursor: Option<ContentCursor>,
+) -> Result<Option<ContentCursor>, ContentError> {
+    let as_post = resolve_post_cursor(pool, cursor).await?;
+    if as_post.map(|c| c.order) != cursor.map(|c| c.order) {
+        return Ok(as_post);
+    }
+    resolve_comment_cursor(pool, cursor).await
+}
+
+/// The chronicle's pending branch: the person's settling posts and
+/// comments, merged on the one `(authoring instant, id)` keyset both
+/// tables page on, newest first.
+///
+/// A settling row whose minting record is already in the mirror is left
+/// out: its record is ordered fact and stands in the landed branch, and
+/// the display row only lags behind it until the landing pass promotes
+/// it (`staged::promote_landed` runs after the epoch is mirrored). Left
+/// in, one page would carry the same post twice. Leaving rows out can
+/// cut a batch short, so the branch reads on from where the batch ended
+/// until it has its `limit` or the settling rows run out — a short
+/// branch is what tells the walk to continue into the landed one.
+async fn chronicle_settling(
+    pool: &PgPool,
+    author: Uuid,
+    cursor: (Option<Timestamp>, Option<Uuid>),
+    backward: bool,
+    limit: i64,
+) -> Result<Vec<ChronicleEntry>, crate::mirror::MirrorError> {
+    let mut kept: Vec<Settling> = Vec::new();
+    let mut from = cursor;
+    while (kept.len() as i64) < limit {
+        let ask = limit - kept.len() as i64;
+        let (batch, exhausted) = settling_batch(pool, author, from, backward, ask).await?;
+        let edge = if backward { batch.first() } else { batch.last() };
+        let Some(edge) = edge.map(Settling::key) else {
+            break;
+        };
+        let minting: Vec<String> = batch
+            .iter()
+            .filter_map(|s| s.genesis_record().map(str::to_string))
+            .collect();
+        let landed = crate::mirror::genesis_records(pool, &minting).await?;
+        let fresh = batch
+            .into_iter()
+            .filter(|s| s.genesis_record().is_none_or(|r| !landed.contains(r)));
+        if backward {
+            let mut head: Vec<Settling> = fresh.collect();
+            head.append(&mut kept);
+            kept = head;
+        } else {
+            kept.extend(fresh);
+        }
+        if exhausted {
+            break;
+        }
+        from = (Some(edge.0), Some(edge.1));
+    }
+    Ok(kept.into_iter().map(|s| s.entry).collect())
+}
+
+/// One read of both settling tables from `cursor`: up to `limit` entries,
+/// newest first, the ones nearest the cursor in the walk's direction —
+/// and whether both tables ran out before `limit`.
+async fn settling_batch(
+    pool: &PgPool,
+    author: Uuid,
+    cursor: (Option<Timestamp>, Option<Uuid>),
+    backward: bool,
+    limit: i64,
+) -> Result<(Vec<Settling>, bool), ContentError> {
+    let posts = list_posts_pending(pool, Some(author), cursor, backward, limit).await?;
+    let comments = comments_by_author_pending(pool, author, cursor, backward, limit).await?;
+    let mut batch: Vec<Settling> = posts
+        .into_iter()
+        .map(|p| Settling {
+            created_at: p.created_at,
+            id: p.id,
+            l1_node_id: p.l1_node_id.clone(),
+            entry: ChronicleEntry::Post(p),
+        })
+        .chain(comments.into_iter().map(|c| Settling {
+            created_at: c.created_at,
+            id: c.id,
+            l1_node_id: c.l1_node_id.clone(),
+            entry: ChronicleEntry::Comment(c),
+        }))
+        .collect();
+    batch.sort_by_key(|s| std::cmp::Reverse(s.key()));
+    let exhausted = (batch.len() as i64) < limit;
+    Ok((nearest(batch, backward, limit), exhausted))
+}
+
+/// The `limit` entries of a newest-first list nearest the cursor: its
+/// head on a forward walk, its tail on a backward one.
+fn nearest<T>(mut rows: Vec<T>, backward: bool, limit: i64) -> Vec<T> {
+    let keep = usize::try_from(limit).unwrap_or(0);
+    if rows.len() > keep {
+        if backward {
+            rows.drain(..rows.len() - keep);
+        } else {
+            rows.truncate(keep);
+        }
+    }
+    rows
+}
+
 /// A content id with the class that answers for it and the node it
 /// minted.
 #[derive(Debug, Clone)]
