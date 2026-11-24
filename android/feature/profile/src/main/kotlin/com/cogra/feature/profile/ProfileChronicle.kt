@@ -6,8 +6,12 @@
 
 package com.cogra.feature.profile
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.icons.Icons
@@ -28,11 +32,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ContentRow
 import com.cogra.core.designsystem.v2.atom.ContentRowDisc
 import com.cogra.core.designsystem.v2.atom.ContentRowSecond
 import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
 import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.crypto.Family
@@ -197,22 +204,46 @@ internal fun LoadNextAtTheTail(list: LazyListState, rows: Int, ready: Boolean, o
 }
 
 /**
+ * A card tab whose first page is the one asked for (`ProfileTabFirstPage`):
+ * the view's node, whose `loading` and `moreFault` it wears, and the
+ * first-page family's words for a page that did not arrive.
+ */
+internal data class TabFirstPage(val view: DataNode, @param:StringRes val fault: Int)
+
+/**
  * What stands where the next page will: `Loading…` once it is 200ms late
  * (Profile.md:33 — never a spinner), or the quiet failure line with Retry
  * (Profile.md:35 — never the error colour; copy-voice.md `Couldn't load
- * more` · `Retry`).
+ * more` · `Retry`). On a card tab still waiting for its first page
+ * ([firstPage]) the same wait wears the view's `loading`, and a first page
+ * that did not arrive reads the first-page line ([TabFirstPageFault]).
+ *
+ * The wait belongs to the read it was started for ([read], the tab asked):
+ * a tab switched mid-read, a Retry or a first page turning into a next one
+ * starts its own 200ms, never inheriting an older read's clock.
  */
 @Composable
-internal fun ChronicleTail(paging: Boolean, failed: Boolean, onRetry: () -> Unit) {
-    var late by remember { mutableStateOf(false) }
-    LaunchedEffect(paging) {
-        late = false
+internal fun ChronicleTail(
+    paging: Boolean,
+    failed: Boolean,
+    onRetry: () -> Unit,
+    read: ProfileTab? = null,
+    firstPage: TabFirstPage? = null,
+) {
+    val first = firstPage != null
+    var late by remember(paging, read, first) { mutableStateOf(false) }
+    LaunchedEffect(paging, read, first) {
         if (paging) {
             delay(LOADING_AFTER_MS)
             late = true
         }
     }
     when {
+        failed && firstPage != null -> TabFirstPageFault(firstPage, onRetry)
+        paging && late && firstPage != null -> LoadingState(
+            testTag = (firstPage.view / "loading").tag,
+            modifier = Modifier.padding(horizontal = Space.x4),
+        )
         failed -> Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.x3),
@@ -229,6 +260,42 @@ internal fun ChronicleTail(paging: Boolean, failed: Boolean, onRetry: () -> Unit
         paging && late -> LoadingState(
             testTag = "profile_rows_loading",
             modifier = Modifier.padding(horizontal = Space.x4, vertical = Space.x2),
+        )
+    }
+}
+
+/**
+ * A CARD TAB'S FIRST PAGE THAT DID NOT ARRIVE (ProfilePosts.md:23,
+ * ProfileComments.md:27; `_shared.jsx` `ProfileTabFirstPage`): one quiet
+ * line where the list would stand — body-medium in the secondary ink, never
+ * the error colour, never a full-tab fault — ending in its inline Retry
+ * (`InlineAction size="sm"`), which asks the first page again. The list's
+ * own 8dp top stands above it; the board's `16px` gutter and `16px` foot
+ * around it.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TabFirstPageFault(firstPage: TabFirstPage, onRetry: () -> Unit) {
+    val fault = firstPage.view / "moreFault"
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(Space.x1),
+        itemVerticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = Space.x4, end = Space.x4, bottom = Space.x4)
+            .semantics(mergeDescendants = true) {}
+            .dataNode(fault),
+    ) {
+        Text(
+            text = stringResource(firstPage.fault),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        InlineAction(
+            stringResource(R.string.profile_more_retry),
+            onRetry,
+            size = InlineSize.Small,
+            node = fault / "retry",
         )
     }
 }
