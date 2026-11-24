@@ -145,6 +145,19 @@ class ChronicleSettlingViewModelTest {
         assertThat(rows[0].landedAt).isNotNull()
     }
 
+    // The server serves an entry once; should one page ever carry it twice —
+    // settling and landed in the same instant — the list still holds one row
+    // (its lazy keys must be unique), the first served.
+    @Test
+    fun onePageServingAnEntryTwiceStillHoldsOneRow() = runTest(dispatcher) {
+        chronicle.pages += page(settling("rec:a"), landed("rec:a"), landed("rec:z"))
+
+        val vm = onEverything()
+
+        assertThat(vm.state.value.rows.map { it.id }).containsExactly("rec:a", "rec:z").inOrder()
+        assertThat(vm.state.value.rows[0].pending).isTrue()
+    }
+
     // Paging across the boundary: the entry landed between two fetches, so
     // the next page serves its record below the cursor; the held settling
     // copy stays the one row and the page's other rows join below it.

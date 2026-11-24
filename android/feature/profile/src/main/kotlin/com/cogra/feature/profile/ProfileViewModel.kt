@@ -320,10 +320,12 @@ private fun tabById(id: String): ProfileTab? = ProfileTab.entries.firstOrNull { 
  * A page joined to the list: a first page replaces it; a further page joins
  * below it, any item it already holds skipped — a thing that lands between two
  * fetches can move below the cursor the walk resumes from (web's
- * `appendDeduped`).
+ * `appendDeduped`). A key is never held twice, not even within one page: the
+ * list's lazy keys must be unique, and a settling entry and the record it lands
+ * as share one.
  */
 private fun <T> joined(current: List<T>, page: List<T>, reset: Boolean, key: (T) -> String): List<T> {
-    if (reset) return page
+    if (reset) return page.distinctBy(key)
     val held = current.mapTo(HashSet(), key)
-    return current + page.filterNot { key(it) in held }
+    return current + page.filterNot { key(it) in held }.distinctBy(key)
 }
