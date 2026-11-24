@@ -172,9 +172,13 @@ fun shapeNamesInText(text: String, units: List<NameUnit>, lineWidth: Int?, width
             append(text, last, unit.start)
             val name = text.substring(unit.start, unit.nameEnd)
             val tail = text.substring(unit.nameEnd, unit.end)
+            // Measured as drawn, joiners included: each is its own grapheme
+            // and takes the style's letter spacing, so a long unit measured
+            // bare is drawn wider than its line and breaks inside itself.
+            val drawnWidth: (String) -> Int = { widthOf(joined(it)) }
             val shown = lineWidth
-                ?.takeIf { widthOf(name + tail) > it }
-                ?.let { cutName(name, tail, it, widthOf) }
+                ?.takeIf { drawnWidth(name + tail) > it }
+                ?.let { cutName(name, tail, it, drawnWidth) }
                 ?: name
             append(joined(shown + tail))
             last = unit.end

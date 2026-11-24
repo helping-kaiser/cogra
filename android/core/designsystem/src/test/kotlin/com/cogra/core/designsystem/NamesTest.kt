@@ -108,6 +108,19 @@ class NamesTest {
         assertThat(plain).isEqualTo("Signed #" + "w".repeat(27) + "$ELLIPSIS.")
     }
 
+    // Letter spacing lands on every grapheme, a joiner's too: the cut is
+    // measured as it is drawn, so the drawn unit never outgrows its line.
+    @Test
+    fun theCutIsMeasuredWithItsJoinersAsItIsDrawn() {
+        val spaced: (String) -> Int = { it.length * 10 }
+        val tag = "#" + "w".repeat(128)
+        val text = "Signed $tag."
+        val shown = shapeNamesInText(text, nameUnits(text), lineWidth = 300, widthOf = spaced)
+        val unit = shown.substring(shown.indexOf('#'))
+        assertThat(spaced(unit)).isAtMost(300)
+        assertThat(unit.filterNot { it == WORD_JOINER }).endsWith("$ELLIPSIS.")
+    }
+
     private fun text(unit: NameUnit, of: String) = of.substring(unit.start, unit.nameEnd)
 
     // NamesLong.md:13 — a unit never stands on two lines: no break opportunity inside it.
