@@ -619,15 +619,18 @@ private fun CommentTopicsLine(
     CoversSurface(open = refsOpen, kind = CoverKind.Suspend)
     TopicsLine(
         topics = comment.topics,
-        references = comment.references,
+        referenceCount = comment.citationCount,
         onOpenTopic = onOpenTopic,
         testTagPrefix = testTagPrefix,
         onOpenReferences = { refsOpen = true },
     )
     if (refsOpen) {
+        // The card carries the count; the sheet reads the rows as it rises.
         RefsSheet(
             topics = comment.topics,
-            references = comment.references,
+            node = comment.citingNode,
+            referenceCount = comment.citationCount,
+            held = comment.references,
             onDismiss = { refsOpen = false },
             onOpenTopic = onOpenTopic,
             onOpenActor = onOpenActor,

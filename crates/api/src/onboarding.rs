@@ -188,6 +188,10 @@ pub struct RegisteredAccount {
 /// email conflicts surface here, at the form. Pure L2 — nothing touches
 /// L1.
 ///
+/// A reserved handle ([`crate::reserved`]) is refused as a held one is,
+/// at the same point in the flow, so every earlier refusal answers first
+/// for both alike and the client cannot tell the two causes apart.
+///
 /// The two clocks are independent (auth.md "Expiry"): the link's expiry
 /// bounds registration through it, the account dies unverified on its own
 /// clock, and the application row carries none. The verification mail
@@ -225,6 +229,9 @@ pub async fn register(
         .ok_or(OnboardingError::InviteUnusable)?;
 
     let password_hash = auth::hash_password(&input.password)?;
+    if crate::reserved::is_reserved_handle(&handle) {
+        return Err(OnboardingError::HandleTaken);
+    }
     let verification = auth::new_secret();
     let account_id = Uuid::new_v4();
     let outcome = store::register_account(

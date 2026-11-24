@@ -5,7 +5,7 @@
 
 import type { ApolloClient } from "@apollo/client";
 
-import type { UserError } from "@/lib/api/outcome";
+import { hasCode, type Outcome, type UserError } from "@/lib/api/outcome";
 import { fetchApplicationStatus } from "@/lib/api/onboarding-api";
 import { toBase64 } from "@/lib/crypto/bytes";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
@@ -22,17 +22,35 @@ export type RegistrationProgress =
   | { kind: "awaitingLanding" }
   /** A staged Registration exists but this device cannot sign — restore the key. */
   | { kind: "awaitingSigningKey" }
-  /** The live application: the two proofs and whether the key is on this device. */
+  /**
+   * The live application: the two proofs and whether the key is on this
+   * device — and, when this pass's repair attach did not go through, why.
+   */
   | {
       kind: "awaitingApproval";
       emailVerified: boolean;
       keyAttached: boolean;
       keyOnDevice: boolean;
+      /** Absent unless this pass's repair attach failed. */
+      attachFault?: AttachFault;
     }
   /** The device refused to sign — no amount of polling repairs it. */
   | { kind: "rejectedByDevice"; reason: string }
   | { kind: "refused"; errors: readonly UserError[] }
   | { kind: "failed"; cause: unknown };
+
+/**
+ * Why an attach did not go through (ApplicantFeed.md:37): `keyInUse` when the
+ * server refused the key as another account's (`ACTOR_KEY_IN_USE`), `failed`
+ * for every other refusal and for no answer.
+ */
+export type AttachFault = "failed" | "keyInUse";
+
+/** The fault an attach's outcome reads as; null when it went through. */
+export function attachFaultOf(outcome: Outcome<true>): AttachFault | null {
+  if (outcome.kind === "success") return null;
+  return hasCode(outcome, "ACTOR_KEY_IN_USE") ? "keyInUse" : "failed";
+}
 
 export type RegistrationSigner = {
   advance(): Promise<RegistrationProgress>;
@@ -57,9 +75,10 @@ export function createRegistrationSigner(deps: {
    * Silent crash healing for the gap between minting and attaching:
    * reached only when the server reports no key attached AND this
    * account's slot holds a key — never a blind fire across accounts.
+   * Hands back why it failed; null when it went through.
    */
-  async function repairAttach(): Promise<boolean> {
-    return (await ceremony.attachActorKey()).kind === "success";
+  async function repairAttach(): Promise<AttachFault | null> {
+    return attachFaultOf(await ceremony.attachActorKey());
   }
 
   return {
@@ -124,11 +143,15 @@ export function createRegistrationSigner(deps: {
       if (application.approvedAt !== null) return { kind: "awaitingLanding" };
 
       const devicePub = await devicePubkey();
+      // The same attach, under the same condition, as ever: only its reason
+      // is kept now.
+      const attachFault = application.keyAttached || devicePub === null ? null : await repairAttach();
       return {
         kind: "awaitingApproval",
         emailVerified: application.emailVerified,
-        keyAttached: application.keyAttached || (devicePub !== null && (await repairAttach())),
+        keyAttached: application.keyAttached || (devicePub !== null && attachFault === null),
         keyOnDevice: keyUsable(devicePub, actorPubkey),
+        ...(attachFault === null ? {} : { attachFault }),
       };
     },
   };

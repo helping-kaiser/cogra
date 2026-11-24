@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -108,53 +109,56 @@ class ContentScreensTest {
         thread: CommentsUiState = CommentsUiState(loading = false),
         onThreadRaised: (String) -> Unit = {},
         saved: SavedWrites? = null,
+        references: ReferenceReads = ReferenceReads(),
     ) {
         compose.setContent {
-            FeedScreen(
-                saved = saved,
-                onShare = onShare,
-                stanceControl = { target, tag, node ->
-                    onStance(target, tag)
-                    onStanceNode(node)
-                },
-                state = state,
-                onRefresh = onRefresh,
-                onLoadMore = onLoadMore,
-                onOpenPost = onOpenPost,
-                onOpenActor = onOpenActor,
-                onOpenTopic = onOpenTopic,
-                onChats = onChats,
-                keyBanner = keyBanner,
-                borrowedViewBand = borrowedViewBand,
-                viewerId = viewerId,
-                onEditPost = onEditPost,
-                onCitePost = onCitePost,
-                // The same stateless sheet the detail mounts: the feed
-                // supplies the slot, and the thread state stands in for
-                // the holder the route would bind.
-                commentsSheet = { postId, onDismiss ->
-                    onThreadRaised(postId)
-                    CommentsSheet(
-                        state = thread,
-                        viewerId = viewerId,
-                        signedIn = true,
-                        onDismiss = onDismiss,
-                        onLoadMoreComments = {},
-                        onAddComment = {},
-                        onReplyTo = {},
-                        onEditComment = {},
-                        onCommentSignedShown = {},
-                        onLoadMoreReplies = {},
-                        onReveal = { _, _ -> },
-                        onOpenActor = onOpenActor,
-                        onOpenTopic = onOpenTopic,
-                        onOpenPost = {},
-                        onReference = onCitePost,
-                        onLicense = {},
-                        onSignInOrJoin = {},
-                    )
-                },
-            )
+            CompositionLocalProvider(LocalReferenceReads provides references) {
+                FeedScreen(
+                    saved = saved,
+                    onShare = onShare,
+                    stanceControl = { target, tag, node ->
+                        onStance(target, tag)
+                        onStanceNode(node)
+                    },
+                    state = state,
+                    onRefresh = onRefresh,
+                    onLoadMore = onLoadMore,
+                    onOpenPost = onOpenPost,
+                    onOpenActor = onOpenActor,
+                    onOpenTopic = onOpenTopic,
+                    onChats = onChats,
+                    keyBanner = keyBanner,
+                    borrowedViewBand = borrowedViewBand,
+                    viewerId = viewerId,
+                    onEditPost = onEditPost,
+                    onCitePost = onCitePost,
+                    // The same stateless sheet the detail mounts: the feed
+                    // supplies the slot, and the thread state stands in for
+                    // the holder the route would bind.
+                    commentsSheet = { postId, onDismiss ->
+                        onThreadRaised(postId)
+                        CommentsSheet(
+                            state = thread,
+                            viewerId = viewerId,
+                            signedIn = true,
+                            onDismiss = onDismiss,
+                            onLoadMoreComments = {},
+                            onAddComment = {},
+                            onReplyTo = {},
+                            onEditComment = {},
+                            onCommentSignedShown = {},
+                            onLoadMoreReplies = {},
+                            onReveal = { _, _ -> },
+                            onOpenActor = onOpenActor,
+                            onOpenTopic = onOpenTopic,
+                            onOpenPost = {},
+                            onReference = onCitePost,
+                            onLicense = {},
+                            onSignInOrJoin = {},
+                        )
+                    },
+                )
+            }
         }
     }
 
@@ -977,61 +981,64 @@ class ContentScreensTest {
         onShare: (String) -> Unit = {},
         onOpenPost: (String) -> Unit = {},
         onCommentsDepart: (CommentsScroll) -> Unit = {},
+        references: ReferenceReads = ReferenceReads(),
     ) {
         compose.setContent {
-            // The license sheet the comment menus raise stands OUTSIDE the
-            // thread's own window, exactly as `CommentsSheetRoute` holds it.
-            var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
-            PostDetailScreen(
-                stanceControl = { target, tag, _ -> onStance(target, tag) },
-                state = state.detail,
-                viewerId = viewerId,
-                onRefresh = onRefresh,
-                onEdit = onEdit,
-                onOpenActor = onOpenActor,
-                onOpenPost = onOpenPost,
-                onOpenTopic = onOpenTopic,
-                onReference = onReference,
-                onShare = onShare,
-                onReveal = { _, _ -> },
-                onBack = {},
-                // The sheet is its own state holder now, so the detail
-                // test drives it as the app does: through the slot, with
-                // the thread's own state beside the post's.
-                commentsSheet = { onDismiss ->
-                    CommentsSheet(
-                        state = state.comments,
-                        viewerId = viewerId,
-                        signedIn = signedIn,
-                        onDismiss = onDismiss,
-                        onLoadMoreComments = onLoadMoreComments,
-                        onAddComment = onAddComment,
-                        onReplyTo = onReplyTo,
-                        onEditComment = onEditComment,
-                        onCommentSignedShown = {},
-                        onLoadMoreReplies = onLoadMoreReplies,
-                        onReveal = { _, _ -> },
-                        onOpenActor = onOpenActor,
-                        onOpenTopic = onOpenTopic,
-                        onOpenPost = {},
-                        onReference = onReference,
-                        onLicense = { licenseShown = it },
-                        onSignInOrJoin = onSignInOrJoin,
-                        onDepart = onCommentsDepart,
-                        stanceControl = { target, tag, _ -> onStance(target, tag) },
-                    )
-                },
-            )
-            // Stacked, as `CommentsSheetRoute` mounts it: only a COMMENT's
-            // terms reach this mount, and they stand over the thread's own
-            // sheet (design/readme.md:2364).
-            licenseShown?.let { license ->
-                LicenseSheet(
-                    license = license,
-                    onDismiss = { licenseShown = null },
-                    stacked = true,
-                    node = POST_DETAIL / "licenseSheet",
+            CompositionLocalProvider(LocalReferenceReads provides references) {
+                // The license sheet the comment menus raise stands OUTSIDE the
+                // thread's own window, exactly as `CommentsSheetRoute` holds it.
+                var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
+                PostDetailScreen(
+                    stanceControl = { target, tag, _ -> onStance(target, tag) },
+                    state = state.detail,
+                    viewerId = viewerId,
+                    onRefresh = onRefresh,
+                    onEdit = onEdit,
+                    onOpenActor = onOpenActor,
+                    onOpenPost = onOpenPost,
+                    onOpenTopic = onOpenTopic,
+                    onReference = onReference,
+                    onShare = onShare,
+                    onReveal = { _, _ -> },
+                    onBack = {},
+                    // The sheet is its own state holder now, so the detail
+                    // test drives it as the app does: through the slot, with
+                    // the thread's own state beside the post's.
+                    commentsSheet = { onDismiss ->
+                        CommentsSheet(
+                            state = state.comments,
+                            viewerId = viewerId,
+                            signedIn = signedIn,
+                            onDismiss = onDismiss,
+                            onLoadMoreComments = onLoadMoreComments,
+                            onAddComment = onAddComment,
+                            onReplyTo = onReplyTo,
+                            onEditComment = onEditComment,
+                            onCommentSignedShown = {},
+                            onLoadMoreReplies = onLoadMoreReplies,
+                            onReveal = { _, _ -> },
+                            onOpenActor = onOpenActor,
+                            onOpenTopic = onOpenTopic,
+                            onOpenPost = {},
+                            onReference = onReference,
+                            onLicense = { licenseShown = it },
+                            onSignInOrJoin = onSignInOrJoin,
+                            onDepart = onCommentsDepart,
+                            stanceControl = { target, tag, _ -> onStance(target, tag) },
+                        )
+                    },
                 )
+                // Stacked, as `CommentsSheetRoute` mounts it: only a COMMENT's
+                // terms reach this mount, and they stand over the thread's own
+                // sheet (design/readme.md:2364).
+                licenseShown?.let { license ->
+                    LicenseSheet(
+                        license = license,
+                        onDismiss = { licenseShown = null },
+                        stacked = true,
+                        node = POST_DETAIL / "licenseSheet",
+                    )
+                }
             }
         }
     }
@@ -2926,6 +2933,75 @@ class ContentScreensTest {
         openComments()
         compose.onNodeWithTag("comment_c1_topics_counts", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("comment_c1_refs_sheet").assertExists()
+    }
+
+    // -- A card carries the count; its sheet reads the rows by id (api-spec.md "Query budgets") --
+
+    /** A feed card as its read draws it: `referenceCount`, and no list. */
+    private fun countedCard(count: Int) = testPost("p1", references = null).copy(
+        topics = listOf(testTopicClaim("photography")),
+        referenceCount = count,
+    )
+
+    @Test
+    fun aFeedCardPrintsTheCountItsReadCarried() {
+        val reads = ScriptedReferenceReads()
+        renderFeed(FeedUiState(loading = false, posts = listOf(countedCard(3))), references = reads.reads)
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
+            .assertTextEquals("· 3 references")
+        assertThat(reads.asked).isEmpty()
+    }
+
+    @Test
+    fun aFeedCardsSheetReadsThePostsRowsByIdAsItRises() {
+        val reads = ScriptedReferenceReads(
+            answer = Outcome.Success(
+                listOf(
+                    testReferenceClaim(testMentionTarget("mira")),
+                    testReferenceClaim(testContentTarget("p2")),
+                    testReferenceClaim(null),
+                ),
+            ),
+        )
+        renderFeed(FeedUiState(loading = false, posts = listOf(countedCard(3))), references = reads.reads)
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("feed_post_p1_refs_reference_l1-user-mira").assertExists()
+        compose.onNodeWithTag("feed_post_p1_refs_reference_l1-p2").assertExists()
+        compose.onNodeWithTag("feed_post_p1_refs_reference_l1-untypeable").assertExists()
+        assertThat(reads.asked).containsExactly(com.cogra.domain.ReferenceContentKind.POST to "p1")
+    }
+
+    /**
+     * The detail's own read carries the list: its sheet reads nothing — and a
+     * post painted off a card (the count only) reads the rows by id instead.
+     */
+    @Test
+    fun theDetailsOwnListIsHeldAndReadsNothing() {
+        val reads = ScriptedReferenceReads()
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1").copy(references = listOf(testReferenceClaim(testContentTarget("p2")))),
+            ),
+            references = reads.reads,
+        )
+        compose.onNodeWithTag("postDetail.card.tagsLine").performClick()
+        compose.onNodeWithTag("detail_post_refs_reference_l1-p2").assertExists()
+        assertThat(reads.asked).isEmpty()
+    }
+
+    @Test
+    fun aDetailPaintedOffACardReadsItsRowsById() {
+        val reads = ScriptedReferenceReads(
+            answer = Outcome.Success(listOf(testReferenceClaim(testContentTarget("p2")))),
+        )
+        renderDetail(
+            detailFixture(loading = false, post = countedCard(1)),
+            references = reads.reads,
+        )
+        compose.onNodeWithTag("postDetail.card.tagsLine").performClick()
+        compose.onNodeWithTag("detail_post_refs_reference_l1-p2").assertExists()
+        assertThat(reads.asked).containsExactly(com.cogra.domain.ReferenceContentKind.POST to "p1")
     }
 
     // -- What the composer is pinned to (graph.json `ReplyEntry` 5, 7) --

@@ -161,7 +161,14 @@ class CommentEditViewModel @Inject constructor(
                     // unaddressable — no write could name it — so it
                     // stays out of the editable section entirely and its
                     // absence is never read as a removal.
-                    val refs = loaded.comment.references.mapNotNull { it.editableRow() }
+                    //
+                    // THE EDIT OPENS ON THE WHOLE CITATION SET, OR NOT AT ALL:
+                    // `CommentForEdit` carries the list beside the card's
+                    // count, and a read without it must never open an edit
+                    // that would stage a set the author never chose.
+                    val cited = loaded.comment.references
+                        ?: return@launch _state.update { it.copy(loading = false, transportFailed = true) }
+                    val refs = cited.mapNotNull { it.editableRow() }
                     _state.update {
                         it.copy(
                             loading = false,

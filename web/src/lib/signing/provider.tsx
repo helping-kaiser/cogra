@@ -138,6 +138,17 @@ export function useKeyCeremony(): KeyCeremony {
   return useRegistrationRuntime().ceremony;
 }
 
+/**
+ * The attach of the key already on this browser, and nothing else of the
+ * ceremony: no mint, no restore, so no custody question to gate
+ * (key-custody-gate.guard.test.ts). The applicant key card's Retry
+ * (ApplicantFeed.md:39) attaches the same key again through it.
+ */
+export function useAttachActorKey(): KeyCeremony["attachActorKey"] {
+  const { ceremony } = useRegistrationRuntime();
+  return () => ceremony.attachActorKey();
+}
+
 /** The app's one write signer — member surfaces sign through it. */
 export function useWriteSigner(): WriteSigner {
   return useRegistrationRuntime().writeSigner;

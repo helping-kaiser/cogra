@@ -71,10 +71,13 @@ fragment PostFields on Post {
     pending
   }
   # The author's own current references, on the same content-intrinsic
-  # channel the topics ride (D12).
-  references {
-    ...ReferenceClaimFields
-  }
+  # channel the topics ride (D12) — as a COUNT (api-spec.md "Query
+  # budgets"). The list is a fold priced at fifty rows (1 850 a card), so a
+  # card carries the number its line prints and the sheet reads the rows by
+  # id when it opens (`PostReferences`); `PostDetail` selects its own post's
+  # list beside this. No argument, as the list had none: the default view
+  # (`includePending: true`), the rows the sheet's read lists.
+  referenceCount
   # The post menu's Save / Unsave row: the only place a kept state shows.
   viewerBookmarkedAt
 }
@@ -151,9 +154,10 @@ fragment CommentFields on Comment {
     confidence
     pending
   }
-  references {
-    ...ReferenceClaimFields
-  }
+  # A count, as the post's: the thread's sheet reads the rows by id when it
+  # opens (`CommentReferences`), and the edit reads them with the comment
+  # (`CommentForEdit`).
+  referenceCount
   # The comment menu's Save / Unsave row.
   viewerBookmarkedAt
 }
@@ -310,6 +314,12 @@ query PostBacking($id: UUID!) {
 query CommentForEdit($id: UUID!) {
   comment(id: $id) {
     ...CommentFields
+    # THE EDIT OPENS ON THE WHOLE CITATION SET: the fragment carries only
+    # the count, and an edit that opened on fewer citations than stand would
+    # stage a set the author never chose. One comment, once.
+    references {
+      ...ReferenceClaimFields
+    }
   }
 }
 
@@ -343,6 +353,13 @@ query CommentParent($id: UUID!) {
 query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $includePending: Boolean! = true) {
   post(id: $id) {
     ...PostFields
+    # THE DETAIL KEEPS ITS OWN POST'S LIST — the one post on the page, so
+    # the fold prices once: its sheet, the hold's citation-set check
+    # (`DetailLanding.kt`) and the post edit read it. Its comments carry
+    # the count (`CommentFields`).
+    references {
+      ...ReferenceClaimFields
+    }
     comments(first: $commentsFirst, after: $commentsAfter, includePending: $includePending) {
       # The whole thread's size, cursor-independent — what the card's
       # comment affordance states on the detail too.

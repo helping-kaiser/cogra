@@ -2744,7 +2744,9 @@ impl Mutation {
 
     /// Renames the account in the one actor namespace — L2 account
     /// state, not graph or profile payload. Subject to the global handle
-    /// rules: 3–30 chars of [a-z0-9_], case-folded.
+    /// rules: 3–30 chars of [a-z0-9_], case-folded. A reserved handle
+    /// answers HANDLE_TAKEN, as a held one does, unless it is the
+    /// account's own.
     async fn change_handle(
         &self,
         ctx: &Context<'_>,
@@ -2765,7 +2767,11 @@ impl Mutation {
                 });
             }
         };
-        if !store::change_handle(pool, v.user_id, &handle).await? {
+        let kept = crate::reserved::is_reserved_handle(&handle)
+            && store::actor_identity(pool, v.user_id)
+                .await?
+                .is_none_or(|own| own.handle != handle);
+        if kept || !store::change_handle(pool, v.user_id, &handle).await? {
             return Ok(ChangeHandlePayload {
                 user: None,
                 user_errors: vec![UserError::at(
@@ -4211,7 +4217,9 @@ impl Mutation {
     /// Prepares an update of the viewer's profile — a parallel
     /// Registration, L1's own profile-update idiom: payload only, never
     /// identity (substrate.md §9). Chained behind the current head; one
-    /// in-flight update per profile.
+    /// in-flight update per profile. A display name CoGra reserves
+    /// answers DISPLAY_NAME_RESERVED on `displayName`, unless the account
+    /// already holds it.
     async fn prepare_profile_update(
         &self,
         ctx: &Context<'_>,
@@ -4240,6 +4248,14 @@ impl Mutation {
                     ErrorCode::BadInput,
                     message,
                     vec![field.to_string()],
+                )],
+            }),
+            Err(e @ ProfileError::DisplayNameReserved) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![UserError::at(
+                    ErrorCode::DisplayNameReserved,
+                    e.to_string(),
+                    vec!["displayName".to_string()],
                 )],
             }),
             Err(ProfileError::Media(e)) => Ok(PreparePayload {

@@ -72,6 +72,8 @@ class ContentRepositoryTest {
         attachments: String = "[]",
         moderationStatus: String = "NORMAL",
         commentCount: Int = 0,
+        references: String = "[]",
+        referenceCount: Int = 0,
     ) = """
         {"__typename":"Post","id":"$id",
          "title":{"__typename":"ModeratedText","value":${title?.let { "\"$it\"" } ?: "null"},"status":"NORMAL"},
@@ -89,7 +91,7 @@ class ContentRepositoryTest {
          "removal":null,"genesisRecordId":"rec:$id",
          "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
          "topics":[],
-         "references":[],
+         "references":$references,"referenceCount":$referenceCount,
          "commentCount":{"__typename":"CommentConnection","totalCount":$commentCount}}
     """.trimIndent()
 
@@ -202,7 +204,7 @@ class ContentRepositoryTest {
                "removal":null,"genesisRecordId":"rec:p1",
                "license":{"__typename":"License","attribution":0.0,"provenance":0.0},
                "topics":[],
-               "references":[],
+               "references":[],"referenceCount":0,
                "comments":{"__typename":"CommentConnection","totalCount":1,
                  "edges":[{"__typename":"CommentEdge","node":{"__typename":"Comment","id":"c1",
                    "content":{"__typename":"ModeratedText","value":"hi","status":"NORMAL"},
@@ -217,7 +219,7 @@ class ContentRepositoryTest {
                    "sensitiveSelfMark":false,"sensitiveReason":null,
                    "license":{"__typename":"License","attribution":1.0,"provenance":0.0},
                    "topics":[],
-                   "references":[],
+                   "references":[],"referenceCount":0,
                    "replies":{"__typename":"CommentConnection","totalCount":2}}}],
                  "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":"cc"}}}}}""",
         )
