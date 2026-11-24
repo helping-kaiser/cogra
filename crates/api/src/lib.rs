@@ -616,37 +616,39 @@ async fn part_door(
     next: Next,
 ) -> axum::response::Response {
     let (mut parts, body) = request.into_parts();
-    match admit_uploader(&state, &parts.headers, session_id, part_number).await {
-        Ok(viewer) => {
-            parts.extensions.insert(viewer);
-            next.run(Request::from_parts(parts, body)).await
-        }
-        Err(refusal) => refuse_unread(refusal, &parts.headers, body, state.part_absorb_bytes).await,
-    }
-}
-
-/// The viewer a part may be taken from, or the refusal the route answers.
-async fn admit_uploader(
-    state: &AppState,
-    headers: &HeaderMap,
-    session_id: Uuid,
-    part_number: u32,
-) -> Result<Viewer, axum::response::Response> {
-    let Some(viewer) = bearer_viewer(&state.auth, headers) else {
-        return Err(upload_error(
+    let refusal = match bearer_viewer(&state.auth, &parts.headers) {
+        None => upload_error(
             StatusCode::UNAUTHORIZED,
             "UNAUTHENTICATED",
             "this endpoint needs an access token",
             &[],
-        ));
+        ),
+        Some(viewer) => {
+            match uploader_refusal(&state.uploads.pool, viewer, session_id, part_number).await {
+                None => {
+                    parts.extensions.insert(viewer);
+                    return next.run(Request::from_parts(parts, body)).await;
+                }
+                Some(refusal) => refusal,
+            }
+        }
     };
-    let pool = &state.uploads.pool;
+    refuse_unread(refusal, &parts.headers, body, state.part_absorb_bytes).await
+}
 
+/// The refusal the part route answers a verified viewer with, or none when
+/// the viewer may send this part.
+async fn uploader_refusal(
+    pool: &PgPool,
+    viewer: Viewer,
+    session_id: Uuid,
+    part_number: u32,
+) -> Option<axum::response::Response> {
     match postgres_store::auth::credentials_by_actor(pool, viewer.user_id).await {
         Ok(Some(credentials))
             if credentials.account_state == postgres_store::auth::AccountState::Member => {}
         Ok(_) => {
-            return Err(upload_error(
+            return Some(upload_error(
                 StatusCode::FORBIDDEN,
                 "FORBIDDEN",
                 "only a member may upload",
@@ -655,7 +657,7 @@ async fn admit_uploader(
         }
         Err(e) => {
             tracing::error!(error = %e, "upload part viewer lookup failed");
-            return Err(upload_error(
+            return Some(upload_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "INTERNAL",
                 "internal error",
@@ -663,11 +665,10 @@ async fn admit_uploader(
             ));
         }
     }
-
     resumable::admit_part(pool, viewer.user_id, session_id, part_number)
         .await
-        .map_err(part_refusal)?;
-    Ok(viewer)
+        .err()
+        .map(part_refusal)
 }
 
 /// The part route's answer to a session refusal, in the vocabulary of
