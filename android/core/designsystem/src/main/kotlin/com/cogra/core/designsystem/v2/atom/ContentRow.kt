@@ -274,12 +274,13 @@ private fun UnreadDot(node: DataNode?, testTag: String) {
 }
 
 /**
- * How the aside yields (`ContentRow.jsx` `ASIDE_FLEX`, round 40): a bare
- * handle beside a name as the chip's handle does — the name gives way first;
- * words naming a handle (`on @mira`) by giving up the handle first, the title
- * kept whole; plain words never.
+ * How the aside yields (`ContentRow.jsx` `ASIDE_FLEX`, rounds 40 and 62): a
+ * bare handle beside a name as the chip's handle does — the name gives way
+ * first; words naming a handle (`on @mira`) by giving up the handle first, the
+ * title kept whole; words with no handle — a tag up to 128 characters,
+ * `#saltmaps`, `on #saltmaps` — by ending in "…" while the title keeps its room.
  */
-private enum class AsideYield { None, Bare, Words }
+private enum class AsideYield { Bare, Words, Text }
 
 private val BARE_HANDLE = Regex("^@[A-Za-z0-9_]+$")
 private val HANDLE_IN_WORDS = Regex("(?<![\\w@])@[A-Za-z0-9_]")
@@ -287,7 +288,7 @@ private val HANDLE_IN_WORDS = Regex("(?<![\\w@])@[A-Za-z0-9_]")
 private fun asideYield(aside: String): AsideYield = when {
     BARE_HANDLE.matches(aside) -> AsideYield.Bare
     HANDLE_IN_WORDS.containsMatchIn(aside) -> AsideYield.Words
-    else -> AsideYield.None
+    else -> AsideYield.Text
 }
 
 /**
@@ -301,10 +302,11 @@ private fun TitleLine(title: String, quiet: Boolean, aside: String?, part: (Stri
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         // The heading spans its column, unless an aside rides its baseline
         // (`ContentRow.jsx`: a block in the column, content-width beside the
-        // aside). Measured after an unweighted aside, it is what yields; a
-        // `words` aside is the weighted one instead, and the title keeps its
+        // aside). Measured after a bare handle, it is what yields; a `words`
+        // or `text` aside is the weighted one instead, and the title keeps its
         // width (`flex: none; max-width: 100%`).
-        val titleWidth = if (yields == AsideYield.Words) Modifier else Modifier.weight(1f, fill = aside == null)
+        val asideYields = yields == AsideYield.Words || yields == AsideYield.Text
+        val titleWidth = if (asideYields) Modifier else Modifier.weight(1f, fill = aside == null)
         NameInLine(
             text = title,
             style = MaterialTheme.typography.labelLarge,
@@ -312,7 +314,7 @@ private fun TitleLine(title: String, quiet: Boolean, aside: String?, part: (Stri
             modifier = titleWidth.dataNode(part("title")),
         )
         aside?.let {
-            val asideWidth = if (yields == AsideYield.Words) Modifier.weight(1f, fill = false) else Modifier
+            val asideWidth = if (asideYields) Modifier.weight(1f, fill = false) else Modifier
             NameInLine(
                 text = it,
                 style = MaterialTheme.typography.labelSmall,
