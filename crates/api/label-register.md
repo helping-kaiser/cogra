@@ -1024,6 +1024,7 @@ label.
 | `test:integration:the-first-vouch-to-land-completes-the-ceremony`                                              | the_first_vouch_to_land_completes_the_ceremony                                              |
 | `test:integration:the-five-steps-land-a-record-and-confirm-the-staged-write`                                   | the_five_steps_land_a_record_and_confirm_the_staged_write                                   |
 | `test:integration:the-genesis-filter-counts-posts-never-edits`                                                 | the_genesis_filter_counts_posts_never_edits                                                 |
+| `test:integration:the-guard-reports-an-invalid-client-document`                                                | the_guard_reports_an_invalid_client_document                                                |
 | `test:integration:the-handshake-stays-the-authors-own-business`                                                | the_handshake_stays_the_authors_own_business                                                |
 | `test:integration:the-host-never-holds-the-content-pair-of-an-api-write`                                       | the_host_never_holds_the_content_pair_of_an_api_write                                       |
 | `test:integration:the-ingestion-pass-collects-writes-that-never-land`                                          | the_ingestion_pass_collects_writes_that_never_land                                          |
