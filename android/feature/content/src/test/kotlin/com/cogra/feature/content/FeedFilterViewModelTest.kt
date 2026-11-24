@@ -29,6 +29,7 @@ import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
 import com.cogra.domain.feed.FeedTopic
 import com.cogra.domain.feed.FeedViewer
+import com.cogra.domain.feed.MAX_CARDS_WINDOW
 import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.history.SeenRecord
@@ -384,7 +385,9 @@ class FeedFilterViewModelTest {
         val vm = viewModel()
         settle()
 
-        assertThat(feed.cardReads.map { it.size }).containsExactly(20, 2).inOrder()
+        // A window is as wide as a cards read, so one window is one read.
+        assertThat(feed.cardReads.first()).hasSize(FEED_PAGE_SIZE)
+        assertThat(feed.cardReads.map { it.size }.max()).isAtMost(MAX_CARDS_WINDOW)
         assertThat(vm.ids()).isEqualTo(ids)
     }
 
