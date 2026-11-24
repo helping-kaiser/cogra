@@ -128,6 +128,7 @@
     <string name="profile_edit_display_name_too_long">Too long — at most %1$d characters.</string>
     <string name="profile_edit_bio_too_long">Too long — at most %1$d characters.</string>
     <string name="profile_edit_website_too_long">Too long — at most %1$d characters.</string>
+    <string name="profile_edit_name_reserved">That name isn\'t available.</string>
     <string name="profile_edit_refused">That didn\'t work. Check the fields and try again.</string>
     <string name="profile_edit_signing_failed">Signing didn\'t complete. Try again.</string>
 </resources>

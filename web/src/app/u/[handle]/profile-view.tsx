@@ -38,17 +38,18 @@ import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import type { PostView } from "@/lib/api/content-api";
 import { withRemoval } from "@/lib/api/removal-api";
 import {
-  fetchAuthorRecords,
   fetchMyProfile,
   fetchProfileByHandle,
+  fetchProfileChronicle,
   fetchProfileComments,
   fetchProfileFigures,
   fetchProfilePosts,
+  isSettlingEntry,
   type ChronicleFilter,
+  type ChronicleRow,
   type ProfileCommentView,
   type ProfileFigures,
   type ProfileView as Profile,
-  type RecordRow,
 } from "@/lib/api/profile-api";
 import {
   forgetProfileView,
@@ -183,7 +184,7 @@ export function ProfileScreen({
   // EVERY PROFILE LANDS ON POSTS, from any door (ProfilePosts.md:5,
   // ProfileOther.md:21, Profile.md:25); a return stands on the tab it left.
   const [filter, setFilter] = useState<ChronicleFilter>(held?.tab ?? "posts");
-  const [rows, setRows] = useState<readonly RecordRow[]>(held?.tab === "everything" ? held.rows : []);
+  const [rows, setRows] = useState<readonly ChronicleRow[]>(held?.tab === "everything" ? held.rows : []);
   // THE POSTS VIEW'S CARDS (ProfilePosts.md:3), in the order the read serves.
   const [posts, setPosts] = useState<readonly PostView[]>(held?.tab === "posts" ? held.posts : []);
   // THE COMMENTS VIEW'S CARDS (ProfileComments.md:3), in the order the read serves.
@@ -256,14 +257,16 @@ export function ProfileScreen({
         }
         return;
       }
-      const outcome = await fetchAuthorRecords(client, authorId, after, mine);
+      const outcome = await fetchProfileChronicle(client, authorId, after, mine);
       if (request !== rowsRequest.current) return;
       setRowsLoading(false);
       if (outcome.kind === "success") {
         // The chronicle is the surface most exposed to the repeat
-        // `appendDeduped` exists for: it lists the author's own records, and a
-        // record that lands between two fetches leaves the pending namespace
-        // for a place below the cursor the walk resumes from.
+        // `appendDeduped` exists for: a post or comment that lands between two
+        // fetches leaves the settling head for its record's place below the
+        // cursor the walk resumes from. A settling row is keyed by the record
+        // it lands as (`genesisRecordId`), so that record is the same row by
+        // id: the held copy stands and the repeat is dropped, never both.
         setRows((current) =>
           after === null ? outcome.value.items : appendDeduped(current, outcome.value.items),
         );
@@ -881,7 +884,7 @@ export function ProfileScreen({
 }
 
 /** Each act's disc, by kind (`_shared.jsx` `ProfileOwnBody`'s chronicle). */
-function discOf(row: RecordRow): ContentRowDisc {
+function discOf(row: ChronicleRow): ContentRowDisc {
   switch (row.kind) {
     case "post":
       return { kind: "glyph", glyph: "dynamic_feed" };
@@ -923,30 +926,40 @@ function discOf(row: RecordRow): ContentRowDisc {
  * One act (`ContentRow` chronicle): its disc, its verb and snippet, its age on
  * the trailing edge. A card with somewhere to go opens its post, whose back
  * arrow names this profile; one with nowhere to go is the same card, inert.
+ *
+ * A POST OR A COMMENT STILL SETTLING (Profile.md:31, ProfileOther.md:27) is
+ * its act's card, its age its signing and `Still settling` under it
+ * (`_shared.jsx` `ChronicleAct`'s `settling`: `ContentRow` `pending`); its
+ * door is its card's on the Posts or Comments tab — the post, or the thread
+ * landed on the comment (`comment-feed-card.tsx` `place`).
  */
 function ChronicleAct({
   row,
   position,
   origin,
 }: {
-  row: RecordRow;
+  row: ChronicleRow;
   position: number;
   origin: string | null;
 }) {
   const node = instance(CHRONICLE, "act", String(position));
+  const entry = isSettlingEntry(row) ? row : null;
+  const query = [
+    entry?.commentId ? `comment=${entry.commentId}` : null,
+    origin === null ? null : `from=${encodeURIComponent(origin)}`,
+  ].filter((part) => part !== null);
   const href =
     row.postId === null
       ? undefined
-      : origin === null
-        ? `/posts/${row.postId}`
-        : `/posts/${row.postId}?from=${encodeURIComponent(origin)}`;
+      : `/posts/${row.postId}${query.length > 0 ? `?${query.join("&")}` : ""}`;
   return (
     <ContentRow
       variant="chronicle"
       title={row.label}
       titleAside={row.aside ?? undefined}
       second={row.snippet?.trim() ? row.snippet : undefined}
-      trailing={ladderAge(row.landedAt)}
+      trailing={ladderAge(isSettlingEntry(row) ? row.signedAt : row.landedAt)}
+      pending={entry?.pending === true}
       disc={discOf(row)}
       href={href}
       node={node}

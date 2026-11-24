@@ -30,6 +30,7 @@ import { bundleReadout, EMPTY_PICK_LABEL, ZERO_BUNDLE_EMOJI } from "@/lib/stance
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon, type GlyphName } from "@/lib/ui/icons";
 import { nameInLine } from "@/lib/ui/names";
+import { PendingMarker } from "@/lib/ui/pending-marker";
 import { formatStancePair, STANCE_SEVERANCE_WORDS } from "@/lib/ui/stance-format";
 import { MonogramAvatar } from "./monogram-avatar";
 
@@ -175,10 +176,16 @@ export function ContentRow({
   node,
   testId,
   unread = false,
+  pending = false,
   sentence = false,
   titleId,
   chevron = variant === "door",
 }: {
+  /**
+   * Signed and not yet landed: `Still settling` under the trailing edge
+   * (ContentRow.jsx `pending`), the chronicle's still-settling post or comment.
+   */
+  pending?: boolean;
   /**
    * The chevron that says the row opens another surface (ContentRow.jsx
    * `chevron`, default on). A door draws it; a chronicle row that opens a
@@ -270,7 +277,7 @@ export function ContentRow({
           </span>
         )}
       </span>
-      {(trailing !== undefined || unread) && (
+      {(trailing !== undefined || unread || pending) && (
         <span className="flex flex-none flex-col items-end gap-0.5">
           {trailing !== undefined && (
             <span
@@ -281,6 +288,12 @@ export function ContentRow({
             >
               {trailing}
             </span>
+          )}
+          {/* STILL SETTLING UNDER THE AGE (ContentRow.jsx `pending`): the
+              honesty marker, in its phrasing form — the row is a link or a
+              button, which takes phrasing content (`PendingMarker.jsx`). */}
+          {pending && (
+            <PendingMarker inline node={part(node, "pending")} testId={`${testId}-pending`} />
           )}
           {/* The shell's unread mark at row scale: a dot, never a weight
               change, so a list of unread rows stays a list. */}

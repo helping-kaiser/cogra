@@ -108,3 +108,34 @@ describe("the identity row's long names", () => {
     expect(classes("row-aside")).toEqual(expect.arrayContaining(["shrink", "min-w-0", "text-ellipsis"]));
   });
 });
+
+// ContentRow.jsx `pending`: a still-settling act reads `Still settling` under
+// its age, the honesty marker in the trailing column, named `<node>.pending`.
+describe("the identity row's pending marker", () => {
+  it("reads Still settling under the age, inside the row's door, on the registered part", () => {
+    render(
+      <ContentRow
+        title="Published a post"
+        trailing="now"
+        pending
+        href="/posts/p1"
+        disc={{ kind: "glyph", glyph: "dynamic_feed" }}
+        node={{ path: "profile.chronicle.act", key: "1" }}
+        testId="row"
+      />,
+    );
+    const marker = screen.getByText("Still settling");
+    expect(marker.tagName).toBe("SPAN");
+    expect(marker).toHaveAttribute("data-testid", "profile.chronicle.act.pending");
+    expect(marker).toHaveAttribute("data-testid-key", "1");
+    expect(marker.className).not.toContain("text-error");
+    // Under the age, in the same trailing column.
+    expect(marker.previousElementSibling).toHaveTextContent("now");
+    expect(screen.getByTestId("row-open")).toContainElement(marker);
+  });
+
+  it("draws no marker on a landed row", () => {
+    render(<ContentRow title="Published a post" trailing="2h" disc={{ kind: "glyph", glyph: "dynamic_feed" }} testId="row" />);
+    expect(screen.queryByText("Still settling")).not.toBeInTheDocument();
+  });
+});

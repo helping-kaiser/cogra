@@ -47,9 +47,10 @@ use async_graphql_axum::rejection::GraphQLRejection;
 use axum::body::Bytes;
 use axum::extract::{DefaultBodyLimit, Path, Request, State};
 use axum::http::{Extensions, HeaderMap, StatusCode, Version};
+use axum::middleware::{self, Next};
 use axum::response::IntoResponse;
 use axum::routing::{get, post, put};
-use axum::{Json, Router, response::Html};
+use axum::{Extension, Json, Router, response::Html};
 use axum_client_ip::{ClientIp, ClientIpSource};
 use postgres_store::PgPool;
 use serde_json::{Value, json};
@@ -105,6 +106,8 @@ struct AppState {
     auth: AuthConfig,
     multipart: multipart::MultipartLimits,
     anonymous_upload_absorb_bytes: usize,
+    /// How much of a refused part's body [`part_door`] absorbs: one part.
+    part_absorb_bytes: usize,
     uploads: UploadRouting,
 }
 
@@ -432,9 +435,21 @@ async fn refuse_anonymous_upload(
     body: axum::body::Body,
     absorb_bytes: usize,
 ) -> axum::response::Response {
+    refuse_unread(unauthenticated_upload(), headers, body, absorb_bytes).await
+}
+
+/// Sends `response`, the refusal of a request decided from its headers
+/// alone, once its body has been absorbed up to `absorb_bytes` — or at
+/// once with `Connection: close` when the body declares or carries more
+/// (see [`refuse_anonymous_upload`] for why a refusal still absorbs).
+async fn refuse_unread(
+    mut response: axum::response::Response,
+    headers: &HeaderMap,
+    body: axum::body::Body,
+    absorb_bytes: usize,
+) -> axum::response::Response {
     let fits = declared_length(headers).is_none_or(|declared| declared <= absorb_bytes);
     let absorbed = fits && absorb(body, absorb_bytes).await;
-    let mut response = unauthenticated_upload();
     if !absorbed {
         response.headers_mut().insert(
             axum::http::header::CONNECTION,
@@ -548,44 +563,17 @@ fn upload_error(
 /// The session id is the only capability, and it is not enough on its
 /// own: the viewer's token must resolve to the account that opened the
 /// session, so a leaked id buys nothing.
+///
+/// The caller is admitted by [`part_door`] before this runs, so the `Bytes`
+/// extractor — the last one, and the only one that reads the body — reads
+/// a part only for its session's owner.
 async fn upload_part(
     State(state): State<AppState>,
     Path((session_id, part_number)): Path<(Uuid, u32)>,
-    headers: HeaderMap,
+    Extension(viewer): Extension<Viewer>,
     body: Bytes,
 ) -> axum::response::Response {
-    let Some(viewer) = bearer_viewer(&state.auth, &headers) else {
-        return upload_error(
-            StatusCode::UNAUTHORIZED,
-            "UNAUTHENTICATED",
-            "this endpoint needs an access token",
-            &[],
-        );
-    };
     let uploads = &state.uploads;
-
-    match postgres_store::auth::credentials_by_actor(&uploads.pool, viewer.user_id).await {
-        Ok(Some(credentials))
-            if credentials.account_state == postgres_store::auth::AccountState::Member => {}
-        Ok(_) => {
-            return upload_error(
-                StatusCode::FORBIDDEN,
-                "FORBIDDEN",
-                "only a member may upload",
-                &[],
-            );
-        }
-        Err(e) => {
-            tracing::error!(error = %e, "upload part viewer lookup failed");
-            return upload_error(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL",
-                "internal error",
-                &[],
-            );
-        }
-    }
-
     match resumable::receive_part(
         &uploads.pool,
         uploads.blobs.as_ref(),
@@ -602,23 +590,108 @@ async fn upload_part(
             "partCount": receipt.part_count,
         }))
         .into_response(),
-        Err(SessionError::NotFound) => upload_error(
+        Err(e) => part_refusal(e),
+    }
+}
+
+/// The part route's door: everything that can refuse a part without its
+/// bytes is decided here, from the path and the headers, before a byte of
+/// the body is read (api-spec.md "Uploads need a session at the door").
+///
+/// The bearer must verify, its account must be a member, and the session
+/// must be the viewer's, open, and take the part's number. A caller that
+/// fails any of these gets the refusal it always got; its body is absorbed
+/// and dropped up to one part — the largest body a client sends here —
+/// and never buffered, so the answer reaches a client that sends a part
+/// whole before it reads (see [`refuse_anonymous_upload`]). A body that
+/// declares or carries more is answered at once with `Connection: close`.
+/// The admitted viewer rides to [`upload_part`] as a request extension.
+///
+/// It is a `route_layer`, not a `layer`, so a request with another method
+/// is still answered 405 by the method router rather than met here.
+async fn part_door(
+    State(state): State<AppState>,
+    Path((session_id, part_number)): Path<(Uuid, u32)>,
+    request: Request,
+    next: Next,
+) -> axum::response::Response {
+    let (mut parts, body) = request.into_parts();
+    let refusal = match bearer_viewer(&state.auth, &parts.headers) {
+        None => upload_error(
+            StatusCode::UNAUTHORIZED,
+            "UNAUTHENTICATED",
+            "this endpoint needs an access token",
+            &[],
+        ),
+        Some(viewer) => {
+            match uploader_refusal(&state.uploads.pool, viewer, session_id, part_number).await {
+                None => {
+                    parts.extensions.insert(viewer);
+                    return next.run(Request::from_parts(parts, body)).await;
+                }
+                Some(refusal) => refusal,
+            }
+        }
+    };
+    refuse_unread(refusal, &parts.headers, body, state.part_absorb_bytes).await
+}
+
+/// The refusal the part route answers a verified viewer with, or none when
+/// the viewer may send this part.
+async fn uploader_refusal(
+    pool: &PgPool,
+    viewer: Viewer,
+    session_id: Uuid,
+    part_number: u32,
+) -> Option<axum::response::Response> {
+    match postgres_store::auth::credentials_by_actor(pool, viewer.user_id).await {
+        Ok(Some(credentials))
+            if credentials.account_state == postgres_store::auth::AccountState::Member => {}
+        Ok(_) => {
+            return Some(upload_error(
+                StatusCode::FORBIDDEN,
+                "FORBIDDEN",
+                "only a member may upload",
+                &[],
+            ));
+        }
+        Err(e) => {
+            tracing::error!(error = %e, "upload part viewer lookup failed");
+            return Some(upload_error(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "INTERNAL",
+                "internal error",
+                &[],
+            ));
+        }
+    }
+    resumable::admit_part(pool, viewer.user_id, session_id, part_number)
+        .await
+        .err()
+        .map(part_refusal)
+}
+
+/// The part route's answer to a session refusal, in the vocabulary of
+/// [`upload_error`].
+fn part_refusal(error: SessionError) -> axum::response::Response {
+    match error {
+        SessionError::NotFound => upload_error(
             StatusCode::NOT_FOUND,
             "NOT_FOUND",
             "no such upload session",
             &["uploadId"],
         ),
-        Err(SessionError::BadInput(e)) => {
+        SessionError::BadInput(e) => {
             let field: Vec<&str> = e.path.iter().map(String::as_str).collect();
             upload_error(StatusCode::BAD_REQUEST, "BAD_INPUT", &e.message, &field)
         }
-        Err(SessionError::Refused(e)) => upload_error(
+        SessionError::Refused(e) => upload_error(
             StatusCode::BAD_REQUEST,
             "BAD_INPUT",
             &e.to_string(),
             &["part"],
         ),
-        Err(SessionError::Internal(e)) => {
+        SessionError::Internal(e) => {
             tracing::error!(error = %e, "upload part failed");
             upload_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -646,7 +719,10 @@ async fn upload_part(
 /// transport's ceiling is set apart from the upload caps: a body limit
 /// refuses before a handler exists and can only answer with a status
 /// code, so the readable refusal naming the expected byte count is left
-/// to the handler and this catches only what is wildly out of range.
+/// to the handler and this catches only what is wildly out of range. The
+/// limit is a signed-in owner's to meet: [`part_door`] sits in front of the
+/// extractor that applies it, as axum's own middleware does for a layer
+/// that must run before a handler's extractors.
 ///
 /// `/graphql` carries the same kind of ceiling one layer out. The
 /// multipart limits bound the fields of a multipart request and nothing
@@ -681,6 +757,14 @@ pub fn app(
     let graphql_limit = media
         .transport_limit_bytes()
         .saturating_add(media.upload_part_size_bytes);
+    let state = AppState {
+        schema,
+        auth,
+        multipart,
+        anonymous_upload_absorb_bytes: anonymous_upload_absorb_bytes(media),
+        part_absorb_bytes: media.upload_part_size_bytes,
+        uploads,
+    };
     let mut router = Router::new()
         .route(
             "/graphql",
@@ -693,19 +777,13 @@ pub fn app(
         )
         .route(
             "/media/uploads/{session_id}/parts/{part_number}",
-            put(upload_part).layer(DefaultBodyLimit::max(part_limit)),
+            put(upload_part)
+                .route_layer(middleware::from_fn_with_state(state.clone(), part_door))
+                .layer(DefaultBodyLimit::max(part_limit)),
         )
         .route("/health", get(health));
     if cfg!(debug_assertions) {
         router = router.route("/playground", get(playground));
     }
-    router
-        .layer(ip_source.into_extension())
-        .with_state(AppState {
-            schema,
-            auth,
-            multipart,
-            anonymous_upload_absorb_bytes: anonymous_upload_absorb_bytes(&uploads.media),
-            uploads,
-        })
+    router.layer(ip_source.into_extension()).with_state(state)
 }

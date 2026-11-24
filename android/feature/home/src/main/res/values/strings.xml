@@ -60,6 +60,9 @@
     <string name="home_create_key_title">Create your key</string>
     <string name="home_create_key_body">Your identity on the graph is a key minted on this phone. Create it now — your inviter can only approve you once it exists.</string>
     <string name="home_create_key_button">Create my key</string>
+    <!-- The key in this app that did not attach (ApplicantFeed.md:19-21, the app's wording). -->
+    <string name="home_attach_key_title">Attach your key</string>
+    <string name="home_attach_key_body">Your key is in this app. It hasn\'t reached your application yet.</string>
     <string name="home_key_elsewhere_title">This phone\'s key belongs to another account</string>
     <string name="home_key_elsewhere_body">A signing key can only ever back one account, so this account needs its own. Creating a fresh key replaces the stored one — the other account\'s key stays restorable with its recovery code.</string>
     <string name="home_key_elsewhere_button">Create a fresh key</string>
