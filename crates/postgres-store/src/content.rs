@@ -2311,7 +2311,8 @@ fn nearest<T>(mut rows: Vec<T>, backward: bool, limit: i64) -> Vec<T> {
     let keep = usize::try_from(limit).unwrap_or(0);
     if rows.len() > keep {
         if backward {
-            rows.drain(..rows.len() - keep);
+            let start = rows.len() - keep;
+            rows = rows.split_off(start);
         } else {
             rows.truncate(keep);
         }
