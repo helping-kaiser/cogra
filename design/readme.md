@@ -13092,6 +13092,8 @@ drawing.
   and `ApplicantFeed`'s `borrowedViewBand` (with `.action`, which only
   this board draws). The APK line carries no name; no board registers
   it. Nothing gone; no string added.
+- **Named** (seam 454): a reserved display name's refusal is the code
+  `DISPLAY_NAME_RESERVED` (copy-voice, *Expected refusals*).
 - **Held**: the references sheet's failed read (seam 451.1) — the thread
   sheet's own failed read, its twin, is drawn nowhere (backlog 309).
 - **Found**: the proof harness is repaired in a copy, dev-state
