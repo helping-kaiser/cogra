@@ -16,6 +16,7 @@ import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.domain.testing.FakeBorrowedStanceRepository
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.SealingWriteRepository
@@ -91,6 +92,7 @@ class StanceKeptPicksTest {
         account,
         kept,
         standing,
+        FakeBorrowedStanceRepository(),
     )
 
     private fun idle() = dispatcher.scheduler.advanceUntilIdle()

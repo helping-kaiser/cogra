@@ -167,6 +167,8 @@ fun CardListHost(
     tag: String,
     notify: (String) -> Unit,
     placement: HostedPlacement = HostedPlacement.Profile,
+    /** The tag whose own page hosts the cards: its chips and rows open nothing ([LocalTagHere]). */
+    tagHere: String? = null,
     viewModel: HostedCardsViewModel = hiltViewModel(),
     content: @Composable (HostedCards) -> Unit,
 ) {
@@ -192,6 +194,7 @@ fun CardListHost(
             notify,
             placement,
             rememberCommentReread(),
+            tagHere = tagHere,
             content = content,
         )
     }
@@ -211,6 +214,8 @@ internal fun HostedCardsScope(
     rereadComment: suspend (String) -> CommentView? = { null },
     /** The report row's door over the host — the confirm, or a guest's join prompt — as History's and Saved's. */
     reportSheet: ReportSheetSlot = reportDoor(routes.onRequireAccount, "${tag}_report_sheet"),
+    /** The tag whose own page hosts the cards, over the cards and every sheet they raise. */
+    tagHere: String? = null,
     content: @Composable (HostedCards) -> Unit,
 ) {
     val layers = remember { CoveringLayers() }
@@ -241,7 +246,7 @@ internal fun HostedCardsScope(
         },
         covered = commentsFor != null || reportFor != null || layers.cover == SurfaceCover.Suspended,
     )
-    CompositionLocalProvider(LocalCoveringLayers provides layers) {
+    CompositionLocalProvider(LocalCoveringLayers provides layers, LocalTagHere provides tagHere) {
         content(cards)
         commentsFor?.let { postId ->
             ListThread(
@@ -332,12 +337,12 @@ private fun cardPlacement(node: DataNode, tag: String, placement: HostedPlacemen
 )
 
 /**
- * A listed comment as the comment card's line shape, its every door landing
- * on its thread (ProfileComments.md:23-27): the pointer and the replies line
- * on the comment's own place, Reply with the composer aimed at it — an
+ * A listed comment as the comment card's line shape: its pointer the door to
+ * what it names ([openPointer]); the card and the replies line on the
+ * comment's own place in its thread, Reply with the composer aimed at it — an
  * applicant's answered in the snackbar — and a guest's drawing none. Where the
  * host keeps no thread doors (a tag's page, TagPage.md:17) the card offers no
- * Reply and no replies line, and its pointer still opens the thread.
+ * Reply and no replies line.
  */
 @Composable
 private fun HostedCommentCard(
@@ -371,9 +376,6 @@ private fun HostedCommentCard(
             shape = CommentCardShape.Line(reply),
             authorHere = placement.authorHere,
             menu = placement.commentMenu,
-            // THE POINTER OPENS THE THREAD THE COMMENT LIVES IN, landed on the
-            // comment that answers it (ProfileComments.md:23).
-            onOpenTarget = { openPlace() },
             onReply = {
                 if (lockedReply != null) {
                     lockedReply()

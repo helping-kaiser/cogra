@@ -22,6 +22,7 @@ import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceHandlers } from "@/test/stance";
+import { tagPageHandlers } from "@/test/tag-page";
 import { TopicView } from "./topic-view";
 
 const push = vi.hoisted(() => vi.fn());
@@ -57,19 +58,13 @@ function taggedComment(whose: Whose, removed: Removal) {
 
 function serveTag(whose: Whose, removed: Removal = null) {
   server.use(
-    gqlLink.query("HashtagDetail", () =>
-      HttpResponse.json({
-        data: {
-          hashtag: {
-            __typename: "Hashtag",
-            id: "ht-1",
-            name: moderated("saltmaps"),
-            moderationStatus: "NORMAL",
-            taggedContent: [{ relevance: 0.4, confidence: 0.9, pending: false, node: taggedComment(whose, removed) }],
-          },
-        },
-      }),
-    ),
+    ...tagPageHandlers({
+      __typename: "Hashtag",
+      id: "ht-1",
+      name: moderated("saltmaps"),
+      moderationStatus: "NORMAL",
+      taggedContent: [{ relevance: 0.4, confidence: 0.9, pending: false, node: taggedComment(whose, removed) }],
+    }),
   );
   // A removed comment stands on the page only while the feed's Removed is on
   // (TagPage.md:23-25), which is where these boards draw it.
@@ -257,13 +252,16 @@ describe("TagPageCommentMenuOwn — the reader's own tagged comment", () => {
   });
 
   it("TagPageCommentMenuOwn_7_edit_closes_the_menu_and_the_comments_edit_opens_over_the_page", async () => {
-    // The page read the comment without its folds; the edit starts from it
-    // whole (`comment-feed-card.tsx`), read before the editor opens.
+    // The page reads the comment whole (`TaggedComments`), so the edit starts
+    // from the card's own comment — its topics and citations — with no read
+    // first.
     const asked: CommentEditRequest[] = [];
+    let reads = 0;
     server.use(
-      gqlLink.query("CommentCard", () =>
-        HttpResponse.json({ data: { comment: profileComment("c1", { author: SOL }) } }),
-      ),
+      gqlLink.query("CommentCard", () => {
+        reads += 1;
+        return HttpResponse.json({ data: { comment: profileComment("c1", { author: SOL }) } });
+      }),
     );
     serveTag("own");
     mount((request) => {
@@ -275,6 +273,9 @@ describe("TagPageCommentMenuOwn — the reader's own tagged comment", () => {
     expect(await screen.findByTestId("stub-editor")).toBeInTheDocument();
     expect(asked[0]).toMatchObject({ postId: "p1", parentId: null, targetLabel: "Salt maps of the coast road" });
     expect(asked[0]!.comment.id).toBe("c1");
+    expect(asked[0]!.comment.topics).toEqual([]);
+    expect(asked[0]!.comment.referenceCount).toBe(0);
+    expect(reads).toBe(0);
     pageStands();
   });
 

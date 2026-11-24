@@ -12,6 +12,7 @@ import { failed, refused, success, type Outcome, type UserError } from "@/lib/ap
 import { fallbackPreview, type KeptTargetPreview } from "./kept-preview";
 import { clampPair, ORIGIN, type StancePair } from "./model";
 import type {
+  BorrowedStance,
   StanceBundle,
   StanceCommit,
   StanceData,
@@ -107,6 +108,12 @@ export type StubStanceOptions = {
    * genesis moderator's.
    */
   readonly borrowedView?: string | null;
+  /**
+   * The borrowed view's own stance, by target id, as `borrowedStance`
+   * answers a request with no session. A target left out answers null — the
+   * view holds none.
+   */
+  readonly borrowed?: Readonly<Record<string, BorrowedStance>>;
 };
 
 export type StubStanceData = StanceData & {
@@ -123,6 +130,10 @@ export type StubStanceData = StanceData & {
   setKeyAbsent(absent: boolean): void;
   /** Each batch `commitBatch` signed, in order. */
   readonly batches: readonly (readonly { target: string; pick: StancePair }[])[];
+  /** Targets `borrowedStance` was asked about, in order. */
+  readonly borrowedReads: readonly string[];
+  /** Every seam call that reads the VIEWER's own standing or acts — the guest's witness. */
+  readonly viewerCalls: readonly string[];
 };
 
 const OFFLINE = () => failed(new Error("stub stance data is offline"));
@@ -139,6 +150,8 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
   const pendingFlags: boolean[] = [];
   const freshFlags: boolean[] = [];
   const batches: { target: string; pick: StancePair }[][] = [];
+  const borrowedReads: string[] = [];
+  const viewerCalls: string[] = [];
   let keyAbsent = options.keyAbsent === true;
 
   const recordsOf = (target: string): StancePair[] => state.get(target) ?? [];
@@ -170,12 +183,15 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     freshFlags,
     recordsOf,
     batches,
+    borrowedReads,
+    viewerCalls,
 
     setKeyAbsent(absent: boolean) {
       keyAbsent = absent;
     },
 
     async bundle(target: StanceTarget, readOptions): Promise<Outcome<StanceBundle>> {
+      viewerCalls.push(`bundle:${target.id}`);
       if (options.offline === true) return OFFLINE();
       noteRead(readOptions);
       freshFlags.push(readOptions?.fresh === true);
@@ -187,6 +203,7 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     },
 
     async project(target: StanceTarget, pick, readOptions): Promise<Outcome<StanceProjection>> {
+      viewerCalls.push(`project:${target.id}`);
       if (options.offline === true) return OFFLINE();
       noteRead(readOptions);
       const net = fold([...recordsOf(target.id), pick]);
@@ -200,6 +217,7 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     },
 
     async commit(target: StanceTarget, pick): Promise<Outcome<StanceCommit>> {
+      viewerCalls.push(`commit:${target.id}`);
       if (options.offline === true) return OFFLINE();
       if (options.refuse !== undefined) return REFUSED(options.refuse);
       sent.push({ target: target.id, pick });
@@ -208,6 +226,7 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     },
 
     async keyOnDevice(): Promise<boolean> {
+      viewerCalls.push("keyOnDevice");
       return !keyAbsent;
     },
 
@@ -220,7 +239,14 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
       return options.borrowedView === undefined ? "genesismod" : options.borrowedView;
     },
 
+    async borrowedStance(target): Promise<Outcome<BorrowedStance | null>> {
+      borrowedReads.push(target.id);
+      if (options.offline === true) return OFFLINE();
+      return success(options.borrowed?.[target.id] ?? null);
+    },
+
     async commitBatch(entries): Promise<Outcome<StanceCommit>> {
+      viewerCalls.push("commitBatch");
       if (options.offline === true) return OFFLINE();
       if (options.refuse !== undefined) return REFUSED(options.refuse);
       // All or nothing: every pick lands, or none does.
@@ -238,6 +264,7 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     },
 
     async sever(target: StanceTarget): Promise<Outcome<StanceCommit>> {
+      viewerCalls.push(`sever:${target.id}`);
       if (options.offline === true) return OFFLINE();
       if (options.refuse !== undefined) return REFUSED(options.refuse);
       const records = recordsOf(target.id);

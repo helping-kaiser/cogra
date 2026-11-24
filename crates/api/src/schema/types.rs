@@ -19,7 +19,7 @@ use common::l1::census::Family;
 use common::l1::identifier::NodeId;
 use common::l1::wire;
 use postgres_store::content::ThreadOrder;
-use postgres_store::references::ReferenceView;
+use postgres_store::references::{ReferenceCountKey, ReferenceView};
 use postgres_store::topics::{TagChannel, TopicView};
 use postgres_store::{
     PgPool, auth as store, mirror, profile as profile_store, references as references_store,
@@ -34,7 +34,7 @@ use crate::l1::StandInBoundary;
 use crate::loaders::{
     ActorByAddressLoader, ActorByIdLoader, CommentByNodeLoader, CommentGalleryLoader,
     CommentRemovalLoader, MediaByIdLoader, PayloadStateLoader, PostByNodeLoader, PostGalleryLoader,
-    PostRemovalLoader, SeveringRecordLoader,
+    PostRemovalLoader, ReferenceCountLoader, SeveringRecordLoader,
 };
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
@@ -197,6 +197,43 @@ impl StanceBundle {
     }
 }
 
+/// The borrowed view's own landed stance toward one node, as a
+/// sessionless reader sees it (`design/guidelines/stance-control.md`
+/// "A guest's view"; api-spec.md "The generic stance"). The same fold as
+/// [`StanceBundle`], served read-only: no node to bind an act to, no
+/// severance cost, no projection — nothing a gesture could start from.
+pub struct BorrowedStance(common::l1::fold::Standing);
+
+#[Object]
+impl BorrowedStance {
+    /// The folded valence as it stands.
+    async fn p_directed(&self) -> Dimension {
+        Dimension(self.0.sum.fold().p_d)
+    }
+
+    /// The folded connection as it stands.
+    async fn p_interest(&self) -> Dimension {
+        Dimension(self.0.sum.fold().p_i)
+    }
+
+    /// How many landed records the bundle folds, an empty sign's `(0, 0)`
+    /// included.
+    async fn record_count(&self) -> i32 {
+        self.0.sum.records.try_into().unwrap_or(i32::MAX)
+    }
+
+    /// Either axis at zero — the bundle carries nothing on it.
+    async fn inert(&self) -> bool {
+        self.0.sum.fold().is_inert()
+    }
+
+    /// Walked back to nothing: the bundle nets to `(0, 0)` and its newest
+    /// record said something — `StanceBundle.severed`'s reading.
+    async fn severed(&self) -> bool {
+        self.0.is_severed()
+    }
+}
+
 /// The author's own Publish bundle toward their post: the sum of every
 /// Publish-family record they wrote toward it — the genesis record and
 /// each edit — before and after the clip. A post's creator authors this
@@ -352,6 +389,29 @@ pub(crate) async fn viewer_stance(
         | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
         Err(e) => Err(e.into()),
     }
+}
+
+/// Resolves the `borrowedStance` field shared by every stance-able node:
+/// the borrowed view's landed bundle toward `node`, for a request with no
+/// session — the vantage `Query.borrowedView` answers it, the Genesis
+/// Moderator. Null with a session, for a node with no graph identifier
+/// yet, and where the borrowed view holds no landed record toward it.
+///
+/// Batched through [`crate::loaders::GuestStanceLoader`], so a page of
+/// faces costs two reads whatever its size.
+pub(crate) async fn borrowed_stance(
+    ctx: &Context<'_>,
+    node: Option<NodeId>,
+) -> async_graphql::Result<Option<BorrowedStance>> {
+    if !matches!(ctx.data_opt::<Option<Viewer>>(), None | Some(None)) {
+        return Ok(None);
+    }
+    let Some(node) = node else {
+        return Ok(None);
+    };
+    let loader =
+        ctx.data::<async_graphql::dataloader::DataLoader<crate::loaders::GuestStanceLoader>>()?;
+    Ok(loader.load_one(node.to_string()).await?.map(BorrowedStance))
 }
 
 /// Resolves the `viewerBookmarkedAt` field shared by every saveable node:
@@ -1522,6 +1582,45 @@ impl User {
         .await
     }
 
+    /// The person's posts — the profile's Posts view and its `Posts`
+    /// figure: every post they published, newest-first in the post
+    /// listing's own order — pending entries first, then landed ones in
+    /// landing order — a removed post included, never an edit.
+    /// `totalCount` counts exactly what the pages serve.
+    /// `includePending: false` serves only what has landed on L1.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn posts(
+        &self,
+        ctx: &Context<'_>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<PostConnection> {
+        let page = keyset_page(first, after, last, before)?;
+        posts_connection(ctx, Some(self.identity.id), page, include_pending).await
+    }
+
+    /// The person's comments — the profile's Comments view: every comment
+    /// they made, whatever it answers, newest-first in the thread read's
+    /// own order — pending entries first, then landed ones in landing
+    /// order — a removed comment included, never an edit.
+    /// `includePending: false` serves only what has landed on L1.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn comments(
+        &self,
+        ctx: &Context<'_>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<CommentConnection> {
+        let page = keyset_page(first, after, last, before)?;
+        authored_comments_connection(ctx, self.identity.id, page, include_pending).await
+    }
+
     /// The account's name in the one actor namespace: 3–30 characters of
     /// [a-z0-9_], case-folded.
     async fn handle(&self) -> String {
@@ -2117,6 +2216,18 @@ impl User {
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
         viewer_stance(ctx, self.identity.id, pick, include_pending).await
+    }
+
+    /// The borrowed view's own landed stance toward this person's
+    /// Profile, for a request with no session — read-only, what a guest's
+    /// face wears. Null with a session, for an account with no Profile
+    /// on the graph, and where the borrowed view holds none.
+    async fn borrowed_stance(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<BorrowedStance>> {
+        let node = self.identity.realization_address.clone().map(NodeId::Prof);
+        borrowed_stance(ctx, node).await
     }
 
     /// Whether the viewer's reciprocal Opinion toward invitedBy exists —
@@ -3435,6 +3546,17 @@ impl PostType {
         reference_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
     }
 
+    /// How many rows `references` serves under the same `includePending`
+    /// for the same viewer — the number a card prints, without the rows or
+    /// their targets. Priced as one field.
+    async fn reference_count(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<i32> {
+        reference_count_of(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
+    }
+
     /// The viewer's own stance bundle toward this post, and — with
     /// `pick` — where a candidate stance would land it. Null for a
     /// viewer with no bundle to read. `includePending: false` folds
@@ -3446,6 +3568,16 @@ impl PostType {
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
         viewer_stance(ctx, self.0.id, pick, include_pending).await
+    }
+
+    /// The borrowed view's own landed stance toward this post, for a
+    /// request with no session — read-only, what a guest's face wears.
+    /// Null with a session, and where the borrowed view holds none.
+    async fn borrowed_stance(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<BorrowedStance>> {
+        borrowed_stance(ctx, NodeId::parse(&self.0.l1_node_id).ok()).await
     }
 
     /// The viewer's own Publish bundle toward this post — the raw sum of
@@ -3778,6 +3910,17 @@ impl CommentType {
         reference_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
     }
 
+    /// How many rows `references` serves under the same `includePending`
+    /// for the same viewer — the same count `Post.referenceCount` reads.
+    /// Priced as one field.
+    async fn reference_count(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<i32> {
+        reference_count_of(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
+    }
+
     /// The viewer's own stance bundle toward this comment, and — with
     /// `pick` — where a candidate stance would land it. Null for a
     /// viewer with no bundle to read. `includePending: false` folds
@@ -3789,6 +3932,16 @@ impl CommentType {
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
         viewer_stance(ctx, self.0.id, pick, include_pending).await
+    }
+
+    /// The borrowed view's own landed stance toward this comment, for a
+    /// request with no session — read-only, what a guest's face wears.
+    /// Null with a session, and where the borrowed view holds none.
+    async fn borrowed_stance(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<BorrowedStance>> {
+        borrowed_stance(ctx, NodeId::parse(&self.0.l1_node_id).ok()).await
     }
 
     /// When the viewer saved this comment; null when not kept, or with no
@@ -3913,6 +4066,17 @@ impl HashtagType {
             | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
             Err(e) => Err(e.into()),
         }
+    }
+
+    /// The borrowed view's own landed Affinity bundle toward this topic,
+    /// for a request with no session — read-only, what a guest's follow
+    /// face wears. Null with a session, and where the borrowed view holds
+    /// none.
+    async fn borrowed_stance(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<BorrowedStance>> {
+        borrowed_stance(ctx, NodeId::name(&self.name).ok()).await
     }
 }
 
@@ -4346,16 +4510,9 @@ async fn reference_claims(
     include_pending: bool,
 ) -> async_graphql::Result<Vec<ReferenceClaim>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(author) = ctx
-        .data::<DataLoader<ActorByIdLoader>>()?
-        .load_one(author_id)
-        .await?
-        .and_then(|identity| identity.realization_address)
-    else {
+    let Some((author, counts_pending)) = citing_view(ctx, author_id, include_pending).await? else {
         return Ok(Vec::new());
     };
-    let viewer = viewer_address(ctx).await?;
-    let counts_pending = include_pending && viewer.as_deref() == Some(author.as_str());
     let rows = references_store::references_of(
         pool,
         l1_node_id,
@@ -4376,6 +4533,55 @@ async fn reference_claims(
             pending: row.pending,
         })
         .collect())
+}
+
+/// Whose bundles a citing artifact's reference row reads, and whether
+/// their in-flight acts count: the carrier's author, and pending only when
+/// the viewer is that author and asked for it. `None` for an author with
+/// no address — nothing of theirs can stand on the graph.
+///
+/// Shared by [`reference_claims`] and [`reference_count_of`], so the list
+/// and its count are always read under the same view.
+async fn citing_view(
+    ctx: &Context<'_>,
+    author_id: Uuid,
+    include_pending: bool,
+) -> async_graphql::Result<Option<(String, bool)>> {
+    let Some(author) = ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
+        .await?
+        .and_then(|identity| identity.realization_address)
+    else {
+        return Ok(None);
+    };
+    let viewer = viewer_address(ctx).await?;
+    let counts_pending = include_pending && viewer.as_deref() == Some(author.as_str());
+    Ok(Some((author, counts_pending)))
+}
+
+/// How many rows [`reference_claims`] serves for the same artifact,
+/// viewer and `includePending`, through the loader that counts a whole
+/// page of cards in one grouped read.
+async fn reference_count_of(
+    ctx: &Context<'_>,
+    l1_node_id: &str,
+    author_id: Uuid,
+    include_pending: bool,
+) -> async_graphql::Result<i32> {
+    let Some((author, with_pending)) = citing_view(ctx, author_id, include_pending).await? else {
+        return Ok(0);
+    };
+    let count = ctx
+        .data::<DataLoader<ReferenceCountLoader>>()?
+        .load_one(ReferenceCountKey {
+            artifact: l1_node_id.to_string(),
+            author,
+            with_pending,
+        })
+        .await?
+        .unwrap_or(0);
+    Ok(i32::try_from(count).unwrap_or(i32::MAX))
 }
 
 /// Types one citation's far end from its raw L1 identifier.
@@ -5814,13 +6020,22 @@ pub type CommentConnection = KeysetConnectionWith<CommentType, CommentConnection
 /// [`i32::MAX`]: GraphQL's `Int` is 32-bit, no thread is that deep, and
 /// saturating beats failing the read.
 pub struct CommentConnectionFields {
-    target: Uuid,
+    scope: CommentScope,
     include_pending: bool,
+}
+
+/// Whose comments a comment connection lists: one target's direct
+/// children (a thread), or one person's comments (a profile's Comments
+/// view).
+#[derive(Debug, Clone, Copy)]
+enum CommentScope {
+    Thread(Uuid),
+    Author(Uuid),
 }
 
 #[Object]
 impl CommentConnectionFields {
-    /// How many entries this thread holds in total, across every page —
+    /// How many entries this list holds in total, across every page —
     /// the count behind a "view n replies" affordance, independent of
     /// the cursor. Counted under the same filter that served the edges:
     /// by default pending entries beside landed ones,
@@ -5828,14 +6043,127 @@ impl CommentConnectionFields {
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<i32> {
         let pool = ctx.data::<PgPool>()?;
-        let total = postgres_store::content::count_comments_for_target(
-            pool,
-            self.target,
-            self.include_pending,
-        )
-        .await?;
+        let total = match self.scope {
+            CommentScope::Thread(target) => {
+                postgres_store::content::count_comments_for_target(
+                    pool,
+                    target,
+                    self.include_pending,
+                )
+                .await?
+            }
+            CommentScope::Author(author) => {
+                postgres_store::content::count_comments_by_author(
+                    pool,
+                    author,
+                    self.include_pending,
+                )
+                .await?
+            }
+        };
         Ok(i32::try_from(total).unwrap_or(i32::MAX))
     }
+}
+
+/// A post listing: the post page plus the listing's own count.
+pub type PostConnection = KeysetConnectionWith<PostType, PostConnectionFields>;
+
+/// `PostConnection`'s connection-level fields: the listing's coordinates,
+/// so the count runs only when asked and under the walk's own filter —
+/// priced at zero for [`CommentConnectionFields`]' reason.
+pub struct PostConnectionFields {
+    author: Option<Uuid>,
+    include_pending: bool,
+}
+
+#[Object]
+impl PostConnectionFields {
+    /// How many posts this listing holds in total, across every page,
+    /// independent of the cursor — one per post, never an edit, a removed
+    /// post included. Counted under the same filter that served the
+    /// edges: by default pending entries beside landed ones,
+    /// `includePending: false` only what has landed on L1.
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<i32> {
+        let pool = ctx.data::<PgPool>()?;
+        let total =
+            postgres_store::content::count_posts(pool, self.author, self.include_pending).await?;
+        Ok(i32::try_from(total).unwrap_or(i32::MAX))
+    }
+}
+
+/// A page of the post listing — every post (`author` None) or one
+/// person's — in the listing's two cursor namespaces.
+pub(crate) async fn posts_connection(
+    ctx: &Context<'_>,
+    author: Option<Uuid>,
+    page: KeysetPage,
+    include_pending: bool,
+) -> async_graphql::Result<PostConnection> {
+    let pool = ctx.data::<PgPool>()?;
+    let cursor = content_cursor(page.cursor);
+    let rows = match author {
+        None => {
+            postgres_store::content::list_posts(
+                pool,
+                cursor,
+                page.backward,
+                page.limit + 1,
+                include_pending,
+            )
+            .await?
+        }
+        Some(author) => {
+            postgres_store::content::list_posts_by_author(
+                pool,
+                author,
+                cursor,
+                page.backward,
+                page.limit + 1,
+                include_pending,
+            )
+            .await?
+        }
+    };
+    Ok(keyset_connection_with(
+        rows,
+        &page,
+        |p| content_cursor_key(p.sort_key(), p.id),
+        PostType,
+        PostConnectionFields {
+            author,
+            include_pending,
+        },
+    ))
+}
+
+/// A page of one person's comments, newest-first, pending entries ahead.
+async fn authored_comments_connection(
+    ctx: &Context<'_>,
+    author: Uuid,
+    page: KeysetPage,
+    include_pending: bool,
+) -> async_graphql::Result<CommentConnection> {
+    let pool = ctx.data::<PgPool>()?;
+    let rows = postgres_store::content::comments_by_author(
+        pool,
+        author,
+        content_cursor(page.cursor),
+        page.backward,
+        page.limit + 1,
+        include_pending,
+    )
+    .await?;
+    Ok(keyset_connection_with(
+        rows,
+        &page,
+        |c| content_cursor_key(c.sort_key(), c.id),
+        CommentType,
+        CommentConnectionFields {
+            scope: CommentScope::Author(author),
+            include_pending,
+        },
+    ))
 }
 
 /// A keyset cursor: the landing-order key, plus — on content
@@ -6102,7 +6430,7 @@ async fn comments_connection(
         |c| content_cursor_key(c.sort_key(), c.id),
         CommentType,
         CommentConnectionFields {
-            target: thread.target,
+            scope: CommentScope::Thread(thread.target),
             include_pending: thread.include_pending,
         },
     ))

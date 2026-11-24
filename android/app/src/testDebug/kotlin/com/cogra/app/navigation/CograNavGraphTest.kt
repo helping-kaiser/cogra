@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasContentDescription
@@ -320,6 +321,29 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
     }
 
+    // FeedBare.md:27 — WHEN tap a stance face GIVEN signed out -> the guest
+    // gate rises AND NEVER the pad opens; FeedBare.md:9 — the card's anchor
+    // speaks as the borrowed view's. The card's face is a leaf no host threads
+    // a gate to: the shell provides it (`LocalGuestGate`).
+    @Test
+    fun aGuestTapOnAFeedCardsFaceRaisesTheGateAndSpeaksTheBorrowedView() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed.card.actionRow.stance.anchor")
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodes(hasContentDescription("@genesis_mod's opinion on this post"))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        compose.onNodeWithTag("feed.card.actionRow.stance.anchor").performClick()
+
+        waitForTag("join_prompt")
+        assertThat(compose.onAllNodesWithTag("feed_post_p1_stance_pad").fetchSemanticsNodes()).isEmpty()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
     // TagPage.md:15, :41 — the tag page draws the feed's own post card under
     // the claim that put it there, wired by the shell: a tag chip on that card
     // opens the other tag's page, whose arrow names this tag on the way back.
@@ -351,6 +375,42 @@ class CograNavGraphTest {
                 ?.toRoute<Topic>()?.name == "fieldnotes"
         }
         compose.onNodeWithContentDescription("Back to #rust").assertExists()
+    }
+
+    // jakob 2026-11-23: on a tag's own page its chip does nothing — as a
+    // person's own name does nothing on their profile (ProfilePosts.md:25) —
+    // so no second page of the same tag stacks, and one Back leaves; the tap
+    // never falls through to the card's door either.
+    @Test
+    fun onATagsPageItsOwnChipIsInertAndOneBackLeaves() {
+        val tagged = com.cogra.domain.testing.testPost("p1").copy(
+            topics = listOf(
+                com.cogra.domain.testing.testTopicClaim("rust"),
+                com.cogra.domain.testing.testTopicClaim("fieldnotes"),
+            ),
+        )
+        content.listing = listOf(tagged)
+        topics.content["rust"] = listOf(
+            com.cogra.domain.testing.testTaggedContent("p1").copy(node = com.cogra.domain.TaggedNode.Post(tagged)),
+        )
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed.card.tagsLine.tag:rust")
+        compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
+        waitForTag("tagPage.card:p1")
+
+        // Inert, the chip merges into its card: it is reached in the unmerged tree.
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust", useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+
+        assertThat(navController.currentBackStack.value.count { it.destination.hasRoute<Topic>() }).isEqualTo(1)
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
+        compose.onNodeWithTag("tagPage.card.tagsLine.tag:rust", useUnmergedTree = true).assertHasNoClickAction()
+
+        compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        waitForTag("feed.card:p1")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
     // TagPage.md:31 — a tagged card wears its score as the feed's cards do,

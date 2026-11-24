@@ -148,7 +148,28 @@ function postTarget(id: string, title: string) {
 
 type ReferenceFixture = ReturnType<typeof referenceClaim>;
 
+/**
+ * A COMMENT CARRIES ITS CITATIONS AS A COUNT; the rows are the edit's own read
+ * (`CommentReferences`), answered from the fixture the count was taken from.
+ */
+const commentCitations = new Map<string, ReferenceFixture[]>();
+
+function commentReferencesRead() {
+  return gqlLink.query("CommentReferences", ({ variables }) =>
+    HttpResponse.json({
+      data: {
+        comment: {
+          __typename: "Comment",
+          id: variables.id,
+          references: commentCitations.get(String(variables.id)) ?? [],
+        },
+      },
+    }),
+  );
+}
+
 function commentNode(comment: FixtureComment): Record<string, unknown> {
+  commentCitations.set(comment.id, comment.references ?? []);
   return {
     __typename: "Comment",
     id: comment.id,
@@ -172,7 +193,7 @@ function commentNode(comment: FixtureComment): Record<string, unknown> {
     genesisRecordId: `rec-${comment.id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: comment.topics ?? [],
-    references: comment.references ?? [],
+    referenceCount: (comment.references ?? []).length,
     // Q49: a comment carries its branch as a COUNT, never as a page — on the
     // thread read and on the expand read alike. `withReplies` is gone with the
     // prefetch; every node answers the same way.
@@ -227,6 +248,7 @@ function detail(
       license: { __typename: "License", attribution: 0, provenance: 0 },
       topics: postTopics,
       references: postReferences,
+      referenceCount: postReferences.length,
       // Not kept: the menu's first row reads Save.
       viewerBookmarkedAt: null,
       // The detail read selects the author's own mark beside the card's
@@ -266,6 +288,7 @@ function threadFrom(build: () => PostPayload) {
   return [
     gqlLink.query("PostDetail", () => HttpResponse.json({ data: build() })),
     gqlLink.query("PostComments", () => HttpResponse.json({ data: commentsOf(build()) })),
+    commentReferencesRead(),
   ];
 }
 
@@ -282,6 +305,7 @@ function thread(...args: Parameters<typeof detail>) {
   return [
     gqlLink.query("PostDetail", () => HttpResponse.json({ data })),
     gqlLink.query("PostComments", () => HttpResponse.json({ data: commentsOf(data) })),
+    commentReferencesRead(),
   ];
 }
 
@@ -3765,7 +3789,8 @@ describe("PostView — references", () => {
     await openComments();
 
     await editFromMenu("c1");
-    fireEvent.click(screen.getByTestId("commentEdit.references.stagedReference.remove"));
+    // The edit opens once its citations are read by id (`CommentReferences`).
+    fireEvent.click(await screen.findByTestId("commentEdit.references.stagedReference.remove"));
     // The foot counts the withdrawal's counter-records, served by the claim,
     // and nothing is staged while the reader reads it.
     expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
@@ -3795,7 +3820,7 @@ describe("PostView — references", () => {
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
     await openComments();
     await editFromMenu("c1");
-    expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
+    expect(await screen.findByTestId("commentEdit.acts.line")).toHaveTextContent(
       "Nothing to sign yet",
     );
     expect(screen.getByTestId("commentEdit.references.stagedReference")).toHaveTextContent("@ada");

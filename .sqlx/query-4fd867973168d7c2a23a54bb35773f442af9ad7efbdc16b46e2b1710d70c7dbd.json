@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n         SET approved_at = COALESCE(approved_at, NOW()),\n             approval_sends_open = GREATEST(approval_sends_open - 1, 0)\n         WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4fd867973168d7c2a23a54bb35773f442af9ad7efbdc16b46e2b1710d70c7dbd"
+}

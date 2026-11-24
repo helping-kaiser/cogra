@@ -88,6 +88,29 @@ query ReferenceCandidates($query: String!, $kinds: [NodeKind!], $limit: Int) {
   }
 }
 
+# A CARD'S REFERENCES, READ BY ID WHEN A SURFACE THAT SHOWS THEM OPENS
+# (api-spec.md "Query budgets"). A card carries `referenceCount`; the list is
+# a fold priced at fifty rows, so it is read only when the references sheet
+# opens on a post, or the edit opens on a comment — the same rows the count
+# counts, under the same `includePending` the card's read sent.
+query PostReferences($id: UUID!, $includePending: Boolean! = true) {
+  post(id: $id) {
+    id
+    references(includePending: $includePending) {
+      ...ReferenceClaimFields
+    }
+  }
+}
+
+query CommentReferences($id: UUID!, $includePending: Boolean! = true) {
+  comment(id: $id) {
+    id
+    references(includePending: $includePending) {
+      ...ReferenceClaimFields
+    }
+  }
+}
+
 # One standalone reference on existing content (D10) — the gesture that
 # adds a quote, embed or mention after publishing, which post.md §3 and
 # comment.md §3 both promise. References are never edit FIELDS (D14):

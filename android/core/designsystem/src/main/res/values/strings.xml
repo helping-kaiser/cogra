@@ -137,6 +137,16 @@
     <!-- The wide anchor's printed words, only where there is no pair to
          show (StanceControl.jsx `wide`; copy-voice *At rest and at zero*). -->
     <string name="stance_wide_words">Your opinion</string>
+    <!-- A GUEST'S ANCHOR SPEAKS THE BORROWED VIEW (StanceControl.jsx
+         `anchorName`; FeedBare.md:9, TagPage.md:79, ProfileOther.md:61):
+         %1$s the view's handle, whole; %2$s the target. -->
+    <string name="stance_target_vantage">@%1$s\'s opinion on %2$s</string>
+    <!-- …and where the view holds one, its reading after it — read-only, so
+         never the press-and-hold hint: %3$s the anchor's word, %4$s the pair. -->
+    <string name="stance_target_vantage_given">@%1$s\'s opinion on %2$s: %3$s, %4$s.</string>
+    <!-- The guest's wide words after the handle, `@genesis_mod's opinion`: the
+         handle is cut first, this tail never (TagPage.md:75, ProfileOther.md:59). -->
+    <string name="stance_wide_vantage_tail">\'s opinion</string>
     <!-- The pad's name (copy-voice *The pad's name*; StanceControl.jsx:656). -->
     <string name="stance_pad_name">Opinion pad for %1$s</string>
     <!-- The signed-opinion snackbar (copy-voice; StanceReadout.jsx

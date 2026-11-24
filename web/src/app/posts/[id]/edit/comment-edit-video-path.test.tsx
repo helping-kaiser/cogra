@@ -174,7 +174,7 @@ function comment(attachments: Record<string, unknown>[] = []): CommentView {
     sensitiveSelfMark: false,
     sensitiveReason: null,
     topics: [],
-    references: [],
+    referenceCount: 0,
     license: { __typename: "License", attribution: 0, provenance: 0 },
   } as unknown as CommentView;
 }

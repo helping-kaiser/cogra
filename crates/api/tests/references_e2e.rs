@@ -2219,3 +2219,259 @@ async fn the_finder_narrows_its_candidates_by_kind(pool: PgPool) {
         [user]
     );
 }
+
+const REMOVE_CONTENT: &str = r#"mutation($input: RemoveContentInput!) {
+  removeContent(input: $input) { userErrors { code message field } }
+}"#;
+
+const POST_COUNT_AND_LIST: &str = r#"query($id: UUID!, $p: Boolean!) {
+  post(id: $id) {
+    references(includePending: $p) { targetId }
+    referenceCount(includePending: $p)
+  }
+}"#;
+
+const COMMENT_COUNT_AND_LIST: &str = r#"query($id: UUID!, $p: Boolean!) {
+  comment(id: $id) {
+    references(includePending: $p) { targetId }
+    referenceCount(includePending: $p)
+  }
+}"#;
+
+impl Citer {
+    /// `(rows references serves, referenceCount)` for one node under one
+    /// viewer and one `includePending`.
+    async fn list_and_count(
+        &self,
+        token: Option<&str>,
+        query: &str,
+        root: &str,
+        id: &str,
+        include_pending: bool,
+    ) -> (usize, i64) {
+        let data = self
+            .gql(token, query, json!({ "id": id, "p": include_pending }))
+            .await;
+        let node = &data[root];
+        (
+            node["references"].as_array().expect("rows").len(),
+            node["referenceCount"].as_i64().expect("count"),
+        )
+    }
+
+    /// Removes a post the author owns — its genesis record, every
+    /// revision with it, as the product's Remove sends it.
+    async fn remove_post(&self, token: &str, post: &str) {
+        let data = self
+            .gql(
+                Some(token),
+                r#"query($id: UUID!) { post(id: $id) { genesisRecordId } }"#,
+                json!({ "id": post }),
+            )
+            .await;
+        let record = data["post"]["genesisRecordId"]
+            .as_str()
+            .expect("genesis record")
+            .to_string();
+        let removed = self
+            .gql(
+                Some(token),
+                REMOVE_CONTENT,
+                json!({ "input": { "record": record, "includeRevisions": true }}),
+            )
+            .await;
+        assert_eq!(
+            removed["removeContent"]["userErrors"],
+            json!([]),
+            "removal refused: {removed}"
+        );
+    }
+}
+
+/// The count a card prints is the length of the list the sheet opens, in
+/// every case the fold has: a landed citation, a pending one (its author's
+/// pending view only), a withdrawn one, one whose target was removed, one
+/// off a removed artifact, and none at all — for the author, a stranger
+/// and no session, under both views, on a post and on a comment. The
+/// pending citation is staged last, so no later close ages it out of
+/// flight.
+///
+/// A node's reference count is exactly the number of rows its reference list serves, for the same viewer and view.
+/// ´claim:references:the-count-is-the-lists-length´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_reference_count_is_the_length_of_the_reference_list(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    rig.member("bystander", "bystander@example.test").await;
+    let stranger = rig.log_in("bystander@example.test").await;
+
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    let other = rig.plain_post(&token, &key, "other").await;
+    let cite = |target: &str| json!([{ "target": target, "relevance": 0.1, "support": 0.1 }]);
+
+    let carrier = rig
+        .landed_post_citing(&token, &key, "landed and pending", cite(&cited))
+        .await;
+    let withdrawn = rig
+        .landed_post_citing(&token, &key, "withdrawn", cite(&cited))
+        .await;
+    let withdrawal = rig
+        .gql(
+            Some(&token),
+            WITHDRAW_REFERENCE,
+            json!({ "input": { "artifact": withdrawn, "target": cited }}),
+        )
+        .await;
+    rig.land(
+        &token,
+        &key,
+        &withdrawal["prepareReferenceWithdrawal"]["writes"],
+    )
+    .await;
+
+    let doomed = rig.plain_post(&token, &key, "doomed").await;
+    let cites_removed = rig
+        .landed_post_citing(&token, &key, "cites a removed post", cite(&doomed))
+        .await;
+    rig.remove_post(&token, &doomed).await;
+
+    let removed_carrier = rig
+        .landed_post_citing(&token, &key, "removed itself", cite(&cited))
+        .await;
+    rig.remove_post(&token, &removed_carrier).await;
+
+    let comment = rig
+        .gql(
+            Some(&token),
+            PREPARE_COMMENT,
+            json!({ "input": {
+                "target": cited,
+                "content": "a reply that cites",
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
+                "references": [{ "target": other, "relevance": 0.1, "support": 0.1 }],
+            }}),
+        )
+        .await;
+    let comment_id = comment["prepareComment"]["node"]
+        .as_str()
+        .expect("comment node")
+        .to_string();
+    rig.land(&token, &key, &comment["prepareComment"]["writes"])
+        .await;
+
+    let pending = rig
+        .cite_from(
+            &token,
+            &carrier,
+            &other,
+            json!({ "relevance": 0.1, "support": 0.1 }),
+        )
+        .await;
+    rig.pre_sign(&token, &key, &pending["prepareReference"]["writes"])
+        .await;
+
+    let posts = [
+        &carrier,
+        &withdrawn,
+        &cites_removed,
+        &removed_carrier,
+        &cited,
+    ];
+    for viewer in [Some(token.as_str()), Some(stranger.as_str()), None] {
+        for include_pending in [true, false] {
+            for post in posts {
+                let (listed, counted) = rig
+                    .list_and_count(viewer, POST_COUNT_AND_LIST, "post", post, include_pending)
+                    .await;
+                assert_eq!(
+                    counted as usize, listed,
+                    "post {post}, pending {include_pending}"
+                );
+            }
+            let (listed, counted) = rig
+                .list_and_count(
+                    viewer,
+                    COMMENT_COUNT_AND_LIST,
+                    "comment",
+                    &comment_id,
+                    include_pending,
+                )
+                .await;
+            assert_eq!(
+                counted as usize, listed,
+                "comment, pending {include_pending}"
+            );
+        }
+    }
+
+    let expected = [
+        (
+            Some(token.as_str()),
+            &carrier,
+            true,
+            2,
+            "landed plus the author's pending",
+        ),
+        (Some(token.as_str()), &carrier, false, 1, "landed only"),
+        (
+            Some(stranger.as_str()),
+            &carrier,
+            true,
+            1,
+            "a stranger never counts it",
+        ),
+        (
+            Some(token.as_str()),
+            &withdrawn,
+            true,
+            0,
+            "a netted bundle counts nothing",
+        ),
+        (
+            Some(token.as_str()),
+            &cites_removed,
+            true,
+            1,
+            "a removed target's citation stands",
+        ),
+        (
+            Some(token.as_str()),
+            &cited,
+            true,
+            0,
+            "a post citing nothing",
+        ),
+    ];
+    for (viewer, post, include_pending, count, why) in expected {
+        let (_, counted) = rig
+            .list_and_count(viewer, POST_COUNT_AND_LIST, "post", post, include_pending)
+            .await;
+        assert_eq!(counted, count, "{why}");
+    }
+    let (_, counted) = rig
+        .list_and_count(
+            Some(&token),
+            COMMENT_COUNT_AND_LIST,
+            "comment",
+            &comment_id,
+            true,
+        )
+        .await;
+    assert_eq!(counted, 1, "a comment counts its own citation");
+
+    let defaulted = rig
+        .gql(
+            Some(&token),
+            r#"query($id: UUID!) { post(id: $id) { referenceCount } }"#,
+            json!({ "id": carrier }),
+        )
+        .await;
+    assert_eq!(
+        defaulted["post"]["referenceCount"],
+        json!(2),
+        "includePending defaults to true, as on the list"
+    );
+}

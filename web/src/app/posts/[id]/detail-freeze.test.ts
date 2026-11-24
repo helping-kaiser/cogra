@@ -12,7 +12,8 @@ type Fixture = {
   attachments: { id: string; status: string; coverMedia: { id: string; status: string } | null }[];
   attachmentsStatus: string;
   topics: { hashtag: { id: string; name: { value: string; status: string } }; relevance: number }[];
-  references: { targetId: string; relevance: number }[];
+  referenceCount: number;
+  references?: { targetId: string; relevance: number }[];
   comments: {
     totalCount: number;
     edges: { node: { id: string; content: { status: string } } }[];
@@ -30,6 +31,7 @@ function post(over: Partial<Fixture> = {}): Fixture {
     ],
     attachmentsStatus: "NORMAL",
     topics: [tag("cats")],
+    referenceCount: 1,
     references: [{ targetId: "l1-a", relevance: 0.1 }],
     comments: { totalCount: 1, edges: [{ node: { id: "c1", content: { status: "NORMAL" } } }] },
     ...over,
@@ -42,6 +44,13 @@ function tag(name: string, status = "NORMAL", relevance = 0.4) {
 
 const EDITED = "2026-10-12T11:00:00Z";
 const opened = (p: Fixture | null): Freeze<Fixture> => ({ post: p, newer: null });
+
+/** The post as the feed's cache paints it: the card's count, no list (`FeedPost`). */
+function painted(over: Partial<Fixture> = {}): Fixture {
+  const { references: _list, ...card } = post(over);
+  void _list;
+  return card;
+}
 
 describe("landingOf", () => {
   it("paints an answer when nothing is painted — a cache miss has no opened version to hold", () => {
@@ -190,5 +199,26 @@ describe("freezeReducer", () => {
       post: fresh,
       newer: null,
     });
+  });
+});
+
+// A POST PAINTED OFF THE FEED'S CACHE CARRIES ITS CITATIONS AS A COUNT
+// (`FeedPost`): the card drew the number and never the list, so the count is
+// what the hold compares it by; the detail's own answers carry the list, and
+// two of those still compare by which citations stand.
+describe("a painted card's citations, held by their count", () => {
+  it("takes the detail's first answer silently when it counts what the card counted", () => {
+    expect(landingOf(painted(), post(), false)).toBe("same");
+  });
+
+  it("holds an answer that counts another number of citations", () => {
+    expect(
+      landingOf(
+        painted(),
+        post({ referenceCount: 2, references: [{ targetId: "l1-a", relevance: 0.1 }, { targetId: "l1-b", relevance: 0.1 }] }),
+        false,
+      ),
+    ).toBe("hold");
+    expect(landingOf(painted(), post({ referenceCount: 0, references: [] }), false)).toBe("hold");
   });
 });

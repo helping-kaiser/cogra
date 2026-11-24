@@ -102,7 +102,7 @@ function postNode(id: string, title: string | null, writtenDaysAgo = 1, by = aut
     genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: null,
     comments: { __typename: "CommentConnection", totalCount: 0 },
   };
@@ -126,7 +126,7 @@ function commentNode(id: string, by = author("u2", "tobias", "Tobias")) {
     genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: null,
     target: {
       __typename: "Post",
@@ -462,7 +462,9 @@ describe("History — the seen-list as a feed (History.md)", () => {
     serveHistory(() => page(ALL));
     render();
     await screen.findByTestId("history-list");
-    expect(screen.getByTestId("history-comment-c1-head")).toHaveAttribute("href", "/posts/p1?from=history");
+    // THE POINTER DOOR (History.md:51): the line naming the post opens the post
+    // itself, under its registered name.
+    expect(screen.getByTestId(byNode("history.commentCard.target", "c1"))).toHaveAttribute("href", "/posts/p1?from=history");
     expect(screen.getByTestId("history-comment-c1-link")).toHaveAttribute(
       "href",
       "/posts/p1?comment=c1&from=history",

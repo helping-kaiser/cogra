@@ -67,6 +67,7 @@ import type { Crop } from "@/lib/ui2/media/crop";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TransportError } from "@/lib/ui/transport-error";
+import { Button } from "@/lib/ui/button";
 import { licenseName, type License } from "@/lib/license";
 import {
   editActCount,
@@ -110,6 +111,57 @@ const FACTS = part(NODE, "facts");
 
 /** The header X's accessible name: the edit keeps no draft (CommentEditVideo, WizardHeader boards). */
 export const COMMENT_EDIT_LEAVE_LABEL = "Leave — the edit is discarded";
+
+/**
+ * THE EDIT BEFORE ITS CITATIONS ARE IN (`comment-editor.tsx`): the edit's own
+ * layer and header, so the ways out answer at once, and under them the house
+ * `Loading…` past 200ms — or, for a read with no answer, the house line over
+ * `Retry`. No field stands until the whole citation set is read.
+ */
+export function CommentEditWaiting({
+  late,
+  failed,
+  onRetry,
+  onLeave,
+}: {
+  late: boolean;
+  failed: boolean;
+  onRetry: () => void;
+  onLeave: () => void;
+}) {
+  return (
+    <div
+      data-testid="comment-edit"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Edit comment"
+      className={`${SCREEN_LAYER_STILL} z-40 flex flex-col bg-surface text-on-surface`}
+    >
+      <HeaderBar
+        title="Edit comment"
+        backLabel="Back to the thread"
+        onBack={onLeave}
+        onLeave={onLeave}
+        leaveLabel={COMMENT_EDIT_LEAVE_LABEL}
+      />
+      <div className="flex flex-col gap-3 px-6 pb-4 pt-3">
+        {late && !failed && (
+          <p role="status" aria-live="polite" data-testid="comment-edit-loading">
+            Loading…
+          </p>
+        )}
+        {failed && (
+          <div className="flex items-center gap-3">
+            <TransportError testId="comment-edit-load-failed" />
+            <Button testId="comment-edit-load-retry" variant="outline" size="sm" onClick={onRetry}>
+              Retry
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /** The slow and the count lines, standing under the acts footer (CommentEdit.md). */
 const SLOW_LINE = "Still signing — the network is slow right now.";

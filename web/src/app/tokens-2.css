@@ -291,8 +291,18 @@ dialog.cg-sheet-out::backdrop {
   pointer-events: none;
 }
 
-.cg-state:hover::after {
-  opacity: var(--state-hover);
+/* HOVER BELONGS TO A CURSOR (jakob, 2026-11-23: "if the finger is there we
+   hover once it is gone we don't anymore"). A touch browser leaves `:hover` on
+   the element it last tapped until the next tap lands elsewhere, so an ungated
+   hover layer stayed lit after the finger lifted. Only an input that can hover
+   gets it (Media Queries Level 4, § hover; MDN "hover") — the same gate
+   Tailwind's `hover:` variant compiles to. A finger's feedback is the press
+   layer below, which stands while the finger is down. Kept here, before the
+   press and disabled rules, so they still win in the cascade. */
+@media (hover: hover) {
+  .cg-state:hover::after {
+    opacity: var(--state-hover);
+  }
 }
 
 /* Press is never a scale-down and never a shadow change: the direction is
@@ -327,8 +337,11 @@ dialog.cg-sheet-out::backdrop {
   pointer-events: none;
 }
 
-.cg-door-card:has(.cg-door:hover)::after {
-  opacity: var(--state-hover);
+/* The same gate as `.cg-state`'s hover: a card is never left lit by a tap. */
+@media (hover: hover) {
+  .cg-door-card:has(.cg-door:hover)::after {
+    opacity: var(--state-hover);
+  }
 }
 
 .cg-door-card:has(.cg-door:active)::after {
@@ -412,6 +425,50 @@ dialog.cg-sheet-out::backdrop {
 .cg-crop-frame.cg-crop-frame--cover,
 .cg-crop-frame.cg-crop-frame--avatar { border: 1px solid rgba(255, 255, 255, 0.7); }
 .cg-crop-frame.cg-crop-frame--cover { border-radius: var(--radius-small); }
+
+/* ------------------------------------------- the bar's words at large text --
+ * ABOVE 1.3× THE WORDS DROP (jakob 2026-11-23, seam 411 (c); BottomNav):
+ * where the reader's text size passes 1.3×, the word under each icon is not
+ * drawn and the icons stand alone; the bar keeps its 1× height, a word never
+ * wraps and is never cut. Each slot's word stays its accessible name
+ * (`aria-label` on the slot), so nothing is taken from a screen reader.
+ *
+ * THE READER'S TEXT SIZE IS THE ROOT FONT SIZE: type is `rem`, so 1.3× is a
+ * root of 1.3 × 16px = 20.8px. The comparison is CSS, exact and live:
+ * `sign(1rem - 20.8px)` is 1 only for a root past 20.8px (CSS Values 4,
+ * `sign()`; MDN: a number, 0 for a zero argument, so exactly 1.3× keeps the
+ * words), registered as a `<number>` so its computed value is that number
+ * (CSS Properties and Values API, `@property`), and read by a style query
+ * (CSS Conditional 5, `@container style()`; MDN, "Container style
+ * queries"). It holds from the first paint and follows a size change without
+ * a script. A browser without `sign()` drops the declaration to the initial 0
+ * and draws the bar as before.
+ *
+ * Dropped, a slot keeps its 1× geometry: the icon at its 1× top inset, the
+ * compose disc at its 1× 40px, nothing below the icon. Unlayered on purpose,
+ * so it outranks the slot's own spacing utilities.
+ */
+@property --cg-text-past-bar {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+:root {
+  --cg-text-past-bar: max(0, sign(1rem - 20.8px));
+}
+@container style(--cg-text-past-bar: 1) {
+  .cg-bar-word {
+    display: none;
+  }
+  .cg-bar-slot {
+    padding-block: 8px 0;
+    gap: 0;
+  }
+  .cg-bar-compose {
+    width: 40px;
+    height: 40px;
+  }
+}
 
 /* ------------------------------------------------------------- geek mode --
  * ONE MARKUP, TWO PAINTINGS (design/readme.md §13). Every surface draws the

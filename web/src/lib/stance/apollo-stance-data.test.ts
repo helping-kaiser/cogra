@@ -549,3 +549,117 @@ const SHOWN: StanceBundle = {
   severed: false,
   severance: { records: 3 },
 };
+
+// A GUEST'S BORROWED STANCE IS DISPLAY ONLY (FeedBare.md:7, GuestGate.md:11):
+// its own read, never cached, naming no node an act could point at.
+describe("reading a guest's borrowed stance", () => {
+  /** The guest's read of post-1, answering `borrowedStance`; `seen` hears each request. */
+  const borrowedRead = (
+    borrowedStance: typeof HELD | null,
+    seen?: (query: string, variables: Record<string, unknown>) => void,
+  ) =>
+    gqlLink.query("PostBorrowedStance", async ({ request, variables }) => {
+      if (seen !== undefined) {
+        const body = (await request.clone().json()) as unknown as { query: string };
+        seen(body.query, variables);
+      }
+      return HttpResponse.json({ data: { post: { __typename: "Post", id: "post-1", borrowedStance } } });
+    });
+  const HELD = {
+    __typename: "BorrowedStance",
+    pDirected: 0.55,
+    pInterest: 0.2,
+    recordCount: 2,
+    inert: false,
+    severed: false,
+  };
+
+  it("reads the borrowed view's stance through its own read and carries the fold's flags", async () => {
+    const queries: string[] = [];
+    const asked: Record<string, unknown>[] = [];
+    server.use(
+      borrowedRead(HELD, (query, variables) => {
+        queries.push(query);
+        asked.push(variables);
+      }),
+    );
+    const data = createApolloStanceData({ client: client(), guard, signer: signer() });
+    const outcome = await data.borrowedStance(POST);
+    expect(outcome).toEqual({
+      kind: "success",
+      value: { current: { pDirected: 0.55, pInterest: 0.2 }, records: 2, inert: false, severed: false },
+    });
+    // Nothing an act could be signed toward rides the request.
+    expect(asked).toEqual([{ id: "post-1" }]);
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).not.toContain("viewerStance");
+    expect(queries[0]).not.toContain("targetGraphId");
+  });
+
+  it("answers null where the borrowed view holds none", async () => {
+    server.use(borrowedRead(null));
+    const data = createApolloStanceData({ client: client(), guard, signer: signer() });
+    expect(await data.borrowedStance(POST)).toEqual({ kind: "success", value: null });
+  });
+
+  it("never writes a borrowed stance into the cache", async () => {
+    server.use(borrowedRead(HELD));
+    const apollo = client();
+    const data = createApolloStanceData({ client: apollo, guard, signer: signer() });
+    await data.borrowedStance(POST);
+    const cached = JSON.stringify(apollo.cache.extract());
+    expect(cached).not.toContain("borrowedStance");
+    expect(cached).not.toContain("BorrowedStance");
+  });
+
+  it("teaches the acts no node: a pick after a borrowed read still reads the viewer's own first", async () => {
+    let standingReads = 0;
+    server.use(
+      borrowedRead(HELD),
+      gqlLink.query("PostStance", () => {
+        standingReads += 1;
+        return HttpResponse.json({
+          data: { post: { __typename: "Post", id: "post-1", viewerStance: bundleFields() } },
+        });
+      }),
+      gqlLink.mutation("PrepareStance", () =>
+        HttpResponse.json({
+          data: { prepareStance: { __typename: "PreparePayload", writes: prepared(["w-1"]), userErrors: [] } },
+        }),
+      ),
+    );
+    const writes = signer();
+    const data = createApolloStanceData({ client: client(), guard, signer: writes });
+    await data.borrowedStance(POST);
+    await data.commit(POST, { pDirected: 0.1, pInterest: 0.1 });
+    expect(standingReads).toBe(1);
+    expect(writes.expected[0]).toEqual(expectation([stanceRecord(POST_GRAPH_ID, 0.1, 0.1)]));
+  });
+
+  it("asks once for the view's name while a page of anchors waits on it", async () => {
+    let asked = 0;
+    server.use(
+      gqlLink.query("BorrowedView", () => {
+        asked += 1;
+        return HttpResponse.json({
+          data: {
+            borrowedView: {
+              __typename: "User",
+              id: "vantage",
+              handle: "genesis_mod",
+              displayName: { __typename: "ModeratedText", value: "Genesis Moderator" },
+              avatar: null,
+            },
+          },
+        });
+      }),
+    );
+    const data = createApolloStanceData({ client: client(), guard, signer: signer() });
+    const handles = await Promise.all([data.borrowedViewHandle(), data.borrowedViewHandle(), data.borrowedViewHandle()]);
+    expect(handles).toEqual(["genesis_mod", "genesis_mod", "genesis_mod"]);
+    expect(asked).toBe(1);
+    // Nothing is kept once it answered: the next ask reads again.
+    await data.borrowedViewHandle();
+    expect(asked).toBe(2);
+  });
+});

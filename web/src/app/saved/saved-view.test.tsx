@@ -88,7 +88,7 @@ function postNode(id: string, title: string | null, savedAt: string, writtenDays
     genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: tags.map(topic),
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: savedAt,
     comments: { __typename: "CommentConnection", totalCount: 0 },
   };
@@ -113,7 +113,7 @@ function commentNode(id: string, savedAt: string, tags: string[] = []) {
     genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: tags.map(topic),
-    references: [],
+    referenceCount: 0,
     viewerBookmarkedAt: savedAt,
     target: {
       __typename: "Post",
@@ -303,9 +303,10 @@ describe("SavedScreen — a feed of kept things", () => {
     renderWithProviders(<SavedScreen />, { store: signedIn() });
     await screen.findByTestId("saved-list");
     expect(screen.getByTestId("saved-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=saved");
-    // The comment card's double door: its head row opens the post it answers,
-    // the rest of it the post's comment section landed on it.
-    expect(screen.getByTestId("saved-comment-c1-head")).toHaveAttribute("href", "/posts/p1?from=saved");
+    // THE POINTER DOOR (Saved.md:29, :31): the head row, under its registered
+    // name, opens the post it answers itself; the rest of the card the post's
+    // comment section landed on the comment.
+    expect(screen.getByTestId(byNode("saved.commentCard.target", "c1"))).toHaveAttribute("href", "/posts/p1?from=saved");
     expect(screen.getByTestId("saved-comment-c1-link")).toHaveAttribute("href", "/posts/p1?comment=c1&from=saved");
     // Its comment glyph: the same landing with the reply composer aimed at it.
     const reply = screen.getByTestId(byNode("saved.commentCard.actionRow.reply", "c1"));

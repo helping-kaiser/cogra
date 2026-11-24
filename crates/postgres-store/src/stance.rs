@@ -10,6 +10,8 @@
 //! pre-commitment onward, which the L2 view counts and the L1 view does
 //! not (api-spec.md "Conventions", the includePending split).
 
+use std::collections::HashMap;
+
 use common::l1::census::Family;
 use common::l1::exact::Decimal;
 use common::l1::fold::{BundleSum, Standing};
@@ -130,6 +132,60 @@ pub async fn standing(
         sum: sum.bundle(),
         newest_says_something,
     })
+}
+
+/// [`standing`]'s landed half for many targets of one author, in one read
+/// whatever the batch size — the read behind a sessionless reader's
+/// borrowed faces, which a page asks for once per card.
+///
+/// Each target is named with the family its node class fixes, as
+/// [`standing`] takes it. A target the author holds no landed record
+/// toward is absent from the map: an empty bundle, not a zero one. Only
+/// the landed half exists here, because the pending half is only ever its
+/// own author's read.
+pub async fn landed_standings(
+    pool: &PgPool,
+    author_atom: &str,
+    targets: &[(Family, String)],
+) -> Result<HashMap<String, Standing>, sqlx::Error> {
+    let source = NodeId::Addr(author_atom.to_string()).to_string();
+    let families: Vec<&str> = targets.iter().map(|(f, _)| f.as_str()).collect();
+    let nodes: Vec<&str> = targets.iter().map(|(_, t)| t.as_str()).collect();
+    let rows = sqlx::query!(
+        r#"SELECT l.target                                 AS "target!",
+                  SUM(l.p_d::text::numeric)::text          AS "p_d!",
+                  SUM(l.p_i::text::numeric)::text          AS "p_i!",
+                  COUNT(*)::bigint                         AS "records!",
+                  (ARRAY_AGG(NOT (l.p_d = 0 AND l.p_i = 0)
+                             ORDER BY r.epoch DESC, r.position DESC))[1] AS "newest_says!"
+           FROM mirror_record_legs l
+           JOIN mirror_records r ON r.record_id = l.record_id
+           JOIN UNNEST($2::text[], $3::text[]) AS k(family, target)
+             ON k.family = l.family AND k.target = l.target
+           WHERE l.leg = 'binary' AND l.source = $1
+             AND NOT r.payload_marked
+             AND NOT l.census_unknown
+           GROUP BY l.target"#,
+        source,
+        &families as &[&str],
+        &nodes as &[&str],
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut out = HashMap::with_capacity(rows.len());
+    for row in rows {
+        let mut sum = ExactSums::default();
+        sum.absorb(&row.p_d, &row.p_i, row.records)?;
+        out.insert(
+            row.target,
+            Standing {
+                sum: sum.bundle(),
+                newest_says_something: row.newest_says,
+            },
+        );
+    }
+    Ok(out)
 }
 
 /// For each of the given records that folds into a stance bundle — a

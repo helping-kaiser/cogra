@@ -39,6 +39,9 @@ import type { ReferenceClaimNode } from "@/lib/references/claims";
 import { targetView, untypedTargetView } from "@/lib/references/normalize";
 import type { ReferenceTargetView } from "@/lib/references/draft";
 import { personHref, tagPageHref } from "@/lib/ui/back-origin";
+import { Button } from "@/lib/ui/button";
+import { TransportError } from "@/lib/ui/transport-error";
+import { SLOW_ANSWER_MS, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { Icon } from "@/lib/ui/icons";
 import { formatReferenceParamWords } from "@/lib/ui/reference-format";
 import { formatStancePair } from "@/lib/ui/stance-format";
@@ -144,18 +147,35 @@ export function RefsSheet({
   onClose,
   topics,
   references,
+  failed = false,
+  onRetry,
   from = null,
+  here = null,
   testId = "refs-sheet",
 }: {
   open: boolean;
   onClose: () => void;
   topics: readonly TopicClaimNode[];
-  references: readonly ReferenceClaimNode[];
+  /**
+   * The node's citations; null while their read is out. A card carries only
+   * the count (`referenceCount`), so its sheet reads the rows by id as it
+   * opens (`useReferencesOnOpen`); the detail's own post hands its list.
+   */
+  references: readonly ReferenceClaimNode[] | null;
+  /** The rows' read got no answer: the house line, over Retry. */
+  failed?: boolean;
+  onRetry?: () => void;
   /**
    * The origin the rows' doors carry: the post's on its detail, so the tag's
    * page reads `Back to the post` (TagPage.md:35), the card's list elsewhere.
    */
   from?: string | null;
+  /**
+   * The canonical name of the tag whose page the sheet is raised over: its row
+   * would open the page it is on, so it is the same row, inert — no link, as
+   * the tag's chip on that page (jakob, hand test 2026-11-23).
+   */
+  here?: string | null;
   testId?: string;
 }) {
   // THE SHEET IS THE DOOR, NOT THE DESTINATION. A row that navigated left the
@@ -163,6 +183,13 @@ export function RefsSheet({
   // restored the surface AND raised the sheet over it again, with no way out
   // but a second Back. Dropping it as the row is followed is what makes Back
   // land where the reader opened it from.
+  //
+  // THE ROWS' WAIT IS THE HOUSE LADDER (readme §4, *Loading*; seam 431): under
+  // 200ms nothing shows, then `Loading…` stands where the rows will, and a read
+  // with no answer says the house line over `Retry`, as the thread's own read
+  // does (`comments-sheet.tsx`). The tags are on the card already and never wait.
+  const reading = open && references === null && !failed;
+  const late = useWaitedPast(reading, SLOW_ANSWER_MS);
   return (
     <BottomSheet open={open} onClose={onClose} title={TITLE} testId={testId} maxHeight={SHEET_RAISED}>
       {topics.length > 0 && <SectionLabel>{TAGS_LABEL}</SectionLabel>}
@@ -180,7 +207,7 @@ export function RefsSheet({
             kind="Tag"
             // `RefsSheet` 1: a tag row goes to the tag's page, the one
             // destination a chip's tap already has on every other surface.
-            href={tagPageHref(name, from)}
+            href={here !== null && name === here ? undefined : tagPageHref(name, from)}
             onNavigate={onClose}
             trailing={
               <PairReadout
@@ -198,8 +225,21 @@ export function RefsSheet({
           />
         );
       })}
-      {references.length > 0 && <SectionLabel>{REFERENCES_LABEL}</SectionLabel>}
-      {references.map((claim) => {
+      {late && (
+        <p role="status" aria-live="polite" data-testid={`${testId}-loading`} className="py-3 text-body-medium">
+          Loading…
+        </p>
+      )}
+      {references === null && failed && (
+        <div className="flex items-center gap-3 py-3">
+          <TransportError testId={`${testId}-error`} />
+          <Button testId={`${testId}-retry`} variant="outline" size="sm" onClick={() => onRetry?.()}>
+            Retry
+          </Button>
+        </div>
+      )}
+      {references !== null && references.length > 0 && <SectionLabel>{REFERENCES_LABEL}</SectionLabel>}
+      {(references ?? []).map((claim) => {
         const view =
           claim.target === null || claim.target === undefined
             ? untypedTargetView(claim.targetId)

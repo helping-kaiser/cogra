@@ -33,9 +33,11 @@ within a phase, order is flexible.
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 | 5. When a community wants its own pot | 1 | **Q55** | Community pool splitting — how a community leaves the global admission fund, where the `admission_fund` carve routes once pools multiply, and who governs each pool. One network splitting, not federation (Q15). |
 | 6. If Layer 1 cannot land a batch whole | 1 | **Q57** | Batch atomicity — how the seals' land-together guarantee holds if Layer 1 never backs it, without breaking the mirror. Deferred: the product builds to the guarantee. |
-| 7. At the L1 swap | 3 | **Q56, Q58, Q61** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Deferred to the swap. |
+| 7. At the L1 swap | 8 | **Q56, Q58, Q61, Q68, Q69, Q70, Q71, Q72** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Where the key ↔ address rule lives and what an address is; whether the record carries the pre-digests; whether CoGra claims the courtesy handshake; what ingestion verifies; and what of a stand-in world moves to the network ([l1-swap.md](implementation/l1-swap.md)). Deferred to the swap. |
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 | 9. When a second party writes to Layer 1 | 1 | **Q63** | The payload mark of an act CoGra does not carry — a CoGra actor writing through a third-party Layer 2. It reads unmarked until then. |
+| 10. At the next specification read | 1 | **Q67** | How long the GC keeps the row of an act that may still be ordered — for good, until Layer 1 names when the act can no longer be ordered, or a window of CoGra's own. It stays for good until the read. |
+| 11. When the budget, not the reader, sizes a page | 1 | **Q73** | Pricing a mixed row at its dearest kind — CoGra's own complexity calculator in place of the library's, so a mixed list can carry whole cards and the pages of ten return to twenty. Deferred: a mixed list carries its rows light and cards are read by id. |
 | — Parked | 4 | **Q62, Q64, Q65, Q66** | An authenticated carriage receipt beside the seal — none is issued now; whether ingestion checks that the carried pair opens the witness — it checks nothing until a second carrier exists; four races in the seal leg, accepted as known gaps; and how a deferral's verdict reaches its author — asked of the L1 team, nothing built until the specification settles the duty's scope. |
 
 As questions resolve, their blocks disappear from below and their
@@ -964,3 +966,319 @@ under revision on their side.
 ### Related
 
 Q58 (the write rule's second gate on the surface).
+
+## Q67 — How long the GC keeps the row of an act that may still be ordered
+
+**Where it shows up:**
+[data-model.md "Staged writes"](implementation/data-model.md#staged-writes)
+(the reap),
+[architecture.md "The write path"](implementation/architecture.md#the-write-path)
+(step 5)
+**Status:** open (deferred — waits for the read of the next
+specification release; jakob, 2026-11-20)
+
+### Context
+
+A staged write that does not land is expired and, one window later,
+reaped. The reap keeps the row of every write whose approval was sent
+— accepted by the host, or sent with no refusal back — because the
+host may still order the act later. The row stays as the act's
+structure, with its dependency opening, and a non-empty payload it
+still held moves into carriage. A write a redaction already emptied
+is kept the same way.
+
+Such a row stays for good, like a landed act's row. For an act the
+host never orders, CoGra holds its structure, and its content unless
+a redaction reduced it, with no end date. The author sees it in no
+list. An account deletion and a redaction by act identifier reduce
+its carriage row; nothing else removes either row. The interface
+documents that only an approved verified act is eligible for host
+ordering
+([layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake),
+"Approval witness"); it names no moment after which an approved act
+can no longer be ordered.
+
+### The question
+
+How long does the GC keep such a row? Three options are on the
+table:
+
+- **(a)** Keep it for good, as now.
+- **(b)** Remove the kept row and its carriage row once the act can
+  no longer be ordered. This needs Layer 1 to name that moment.
+- **(c)** Remove them after a further window of CoGra's own. An act
+  ordered after that window is a published record whose content
+  nobody holds, the case the kept row exists to prevent.
+
+### Related
+
+Q65 (known gaps in the seal leg).
+
+## Q68 — Key authority and the actor address at the swap
+
+**Where it shows up:**
+[l1-swap.md §3.1](implementation/l1-swap.md#31-identity-and-who-may-sign-for-an-actor),
+[data-model.md](implementation/data-model.md) (the `actors` table:
+key and address 1:1),
+[auth.md "Application"](implementation/auth.md#application-the-applicant-state)
+(the key ceremony)
+**Status:** open (deferred — to the preparation of the real Layer 1
+swap; asked of the L1 team 2026-11-23)
+
+### Context
+
+CoGra's address is computed from the actor's Ed25519 key — hex of the
+first 20 bytes of SHA-256 of the public key, a stand-in convention
+(`common::l1::crypto::address_of`). Address, act author and signing
+key therefore coincide, and the stand-in refuses to seal a proposal
+whose key does not give the stated author.
+
+The Layer 1 closure checks only that each recorded signature is
+well-formed under the key the record maps to it; no closure check
+relates a key to the Actor, and without a declared author-authority
+case an act is eligible whichever keys signed it, its debit and
+standing following the recorded author
+(``post:graph:act-authentication-requirements``,
+[layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)).
+Key authority is the deployment's concern, or a declared oracle case
+with a second party, a rules edition and per-act proof objects
+(``def:deployment:declared-author-authority-case``, §13.3). An
+Actor's address is the frame binding into the burn map, permanent for
+the life of the graph and not a signing key
+(``def:comparator:frame-binding``).
+
+### The question
+
+Where does CoGra's key ↔ address rule live, what is an actor's
+address on the network, and what happens to existing accounts?
+
+- **The rule.**
+  - **Deployment convention, no case.** The host or CoGra's relay
+    keeps refusing a key that does not give the author; replay does
+    not check it; the package binds the empty case set.
+  - **A declared author-authority case.** The rule becomes replayable
+    by third parties, at the cost of a case declaration, proof objects
+    per act and a withdrawal path when the rule changes.
+  - **No rule.** The closure alone decides; any well-formed key could
+    act for any author, and that author pays.
+- **The address.** A function of the signing key as today, or the
+  realization's address, which the key does not determine — then the
+  ceremony, the uniqueness pair and every identifier carrying an
+  address change.
+- **Existing accounts.**
+  - **Keep the keys.** Valid only if the network accepts CoGra's
+    address form, or binds the existing keys to new addresses.
+  - **Re-key every account.** A new key and address per account,
+    with its backup blob and device custody renewed.
+  - **Start over.** Accounts re-run the ceremony on the new network
+    (Q72).
+
+### Related
+
+Q30 (signature scheme and key rotation); Q72 (what of a stand-in
+world moves to the network).
+
+## Q69 — What the published record carries for the proposal signature
+
+**Where it shows up:**
+[l1-swap.md §3.3](implementation/l1-swap.md#33-the-published-record-and-the-epoch-package),
+[layer1-interface.md §13.3](primitive/layer1-interface.md#133-the-replay-floor-and-the-declared-cases)
+(the replay floor)
+**Status:** open (deferred — to the preparation of the real Layer 1
+swap; asked of the L1 team 2026-11-23)
+
+### Context
+
+The closure asks that each proposal signature verify "over the exact
+bytes it covers, which include the stated author and act identifier",
+and the envelope carries the public inputs those checks need
+(``itm:graph:act-authentication-requirements-signature-verification``,
+``def:graph:act-envelope``). The replay floor holds the signed
+pre-commitment and its recorded signing key, so that the signature
+verifies without any hidden opening
+(``def:deployment:published-epoch-replay-floor``).
+
+CoGra's author signs the pre-commitment, a hash over the encoded body
+and the two pre-digests (`common::l1::proposal::pre_commitment`). A
+record carrying the body, the pre-commitment, the signature and the
+key lets a reader verify the signature over the pre-commitment, and
+the seal and the approval witness, which cover body and pre-commitment
+together, bind the two. A reader cannot recompute the pre-commitment
+from the body: the pre-digests are not on the record, and the content
+pre-digest sits one layer under the host's blinding value. The
+stand-in keeps no content pre-digest after sealing.
+
+### The question
+
+Does the record CoGra's acts produce carry the two pre-digests?
+
+- **No.** The body binds the pre-commitment through the seal and the
+  approval witness, and that discharges the check.
+- **Yes, from the swap on.** Each act's record carries both
+  pre-digests, so the pre-commitment recomputes from the record.
+- **A new formation edition.** The author signs the body bytes
+  directly beside the pre-commitment: a new edition on the server and
+  both clients.
+
+### Related
+
+Q71 (what ingestion verifies).
+
+## Q70 — The courtesy handshake standard and its request intent
+
+**Where it shows up:**
+[l1-swap.md §3.2, §3.4](implementation/l1-swap.md#32-the-handshake-the-clients-speak),
+[layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)
+("Courtesy Handshake", "Requested Publication Intent"),
+[data-model.md "Redacting an act"](implementation/data-model.md#redacting-an-act)
+**Status:** open (deferred — to the preparation of the real Layer 1
+swap; asked of the L1 team 2026-11-23)
+
+### Context
+
+The closure states the handshake's properties; the concrete
+transcript is a courtesy standard that binds only a realization
+claiming it (``def:graph:courtesy-handshake``). Its body carries an
+opaque signed extension with the initial requested publication intent
+per party (peek, store, serve, shelve, forget); an adopter answers
+accepted values with receipts, accepts signed later requests with a
+per-party sequence, returns one receipt for an identical retry, and
+renders removed content by the courtesy erasure default (absent,
+authored emptiness, unavailable, unknown)
+(``def:graph:requested-publication-intent``,
+``def:graph:canonical-erasure-default``).
+
+CoGra's clients speak a transcript with the standard's structure and
+CoGra's own tags and encoding, with no extension slot in the body.
+Removal is a request in the author's authenticated session, or an
+engine's decision, carried out on CoGra's carriage.
+
+### The question
+
+Does CoGra claim the courtesy handshake standard at the swap?
+
+- **No.** CoGra realizes the closure properties with its own
+  transcript, claims no courtesy edition, and documents its removal
+  and its rendering as its own rules.
+- **Yes, with the API as the addressed carrier.** A new body edition
+  with the extension on the server and both clients, receipts, and
+  removal as signed forget requests from the clients; the rendering
+  default follows.
+- **The transcript, not the intent.** The network's transcript and
+  tags, with no intent vocabulary — if the network's host accepts a
+  body with no extension.
+
+### Related
+
+Q33 and Q54 (interim-handshake questions the swap may dissolve); Q62
+(a carriage receipt).
+
+## Q71 — What ingestion verifies of a host it does not run
+
+**Where it shows up:**
+[l1-swap.md §3.3](implementation/l1-swap.md#33-the-published-record-and-the-epoch-package),
+[architecture.md "Record ingestion"](implementation/architecture.md#record-ingestion-the-mirror-contract)
+**Status:** open (deferred — to the preparation of the real Layer 1
+swap)
+
+### Context
+
+Ingestion checks that an epoch package has an order of record and
+follows the mirror's cursor, then stores it
+(`EpochPackage::check_order_of_record`, `mirror::ingest_epoch`). It
+verifies no signature, seal, commitment or closure output: the
+stand-in is CoGra's own host. The mirror "may lag, it must never
+diverge". Layer 1 makes every binding value replayable from the
+published record, and in the centralized phase verification is audit:
+results apply before verification
+([layer1-interface.md §5](primitive/layer1-interface.md#5-substrate-guarantees-what-layer-1s-infrastructure-postulates)).
+
+### The question
+
+Once the host is the network's, what does ingestion check before a
+package enters the mirror, and what does it do on a failure?
+
+- **The order of record only, as today.** The mirror trusts the host;
+  anyone can audit it from the public record.
+- **The record checks.** Signatures under their recorded keys, seals,
+  commitment formation, the case set — refusing or flagging a package
+  that fails.
+- **A full replay.** CoGra replays the package, standing included,
+  before mirroring it.
+
+A refusal leaves the mirror behind the network; a flag mirrors what
+the network published and marks it.
+
+### Related
+
+Q64 (the witness check at ingestion); Q69 (what the record carries).
+
+## Q72 — What of a stand-in world moves to the network
+
+**Where it shows up:**
+[l1-swap.md §3.9](implementation/l1-swap.md#39-the-world),
+[architecture.md "Genesis bootstrap"](implementation/architecture.md#genesis-bootstrap)
+**Status:** open (deferred — to the preparation of the real Layer 1
+swap)
+
+### Context
+
+A stand-in world holds accounts with their keys and addresses, a
+mirror rebuilt from the stand-in's sequence, display content and
+carriage keyed by act identifiers that carry stand-in addresses,
+staged writes some of which the stand-in host sealed, the genesis
+acts, admission funding credited as numbers, and values counted in
+epochs at the stand-in's three-second clock — the staged-write GC
+bound and the governed recency half-life
+([feed-ranking.md §5.3](primitive/feed-ranking.md#53-recency)). Layer 1
+records are permanent and the network's genesis is its own first
+package. The tests run against the stand-in.
+
+### The question
+
+What does the network inherit from a stand-in world?
+
+- **Start fresh.** A new genesis on the network; accounts re-run the
+  ceremony, content is not carried, the stand-in world is archived.
+- **Carry the accounts, not the graph.** Logins and handles stay;
+  every actor is admitted anew on the network (Q68 decides its key);
+  the graph starts empty.
+- **Re-author the history.** CoGra's actors re-sign their acts on the
+  network — which needs every author's key and moves every key of
+  record, act time and maturity.
+
+And with it: whether epoch-counted values are re-set for the network's
+cadence, and what CoGra's tests run against once the stand-in is
+gone.
+
+### Related
+
+Q68 (key authority and the address); Q61 (the deployment).
+
+## Q73 — Pricing a mixed row at its dearest kind
+
+**Where it shows up:**
+[api-spec.md "Query budgets"](implementation/api-spec.md#query-budgets)
+(a list of mixed kinds)
+**Status:** open (deferred — the long-run pricing oracle, recorded
+and not built; jakob, 2026-11-23)
+
+### Context
+
+A list of mixed kinds is priced at the sum of its kinds on every
+row: async-graphql's complexity calculator opens a frame per field
+only, so every inline fragment's fields add into the same parent,
+and the per-field cost function receives the children already
+summed. Pricing a row at its dearest kind therefore cannot be done
+inside that function; it needs CoGra's own calculator in place of
+the library's. It would buy mixed lists that carry whole cards in
+one read, and the pages cut to ten for the budget — Saved,
+History, the feed and the profile lists — back at twenty. It
+costs a calculator CoGra owns on the protective boundary, where
+an under-pricing bug is a hole in the budget.
+
+### The question
+
+When does CoGra replace the library's complexity calculator with
+its own, pricing a mixed row at its dearest kind? Until then a
+mixed list carries its rows light and whole cards are read by id.

@@ -23,7 +23,7 @@ import {
   type RecordNode,
 } from "./profile-api";
 import { gqlLink, startMswServer } from "@/test/msw";
-import { answersComment, commentsPage, profileComment } from "@/test/profile-comment";
+import { answersComment, commentsPage, profileComment, settlingComment } from "@/test/profile-comment";
 import { reelPost } from "@/test/reel";
 
 const server = startMswServer();
@@ -128,7 +128,7 @@ describe("fetchProfileFigures", () => {
             user: {
               __typename: "User",
               id: "u-1",
-              posts: { __typename: "RecordConnection", totalCount: 5 },
+              posts: { __typename: "PostConnection", totalCount: 5 },
               opinionsOn: { __typename: "RecordConnection", bundleCount: 1204 },
               opinionsBy: { __typename: "RecordConnection", bundleCount: null },
             },
@@ -143,10 +143,16 @@ describe("fetchProfileFigures", () => {
 
   // The query's own recipes, read from the document the client sends, so a
   // count quietly changing its filter fails here.
-  it("asks for genesis Publish records, and the bundles of unmarked Opinions toward the person and theirs toward people", () => {
+  // THE POSTS FIGURE IS THE POSTS LIST'S OWN COUNT (ProfilePosts.md:15,
+  // ProfilePostsOwn.md:11; seam 395 item 1): `User.posts`' `totalCount` —
+  // landed, still settling and removed, never an edit — the very connection
+  // the Posts tab pages, so the figure and the list cannot disagree. The old
+  // landed-only count (`outgoingRecords(family: PUBLISH …)`) must be gone.
+  it("asks for the Posts list's own count, and the bundles of unmarked Opinions toward the person and theirs toward people", () => {
     const document = readFileSync(join(process.cwd(), "src", "lib", "graphql", "profile.graphql"), "utf-8");
     const figures = document.slice(document.indexOf("query ProfileFigures"));
-    expect(figures).toContain("posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 0)");
+    expect(figures).toContain("posts(first: 0) {\n      totalCount");
+    expect(figures).not.toContain("family: PUBLISH");
     expect(figures).toContain(
       "opinionsOn: incomingRecords(family: OPINION, payloadMarked: false, first: 0) {\n      bundleCount",
     );
@@ -157,7 +163,7 @@ describe("fetchProfileFigures", () => {
 });
 
 describe("fetchProfilePosts", () => {
-  it("reads the person's posts off their genesis Publish records, in the served order", async () => {
+  it("reads the person's posts off `User.posts`, each edge's node the post, in the served order", async () => {
     let asked: unknown;
     server.use(
       gqlLink.query("ProfilePosts", ({ variables }) => {
@@ -168,12 +174,16 @@ describe("fetchProfilePosts", () => {
               __typename: "User",
               id: "u-1",
               posts: {
-                __typename: "RecordConnection",
+                __typename: "PostConnection",
                 edges: [
-                  { __typename: "RecordEdge", node: { __typename: "Record", id: "r-2", target: reelPost("p-2") } },
-                  // A record whose post CoGra does not carry draws no blank card.
-                  { __typename: "RecordEdge", node: { __typename: "Record", id: "r-x", target: null } },
-                  { __typename: "RecordEdge", node: { __typename: "Record", id: "r-1", target: reelPost("p-1", "photo") } },
+                  // A still-settling post heads the page, as the listing serves it.
+                  {
+                    __typename: "PostEdge",
+                    cursor: "c-3",
+                    node: reelPost("p-3", "photo", { landing: { __typename: "Landing", state: "PENDING" } }),
+                  },
+                  { __typename: "PostEdge", cursor: "c-2", node: reelPost("p-2") },
+                  { __typename: "PostEdge", cursor: "c-1", node: reelPost("p-1", "photo") },
                 ],
                 pageInfo: { __typename: "PageInfo", hasNextPage: true, endCursor: "c-1" },
               },
@@ -186,7 +196,8 @@ describe("fetchProfilePosts", () => {
     expect(asked).toEqual({ id: "u-1", after: "c-0", includePending: true });
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
-    expect(outcome.value.items.map((post) => post.id)).toEqual(["p-2", "p-1"]);
+    expect(outcome.value.items.map((post) => post.id)).toEqual(["p-3", "p-2", "p-1"]);
+    expect(outcome.value.items[0]?.landing.state).toBe("PENDING");
     expect(outcome.value.endCursor).toBe("c-1");
     expect(outcome.value.hasNextPage).toBe(true);
   });
@@ -201,20 +212,21 @@ describe("fetchProfilePosts", () => {
     expect((await fetchProfilePosts(client(), "u-9")).kind).toBe("failed");
   });
 
-  // The figure and the list are one filter, read from the document the client
-  // sends: the Posts count can never disagree with the cards it counts.
-  it("asks for exactly the records the Posts figure counts, ten to a page, each a whole card", () => {
+  // The figure and the list are one connection, read from the document the
+  // client sends: the Posts count can never disagree with the cards it counts
+  // (ProfilePosts.md:15). Still-settling posts ride it (ProfilePosts.md:7).
+  it("asks for the connection the Posts figure counts, twenty to a page, each node a whole card", () => {
     const document = readFileSync(join(process.cwd(), "src", "lib", "graphql", "profile.graphql"), "utf-8");
     const posts = document.slice(document.indexOf("query ProfilePosts"), document.indexOf("query ProfileComments"));
-    expect(posts).toContain(
-      "posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 10, after: $after)",
-    );
-    expect(posts).toContain("...FeedPost");
+    expect(posts).toContain("posts(first: 20, after: $after) {");
+    expect(posts).not.toContain("outgoingRecords");
+    expect(posts).not.toContain("includePending: false");
+    expect(posts).toMatch(/node \{\s+\.\.\.FeedPost\s+\}/);
   });
 });
 
 describe("fetchProfileComments", () => {
-  it("reads the person's comments off their genesis Review records, in the served order", async () => {
+  it("reads the person's comments off `User.comments`, each edge's node the comment, in the served order", async () => {
     let asked: unknown;
     server.use(
       gqlLink.query("ProfileComments", ({ variables }) => {
@@ -222,9 +234,9 @@ describe("fetchProfileComments", () => {
         const page = commentsPage(
           "u-1",
           [
+            // A still-settling comment heads the page, as the listing serves it.
+            settlingComment("c-3"),
             profileComment("c-2"),
-            // A record whose comment CoGra does not carry draws no blank card.
-            null,
             profileComment("c-1", { target: answersComment("c-0", "sol") }),
           ],
           "k-1",
@@ -236,9 +248,10 @@ describe("fetchProfileComments", () => {
     expect(asked).toEqual({ id: "u-1", after: "k-0", includePending: true });
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
-    expect(outcome.value.items.map((comment) => comment.id)).toEqual(["c-2", "c-1"]);
-    expect(outcome.value.items[1]?.target?.__typename).toBe("Comment");
-    expect(outcome.value.items[0]?.post?.id).toBe("p1");
+    expect(outcome.value.items.map((comment) => comment.id)).toEqual(["c-3", "c-2", "c-1"]);
+    expect(outcome.value.items[0]?.landing.state).toBe("PENDING");
+    expect(outcome.value.items[2]?.target?.__typename).toBe("Comment");
+    expect(outcome.value.items[1]?.post?.id).toBe("p1");
     expect(outcome.value.endCursor).toBe("k-1");
     expect(outcome.value.hasNextPage).toBe(true);
   });
@@ -253,14 +266,16 @@ describe("fetchProfileComments", () => {
     expect((await fetchProfileComments(client(), "u-9")).kind).toBe("failed");
   });
 
-  // Every comment the person made, once, whatever it answers: the genesis
-  // Review (never an edit), with no `toKind` — a Review's actor leg enters on
-  // the parent, so `toKind: COMMENT` would keep the replies alone.
-  it("asks for each comment's own Review record, any parent, ten to a page, each a whole card", () => {
+  // Every comment the person made, once, whatever it answers, never an edit —
+  // the still-settling ones included (ProfileComments.md:5) — off the
+  // person's own comment listing, each node a whole card.
+  it("asks for the person's comment listing, any parent, twenty to a page, each node a whole card", () => {
     const document = readFileSync(join(process.cwd(), "src", "lib", "graphql", "profile.graphql"), "utf-8");
     const comments = document.slice(document.indexOf("query ProfileComments"), document.indexOf("query ProfileFigures"));
-    expect(comments).toContain("comments: outgoingRecords(family: REVIEW, genesis: true, first: 10, after: $after)");
-    expect(comments).toContain("...CommentFields");
+    expect(comments).toContain("comments(first: 20, after: $after) {");
+    expect(comments).not.toContain("outgoingRecords");
+    expect(comments).not.toContain("includePending: false");
+    expect(comments).toMatch(/node \{\s+\.\.\.CommentFields/);
   });
 });
 

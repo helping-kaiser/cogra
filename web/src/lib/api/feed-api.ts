@@ -68,13 +68,13 @@ export async function fetchFeedRanking(
   });
 }
 
-/** How many of the other kinds' ids one `FeedCards` read carries (its literal `first: 10`). */
-export const FEED_CARDS_PAGE = 10;
+/** How many of the other kinds' ids one `FeedCards` read carries (its literal `first: 20`). */
+export const FEED_CARDS_PAGE = 20;
 
 /**
  * Hydrates one window of a derived list, in the order handed (at most a page
  * of ids). The ranking already named each row's kind, so the post rows ride
- * `Feed` and the other kinds `FeedCards`, a page of ten at a time; the answer
+ * `Feed` and the other kinds `FeedCards`, a page of twenty at a time; the answer
  * is put back in the order handed. An id the server cannot hydrate — a
  * pending write that expired — is simply absent from the answer.
  *
