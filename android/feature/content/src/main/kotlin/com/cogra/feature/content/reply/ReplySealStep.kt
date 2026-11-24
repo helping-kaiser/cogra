@@ -280,6 +280,8 @@ private fun ActRowSlot(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            // The tag rides ahead of the door's clearing, which empties what follows it.
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .then(if (onOpen != null) Modifier.clickable(role = Role.Button, onClick = onOpen) else Modifier)
             .then(
                 if (onOpen != null && doorName != null) {
@@ -295,7 +297,6 @@ private fun ActRowSlot(
                     Modifier
                 },
             )
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .padding(vertical = Space.x2),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
