@@ -23,11 +23,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,6 +42,7 @@ import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.reading
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.CograReadoutChip
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.HelpDot
@@ -50,7 +54,11 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.ReferenceRow
+import com.cogra.feature.content.SEAL_TAG_GAP
+import com.cogra.feature.content.SealTagsFold
+import com.cogra.feature.content.manageTagsLabel
 import com.cogra.feature.content.referenceLabel
+import com.cogra.feature.content.tagsCountWords
 import com.cogra.feature.content.wizard.actsCountReading
 import com.cogra.feature.content.wizard.sealLabel
 
@@ -207,16 +215,9 @@ private fun ReplyActBlock(state: ReplyWizardState, doors: ReplyActDoors) {
         Hairline()
         val tags = state.tagSection.tags
         if (tags.isNotEmpty()) {
-            // The staged tags read back by name; the row is the door to their
-            // manager, the post seal's `TagsSheet`, where each tag's pair is set.
-            ActRow(
-                kind = "Tags",
-                detail = tags.joinToString(" ") { "#${it.name}" },
-                count = tags.size,
-                countNoun = "tag",
-                onOpen = doors.onOpenTags,
-                testTag = "reply_seal_tags",
-            )
+            // The staged tags read back as the post seal's do; the row is the
+            // door to their manager, the post seal's `TagsSheet`.
+            ReplyTagsRow(tags.map { it.name }, doors.onOpenTags)
             Hairline()
         }
         // ReplySeal.md: ALWAYS the seal carries `+ Add a tag` (`ADD_ROWS`).
@@ -244,11 +245,58 @@ private fun ActRow(
     onOpen: (() -> Unit)? = null,
     testTag: String? = null,
 ) {
+    ActRowSlot(kind = kind, count = count, countNoun = countNoun, onOpen = onOpen, testTag = testTag) {
+        ActDetail(detail)
+    }
+}
+
+/** A row's value: `body-medium`, one line, an ellipsis where it runs past the card. */
+@Composable
+private fun ActDetail(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+/**
+ * One act row around its [value] slot: the kind's 76 column, the value, the
+ * bare count. A [doorName] makes the whole row one control named for what it
+ * opens (`ActsCard.jsx` `aria-label`), the count riding inside the name.
+ */
+@Composable
+private fun ActRowSlot(
+    kind: String,
+    count: Int,
+    countNoun: String,
+    onOpen: (() -> Unit)? = null,
+    testTag: String? = null,
+    doorName: String? = null,
+    value: @Composable () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (onOpen != null) Modifier.clickable(role = Role.Button, onClick = onOpen) else Modifier)
+            // The tag rides ahead of the door's clearing, which empties what follows it.
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            .then(if (onOpen != null) Modifier.clickable(role = Role.Button, onClick = onOpen) else Modifier)
+            .then(
+                if (onOpen != null && doorName != null) {
+                    Modifier.clearAndSetSemantics {
+                        contentDescription = doorName
+                        role = Role.Button
+                        onClick {
+                            onOpen()
+                            true
+                        }
+                    }
+                } else {
+                    Modifier
+                },
+            )
             .padding(vertical = Space.x2),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
@@ -259,15 +307,43 @@ private fun ActRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.width(ACT_LABEL_WIDTH),
         )
-        Text(
-            text = detail,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
+        Box(Modifier.weight(1f)) { value() }
         ActsCount(count = count, noun = countNoun)
+    }
+}
+
+/**
+ * THE STAGED TAGS READ BACK AS THE POST SEAL'S DO (`sealTagsRow`, round 62;
+ * "the reply seal mirrors the post seal exactly", seam 254 item 10): the chips
+ * while they fit the value slot whole, past that `N tags` — `1 tag` for one
+ * too long for the slot — the row named `Manage the N tags`. The row stays
+ * the door to their manager in both readings: the reply has no details stage,
+ * so the tags sheet is the only place a staged tag's pair is set.
+ */
+@Composable
+internal fun ReplyTagsRow(names: List<String>, onOpen: () -> Unit) {
+    if (names.isEmpty()) return
+    SealTagsFold(names, labelWidth = ACT_LABEL_WIDTH, countStyle = MaterialTheme.typography.bodySmall) { folded ->
+        ActRowSlot(
+            kind = "Tags",
+            count = names.size,
+            countNoun = "tag",
+            onOpen = onOpen,
+            testTag = "reply_seal_tags",
+            doorName = if (folded) manageTagsLabel(names.size) else null,
+        ) {
+            if (folded) {
+                ActDetail(tagsCountWords(names.size))
+            } else {
+                Row(
+                    modifier = Modifier.clipToBounds().testTag("reply_seal_tag_chips"),
+                    horizontalArrangement = Arrangement.spacedBy(SEAL_TAG_GAP),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    names.forEach { CograReadoutChip(label = "#$it", testTag = "reply_seal_tag_$it") }
+                }
+            }
+        }
     }
 }
 

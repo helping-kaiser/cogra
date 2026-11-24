@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.NameInText
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
@@ -242,11 +243,16 @@ fun WithdrawnLine(name: String, onUndo: () -> Unit, testTag: String, node: DataN
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x1),
     ) {
-        Text(
+        // A WRAPPING SENTENCE (`_shared.jsx` `WithdrawnLine`, round 63): the tag
+        // in it is one unit, whole on a line or cut past one, and the words
+        // yield their room before `Undo` gives up its own.
+        NameInText(
             text = "Withdrawn: $name",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = if (node == null) Modifier.testTag(testTag) else Modifier,
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .then(if (node == null) Modifier.testTag(testTag) else Modifier),
         )
         InlineAction(
             text = "Undo",

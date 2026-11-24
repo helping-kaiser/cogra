@@ -185,7 +185,9 @@ private fun ReadoutLabel(label: String, node: DataNode? = null) {
 @Composable
 private fun ReadoutSentence(sentence: String, testTag: String, modifier: Modifier = Modifier) {
     val said = rememberSettled(sentence)
-    Text(
+    // TEXT THAT WRAPS (NamesLong.md; round 63): a `#tag` or `@handle` it
+    // names is one unit, whole on a line or cut past one.
+    NameInText(
         text = sentence,
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -434,7 +436,8 @@ internal fun HelpInPlace(
             .testTag(testTag),
     ) {
         lines.forEach { line ->
-            Text(
+            // A pad's help line wraps; the tag or handle it names is one unit (round 63).
+            NameInText(
                 text = line,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

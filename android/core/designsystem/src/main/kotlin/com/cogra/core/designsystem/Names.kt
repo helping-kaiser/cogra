@@ -16,8 +16,8 @@
 // developer.android.com/develop/ui/compose/layouts/basics).
 //
 // TEXT THAT WRAPS ([NameInText]): the sentence wraps at its spaces and is never
-// cut as a whole, but a handle — or a person's name passed in `names` — never
-// stands on two lines. Compose has no keep-together span: `LineBreak` and
+// cut as a whole, but a handle, a `#tag` (round 63) — or a person's name passed
+// in `names` — never stands on two lines. Compose has no keep-together span: `LineBreak` and
 // `Hyphens` choose a paragraph's strategy, not a span's
 // (developer.android.com/develop/ui/compose/text/style-paragraph). So the unit
 // is made unbreakable the Unicode way, a WORD JOINER (U+2060) between each of
@@ -53,6 +53,17 @@ import java.text.BreakIterator
 
 /** A handle in running text: `@` and its characters, not inside a word or an email. */
 private val HANDLE = Regex("""(?<![\w@])@[A-Za-z0-9_]+""")
+
+/**
+ * A TAG IS THE SAME ONE UNIT in wrapping text (`ActorChip.jsx` `HANDLE_IN_TEXT`,
+ * round 63; jakob 2026-11-23: "everywhere the tag is one-line at most"): `#`
+ * and its name, not inside a word or an entity. A name may hold dots, so it
+ * ends on a non-dot and a dot after it rides as punctuation.
+ */
+private val TAG = Regex("""(?<![\w#&])#[A-Za-z0-9_-](?:[A-Za-z0-9._-]*[A-Za-z0-9_-])?""")
+
+/** What [NameInText] holds whole: every handle and every tag. */
+private val IN_TEXT = Regex("${HANDLE.pattern}|${TAG.pattern}")
 
 /** The punctuation that rides with a unit (`ActorChip.jsx` `UNIT_TAIL`). */
 private val UNIT_TAIL = Regex("""^(?:['’]s\b|[?.,!:;)’]+)""")
@@ -95,10 +106,10 @@ fun nameLine(text: String): NameLine? {
 /** One unit in wrapping text: the name at [start] until [nameEnd], its punctuation until [end]. */
 data class NameUnit(val start: Int, val nameEnd: Int, val end: Int)
 
-/** Every handle in [text], and every one of [names], as units with their trailing punctuation. */
+/** Every handle and tag in [text], and every one of [names], as units with their trailing punctuation. */
 fun nameUnits(text: String, names: List<String> = emptyList()): List<NameUnit> {
     val given = names.filter { it.isNotBlank() }.map { Regex.escape(it) }
-    val pattern = if (given.isEmpty()) HANDLE else Regex((listOf(HANDLE.pattern) + given).joinToString("|"))
+    val pattern = if (given.isEmpty()) IN_TEXT else Regex((listOf(IN_TEXT.pattern) + given).joinToString("|"))
     val units = mutableListOf<NameUnit>()
     var from = 0
     while (from <= text.length) {
@@ -162,9 +173,13 @@ fun shapeNamesInText(text: String, units: List<NameUnit>, lineWidth: Int?, width
             append(text, last, unit.start)
             val name = text.substring(unit.start, unit.nameEnd)
             val tail = text.substring(unit.nameEnd, unit.end)
+            // Measured as drawn, joiners included: each is its own grapheme
+            // and takes the style's letter spacing, so a long unit measured
+            // bare is drawn wider than its line and breaks inside itself.
+            val drawnWidth: (String) -> Int = { widthOf(joined(it)) }
             val shown = lineWidth
-                ?.takeIf { widthOf(name + tail) > it }
-                ?.let { cutName(name, tail, it, widthOf) }
+                ?.takeIf { drawnWidth(name + tail) > it }
+                ?.let { cutName(name, tail, it, drawnWidth) }
                 ?: name
             append(joined(shown + tail))
             last = unit.end
