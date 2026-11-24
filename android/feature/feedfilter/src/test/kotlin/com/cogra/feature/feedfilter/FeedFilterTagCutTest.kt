@@ -52,7 +52,10 @@ class FeedFilterTagCutTest {
         val chip = compose.onNodeWithTag(chipTag, useUnmergedTree = true).getUnclippedBoundsInRoot()
         assertThat(chip.left.value).isAtLeast(GUTTER)
         assertThat(chip.right.value).isAtMost(SCREEN - GUTTER)
-        assertThat(chip.height.value).isAtMost(ONE_LINE_CHIP)
+        // The node is the 48dp target (`hitTarget`); the label inside stays one line.
+        assertThat(chip.height.value).isAtMost(TAP_TARGET)
+        val labelBounds = compose.onNodeWithTag("${chipTag}_label", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        assertThat(labelBounds.height.value).isAtMost(ONE_LABEL_LINE)
         val label = compose.onNodeWithTag("${chipTag}_label", useUnmergedTree = true).fetchSemanticsNode()
         val results = mutableListOf<TextLayoutResult>()
         label.config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
@@ -76,8 +79,11 @@ class FeedFilterTagCutTest {
         /** `FilterSection`'s side padding. */
         const val GUTTER = 24f
 
-        /** 32 drawn, one label-large line — never a second. */
-        const val ONE_LINE_CHIP = 34f
+        /** The chip's tap target: 32 drawn, answering at 48. */
+        const val TAP_TARGET = 48f
+
+        /** One label-large line (20) and slack — never a second. */
+        const val ONE_LABEL_LINE = 24f
 
         /** Thirty characters, hyphenated, short enough to fit a phone's row whole. */
         const val THIRTY = "salt-maps-of-the-coast-road-26"

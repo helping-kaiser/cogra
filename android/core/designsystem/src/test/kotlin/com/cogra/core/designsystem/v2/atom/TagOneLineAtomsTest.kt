@@ -72,7 +72,8 @@ class TagOneLineAtomsTest {
         compose.waitForIdle()
     }
 
-    private fun assertAsideHolds(name: String, cut: Boolean) {
+    /** [cut] null: whichever the row's width gives — the verb, disc and age come first. */
+    private fun assertAsideHolds(name: String, cut: Boolean?) {
         showChronicle("#$name")
         val verb = layout("row.title")
         // The verb keeps its whole room: one line, never cut.
@@ -80,7 +81,7 @@ class TagOneLineAtomsTest {
         assertThat(verb.isLineEllipsized(0)).isFalse()
         val aside = layout("row.aside")
         assertThat(aside.lineCount).isEqualTo(1)
-        assertThat(aside.isLineEllipsized(0)).isEqualTo(cut)
+        if (cut != null) assertThat(aside.isLineEllipsized(0)).isEqualTo(cut)
         assertThat(bounds("row.title").right.value).isAtMost(bounds("row.aside").left.value)
         assertThat(bounds("row.aside").right.value).isAtMost(bounds("row.trailing").left.value)
         assertThat(bounds("row.trailing").right.value).isAtMost(SCREEN.value)
@@ -88,7 +89,11 @@ class TagOneLineAtomsTest {
     }
 
     @Test
-    fun aThirtyCharacterTagAsideStandsWholeBesideItsVerb() = assertAsideHolds(THIRTY, cut = false)
+    fun aShortTagAsideStandsWholeBesideItsVerb() = assertAsideHolds("saltmaps", cut = false)
+
+    /** Thirty characters do not fit beside `Tagged a post`, its disc and its age at 360: one line either way. */
+    @Test
+    fun aThirtyCharacterTagAsideStaysOnOneLineBesideItsVerb() = assertAsideHolds(THIRTY, cut = null)
 
     @Test
     fun aLongHyphenatedTagAsideIsCutAndTheVerbKeepsItsRoom() = assertAsideHolds(LONG_HYPHENATED, cut = true)
@@ -119,7 +124,9 @@ class TagOneLineAtomsTest {
         val chip = bounds("chip")
         assertThat(chip.left.value).isAtLeast(0f)
         assertThat(chip.right.value).isAtMost(SCREEN.value)
-        assertThat(chip.height.value).isAtMost(ONE_LINE_CHIP.value)
+        // The node is the 48dp target (`hitTarget`); the pill inside it never grows past it.
+        assertThat(chip.height.value).isAtMost(TAP_TARGET.value)
+        assertThat(bounds("chip_label").height.value).isAtMost(ONE_LABEL_LINE.value)
         val label = layout("chip_label")
         assertThat(label.lineCount).isEqualTo(1)
         assertThat(label.isLineEllipsized(0)).isEqualTo(cut)
@@ -157,8 +164,11 @@ class TagOneLineAtomsTest {
     private companion object {
         val SCREEN: Dp = 360.dp
 
-        /** The filter chip: 32 drawn, one label-large line — never a second. */
-        val ONE_LINE_CHIP: Dp = 34.dp
+        /** The filter chip's tap target: 32 drawn, answering at 48. */
+        val TAP_TARGET: Dp = 48.dp
+
+        /** One label-large line (20) and slack — never a second. */
+        val ONE_LABEL_LINE: Dp = 24.dp
 
         /** Two lines of the body's type, and a little slack. */
         val TWO_LINES: Dp = 48.dp
