@@ -1072,3 +1072,79 @@ async fn the_operator_login_requires_a_bootstrapped_instance(pool: PgPool) {
         .expect_err("no genesis actor yet");
     assert!(matches!(err, BootstrapError::Unrepairable(_)));
 }
+
+/// The bootstrap seeds the system accounts under CoGra's reserved names —
+/// its own one-shot store writes, which no request reaches — and the
+/// Genesis Moderator, holding its reserved display name, may still save
+/// that name over its profile while another reserved name stays refused.
+///
+/// The bootstrap's own seeding is the path that puts the reserved names on the system accounts, and the holder keeps them.
+/// ´claim:bootstrap:the-bootstrap-seeds-the-reserved-names´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_bootstrap_seeds_the_reserved_names(pool: PgPool) {
+    let host = standin(&pool);
+    let defaults = GenesisInput {
+        handle: "genesis".into(),
+        display_name: "Genesis Moderator".into(),
+        ..input()
+    };
+    run(&host, &pool, defaults).await.expect("bootstraps");
+
+    let mut genesis_id = None;
+    for handle in [
+        "genesis",
+        genesis::PUBLISHER_HANDLE,
+        genesis::MODERATOR_HANDLE,
+        genesis::TREASURY_HANDLE,
+    ] {
+        assert!(api::reserved::is_reserved_handle(handle), "`{handle}`");
+        let actor = genesis::actor_by_handle(&pool, handle)
+            .await
+            .expect("query")
+            .unwrap_or_else(|| panic!("the bootstrap seeded `{handle}`"));
+        let name = postgres_store::profile::landed_profile(&pool, actor.id)
+            .await
+            .expect("query")
+            .expect("seeded profile")
+            .display_name;
+        assert!(
+            api::reserved::is_reserved_display_name(&name),
+            "`{handle}` wears the reserved name `{name}`"
+        );
+        if handle == "genesis" {
+            genesis_id = Some(actor.id);
+        }
+    }
+
+    let boundary = StandInBoundary(host.clone());
+    let draft = |name: &str| ProfileUpdateDraft {
+        display_name: Some(name.into()),
+        bio: Some("the operator's bio".into()),
+        website_url: None,
+        avatar_media_id: None,
+    };
+    let staging = || api::prepare::Staging::unbudgeted(api::ingest::DEFAULT_GC_AFTER_EPOCHS);
+    let genesis_id = genesis_id.expect("genesis seeded");
+    api::profile::prepare_profile_update(
+        &pool,
+        &boundary,
+        staging(),
+        genesis_id,
+        draft("Genesis Moderator"),
+    )
+    .await
+    .expect("the holder re-saves its own reserved name");
+    let refused = api::profile::prepare_profile_update(
+        &pool,
+        &boundary,
+        staging(),
+        genesis_id,
+        draft("The Treasury"),
+    )
+    .await
+    .expect_err("another reserved name stays refused");
+    assert!(
+        matches!(refused, api::profile::ProfileError::DisplayNameReserved),
+        "got {refused:?}"
+    );
+}

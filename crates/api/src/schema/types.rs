@@ -459,8 +459,11 @@ pub enum ErrorCode {
     /// Ask link unknown, or its applicant is landed or already waiting in
     /// your own queue.
     AskLinkUnusable,
-    /// The handle is already held in the one actor namespace.
+    /// The handle is already held in the one actor namespace, or is one
+    /// CoGra reserves.
     HandleTaken,
+    /// The display name is one CoGra reserves.
+    DisplayNameReserved,
     /// Under the length floor or in the breach corpus.
     WeakPassword,
     /// The email already belongs to an account.
