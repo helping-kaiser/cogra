@@ -2590,13 +2590,12 @@ async fn chronicle_settling(
             .collect();
         let mirrored = crate::mirror::record_keys(pool, &minting).await?;
         let fresh = batch.into_iter().filter(|s| {
-            let key = s
-                .genesis_record()
-                .and_then(|r| mirrored.get(r))
-                .map(|&(landed_epoch, position)| LandingOrder {
+            let key = s.genesis_record().and_then(|r| mirrored.get(r)).map(
+                |&(landed_epoch, position)| LandingOrder {
                     landed_epoch,
                     position,
-                });
+                },
+            );
             s.served(key, cursor.horizon)
         });
         if backward {
@@ -3137,7 +3136,11 @@ mod tests {
         let (full, calls) = walk_listing(None, false, 1, true, vec![9, 8], vec![6, 5]).await;
         assert_eq!(full.items, vec![9]);
         assert_eq!(full.horizon, Some(landed(6)));
-        assert_eq!(calls.landed, vec![(None, false, 1)], "one ask for the newest");
+        assert_eq!(
+            calls.landed,
+            vec![(None, false, 1)],
+            "one ask for the newest"
+        );
 
         let (empty, _) = walk_listing(None, false, 3, true, vec![9], vec![]).await;
         assert_eq!(empty.horizon, Some(EMPTY_HORIZON));
@@ -3184,7 +3187,11 @@ mod tests {
             ..pending
         };
         let (out, calls) = walk(Some(below), true, 4, true, vec![1], vec![7, 5, 3]).await;
-        assert_eq!(out, vec![1, 5, 3], "the row landed above the horizon is not served here");
+        assert_eq!(
+            out,
+            vec![1, 5, 3],
+            "the row landed above the horizon is not served here"
+        );
         assert_eq!(calls.pending[0].2, 2);
     }
 }

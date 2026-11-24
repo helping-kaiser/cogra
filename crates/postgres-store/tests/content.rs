@@ -173,7 +173,12 @@ async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
     expected.sort();
     assert_eq!(walked, expected);
 
-    assert!(page(&pool, Some(cursor_at(&second, 0)), 1).await.items.is_empty());
+    assert!(
+        page(&pool, Some(cursor_at(&second, 0)), 1)
+            .await
+            .items
+            .is_empty()
+    );
 }
 
 /// A page boundary can fall inside the pending set and then have its own
@@ -645,7 +650,11 @@ async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
         .await
         .expect("count");
     assert_eq!(total, 3);
-    assert_eq!(total, served.items.len() as i64, "the count answers for the page");
+    assert_eq!(
+        total,
+        served.items.len() as i64,
+        "the count answers for the page"
+    );
 
     let landed = content::comments_for_target(
         &pool,
@@ -781,38 +790,14 @@ async fn an_oldest_first_walk_pages_across_both_namespaces(pool: PgPool) {
 
     let page1 = thread(&pool, b.host, None, false, 2, oldest).await;
     assert_eq!(ids(&page1), vec![l1, l2]);
-    let page2 = thread(
-        &pool,
-        b.host,
-        Some(cursor_at(&page1, 1)),
-        false,
-        2,
-        oldest,
-    )
-    .await;
+    let page2 = thread(&pool, b.host, Some(cursor_at(&page1, 1)), false, 2, oldest).await;
     assert_eq!(ids(&page2), vec![l3, p1], "the walk continues into pending");
-    let page3 = thread(
-        &pool,
-        b.host,
-        Some(cursor_at(&page2, 1)),
-        false,
-        2,
-        oldest,
-    )
-    .await;
+    let page3 = thread(&pool, b.host, Some(cursor_at(&page2, 1)), false, 2, oldest).await;
     assert_eq!(ids(&page3), vec![p2]);
 
     let tail = thread(&pool, b.host, None, true, 2, oldest).await;
     assert_eq!(ids(&tail), vec![p1, p2], "`last` reads the newest end");
-    let before = thread(
-        &pool,
-        b.host,
-        Some(cursor_at(&tail, 0)),
-        true,
-        2,
-        oldest,
-    )
-    .await;
+    let before = thread(&pool, b.host, Some(cursor_at(&tail, 0)), true, 2, oldest).await;
     assert_eq!(ids(&before), vec![l2, l3], "and back across the boundary");
 }
 
@@ -1015,7 +1000,9 @@ async fn a_walk_with_landings_between_every_page_serves_each_entry_once(pool: Pg
     let mut cursor = None;
     loop {
         let one = page(&pool, cursor, 1).await;
-        let Some(entry) = one.items.first() else { break };
+        let Some(entry) = one.items.first() else {
+            break;
+        };
         walked.push(entry.id);
         cursor = Some(cursor_at(&one, 0));
         if let Some(landing) = schedule.next() {
@@ -1120,28 +1107,12 @@ async fn an_oldest_first_branch_serves_a_reply_landing_past_its_boundary(pool: P
     let oldest = ThreadOrder::OldestFirst;
 
     let page1 = thread(&pool, b.host, None, false, 2, oldest).await;
-    let page2 = thread(
-        &pool,
-        b.host,
-        Some(cursor_at(&page1, 1)),
-        false,
-        2,
-        oldest,
-    )
-    .await;
+    let page2 = thread(&pool, b.host, Some(cursor_at(&page1, 1)), false, 2, oldest).await;
     assert_eq!(ids(&page2), vec![l3, p1]);
 
     land_one_comment(&pool, p2, order(9, 1)).await;
 
-    let page3 = thread(
-        &pool,
-        b.host,
-        Some(cursor_at(&page2, 1)),
-        false,
-        2,
-        oldest,
-    )
-    .await;
+    let page3 = thread(&pool, b.host, Some(cursor_at(&page2, 1)), false, 2, oldest).await;
     assert_eq!(
         ids(&page3),
         vec![p2],

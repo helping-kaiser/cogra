@@ -215,7 +215,9 @@ async fn walk_one_by_one(pool: &PgPool, author: Uuid) -> Vec<Seen> {
     let mut cursor = None;
     loop {
         let one = page(pool, author, cursor, false, 1, true).await;
-        let Some(entry) = one.items.first() else { break };
+        let Some(entry) = one.items.first() else {
+            break;
+        };
         walked.push(seen(entry));
         cursor = Some(cursor_at(&one, 0));
         assert!(walked.len() <= 16, "the walk must end: {walked:?}");
@@ -305,7 +307,9 @@ async fn the_chronicle_pages_across_both_namespaces(pool: PgPool) {
     let mut cursor = Some(cursor_at(&all, all.items.len() - 1));
     loop {
         let one = page(&pool, f.author, cursor, true, 1, true).await;
-        let Some(entry) = one.items.first() else { break };
+        let Some(entry) = one.items.first() else {
+            break;
+        };
         back.push(seen(entry));
         cursor = Some(cursor_at(&one, 0));
         assert!(back.len() <= 16, "the walk back must end: {back:?}");
@@ -401,7 +405,12 @@ async fn boundary_fixture(pool: &PgPool) -> Boundary {
     let older = opinion(1, 1, 1);
     let newer = opinion(2, 1, 2);
     let (older_opinion, newer_opinion) = (older.act_id.to_string(), newer.act_id.to_string());
-    ingest(pool, 1, vec![older, newer, publish(act(9, Family::Publish), 1, 3)]).await;
+    ingest(
+        pool,
+        1,
+        vec![older, newer, publish(act(9, Family::Publish), 1, 3)],
+    )
+    .await;
     let mut tx = pool.begin().await.expect("tx");
     assert!(
         content::land_post(&mut tx, host, order(1, 3))
