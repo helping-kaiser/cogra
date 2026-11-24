@@ -81,6 +81,8 @@ fun FittedName(
     modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,
     floor: Int = 1,
+    /** The drawn text's own semantics (a heading, or hidden where a title already speaks it). */
+    textModifier: Modifier = Modifier,
 ) {
     val measurer = rememberTextMeasurer()
     BoxWithConstraints(modifier) {
@@ -99,7 +101,7 @@ fun FittedName(
             text = text,
             style = style.at(fit),
             color = color,
-            modifier = Modifier.semantics { this[NameFitSize] = fit },
+            modifier = textModifier.semantics { this[NameFitSize] = fit },
         )
     }
 }
