@@ -457,6 +457,67 @@ async fn the_budget_ceilings_keep_their_stated_headroom(pool: PgPool) {
     );
 }
 
+/// Documents the schema refuses, one per refusal class a client document
+/// drifts into: a field the schema does not have, an argument the field
+/// does not take, and an argument of the wrong type. None binds a
+/// variable, so nothing they raise can be an unbound variable's refusal.
+const INVALID_DOCUMENTS: [(&str, &str); 3] = [
+    ("UnknownField", "query UnknownField { noSuchField }"),
+    (
+        "UnknownArgument",
+        "query UnknownArgument { user(handle: \"a\", noSuchArgument: 1) { id } }",
+    ),
+    (
+        "WrongArgumentType",
+        "query WrongArgumentType { user(handle: \"a\") { chronicle(first: \"ten\") { pageInfo { hasNextPage } } } }",
+    ),
+];
+
+/// A valid document whose one variable stays unbound, as every client
+/// id does here: the server refuses it while executing, and the guard
+/// must not mistake that refusal for an invalid document.
+const UNBOUND_VARIABLE: (&str, &str) = (
+    "UnboundVariable",
+    "query UnboundVariable($id: UUID!) { user(id: $id) { id } }",
+);
+
+/// The guard is only as strict as its filter: a check that keeps the
+/// budget refusals alone passes a client document the schema refuses.
+/// Each invalid document is first shown refused by the server, so a
+/// green guard is its filter's verdict, not an accepting schema's.
+///
+/// The client-operation guard reports every validation error a client document raises, not only a tripped budget, and no unbound variable's refusal.
+/// ´claim:budgets:the-guard-reports-an-invalid-client-document´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_guard_reports_an_invalid_client_document(pool: PgPool) {
+    let schema = schema(pool, QueryBudgets::release());
+    for (name, document) in INVALID_DOCUMENTS {
+        let request = async_graphql::Request::new(document)
+            .operation_name(name)
+            .data(Option::<api::auth::Viewer>::None);
+        let refused = schema.execute(request).await.errors;
+        assert!(!refused.is_empty(), "the schema accepts {name}");
+        let reported = budget_errors(&schema, name, document).await;
+        assert!(
+            !reported.is_empty(),
+            "the guard passes {name}, which the schema refuses with {refused:?}"
+        );
+    }
+    let (name, document) = UNBOUND_VARIABLE;
+    let request = async_graphql::Request::new(document)
+        .operation_name(name)
+        .data(Option::<api::auth::Viewer>::None);
+    assert!(
+        !schema.execute(request).await.errors.is_empty(),
+        "{name} executes without its variable"
+    );
+    let reported = budget_errors(&schema, name, document).await;
+    assert!(
+        reported.is_empty(),
+        "the guard reports {name}'s unbound variable: {reported:?}"
+    );
+}
+
 /// The extraction is load-bearing — an operation silently dropped would
 /// make the guards above pass by not looking. Both corpora carry the
 /// post-detail read, which is the heaviest document either client sends.
