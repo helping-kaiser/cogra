@@ -23,10 +23,19 @@ export function Chip({
   onDismiss,
   dismissLabel,
   onClick,
+  cut = false,
   node,
 }: {
   children: ReactNode;
   testId: string;
+  /**
+   * Keeps the chip inside its row (`Chip.jsx` `cut`, round 62; jakob
+   * 2026-11-23, no wrapping for tags in lists): a label too long for the row
+   * — a 128-character tag in the filter sheet's `One tag` — ends in "…" and
+   * the pill never runs past the row's edge. The label stays whole in the
+   * DOM, so the chip's accessible name carries all of it.
+   */
+  cut?: boolean;
   /** The registered chip (`history.filterSheet.kinds.postsChip`); it then names the chip instead of `testId`. */
   node?: DataNode;
   selected?: boolean;
@@ -42,10 +51,11 @@ export function Chip({
     : "border border-outline text-on-surface";
 
   return (
-    <span className="relative inline-flex">
+    <span className={`relative inline-flex${cut ? " min-w-0 max-w-full" : ""}`}>
       <button
         type="button"
         {...testAttributes(node, testId)}
+        data-cut={cut ? "" : undefined}
         disabled={disabled}
         // A selectable chip is a toggle, so it reports its state rather than
         // relying on the colour change alone — colour never carries meaning
@@ -53,9 +63,9 @@ export function Chip({
         role={onClick ? "switch" : undefined}
         aria-checked={onClick ? selected : undefined}
         onClick={onClick}
-        className={`cg-state cg-focus cg-hit box-border inline-flex h-8 items-center gap-1.5 rounded-full px-3 py-0 text-label-large disabled:opacity-[var(--state-disabled)] ${tone}`}
+        className={`cg-state cg-focus cg-hit box-border inline-flex h-8 items-center gap-1.5 rounded-full px-3 py-0 text-label-large disabled:opacity-[var(--state-disabled)] ${tone}${cut ? " min-w-0 max-w-full" : ""}`}
       >
-        {children}
+        {cut ? <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{children}</span> : children}
         {onDismiss && (
           // Rendered inside the chip but acting as its own control: a span with
           // a click handler would be unreachable by keyboard, and nesting a

@@ -89,8 +89,22 @@ describe("the identity row's long names", () => {
     expect(screen.getByTestId("row-aside")).toHaveTextContent(`on ${H}`);
   });
 
-  it("keeps a handle-free aside at its width", () => {
-    render(<ContentRow title="Saved" titleAside="· 2 acts" disc={{ kind: "glyph", glyph: "chat_bubble" }} testId="row" />);
-    expect(classes("row-aside")).toContain("flex-none");
+  // ContentRow.jsx `ASIDE_FLEX.text` (round 62; jakob 2026-11-23, "everywhere
+  // the tag is one-line at most"): an aside with no handle — a tag up to 128
+  // characters — ends in "…" while the title (the verb) keeps its room.
+  it("cuts a handle-free aside, a long tag, and keeps the verb whole", () => {
+    const TAG = `#${"sweepfixture-".repeat(9)}end`;
+    render(<ContentRow title="Tagged a post" titleAside={TAG} disc={{ kind: "letter", letter: "#" }} testId="row" />);
+    expect(classes("row-title")).toEqual(expect.arrayContaining(["flex-none", "max-w-full"]));
+    expect(classes("row-aside")).toEqual(expect.arrayContaining(["shrink", "min-w-0", "overflow-hidden", "text-ellipsis", "whitespace-nowrap"]));
+    expect(classes("row-aside")).not.toContain("flex-none");
+    // The cut is the paint's; the words, and so what is spoken, stay whole.
+    expect(screen.getByTestId("row-aside")).toHaveTextContent(TAG);
+  });
+
+  it("cuts an opinion's `on #tag` aside the same way", () => {
+    render(<ContentRow title="Gave an opinion" titleAside="on #saltmaps" disc={{ kind: "glyph", glyph: "chat_bubble" }} testId="row" />);
+    expect(classes("row-title")).toEqual(expect.arrayContaining(["flex-none", "max-w-full"]));
+    expect(classes("row-aside")).toEqual(expect.arrayContaining(["shrink", "min-w-0", "text-ellipsis"]));
   });
 });
