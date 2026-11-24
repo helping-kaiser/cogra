@@ -9,9 +9,9 @@ import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import {
-  fetchAuthorRecords,
   fetchMyProfile,
   fetchProfileByHandle,
+  fetchProfileChronicle,
   fetchProfileComments,
   fetchProfileFigures,
   fetchProfilePosts,
@@ -25,6 +25,7 @@ import {
 import { gqlLink, startMswServer } from "@/test/msw";
 import { answersComment, commentsPage, profileComment, settlingComment } from "@/test/profile-comment";
 import { reelPost } from "@/test/reel";
+import { chroniclePage, settlingCommentEntry, settlingPostEntry } from "@/test/chronicle";
 
 const server = startMswServer();
 
@@ -331,21 +332,18 @@ describe("the profile reads", () => {
   });
 });
 
-describe("fetchAuthorRecords", () => {
+describe("fetchProfileChronicle", () => {
+  /** The served page, the edges' nodes under the person's `chronicle`. */
   function records(edges: unknown[], hasNextPage = false, endCursor: string | null = null) {
-    return {
-      __typename: "RecordConnection",
-      edges,
-      pageInfo: { __typename: "PageInfo", hasNextPage, endCursor },
-    };
+    return chroniclePage((edges as { node: unknown }[]).map((edge) => edge.node), { userId: "u-1", hasNextPage, endCursor }).data.user;
   }
 
   it("maps edges to rows and carries the page shape", async () => {
     server.use(
-      gqlLink.query("AuthorRecords", () =>
+      gqlLink.query("ProfileChronicle", () =>
         HttpResponse.json({
           data: {
-            records: records(
+            user: records(
               [
                 {
                   __typename: "RecordEdge",
@@ -377,7 +375,7 @@ describe("fetchAuthorRecords", () => {
         }),
       ),
     );
-    const outcome = await fetchAuthorRecords(client(), "u-1");
+    const outcome = await fetchProfileChronicle(client(), "u-1");
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
     expect(outcome.value.items).toEqual([
@@ -402,10 +400,10 @@ describe("fetchAuthorRecords", () => {
   // it has nowhere to open.
   it("gives an opinion on a person its face and its name", async () => {
     server.use(
-      gqlLink.query("AuthorRecords", () =>
+      gqlLink.query("ProfileChronicle", () =>
         HttpResponse.json({
           data: {
-            records: records([
+            user: records([
               {
                 __typename: "RecordEdge",
                 node: {
@@ -428,7 +426,7 @@ describe("fetchAuthorRecords", () => {
         }),
       ),
     );
-    const outcome = await fetchAuthorRecords(client(), "u-1", null, true);
+    const outcome = await fetchProfileChronicle(client(), "u-1", null, true);
     if (outcome.kind !== "success") throw new Error(outcome.kind);
     expect(outcome.value.items[0]).toMatchObject({
       kind: "opinion",
@@ -446,25 +444,155 @@ describe("fetchAuthorRecords", () => {
   it("reads every family, never one tab's", async () => {
     const seen: unknown[] = [];
     server.use(
-      gqlLink.query("AuthorRecords", ({ variables }) => {
+      gqlLink.query("ProfileChronicle", ({ variables }) => {
         seen.push(variables);
-        return HttpResponse.json({ data: { records: records([]) } });
+        return HttpResponse.json({ data: { user: records([]) } });
       }),
     );
-    await fetchAuthorRecords(client(), "u-1", "c-0");
-    expect(seen).toEqual([{ author: "u-1", first: PROFILE_PAGE_SIZE, after: "c-0" }]);
+    await fetchProfileChronicle(client(), "u-1", "c-0");
+    expect(seen).toEqual([{ id: "u-1", first: PROFILE_PAGE_SIZE, after: "c-0" }]);
   });
 
   it("asks for the page size the chronicle pages by", async () => {
     let first: number | undefined;
     server.use(
-      gqlLink.query("AuthorRecords", ({ variables }) => {
+      gqlLink.query("ProfileChronicle", ({ variables }) => {
         first = (variables as { first: number }).first;
-        return HttpResponse.json({ data: { records: records([]) } });
+        return HttpResponse.json({ data: { user: records([]) } });
       }),
     );
-    await fetchAuthorRecords(client(), "u-1");
+    await fetchProfileChronicle(client(), "u-1");
     expect(first).toBe(PROFILE_PAGE_SIZE);
+  });
+});
+
+// A REMOVED THING KEEPS ITS ROW (Profile.md:37 and :39, ProfileOther.md:33 and
+// :39, ProfileDeleted.md:25): the second line reads `Removed by its author`
+// where its words were — never the words of the post it answered, nor of the
+// thing that cited it — and its door stays (`_shared.jsx` `ChronicleAct`).
+describe("fetchProfileChronicle's removed rows", () => {
+  const removed = { __typename: "Removal", at: "2026-11-20T10:00:00Z", by: "AUTHOR" };
+  const words = (value: string | null) => ({ __typename: "ModeratedText", value });
+  const post = (id: string, title: string | null, removal: unknown = null) => ({
+    __typename: "Post",
+    id,
+    title: words(title),
+    content: words(title === null ? null : `${title}, the body`),
+    removal,
+  });
+  const comment = (id: string, content: string | null, removal: unknown = null, parent: unknown = null) => ({
+    __typename: "Comment",
+    id,
+    content: words(content),
+    removal,
+    target: parent,
+  });
+  function record(id: string, family: string, over: Record<string, unknown>) {
+    return {
+      __typename: "Record",
+      id,
+      family,
+      act: "GENESIS",
+      targetId: `t:${id}`,
+      terminalId: null,
+      topic: null,
+      landedAt: "2026-11-20T09:00:00Z",
+      pDirected: 0.4,
+      pInterest: 0.5,
+      severed: false,
+      target: null,
+      terminal: null,
+      ...over,
+    };
+  }
+  async function rows(nodes: unknown[]) {
+    server.use(gqlLink.query("ProfileChronicle", () => HttpResponse.json(chroniclePage(nodes))));
+    const outcome = await fetchProfileChronicle(client(), "u-chronicle");
+    if (outcome.kind !== "success") throw new Error(outcome.kind);
+    return outcome.value.items;
+  }
+
+  it("reads a removed comment's row as removed, never its post's words", async () => {
+    const [row] = await rows([
+      record("r-c", "REVIEW", {
+        target: post("p-1", "The parent post"),
+        terminal: comment("c-1", null, removed, { __typename: "Post", id: "p-1" }),
+      }),
+    ]);
+    expect(row).toMatchObject({ label: "Commented", snippet: "Removed by its author", postId: "p-1" });
+  });
+
+  it("reads a removed reply's row as removed, never the comment it answered", async () => {
+    const [row] = await rows([
+      record("r-r", "REVIEW", {
+        target: comment("c-0", "The answered comment", null, { __typename: "Post", id: "p-1" }),
+        terminal: comment("c-1", null, removed, { __typename: "Comment" }),
+      }),
+    ]);
+    expect(row).toMatchObject({ label: "Commented", snippet: "Removed by its author" });
+  });
+
+  it("reads a removed post's publish, edit and tag rows as removed, their doors kept", async () => {
+    const [publish, edit, tag] = await rows([
+      record("r-p", "PUBLISH", { target: post("p-2", null, removed) }),
+      record("r-e", "PUBLISH", { act: "ORDINARY", target: post("p-2", null, removed) }),
+      record("r-t", "TAG", { target: post("p-2", null, removed), topic: { name: words("saltmaps") } }),
+    ]);
+    expect(publish).toMatchObject({ label: "Published a post", snippet: "Removed by its author", postId: "p-2" });
+    expect(edit).toMatchObject({ label: "Edited a post", snippet: "Removed by its author", postId: "p-2" });
+    expect(tag).toMatchObject({ label: "Tagged a post", aside: "#saltmaps", snippet: "Removed by its author", postId: "p-2" });
+  });
+
+  it("reads an opinion on a removed post or comment as removed", async () => {
+    const [onPost, onComment] = await rows([
+      record("r-o", "OPINION", { act: "ORDINARY", target: post("p-2", null, removed) }),
+      record("r-q", "OPINION", { act: "ORDINARY", target: comment("c-2", null, removed) }),
+    ]);
+    expect(onPost).toMatchObject({ aside: "on a post", snippet: "Removed by its author" });
+    expect(onComment).toMatchObject({ aside: "on a comment", snippet: "Removed by its author" });
+  });
+
+  it("reads a citation of a removed thing as removed, never the citing thing's words", async () => {
+    const [ofPost, ofComment] = await rows([
+      record("r-x", "REFERENCE", { target: post("p-3", "The citing post"), terminal: post("p-4", null, removed) }),
+      record("r-y", "REFERENCE", {
+        target: post("p-3", "The citing post"),
+        terminal: comment("c-4", null, removed, { __typename: "Post", id: "p-5" }),
+      }),
+    ]);
+    expect(ofPost).toMatchObject({ label: "Cited a post", snippet: "Removed by its author", postId: "p-4" });
+    expect(ofComment).toMatchObject({ label: "Cited a comment", snippet: "Removed by its author" });
+  });
+
+  it("reads a moderation verdict's removal in its own mark", async () => {
+    const [row] = await rows([
+      record("r-m", "PUBLISH", { target: post("p-6", null, { ...removed, by: "MODERATION" }) }),
+    ]);
+    expect(row).toMatchObject({ snippet: "Removed under the platform's rules" });
+  });
+
+  it("leaves a row whose thing stands unchanged, beside a removed one", async () => {
+    const [live, gone] = await rows([
+      record("r-l", "REVIEW", {
+        target: post("p-1", "The parent post"),
+        terminal: comment("c-5", "Still here", null, { __typename: "Post", id: "p-1" }),
+      }),
+      record("r-g", "REVIEW", {
+        target: post("p-1", "The parent post"),
+        terminal: comment("c-6", null, removed, { __typename: "Post", id: "p-1" }),
+      }),
+    ]);
+    expect(live).toMatchObject({ snippet: "Still here", postId: "p-1" });
+    expect(gone).toMatchObject({ snippet: "Removed by its author", postId: "p-1" });
+  });
+
+  it("reads a removed post or comment still settling as removed", async () => {
+    const [p, c] = await rows([
+      { ...settlingPostEntry({ id: "p9", title: null, content: null }), removal: removed },
+      { ...settlingCommentEntry({ id: "c9", postId: "p1", content: null }), removal: removed },
+    ]);
+    expect(p).toMatchObject({ snippet: "Removed by its author", postId: "p9", pending: true });
+    expect(c).toMatchObject({ snippet: "Removed by its author", postId: "p1", commentId: "c9" });
   });
 });
 
@@ -567,5 +695,83 @@ describe("prepareAvatarChange", () => {
     // Omitted = untouched (api-spec.md "Content authoring"): the wire carries
     // the avatar's key and no other, never a null that would clear.
     expect(input).toEqual({ avatarMediaId: "m-1" });
+  });
+});
+
+// THE EVERYTHING TAB'S SETTLING ENTRIES (Profile.md:31, ProfileOther.md:27): a
+// post or comment still settling maps to its act's row, keyed by the record it
+// lands as, in the order served — no client-side merge, no sort.
+describe("fetchProfileChronicle's settling entries", () => {
+  it("maps a settling post and comment to their acts' rows, in the order served, before the landed one", async () => {
+    const signed = "2026-11-24T11:59:00Z";
+    server.use(
+      gqlLink.query("ProfileChronicle", () =>
+        HttpResponse.json(
+          chroniclePage([
+            settlingPostEntry({ id: "p9", title: null, content: "Only words", createdAt: signed }),
+            settlingCommentEntry({ id: "c9", postId: "p1", content: "A reply", createdAt: signed }),
+            {
+              __typename: "Record",
+              id: "r-1",
+              family: "PUBLISH",
+              act: "GENESIS",
+              targetId: "mint:r-1",
+              terminalId: null,
+              topic: null,
+              landedAt: "2026-10-20T10:00:00Z",
+              pDirected: 0,
+              pInterest: 0,
+              severed: null,
+              target: null,
+              terminal: null,
+            },
+          ]),
+        ),
+      ),
+    );
+    const outcome = await fetchProfileChronicle(client(), "u-1");
+    if (outcome.kind !== "success") throw new Error(outcome.kind);
+    expect(outcome.value.items.map((row) => row.id)).toEqual(["act:p9", "act:c9", "r-1"]);
+    expect(outcome.value.items[0]).toEqual({
+      id: "act:p9",
+      kind: "post",
+      label: "Published a post",
+      aside: null,
+      snippet: "Only words",
+      postId: "p9",
+      commentId: null,
+      face: null,
+      cited: null,
+      mentioned: null,
+      pending: true,
+      signedAt: signed,
+    });
+    expect(outcome.value.items[1]).toMatchObject({
+      kind: "comment",
+      label: "Commented",
+      snippet: "A reply",
+      postId: "p1",
+      commentId: "c9",
+      pending: true,
+    });
+    expect(outcome.value.items[2]).not.toHaveProperty("pending");
+  });
+
+  it("keeps an entry read landed in the instant its record mirrors, unmarked", async () => {
+    server.use(
+      gqlLink.query("ProfileChronicle", () =>
+        HttpResponse.json(chroniclePage([settlingPostEntry({ id: "p9", state: "LANDED" })])),
+      ),
+    );
+    const outcome = await fetchProfileChronicle(client(), "u-1");
+    if (outcome.kind !== "success") throw new Error(outcome.kind);
+    expect(outcome.value.items).toHaveLength(1);
+    expect(outcome.value.items[0]).toMatchObject({ id: "act:p9", pending: false });
+  });
+
+  it("reads an absent person as an empty page", async () => {
+    server.use(gqlLink.query("ProfileChronicle", () => HttpResponse.json({ data: { user: null } })));
+    const outcome = await fetchProfileChronicle(client(), "u-1");
+    expect(outcome).toEqual({ kind: "success", value: { items: [], endCursor: null, hasNextPage: false } });
   });
 });

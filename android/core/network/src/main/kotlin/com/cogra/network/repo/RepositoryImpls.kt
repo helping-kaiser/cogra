@@ -29,10 +29,6 @@ import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileComment
 import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
-import com.cogra.domain.RecordAbout
-import com.cogra.domain.RecordAct
-import com.cogra.domain.RecordLink
-import com.cogra.domain.RecordOpinion
 import com.cogra.domain.RecordRow
 import com.cogra.domain.SelfMarkView
 import com.cogra.domain.StagedWriteView
@@ -56,7 +52,6 @@ import com.cogra.network.fetch
 import com.cogra.network.graphql.ApplicationStatusQuery
 import com.cogra.network.graphql.ApproveActsMutation
 import com.cogra.network.graphql.AttachActorKeyMutation
-import com.cogra.network.graphql.AuthorRecordsQuery
 import com.cogra.network.graphql.BorrowedViewQuery
 import com.cogra.network.graphql.ChangeHandleMutation
 import com.cogra.network.graphql.ChangePasswordMutation
@@ -929,25 +924,8 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
         client.query(MyProfileQuery()).fetch().map { data -> data.me?.profileFields?.toDomain() }
     }
 
-    override suspend fun authorRecords(
-        authorId: String,
-        first: Int,
-        after: String?,
-    ): Outcome<Page<RecordRow>> = guard.run {
-        client.query(
-            AuthorRecordsQuery(
-                author = authorId,
-                first = first,
-                after = Optional.presentIfNotNull(after),
-            ),
-        ).fetch().map { data ->
-            Page(
-                items = data.records.edges.map { it.node.toRow() },
-                endCursor = data.records.pageInfo.endCursor,
-                hasNextPage = data.records.pageInfo.hasNextPage,
-            )
-        }
-    }
+    override suspend fun chronicle(authorId: String, first: Int, after: String?): Outcome<Page<RecordRow>> =
+        guard.run { readProfileChronicle(client, authorId, first, after) }
 
     override suspend fun profilePosts(authorId: String, after: String?): Outcome<Page<PostView>> =
         guard.run { readProfilePosts(client, authorId, after) }
@@ -1003,94 +981,4 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
             data.prepareProfileUpdate.writes?.map { w -> w.preparedWriteFields.toDomain() }
         }
     }
-}
-
-/**
- * One chronicle row: family + genesis mark, the touched content's
- * snippet, and the post it opens. A record is a genesis exactly when
- * its target (binary) or terminal (hyper) is the mint of its own act.
- */
-private fun AuthorRecordsQuery.Node.toRow(): RecordRow {
-    val mint = "mint:$id"
-    val kind = family.toDomain()
-    // A citation is about its terminal leg — the cited thing — while every
-    // other family is about its target (a Review's terminal being the
-    // comment it minted, whose words are the row's).
-    val reading = if (kind == Family.REFERENCE) citedReading() else touchedReading()
-    // The server's reading of what the record did (`Record.act`); a value
-    // this client does not know reads ordinary.
-    val did = runCatching { RecordAct.valueOf(act.rawValue) }.getOrDefault(RecordAct.ORDINARY)
-    return RecordRow(
-        id = id,
-        family = kind,
-        genesis = did == RecordAct.GENESIS || targetId == mint || terminalId == mint,
-        snippet = reading.snippet,
-        link = reading.link,
-        landedAt = landedAt,
-        // Both stance families wear their own face (the chronicle's opinion card).
-        opinion = RecordOpinion(pDirected, pInterest, severed == true)
-            .takeIf { kind == Family.OPINION || kind == Family.AFFINITY },
-        targetHandle = reading.handle,
-        act = did,
-        about = reading.about,
-        topic = topic?.name?.value?.takeIf { it.isNotBlank() },
-        untag = kind == Family.TAG && pDirected == 0.0 && pInterest == 0.0,
-    )
-}
-
-/** What a chronicle row reads of the node its act is about. */
-private class RowReading(
-    val snippet: String?,
-    val link: RecordLink?,
-    val about: RecordAbout?,
-    val handle: String?,
-)
-
-/** A citation's row reads its terminal leg, the cited thing: a post, a comment, or a person mentioned. */
-private fun AuthorRecordsQuery.Node.citedReading(): RowReading {
-    val post = terminal?.onPost
-    val comment = terminal?.onComment
-    val person = terminal?.onUser
-    return RowReading(
-        snippet = post?.title?.value ?: post?.content?.value ?: comment?.content?.value,
-        link = post?.let { RecordLink.ToPost(it.id) }
-            ?: comment?.target?.onPost?.id?.let { RecordLink.ToPost(it) },
-        about = when {
-            person != null -> RecordAbout.PERSON
-            post != null -> RecordAbout.POST
-            comment != null -> RecordAbout.COMMENT
-            else -> null
-        },
-        handle = person?.handle,
-    )
-}
-
-/**
- * Every other row reads what its act touched: a Review's minted comment
- * (its terminal), else the target post or comment, or the person an
- * opinion was given on.
- */
-private fun AuthorRecordsQuery.Node.touchedReading(): RowReading {
-    val minted = terminal?.onComment
-    val post = target?.onPost
-    val comment = target?.onComment
-    val person = target?.onUser
-    return RowReading(
-        snippet = minted?.content?.value ?: post?.title?.value ?: post?.content?.value ?: comment?.content?.value,
-        // A Review's thread opens at its parent post, when the parent is a
-        // post CoGra carries; nested reply chains stay unlinked until a
-        // comment permalink exists.
-        link = when {
-            minted != null -> minted.target?.onPost?.id?.let { RecordLink.ToPost(it) }
-            post != null -> RecordLink.ToPost(post.id)
-            else -> comment?.target?.onPost?.id?.let { RecordLink.ToPost(it) }
-        },
-        about = when {
-            person != null -> RecordAbout.PERSON
-            post != null -> RecordAbout.POST
-            comment != null -> RecordAbout.COMMENT
-            else -> null
-        },
-        handle = person?.handle,
-    )
 }

@@ -976,13 +976,20 @@ sealed interface RecordLink {
 }
 
 /**
- * One row of an actor's chronicle — the `records(author:)` read
- * rendered as an honest labelled history (roadmap "Slice 2.1"). The
- * label derives from family + [act]; the snippet is the touched
- * content's current text, when CoGra carries a display row for it.
+ * One row of an actor's chronicle — the `User.chronicle` read rendered
+ * as an honest labelled history (roadmap "Slice 2.1"). The label derives
+ * from family + [act]; the snippet is the touched content's current
+ * text, when CoGra carries a display row for it — or, once that content is
+ * removed, its removal mark, never another node's words. A post or comment
+ * still settling is the row its genesis record will draw, [pending] and aged
+ * by [signedAt].
  */
 data class RecordRow(
-    /** L1's record identifier — the list key. */
+    /**
+     * L1's record identifier — the list key. A settling entry carries the
+     * record it lands as (`genesisRecordId`), so it and that record are one
+     * row by key.
+     */
     val id: String,
     val family: Family,
     /** True when the record minted its node (created), false on updates. */
@@ -1021,6 +1028,14 @@ data class RecordRow(
     val topic: String? = null,
     /** A tag signed at `(0, 0)` — the un-tag, read as withdrawn (hashtag.md §4). */
     val untag: Boolean = false,
+    /**
+     * A post or comment signed and still settling (its `landing` PENDING):
+     * the row reads `Still settling` under its age (Profile.md:31). One read
+     * LANDED in the instant its record is mirrored keeps its row, unmarked.
+     */
+    val pending: Boolean = false,
+    /** A settling entry's signing instant (`createdAt`) — its age, as it has no landing. */
+    val signedAt: Instant? = null,
 )
 
 /** What one record did beyond its family (`RecordAct`, api-spec.md). */

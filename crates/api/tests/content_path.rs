@@ -17,13 +17,13 @@ use postgres_store::{content as content_store, genesis, mirror};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-/// The cursor a resolver hands back for a listing entry: its sort key
-/// and its own id.
-fn cursor_of(p: &content_store::Post) -> content_store::ContentCursor {
-    content_store::ContentCursor {
-        order: p.sort_key(),
-        id: Some(p.id),
-    }
+/// The cursor a resolver hands back for entry `i` of a page: its place in
+/// the walk, its own id, and the walk's horizon.
+fn cursor_at(
+    page: &content_store::Listing<content_store::Post>,
+    i: usize,
+) -> content_store::ContentCursor {
+    content_store::ContentCursor::of(&page.items[i], page.horizon)
 }
 
 const GC: i64 = 8;
@@ -1092,8 +1092,8 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     let listed = content_store::list_posts(&rig.pool, None, false, 10, true)
         .await
         .expect("lists");
-    assert_eq!(listed.len(), 1);
-    assert_eq!(listed[0].id, prepared.node);
+    assert_eq!(listed.items.len(), 1);
+    assert_eq!(listed.items[0].id, prepared.node);
     let record = mirror::record_full(&rig.pool, &body.act_id().to_string())
         .await
         .expect("reads record")
@@ -1476,8 +1476,8 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     )
     .await
     .expect("thread");
-    assert_eq!(on_post.len(), 1);
-    assert_eq!(on_post[0].id, comment.node);
+    assert_eq!(on_post.items.len(), 1);
+    assert_eq!(on_post.items[0].id, comment.node);
     let on_comment = content_store::comments_for_target(
         &rig.pool,
         comment.node,
@@ -1489,8 +1489,8 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     )
     .await
     .expect("replies");
-    assert_eq!(on_comment.len(), 1);
-    assert_eq!(on_comment[0].id, reply.node);
+    assert_eq!(on_comment.items.len(), 1);
+    assert_eq!(on_comment.items[0].id, reply.node);
 
     let edit = content::prepare_comment_edit(
         &rig.pool,
@@ -1564,23 +1564,23 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
         .await
         .expect("page 1");
     assert_eq!(
-        page1.iter().map(|p| p.id).collect::<Vec<_>>(),
+        page1.items.iter().map(|p| p.id).collect::<Vec<_>>(),
         vec![ids[4], ids[3]]
     );
 
-    let page2 = content_store::list_posts(&rig.pool, Some(cursor_of(&page1[1])), false, 2, true)
+    let page2 = content_store::list_posts(&rig.pool, Some(cursor_at(&page1, 1)), false, 2, true)
         .await
         .expect("page 2");
     assert_eq!(
-        page2.iter().map(|p| p.id).collect::<Vec<_>>(),
+        page2.items.iter().map(|p| p.id).collect::<Vec<_>>(),
         vec![ids[2], ids[1]]
     );
 
-    let back = content_store::list_posts(&rig.pool, Some(cursor_of(&page2[1])), true, 2, true)
+    let back = content_store::list_posts(&rig.pool, Some(cursor_at(&page2, 1)), true, 2, true)
         .await
         .expect("backward");
     assert_eq!(
-        back.iter().map(|p| p.id).collect::<Vec<_>>(),
+        back.items.iter().map(|p| p.id).collect::<Vec<_>>(),
         vec![ids[3], ids[2]]
     );
 

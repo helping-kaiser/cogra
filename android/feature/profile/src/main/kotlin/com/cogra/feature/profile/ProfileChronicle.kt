@@ -67,7 +67,11 @@ internal fun ChronicleAct(
         titleAside = aside,
         disc = discOf(row),
         second = row.snippet?.takeIf { it.isNotBlank() }?.let { words -> { ContentRowSecond(words) } },
-        trailing = row.landedAt?.let { ageLadder(it, now) },
+        // A landed act's age is its landing; a post or comment still settling
+        // has none yet, so its age is its signing, `Still settling` under it
+        // (Profile.md:31).
+        trailing = (row.landedAt ?: row.signedAt)?.let { ageLadder(it, now) },
+        pending = row.pending,
         onOpen = post?.let { { onOpenPost(it) } },
         node = node.keyed(position.toString()),
         testTag = "chronicle_row",

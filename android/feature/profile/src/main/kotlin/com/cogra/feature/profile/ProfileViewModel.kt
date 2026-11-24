@@ -1,5 +1,6 @@
 package com.cogra.feature.profile
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.EdgeSighting
@@ -26,8 +27,9 @@ import kotlinx.coroutines.launch
  * The profile's tab row (`CHRONICLE_TABS`; Profile.md:21) and what stands
  * below it: Posts the person's post cards (ProfilePosts.md:3), Comments their
  * comment cards (ProfileComments.md:3), and the right-most, Everything, the
- * chronicle of all their acts (Profile.md:23). Every visitor lands on
- * Everything (every board draws `value="everything"`).
+ * chronicle of all their acts (Profile.md:23). Every profile lands on
+ * Posts, from any door, the reader's own and another's (Profile.md:25,
+ * ProfileOther.md:21, ProfilePosts.md:5, ProfilePostsOwn.md:3).
  */
 enum class ProfileTab(val id: String) {
     POSTS("posts"),
@@ -53,8 +55,9 @@ data class ProfileUiState(
      * the card put away or not (VouchBack.md:51).
      */
     val vouchesBack: Boolean = false,
-    val tab: ProfileTab = ProfileTab.EVERYTHING,
-    /** Everything's chronicle acts, newest first. */
+    /** The lit tab: Posts on landing, "AND NEVER it lands on Everything or Comments" (ProfileOther.md:21). */
+    val tab: ProfileTab = ProfileTab.POSTS,
+    /** Everything's chronicle acts in the server's order, the settling posts and comments first. */
     val rows: List<RecordRow> = emptyList(),
     /** The posts view's cards, in the order the read serves. */
     val posts: List<PostView> = emptyList(),
@@ -98,15 +101,24 @@ private const val PAGE = 20
  * into view ([onCardsSeen]). The reader's own profile is not reported — it
  * is where History's own door stands (ProfileOwnMenu.md:3, :15), and a
  * reader who has seen nothing must still find History empty there.
+ *
+ * The lit tab is the destination's saved state ([saved]): each opening is a
+ * fresh back-stack entry and lands on Posts, a return to the entry finds the
+ * tab it was left on (ProfilePosts.md:77), and a process the OS ended in the
+ * background restores it (design/readme.md §4, "restores by the platform's
+ * convention — Android's saved state").
  */
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
+    private val saved: SavedStateHandle,
     private val profiles: ProfileRepository,
     private val account: AccountRepository,
     private val seenTracker: SeenTracker,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ProfileUiState())
+    private val _state = MutableStateFlow(
+        ProfileUiState(tab = saved.get<String>(TAB)?.let(::tabById) ?: ProfileTab.POSTS),
+    )
     val state = _state.asStateFlow()
 
     private var handle: String? = null
@@ -190,12 +202,15 @@ class ProfileViewModel @Inject constructor(
     }
 
     /**
-     * ONLY THE LIST BELOW THE TAB ROW CHANGES (ProfilePosts.md:13): the
+     * ONLY THE LIST BELOW THE TAB ROW CHANGES (ProfilePosts.md:35): the
      * header stays as it was, and the new tab reads its own list from its
-     * first page. A tap on the standing tab changes nothing (:21).
+     * first page — Everything's chronicle first read here, never on the
+     * landing. A tap on the standing tab changes nothing (:45). The tab
+     * chosen is kept in the entry's saved state.
      */
     fun onTabChange(tab: ProfileTab) {
         if (tab == _state.value.tab) return
+        saved[TAB] = tab.id
         _state.update {
             it.copy(
                 tab = tab,
@@ -265,7 +280,10 @@ class ProfileViewModel @Inject constructor(
                 ProfileTab.COMMENTS -> land(profiles.profileComments(author, after)) { page ->
                     copy(comments = joined(comments, page.items, reset) { it.comment.id })
                 }
-                ProfileTab.EVERYTHING -> land(profiles.authorRecords(author, PAGE, after)) { page ->
+                // A settling entry and the record it lands as share a key, so
+                // a page that serves the record after the held settling copy
+                // keeps the one row; a pull replaces the list.
+                ProfileTab.EVERYTHING -> land(profiles.chronicle(author, PAGE, after)) { page ->
                     copy(rows = joined(rows, page.items, reset) { it.id })
                 }
             }
@@ -288,16 +306,26 @@ class ProfileViewModel @Inject constructor(
             is Outcome.Refused, is Outcome.Failed -> _state.update { it.copy(rowsLoading = false, pageFailed = true) }
         }
     }
+
+    private companion object {
+        /** The lit tab's id in the entry's saved state. */
+        const val TAB = "profile_tab"
+    }
 }
+
+/** The tab a saved id names; an id no tab carries any more names none. */
+private fun tabById(id: String): ProfileTab? = ProfileTab.entries.firstOrNull { it.id == id }
 
 /**
  * A page joined to the list: a first page replaces it; a further page joins
  * below it, any item it already holds skipped — a thing that lands between two
  * fetches can move below the cursor the walk resumes from (web's
- * `appendDeduped`).
+ * `appendDeduped`). A key is never held twice, not even within one page: the
+ * list's lazy keys must be unique, and a settling entry and the record it lands
+ * as share one.
  */
 private fun <T> joined(current: List<T>, page: List<T>, reset: Boolean, key: (T) -> String): List<T> {
-    if (reset) return page
+    if (reset) return page.distinctBy(key)
     val held = current.mapTo(HashSet(), key)
-    return current + page.filterNot { key(it) in held }
+    return current + page.filterNot { key(it) in held }.distinctBy(key)
 }

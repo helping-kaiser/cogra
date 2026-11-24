@@ -573,6 +573,9 @@ private fun TopicSection(
                 selected = on,
                 onClick = { onStage(staged.copy(topic = if (on) null else topic)) },
                 testTag = (node / "tag").keyed(topic.name).tag,
+                // A tag too long for the sheet ends in "…" and the chip stays
+                // inside it (`Chip.jsx` `cut`, round 62).
+                cut = true,
             )
         }
         Box(Modifier.fillMaxWidth()) {

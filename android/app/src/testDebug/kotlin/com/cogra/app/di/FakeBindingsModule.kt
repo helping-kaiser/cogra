@@ -294,7 +294,7 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
     override suspend fun profileByHandle(handle: String): Outcome<ProfileView?> =
         Outcome.Success(others[handle] ?: profile?.takeIf { it.handle == handle })
 
-    override suspend fun authorRecords(
+    override suspend fun chronicle(
         authorId: String,
         first: Int,
         after: String?,

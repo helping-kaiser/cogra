@@ -1197,6 +1197,7 @@ label.
 | `test:unit:a-history-cursor-round-trips-and-a-foreign-one-does-not-decode`                                     | a_history_cursor_round_trips_and_a_foreign_one_does_not_decode                              |
 | `test:unit:a-job-is-planned-for-the-destination-it-named`                                                      | a_job_is_planned_for_the_destination_it_named                                               |
 | `test:unit:a-listed-suffix-reports-its-count`                                                                  | a_listed_suffix_reports_its_count                                                           |
+| `test:unit:a-listing-cursor-carries-its-walks-horizon`                                                         | a_listing_cursor_carries_its_walks_horizon                                                  |
 | `test:unit:a-lone-cue-names-nothing`                                                                           | a_lone_cue_names_nothing                                                                    |
 | `test:unit:a-malformed-container-is-refused-not-repaired`                                                      | a_malformed_container_is_refused_not_repaired                                               |
 | `test:unit:a-malformed-recipient-is-refused-before-sending`                                                    | a_malformed_recipient_is_refused_before_sending                                             |

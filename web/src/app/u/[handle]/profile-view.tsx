@@ -38,17 +38,18 @@ import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import type { PostView } from "@/lib/api/content-api";
 import { withRemoval } from "@/lib/api/removal-api";
 import {
-  fetchAuthorRecords,
   fetchMyProfile,
   fetchProfileByHandle,
+  fetchProfileChronicle,
   fetchProfileComments,
   fetchProfileFigures,
   fetchProfilePosts,
+  isSettlingEntry,
   type ChronicleFilter,
+  type ChronicleRow,
   type ProfileCommentView,
   type ProfileFigures,
   type ProfileView as Profile,
-  type RecordRow,
 } from "@/lib/api/profile-api";
 import {
   forgetProfileView,
@@ -69,7 +70,8 @@ import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { StatusBanners } from "@/app/status-banners";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { CograBand } from "@/lib/ui/cogra-band";
-import { instance, type DataNode } from "@/lib/ui/data-node";
+import { instance, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { InlineAction } from "@/lib/ui2/inline-action";
 import { EmptyState } from "@/lib/ui/empty-state";
 import { Icon } from "@/lib/ui/icons";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
@@ -111,7 +113,15 @@ export const INVITE_LOCKED = "You can invite once you're in.";
 export const APPLICANT_CHRONICLE_EMPTY = "Nothing here yet.";
 /** The chronicle page that did not arrive (Profile.md:35; copy-voice.md). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
-/** How long a next page may take before `Loading…` stands for it (Profile.md:33). */
+/**
+ * A card tab's FIRST page that did not arrive (ProfilePosts.md:23,
+ * ProfileComments.md:27; `_shared.jsx` `ProfileTabFirstPage`): the house
+ * line's noun form (copy-voice *A read with nothing loaded*).
+ */
+export function tabFirstPageFault(tab: "posts" | "comments"): string {
+  return `Can't reach the server — ${tab} can't load right now.`;
+}
+/** How long a page may take before `Loading…` stands for it (Profile.md:47, ProfilePosts.md:21). */
 export const LOADING_AFTER_MS = 200;
 
 const CHRONICLE: DataNode = { path: "profile.chronicle" };
@@ -183,7 +193,7 @@ export function ProfileScreen({
   // EVERY PROFILE LANDS ON POSTS, from any door (ProfilePosts.md:5,
   // ProfileOther.md:21, Profile.md:25); a return stands on the tab it left.
   const [filter, setFilter] = useState<ChronicleFilter>(held?.tab ?? "posts");
-  const [rows, setRows] = useState<readonly RecordRow[]>(held?.tab === "everything" ? held.rows : []);
+  const [rows, setRows] = useState<readonly ChronicleRow[]>(held?.tab === "everything" ? held.rows : []);
   // THE POSTS VIEW'S CARDS (ProfilePosts.md:3), in the order the read serves.
   const [posts, setPosts] = useState<readonly PostView[]>(held?.tab === "posts" ? held.posts : []);
   // THE COMMENTS VIEW'S CARDS (ProfileComments.md:3), in the order the read serves.
@@ -256,14 +266,16 @@ export function ProfileScreen({
         }
         return;
       }
-      const outcome = await fetchAuthorRecords(client, authorId, after, mine);
+      const outcome = await fetchProfileChronicle(client, authorId, after, mine);
       if (request !== rowsRequest.current) return;
       setRowsLoading(false);
       if (outcome.kind === "success") {
         // The chronicle is the surface most exposed to the repeat
-        // `appendDeduped` exists for: it lists the author's own records, and a
-        // record that lands between two fetches leaves the pending namespace
-        // for a place below the cursor the walk resumes from.
+        // `appendDeduped` exists for: a post or comment that lands between two
+        // fetches leaves the settling head for its record's place below the
+        // cursor the walk resumes from. A settling row is keyed by the record
+        // it lands as (`genesisRecordId`), so that record is the same row by
+        // id: the held copy stands and the repeat is dropped, never both.
         setRows((current) =>
           after === null ? outcome.value.items : appendDeduped(current, outcome.value.items),
         );
@@ -404,11 +416,16 @@ export function ProfileScreen({
   const listed =
     filter === "posts" ? posts.length : filter === "comments" ? comments.length : rows.length;
   const tailIndex = tailIndexOf(listed);
-  // `Loading…` stands only once a next page is 200ms late (Profile.md:33):
-  // the timer marks the read it was started for, so an answered read — or the
-  // next one — is never shown late.
+  const cardTab = filter === "posts" || filter === "comments" ? filter : null;
+  const cardView = cardTab !== null;
+  // `Loading…` stands only once a next page is 200ms late (Profile.md:47), and
+  // so does a card tab's first page (ProfilePosts.md:21, :25;
+  // ProfileComments.md:25, :29): the timer marks the read it was started for,
+  // so an answered read — or the next one, a tab switched mid-read or a Retry
+  // — is never shown late. Everything's first page keeps its line at once:
+  // no board draws its wait.
   const [lateRead, setLateRead] = useState<number | null>(null);
-  const paging = rowsLoading && listed > 0;
+  const paging = rowsLoading && (listed > 0 || cardView);
   useEffect(() => {
     if (!paging) return;
     const timer = window.setTimeout(() => setLateRead(pageAsk), LOADING_AFTER_MS);
@@ -440,7 +457,6 @@ export function ProfileScreen({
   // History's own); the chronicle keeps its 16px gutter (`profile.chronicle`:
   // `8px 16px 0`). The lines that stand where cards would keep the gutter
   // either way.
-  const cardView = filter === "posts" || filter === "comments";
   const lineGutter = cardView ? "px-4" : "";
   // WHAT A COMMENT CARD'S REPLY DOES FOR THIS READER (ProfileComments.md:25,
   // :29): a member's opens the thread, an applicant's is locked, and a guest
@@ -835,20 +851,54 @@ export function ProfileScreen({
                   ))}
                 </ul>
               )}
-              {rowsLoading && listed === 0 && (
+              {rowsLoading && listed === 0 && !cardView && (
                 <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
                   Loading…
                 </p>
               )}
-              {loadingShown && (
+              {/* A CARD TAB'S FIRST PAGE, 200ms LATE: `LoadingState` in the
+                  list's place (`ProfileTabFirstPage`), never the empty line. */}
+              {loadingShown && listed === 0 && (
+                <p
+                  role="status"
+                  aria-live="polite"
+                  {...testAttributes({ path: `profile.${filter}.loading` })}
+                  className={`m-0 text-body-medium text-on-surface-variant ${lineGutter}`}
+                >
+                  Loading…
+                </p>
+              )}
+              {loadingShown && listed > 0 && (
                 <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
                   Loading…
                 </p>
               )}
-              {/* THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and
+              {/* A CARD TAB'S FIRST PAGE THAT DID NOT ARRIVE (ProfilePosts.md:23,
+                  ProfileComments.md:27): `ProfileMoreFailed`'s quiet row in the
+                  first-page family's words, Retry ending the line, where the
+                  list would stand — never the error colour, never a full-tab
+                  fault. Retry asks the first page again. */}
+              {pageFailed && listed === 0 && cardTab !== null && (
+                <div className={lineGutter} role="alert">
+                  <p
+                    className="m-0 pb-4 text-body-medium text-on-surface-variant"
+                    {...testAttributes({ path: `profile.${cardTab}.moreFault` })}
+                  >
+                    {tabFirstPageFault(cardTab)}{" "}
+                    <InlineAction
+                      size="sm"
+                      node={{ path: `profile.${cardTab}.moreFault.retry` }}
+                      onClick={() => profile && void loadRows(profile.id, cardTab, null, own)}
+                    >
+                      Retry
+                    </InlineAction>
+                  </p>
+                </div>
+              )}
+              {/* THE PAGE THAT DID NOT ARRIVE (Profile.md:49): the quiet line and
                   Retry where the next page would have stood — never the error
                   colour. */}
-              {pageFailed && (
+              {pageFailed && (listed > 0 || !cardView) && (
                 <div className={`flex items-center gap-3 ${lineGutter}`} role="alert">
                   <span className="text-body-medium text-on-surface-variant" data-testid="profile-rows-failed">
                     {COULDNT_LOAD_MORE}
@@ -881,7 +931,7 @@ export function ProfileScreen({
 }
 
 /** Each act's disc, by kind (`_shared.jsx` `ProfileOwnBody`'s chronicle). */
-function discOf(row: RecordRow): ContentRowDisc {
+function discOf(row: ChronicleRow): ContentRowDisc {
   switch (row.kind) {
     case "post":
       return { kind: "glyph", glyph: "dynamic_feed" };
@@ -923,30 +973,40 @@ function discOf(row: RecordRow): ContentRowDisc {
  * One act (`ContentRow` chronicle): its disc, its verb and snippet, its age on
  * the trailing edge. A card with somewhere to go opens its post, whose back
  * arrow names this profile; one with nowhere to go is the same card, inert.
+ *
+ * A POST OR A COMMENT STILL SETTLING (Profile.md:31, ProfileOther.md:27) is
+ * its act's card, its age its signing and `Still settling` under it
+ * (`_shared.jsx` `ChronicleAct`'s `settling`: `ContentRow` `pending`); its
+ * door is its card's on the Posts or Comments tab — the post, or the thread
+ * landed on the comment (`comment-feed-card.tsx` `place`).
  */
 function ChronicleAct({
   row,
   position,
   origin,
 }: {
-  row: RecordRow;
+  row: ChronicleRow;
   position: number;
   origin: string | null;
 }) {
   const node = instance(CHRONICLE, "act", String(position));
+  const entry = isSettlingEntry(row) ? row : null;
+  const query = [
+    entry?.commentId ? `comment=${entry.commentId}` : null,
+    origin === null ? null : `from=${encodeURIComponent(origin)}`,
+  ].filter((part) => part !== null);
   const href =
     row.postId === null
       ? undefined
-      : origin === null
-        ? `/posts/${row.postId}`
-        : `/posts/${row.postId}?from=${encodeURIComponent(origin)}`;
+      : `/posts/${row.postId}${query.length > 0 ? `?${query.join("&")}` : ""}`;
   return (
     <ContentRow
       variant="chronicle"
       title={row.label}
       titleAside={row.aside ?? undefined}
       second={row.snippet?.trim() ? row.snippet : undefined}
-      trailing={ladderAge(row.landedAt)}
+      trailing={ladderAge(isSettlingEntry(row) ? row.signedAt : row.landedAt)}
+      pending={entry?.pending === true}
       disc={discOf(row)}
       href={href}
       node={node}

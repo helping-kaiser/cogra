@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.NameInLine
+import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.ZERO_BUNDLE_READOUT
@@ -187,6 +188,12 @@ fun ContentRow(
     sentence: Boolean = false,
     /** The door's chevron (`ContentRow.jsx` `chevron`): this opens another surface. Never beside an [action]. */
     chevron: Boolean = false,
+    /**
+     * Signed and not yet landed (`ContentRow.jsx` `pending`): the shared
+     * `Still settling` marker stands under the trailing edge, its node the
+     * row's `pending` part.
+     */
+    pending: Boolean = false,
 ) {
     // A DELETED ACCOUNT'S ROW (HA-3, design digest item 56): the reserved disc
     // and `Deleted account` in the system's voice, the aside dropped — unless
@@ -224,7 +231,7 @@ fun ContentRow(
                     Box(Modifier.fillMaxWidth().dataNode(part("second"))) { line() }
                 }
             }
-            TrailingEdge(trailing, unread, part, testTag)
+            TrailingEdge(trailing, unread, pending, part, testTag)
             if (chevron && action == null) {
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -238,10 +245,16 @@ fun ContentRow(
     }
 }
 
-/** The trailing edge: the quiet time, and under it the unread dot. */
+/** The trailing edge: the quiet time, under it the settling marker, and the unread dot. */
 @Composable
-private fun TrailingEdge(trailing: String?, unread: Boolean, part: (String) -> DataNode?, testTag: String) {
-    if (trailing == null && !unread) return
+private fun TrailingEdge(
+    trailing: String?,
+    unread: Boolean,
+    pending: Boolean,
+    part: (String) -> DataNode?,
+    testTag: String,
+) {
+    if (trailing == null && !unread && !pending) return
     Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         trailing?.let {
             Text(
@@ -251,6 +264,7 @@ private fun TrailingEdge(trailing: String?, unread: Boolean, part: (String) -> D
                 modifier = Modifier.dataNode(part("trailing")),
             )
         }
+        if (pending) PendingMarker(testTag = part("pending")?.tag ?: "${testTag}_pending")
         if (unread) UnreadDot(part("dot"), testTag)
     }
 }
@@ -274,12 +288,13 @@ private fun UnreadDot(node: DataNode?, testTag: String) {
 }
 
 /**
- * How the aside yields (`ContentRow.jsx` `ASIDE_FLEX`, round 40): a bare
- * handle beside a name as the chip's handle does — the name gives way first;
- * words naming a handle (`on @mira`) by giving up the handle first, the title
- * kept whole; plain words never.
+ * How the aside yields (`ContentRow.jsx` `ASIDE_FLEX`, rounds 40 and 62): a
+ * bare handle beside a name as the chip's handle does — the name gives way
+ * first; words naming a handle (`on @mira`) by giving up the handle first, the
+ * title kept whole; words with no handle — a tag up to 128 characters,
+ * `#saltmaps`, `on #saltmaps` — by ending in "…" while the title keeps its room.
  */
-private enum class AsideYield { None, Bare, Words }
+private enum class AsideYield { Bare, Words, Text }
 
 private val BARE_HANDLE = Regex("^@[A-Za-z0-9_]+$")
 private val HANDLE_IN_WORDS = Regex("(?<![\\w@])@[A-Za-z0-9_]")
@@ -287,7 +302,7 @@ private val HANDLE_IN_WORDS = Regex("(?<![\\w@])@[A-Za-z0-9_]")
 private fun asideYield(aside: String): AsideYield = when {
     BARE_HANDLE.matches(aside) -> AsideYield.Bare
     HANDLE_IN_WORDS.containsMatchIn(aside) -> AsideYield.Words
-    else -> AsideYield.None
+    else -> AsideYield.Text
 }
 
 /**
@@ -301,10 +316,11 @@ private fun TitleLine(title: String, quiet: Boolean, aside: String?, part: (Stri
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         // The heading spans its column, unless an aside rides its baseline
         // (`ContentRow.jsx`: a block in the column, content-width beside the
-        // aside). Measured after an unweighted aside, it is what yields; a
-        // `words` aside is the weighted one instead, and the title keeps its
+        // aside). Measured after a bare handle, it is what yields; a `words`
+        // or `text` aside is the weighted one instead, and the title keeps its
         // width (`flex: none; max-width: 100%`).
-        val titleWidth = if (yields == AsideYield.Words) Modifier else Modifier.weight(1f, fill = aside == null)
+        val asideYields = yields == AsideYield.Words || yields == AsideYield.Text
+        val titleWidth = if (asideYields) Modifier else Modifier.weight(1f, fill = aside == null)
         NameInLine(
             text = title,
             style = MaterialTheme.typography.labelLarge,
@@ -312,7 +328,7 @@ private fun TitleLine(title: String, quiet: Boolean, aside: String?, part: (Stri
             modifier = titleWidth.dataNode(part("title")),
         )
         aside?.let {
-            val asideWidth = if (yields == AsideYield.Words) Modifier.weight(1f, fill = false) else Modifier
+            val asideWidth = if (asideYields) Modifier.weight(1f, fill = false) else Modifier
             NameInLine(
                 text = it,
                 style = MaterialTheme.typography.labelSmall,
