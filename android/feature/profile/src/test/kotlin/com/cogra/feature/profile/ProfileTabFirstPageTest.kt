@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
@@ -114,6 +115,22 @@ class ProfileTabFirstPageTest {
         compose.mainClock.advanceTimeByFrame()
     }
 
+    /**
+     * The screen is handed [next]: the write is announced to the composition
+     * (the clock is held, so nothing else would) and the next frame draws it.
+     */
+    private fun hand(next: ProfileUiState) {
+        state = next
+        Snapshot.sendApplyNotifications()
+        frame()
+    }
+
+    /** Up to [ms] since the read's frame, the last frame drawn at exactly [ms]. */
+    private fun drawnAt(ms: Long) {
+        upTo(ms - FRAME_MS)
+        frame()
+    }
+
     /** The wait's last millisecond passes, and the frame that follows draws what it brought. */
     private fun theWaitEnds() {
         upTo(1)
@@ -138,18 +155,15 @@ class ProfileTabFirstPageTest {
         assertThat(retried).isEqualTo(1)
 
         // The retried read is asked: its own wait starts on the frame that draws it.
-        state = state.copy(pageFailed = false, rowsLoading = true)
-        frame()
-        upTo(LOADING_AFTER_MS / 2)
+        hand(state.copy(pageFailed = false, rowsLoading = true))
+        drawnAt(LOADING_AFTER_MS / 2)
         compose.onAllNodesWithTag("$view.loading").assertCountEquals(0)
         compose.onAllNodesWithTag("$view.moreFault").assertCountEquals(0)
         compose.onAllNodesWithTag("$view.empty").assertCountEquals(0)
-        upTo(LOADING_AFTER_MS / 2)
-        frame()
+        drawnAt(LOADING_AFTER_MS / 2 + FRAME_MS)
         compose.onNodeWithTag("$view.loading").performScrollTo().assertTextEquals("Loading…")
 
-        state = withCards(state).copy(rowsLoading = false)
-        frame()
+        hand(withCards(state).copy(rowsLoading = false))
         compose.onNodeWithTag(card(tab)).performScrollTo()
         compose.onAllNodesWithTag("$view.moreFault").assertCountEquals(0)
         compose.onAllNodesWithTag("$view.loading").assertCountEquals(0)
@@ -177,7 +191,7 @@ class ProfileTabFirstPageTest {
         val view = "profile.${tab.id}"
         compose.mainClock.autoAdvance = false
         render(loaded(tab).copy(rowsLoading = true))
-        upTo(LOADING_AFTER_MS - 1)
+        drawnAt(LOADING_AFTER_MS - 1)
         compose.onNodeWithTag("profile.tabRow.postsTab").assertExists()
         compose.onAllNodesWithTag("$view.loading").assertCountEquals(0)
         compose.onAllNodesWithTag("$view.empty").assertCountEquals(0)
@@ -199,11 +213,9 @@ class ProfileTabFirstPageTest {
     fun aFirstPageAnsweredInTimeNeverShowsLoading() {
         compose.mainClock.autoAdvance = false
         render(loaded(ProfileTab.POSTS).copy(rowsLoading = true))
-        upTo(LOADING_AFTER_MS / 2)
-        state = withCards(state).copy(rowsLoading = false)
-        frame()
-        upTo(LOADING_AFTER_MS)
-        frame()
+        drawnAt(LOADING_AFTER_MS / 2)
+        hand(withCards(state).copy(rowsLoading = false))
+        drawnAt(LOADING_AFTER_MS)
         compose.onAllNodesWithTag("profile.posts.loading").assertCountEquals(0)
         compose.onAllNodesWithTag("profile_rows_loading").assertCountEquals(0)
         compose.onNodeWithTag("profile.posts.card:p1").performScrollTo()
@@ -218,13 +230,11 @@ class ProfileTabFirstPageTest {
         upTo(LOADING_AFTER_MS - 50)
         // The switch's frame starts the Comments read's clock; the Posts read's
         // 200ms run out 50ms in and must not draw it.
-        state = state.copy(tab = ProfileTab.COMMENTS, rowsLoading = true)
-        frame()
-        upTo(100)
+        hand(state.copy(tab = ProfileTab.COMMENTS, rowsLoading = true))
+        drawnAt(100)
         compose.onAllNodesWithTag("profile.comments.loading").assertCountEquals(0)
         compose.onAllNodesWithTag("profile.posts.loading").assertCountEquals(0)
-        upTo(LOADING_AFTER_MS)
-        frame()
+        drawnAt(LOADING_AFTER_MS)
         compose.onNodeWithTag("profile.comments.loading").performScrollTo().assertTextEquals("Loading…")
     }
 
@@ -252,18 +262,20 @@ class ProfileTabFirstPageTest {
     fun everythingsFirstPageKeepsTheTailItHad() {
         compose.mainClock.autoAdvance = false
         render(loaded(ProfileTab.EVERYTHING).copy(rowsLoading = true))
-        upTo(LOADING_AFTER_MS - 1)
+        drawnAt(LOADING_AFTER_MS - 1)
         compose.onNodeWithTag("profile.tabRow.postsTab").assertExists()
         compose.onAllNodesWithTag("profile_rows_loading").assertCountEquals(0)
         theWaitEnds()
         compose.onNodeWithTag("profile_rows_loading").performScrollTo().assertTextEquals("Loading…")
         compose.onAllNodesWithTag("profile.chronicle.loading").assertCountEquals(0)
 
-        state = state.copy(rowsLoading = false, pageFailed = true)
-        frame()
+        hand(state.copy(rowsLoading = false, pageFailed = true))
         compose.onNodeWithTag("profile_rows_failed").performScrollTo().assertTextEquals("Couldn't load more")
         compose.onNodeWithTag("profile_rows_retry").performClick()
         assertThat(retried).isEqualTo(1)
         compose.onAllNodesWithTag("profile.chronicle.moreFault").assertCountEquals(0)
     }
 }
+
+/** The test clock's frame, as `MainTestClock` draws it. */
+private const val FRAME_MS = 16L
