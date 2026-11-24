@@ -312,6 +312,60 @@ describe("registration signer", () => {
       emailVerified: false,
       keyAttached: false,
       keyOnDevice: true,
+      attachFault: "failed",
+    });
+  });
+
+  // ApplicantFeed.md:37 (round 66) — the applicant's own key that fails to
+  // attach is told apart from a key another account holds: the pass hands on
+  // why the repair attach did not go through, and nothing else changes.
+  describe("the repair attach's fault", () => {
+    const passWith = async (attach: KeyCeremony["attachActorKey"]) => {
+      server.use(statusHandler(me({})));
+      await store.saveActor(randomBytes(32), true);
+      const ceremony = fakeCeremony({ attachActorKey: attach });
+      return signer({ ceremony }).advance();
+    };
+
+    it("a transport fault reads failed", async () => {
+      expect(await passWith(() => Promise.resolve({ kind: "failed", cause: new Error("net") }))).toEqual({
+        kind: "awaitingApproval",
+        emailVerified: false,
+        keyAttached: false,
+        keyOnDevice: true,
+        attachFault: "failed",
+      });
+    });
+
+    it("an ACTOR_KEY_IN_USE refusal reads keyInUse", async () => {
+      const progress = await passWith(() =>
+        Promise.resolve({
+          kind: "refused",
+          errors: [{ message: "in use", code: "ACTOR_KEY_IN_USE" as const, field: null }],
+        }),
+      );
+      expect(progress).toEqual({
+        kind: "awaitingApproval",
+        emailVerified: false,
+        keyAttached: false,
+        keyOnDevice: true,
+        attachFault: "keyInUse",
+      });
+    });
+
+    it("any other refusal reads failed", async () => {
+      const progress = await passWith(() =>
+        Promise.resolve({ kind: "refused", errors: [{ message: "no", code: "INTERNAL" as const, field: null }] }),
+      );
+      expect(progress).toMatchObject({ keyAttached: false, attachFault: "failed" });
+    });
+
+    it("a repair attach that goes through, or none run, carries no fault", async () => {
+      expect(await passWith(() => Promise.resolve({ kind: "success", value: true }))).not.toHaveProperty(
+        "attachFault",
+      );
+      server.use(statusHandler(me({ application: application({ keyAttached: true }) })));
+      expect(await signer({}).advance()).not.toHaveProperty("attachFault");
     });
   });
 
