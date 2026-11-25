@@ -33,6 +33,8 @@ export type PictureUpload =
       readonly kind: "uploaded";
       readonly selection: Extract<MediaSelection, { readonly mediaId: string }>;
       readonly ledger: MediaLedger;
+      /** The asset as it went up, which the profile's head wears once the change is taken. */
+      readonly picture: { readonly id: string; readonly url: string };
     }
   | { readonly kind: "problem"; readonly message: string };
 
@@ -64,6 +66,7 @@ export async function uploadProfilePicture(
     return {
       kind: "uploaded",
       selection: { mediaId: result.value.id },
+      picture: { id: result.value.id, url: result.value.url },
       ledger: new Map([
         [result.value.id, { digest: result.value.digest, uploadDigest, mime: result.value.mimeType }],
       ]),

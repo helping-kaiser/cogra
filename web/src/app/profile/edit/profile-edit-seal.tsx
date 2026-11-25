@@ -14,6 +14,7 @@
 import type { ReactNode } from "react";
 
 import type { ProfileChangeOutcome } from "@/lib/profile/profile-change";
+import type { SignedProfileChange } from "@/lib/profile/signed-profile";
 import { ChangeSeal, type ChangeSealReading } from "../change-seal";
 
 export {
@@ -49,6 +50,8 @@ export function ProfileEditSeal({
   change: string;
   hasKey: () => Promise<boolean>;
   sign: () => Promise<ProfileChangeOutcome>;
+  /** What the change sets, for the profile's head once it is taken. */
+  signed?: SignedProfileChange;
   onTaken: () => void;
   /** One stage back, to the edit as it was left. */
   onBack: () => void;
