@@ -13656,7 +13656,8 @@
       "keys": {
         "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
         "profile.comments.commentCard.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "profile.comments.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "profile.comments.commentCard.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "profile.comments.moreFault": "the load chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -13755,8 +13756,12 @@
         "profile.comments.empty": [],
         "profile.comments.empty.title": [],
         "profile.comments.loading": [],
-        "profile.comments.moreFault": [],
-        "profile.comments.moreFault.retry": [],
+        "profile.comments.moreFault": [
+          "more"
+        ],
+        "profile.comments.moreFault.retry": [
+          "more"
+        ],
         "profile.header": [],
         "profile.header.back": [],
         "profile.header.title": [],
@@ -13973,7 +13978,8 @@
     "ProfileCommentsOwn": {
       "prefix": "profile",
       "keys": {
-        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)",
+        "profile.comments.moreFault": "the load chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.band": [],
@@ -14053,8 +14059,12 @@
         "profile.comments.empty": [],
         "profile.comments.empty.title": [],
         "profile.comments.loading": [],
-        "profile.comments.moreFault": [],
-        "profile.comments.moreFault.retry": [],
+        "profile.comments.moreFault": [
+          "more"
+        ],
+        "profile.comments.moreFault.retry": [
+          "more"
+        ],
         "profile.identity": [],
         "profile.identity.actionRow": [],
         "profile.identity.actionRow.edit": [],
