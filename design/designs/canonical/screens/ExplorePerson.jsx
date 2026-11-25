@@ -39,8 +39,8 @@
    brings the person alone, what they made following only the `@`, the
    deliberate person cue; a comment is never found by plain text. The tags
    stand by their names, `Salt maps of the coast road` by its title, and Sal
-   Torres's `Two hives moved inland for the winter` by its author's display
-   name alone — no word of its title starts with `sal`.
+   Torres's `Two hives moved inland` by its author's display name
+   alone — no word of its title starts with `sal`.
 
    REGISTERED under the `explore` prefix (design ⇄ impl seam 062/063), named
    as `ExploreSearch` names its rows: each is a `result`, keyed by its position
@@ -87,7 +87,7 @@ export function Screen() {
         <SectionLabel node="contentLabel">Posts and comments</SectionLabel>
         <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="6" />
         <Seam node="seam" nodeKey="content" />
-        <ReferenceRow kind="post" name="Two hives moved inland for the winter" value="06.09.2024" onOpen={() => {}} node="result" nodeKey="7" />
+        <ReferenceRow kind="post" name="Two hives moved inland" value="06.09.2024" onOpen={() => {}} node="result" nodeKey="7" />
       </div>
       <BottomNav active="search" slots={ALL_SLOTS} inline node="bottomBar" />
     </>

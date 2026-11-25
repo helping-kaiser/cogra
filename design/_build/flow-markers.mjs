@@ -338,7 +338,7 @@ Object.assign(FLOW_MARKERS, {
     // Seam 248: the topics' and the content's rests, numbered as their kinds
     // are, and the field's clear ×, the next free number.
     { n: 11, find: ">saltcrust<", tag: "button" },
-    { n: 4, find: "Two hives moved inland for the winter", tag: "button" },
+    { n: 4, find: "Two hives moved inland", tag: "button" },
     { n: 13, find: 'aria-label="Clear search"', tag: "button" },
   ],
   ExploreFilter: [
