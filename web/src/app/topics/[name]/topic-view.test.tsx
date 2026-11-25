@@ -327,7 +327,7 @@ describe("TopicView", () => {
   it("the_empty_tag_page_carries_the_topics_own_stance_row_holding_nothing", async () => {
     serve("nevertagged", []);
     renderWithProviders(<TopicView name="nevertagged" />, { writeSigner: fakeWriteSigner() });
-    await screen.findByTestId("topic-empty");
+    await screen.findByTestId("tagPage.empty");
     expect(screen.getByTestId("tagPage.actionRow.stance.anchor")).toBeInTheDocument();
     expect(screen.getByTestId("tagPage.actionRow.stance.anchor.face")).toHaveTextContent("🫥");
   });
@@ -337,7 +337,7 @@ describe("TopicView", () => {
   it("a_legal_name_nothing_carries_opens_the_page_empty_never_this_tag_doesnt_exist", async () => {
     serve("nevertagged", []);
     renderWithProviders(<TopicView name="nevertagged" />, { writeSigner: fakeWriteSigner() });
-    const empty = await screen.findByTestId("topic-empty");
+    const empty = await screen.findByTestId("tagPage.empty");
     expect(empty).toHaveTextContent(TAG_EMPTY);
     expect(TAG_EMPTY).toBe("Nothing carries this tag right now.");
     expect(document.body).not.toHaveTextContent(TAG_NOT_FOUND);
@@ -1109,7 +1109,10 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
   // The board's cards wear an opinion (`mkBundle(0.1, 0.1)`), so each anchor
   // draws its exact pair beside the face.
   const NICE = { pDirected: 0.1, pInterest: 0.1 };
-  const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: NICE, "c-pictures": NICE, "c-clip": NICE };
+  // The comments are comments to the page read too (`PageStances` answers each
+  // id as the class the server holds it as).
+  const COMMENT = { ...NICE, kind: "comment" } as const;
+  const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: COMMENT, "c-pictures": COMMENT, "c-clip": COMMENT };
 
   async function census(rows: unknown[], removedOn = false, name = "rust"): Promise<Set<string | null>> {
     if (removedOn) writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
@@ -1183,6 +1186,19 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
     const seen = rendered();
     const missing = registered("TagPageHeldPad").filter((path) => !seen.has(path));
     expect(missing).toEqual([]);
+  });
+
+  // TagPageEmpty.jsx: `tagPage.empty` is the empty state's own box and its
+  // line `tagPage.empty.title`; the padded wrapper around it is the page's.
+  it("every_path_the_registry_gives_TagPageEmpty_stands_on_the_empty_page", async () => {
+    serve("nevertagged", []);
+    renderWithProviders(<TopicView name="nevertagged" />, { writeSigner: fakeWriteSigner() });
+    const empty = await screen.findByTestId("tagPage.empty");
+    expect(within(empty).getByTestId("tagPage.empty.title")).toHaveTextContent(TAG_EMPTY);
+    expect(empty.parentElement).not.toHaveAttribute("data-testid");
+    expect(empty.parentElement?.className).toContain("px-6");
+    const seen = rendered();
+    expect(registered("TagPageEmpty").filter((path) => !seen.has(path))).toEqual([]);
   });
 
   it("the_share_stays_tagPage_actionRow_share_and_the_header_stays_tagPage_header", async () => {
