@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { useState } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
 import { heldPicture, releaseHeldPicture } from "@/lib/profile/held-picture";
@@ -1169,11 +1169,17 @@ describe("ProfileScreen", () => {
   // open here so the frame before it answers is the one asserted.
   describe("a return after a signed change", () => {
     const signedBio = "Signed, not landed.";
+    // Every held read is let go after its test, passed or failed, so no request
+    // is left hanging into the next one.
+    const gates: (() => void)[] = [];
+    const hold = () => new Promise<void>((resolve) => gates.push(resolve));
+    afterEach(() => {
+      for (const open of gates.splice(0)) open();
+    });
 
     /** The own profile, visited once so its view is held; MyProfile answers only when `open` is called. */
     async function visitThenHold(cache: InMemoryCache) {
       let served = profile("u1", "ada", "Before the edit.");
-      let opened: () => void = () => {};
       let gate: Promise<void> | null = null;
       let asked = 0;
       server.use(
@@ -1192,13 +1198,14 @@ describe("ProfileScreen", () => {
       await screen.findByTestId(byNode("profile.posts.empty.title"));
       first.unmount();
       expect(recallProfileView("u1", null, null)).not.toBeNull();
-      gate = new Promise<void>((resolve) => (opened = resolve));
+      gate = hold();
+      const open = gates[gates.length - 1];
       return {
         store,
         serve: (next: ReturnType<typeof profile>) => {
           served = next;
         },
-        open: () => opened(),
+        open,
         asked: () => asked,
       };
     }
@@ -1303,7 +1310,6 @@ describe("ProfileScreen", () => {
 
     it("shows a change taken after its seal closed at once, before the profile's re-read answers", async () => {
       let served = profile("u1", "ada", "Before the edit.");
-      let opened: () => void = () => {};
       let gate: Promise<void> | null = null;
       server.use(
         meHandler(),
@@ -1322,11 +1328,10 @@ describe("ProfileScreen", () => {
       });
       renderWithProviders(<ProfileScreen handle={null} />, { store });
       expect(await screen.findByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Before the edit.");
-      gate = new Promise<void>((resolve) => (opened = resolve));
+      gate = hold();
       served = profile("u1", "ada", signedBio);
       await act(async () => answer({ kind: "taken" }));
       expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent(signedBio);
-      opened();
     });
   });
 
