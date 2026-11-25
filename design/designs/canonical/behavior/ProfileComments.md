@@ -30,6 +30,10 @@ WHEN the first page has not arrived 200ms after profile.comments.moreFault.retry
 
 WHEN the retried first page arrives -> its cards stand below profile.tabRow AND profile.comments.moreFault goes
 
+WHEN the next page has not arrived 200ms after it was asked for -> Loading… stands where the next page will take its place AND NEVER a spinner appears
+
+WHEN the next page does not arrive -> profile.comments.moreFault, Couldn't load more with profile.comments.moreFault.retry, stands where the next page would have AND NEVER the line takes the error colour
+
 ALWAYS profile.comments.commentCard.removalMark.when reads the removal's own moment under the mark, in the one age vocabulary, never the comment's age, GIVEN the comment was removed
 
 ALWAYS the header block above profile.tabRow stands unchanged in every tab view, and only the list below profile.tabRow changes
