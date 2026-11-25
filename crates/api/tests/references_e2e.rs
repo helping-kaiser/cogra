@@ -741,7 +741,7 @@ async fn a_second_citation_prepare_while_the_first_awaits_approval_sums_twice(po
     let rows = rig.references_of_post(None, &carrier).await;
     let rows = rows.as_array().expect("rows");
     assert_eq!(rows.len(), 1, "one citation row: {rows:?}");
-    assert_eq!(rows[0]["targetId"], cited);
+    assert_eq!(rows[0]["target"]["id"], cited);
     assert_eq!(rows[0]["relevance"], json!(0.2), "the pair summed twice");
     assert_eq!(rows[0]["support"], json!(0.2));
     let count = rig
