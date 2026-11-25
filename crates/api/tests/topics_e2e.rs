@@ -1038,6 +1038,85 @@ async fn un_tagging_is_a_further_tag_at_zero_zero(pool: PgPool) {
     );
 }
 
+/// Pinned as the server answers today (the retry hazard, audit defect 5):
+/// `prepareTag` checks only the standing cap, so a second identical tag
+/// prepare while the first is sealed and awaits its approval stages a
+/// second Tag, and both land as two priced records. The fold is
+/// newest-wins per Type (hashtag.md §4), so a reader still gets one chip
+/// at the signed values and the topic lists the post once: the second
+/// record costs the author a price and changes nothing anyone reads.
+///
+/// A second identical tag prepare while the first awaits approval stages a second Tag; both land, and the reader's fold is unchanged.
+/// ´claim:topics:a-second-tag-prepare-in-flight-lands-a-second-record´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_second_tag_prepare_while_the_first_awaits_approval_lands_a_second_record(
+    pool: PgPool,
+) {
+    let rig = Rig::new(pool).await;
+    let (author_id, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig.landed_post(&token, &ak, "A post", json!([])).await;
+    const STATE: &str = r#"query($id: UUID!) { stagedWrite(id: $id) { state } }"#;
+
+    let first = rig.prepare_tag(&token, &post, tag("rust")).await;
+    assert_eq!(errors(&first, "prepareTag"), json!([]), "{first}");
+    let first_signed = rig
+        .pre_sign(&token, &ak, &first["prepareTag"]["writes"])
+        .await;
+    assert_eq!(first_signed.len(), 1);
+    let state = rig
+        .gql(Some(&token), STATE, json!({ "id": first_signed[0].id }))
+        .await;
+    assert_eq!(state["stagedWrite"]["state"], "AWAITING_APPROVAL");
+
+    let second = rig.prepare_tag(&token, &post, tag("rust")).await;
+    assert_eq!(errors(&second, "prepareTag"), json!([]), "{second}");
+    let second_writes = &second["prepareTag"]["writes"];
+    assert_eq!(second_writes.as_array().expect("writes").len(), 1);
+    assert_eq!(second_writes[0]["family"], "TAG");
+    assert_ne!(second_writes[0]["id"], first_signed[0].id);
+    let state = rig
+        .gql(Some(&token), STATE, json!({ "id": first_signed[0].id }))
+        .await;
+    assert_eq!(
+        state["stagedWrite"]["state"], "AWAITING_APPROVAL",
+        "the first attempt stays parked beside the second"
+    );
+
+    rig.approve(&token, &ak, &first_signed).await;
+    rig.land(&token, &ak, second_writes).await;
+    for id in [json!(first_signed[0].id), second_writes[0]["id"].clone()] {
+        let state = rig.gql(Some(&token), STATE, json!({ "id": id })).await;
+        assert_eq!(state["stagedWrite"]["state"], "LANDED", "{id}");
+    }
+
+    let listing = rig
+        .gql(
+            None,
+            r#"query($a: UUID!) {
+                 records(author: $a, family: TAG, first: 10) { edges { node { id } } }
+               }"#,
+            json!({ "a": author_id.to_string() }),
+        )
+        .await;
+    assert_eq!(
+        listing["records"]["edges"].as_array().expect("edges").len(),
+        2,
+        "two Tag records landed: {listing}"
+    );
+
+    let topics = rig.post_topics(None, &post, false).await;
+    let chips = topics.as_array().expect("array");
+    assert_eq!(chips.len(), 1, "one chip: {topics}");
+    assert_eq!(chips[0]["hashtag"]["name"]["value"], "rust");
+    assert_eq!(chips[0]["relevance"], 0.1);
+    assert_eq!(chips[0]["confidence"], 1.0);
+    let hashtag = rig.hashtag(None, "rust").await;
+    let tagged = hashtag["taggedContent"].as_array().expect("array");
+    assert_eq!(tagged.len(), 1, "the topic lists the post once: {hashtag}");
+    assert_eq!(tagged[0]["node"]["id"], post);
+}
+
 /// The target selects the family, so the same `prepareStance` that
 /// carries an Opinion toward a Post carries an Affinity toward a Type —
 /// no per-act family choice anywhere (edges.md §1). Affinity is binary,
