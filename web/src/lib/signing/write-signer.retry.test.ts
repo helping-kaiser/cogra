@@ -117,6 +117,10 @@ class Host {
   readonly approveFault = new Set<string>();
   /** Ids whose next ApproveActs the server ACCEPTS, but whose answer is lost. */
   readonly approveAnswerLost = new Set<string>();
+  /** Ids whose next ApproveActs the server REFUSES with this code (the write stays unapproved). */
+  readonly approveRefusal = new Map<string, UserError["code"]>();
+  /** Ids whose next StagedWrite read dies on the wire. */
+  readonly readFault = new Set<string>();
   /** Ids whose next SubmitProposals dies on the wire before the server sees it. */
   readonly submitFault = new Set<string>();
   /** Ids the host is slow to seal: SEALING until `releaseSeals()`. */
@@ -287,6 +291,7 @@ class Host {
       }),
       gqlLink.query("StagedWrite", ({ variables }) => {
         const id = (variables as { id: string }).id;
+        if (this.readFault.delete(id)) return HttpResponse.error();
         return HttpResponse.json({
           data: { stagedWrite: this.rows.has(id) ? this.json(id) : null },
         });
@@ -295,6 +300,19 @@ class Host {
         const input = (variables as { input: { approvals: { stagedWriteId: string }[] } }).input;
         const id = input.approvals[0].stagedWriteId;
         if (this.approveFault.delete(id)) return HttpResponse.error();
+        const refused = this.approveRefusal.get(id);
+        if (refused !== undefined) {
+          this.approveRefusal.delete(id);
+          return HttpResponse.json({
+            data: {
+              approveActs: {
+                __typename: "ApproveActsPayload",
+                stagedWrites: null,
+                userErrors: [refusal(refused, "refused at approve")],
+              },
+            },
+          });
+        }
         const row = this.row(id);
         row.state = "RELAYING";
         this.approvals.push(id);
@@ -735,7 +753,36 @@ describe("Retry after a parked signing, then Resume", () => {
     expect(host.landed("publish")).toHaveLength(1);
   });
 
-  it("an expired first attempt is retired, then exactly one fresh prepare lands one post", async () => {
+  it("(a) a lost approve answer on the post and a terminal refusal on its tag prepare nothing: the attempt is kept", async () => {
+    const post = surface(preparePost);
+    expect(await post.press("words", approveDies)).toBe("fault");
+    const [genesis, tag] = post.attempt()!.writes;
+    host.approveAnswerLost.add(genesis);
+    host.approveRefusal.set(tag, "SIGNATURE_INVALID");
+    // The genesis is taken server-side, its answer lost: undecided on the device.
+    expect(await post.press("words")).toBe("fault");
+    expect(host.prepares).toBe(1);
+    expect(post.attempt()?.writes).toEqual([genesis, tag]);
+    expect(host.row(genesis).state).toBe("RELAYING");
+    // The next Retry asks the same signing again and still prepares nothing.
+    await post.press("words");
+    expect(host.prepares).toBe(1);
+    expect(host.landed("publish")).toHaveLength(1);
+  });
+
+  it("(b) a read fault on the post and its tag gone prepare nothing: the attempt is kept", async () => {
+    const post = surface(preparePost);
+    expect(await post.press("words", approveDies)).toBe("fault");
+    const [genesis, tag] = post.attempt()!.writes;
+    host.readFault.add(genesis);
+    host.rows.delete(tag);
+    expect(await post.press("words")).toBe("fault");
+    expect(host.prepares).toBe(1);
+    expect(post.attempt()?.writes).toEqual([genesis, tag]);
+    expect(await store.handshake(genesis)).not.toBeNull();
+  });
+
+  it("(c) an expired first attempt — every write ended — is retired, then exactly one fresh prepare lands one post", async () => {
     const post = surface(preparePost);
     expect(await post.press("words", approveDies)).toBe("fault");
     for (const id of post.attempt()!.writes) host.row(id).state = "EXPIRED";
