@@ -7,7 +7,8 @@
 // way the active account ends or changes passes through the token store, so
 // this file drives the store itself and reads the cache's extract.
 
-import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { parse } from "graphql";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MeDocument } from "@/__generated__/graphql";
@@ -15,9 +16,9 @@ import { createGuardedClient } from "./browser-guard";
 import { createTokenStore, type TokenStore } from "./token-store";
 
 // A probe shaped like the viewer-scoped reads the app makes: the reader's own
-// account and the reader's stance toward one post. Inline because it is a
-// test fixture, not an operation the app sends.
-const VIEWER_PROBE = gql`
+// account and the reader's stance toward one post. A parsed fixture rather
+// than an operation document: the app never sends it, so codegen never sees it.
+const VIEWER_PROBE = parse(`
   query ViewerProbe {
     me {
       id
@@ -26,11 +27,11 @@ const VIEWER_PROBE = gql`
     post(id: "post-1") {
       id
       viewerStance {
-        given
+        targetGraphId
       }
     }
   }
-`;
+`);
 
 type Answer = { readonly me: unknown; readonly post: unknown };
 
@@ -40,7 +41,7 @@ function answerAs(account: string | null): Answer {
     post: {
       __typename: "Post",
       id: "post-1",
-      viewerStance: account === null ? null : { __typename: "StanceBundle", given: `given-by-${account}` },
+      viewerStance: account === null ? null : { __typename: "StanceBundle", targetGraphId: `given-by-${account}` },
     },
   };
 }
