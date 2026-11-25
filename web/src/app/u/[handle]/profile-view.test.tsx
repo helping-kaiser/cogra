@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
 import { heldPicture, releaseHeldPicture } from "@/lib/profile/held-picture";
-import { forgetAllProfileViews } from "@/lib/profile/profile-memory";
+import { forgetAllProfileViews, recallProfileView } from "@/lib/profile/profile-memory";
 import { readerState } from "@/lib/session/reader-state";
 import { createTokenStore } from "@/lib/session/token-store";
 import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
@@ -1119,24 +1119,36 @@ describe("ProfileScreen", () => {
   // to the profile from the editor or from settings shows the change on the
   // arrival's own read. That holds only because the arrival asks the server
   // rather than the cache the previous visit filled; the shared cache here is
-  // that previous visit.
+  // that previous visit. The first visit is let settle, so its view is held and
+  // the second arrival is a return (Profile.md:97): what the held head draws
+  // while the read is out is not this test's to say, only that the read's
+  // answer replaces it.
   it("a return to the own profile reads the server, not the last visit's cache", async () => {
     const cache = new InMemoryCache();
     let served = profile("u1", "ada", "Before the edit.");
+    let asked = 0;
     server.use(
       meHandler(),
-      gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: served } })),
+      gqlLink.query("MyProfile", () => {
+        asked += 1;
+        return HttpResponse.json({ data: { me: served } });
+      }),
       recordsHandler([]),
     );
     const store = signedInStore();
     const first = renderWithProviders(<ProfileScreen handle={null} />, { store, cache });
     expect(await screen.findByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Before the edit.");
+    await screen.findByTestId(byNode("profile.posts.empty.title"));
     first.unmount();
+    expect(recallProfileView("u1", null, null)).not.toBeNull();
 
     served = profile("u1", "ada_renamed", "Signed, not landed.");
     renderWithProviders(<ProfileScreen handle={null} />, { store, cache });
-    expect(await screen.findByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Signed, not landed.");
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Signed, not landed."),
+    );
     expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada_renamed");
+    expect(asked).toBe(2);
   });
 
   it("locks the invites entry for an applicant and explains on tap", async () => {

@@ -16,6 +16,7 @@
 // detail), and returns the reader there.
 
 import type { TraceNodes } from "@/lib/api/trace-api";
+import { onAccountChange } from "@/lib/session/account-change";
 import {
   parsePersonOrigin,
   parsePostOrigin,
@@ -153,6 +154,14 @@ export type TraceOpen = {
 };
 
 let current: TraceOpen | null = null;
+
+// The open is the opening reader's: its paths start from that reader's
+// opinions (FeedEntry.md:5). When the tab's active account ends or changes it
+// is let go, so another account arriving on the same trace — a back through
+// the tab's history — is a cold arrival, never a reader of the held answer.
+onAccountChange(() => {
+  current = null;
+});
 
 /** The tap: a new open of `targetId`, whose first level fetches once. */
 export function beginTrace(targetId: string, cover: TraceCover | null, viewer: string | null): void {
