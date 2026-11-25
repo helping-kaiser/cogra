@@ -76,10 +76,32 @@ function root(
 }
 
 /**
- * Handlers for all four roots, keyed by target id — a topic's being its
- * canonical name, the same key the seam hands the control. An id with
- * nothing seeded answers as a target this viewer has never stanced, so
- * the control shows the affordance — the ordinary case, not a refusal.
+ * The page read (`PageStances`): every id answered in its slot, in order.
+ * The seam reads a slot by its id alone — the id names the node — so the
+ * slot's kind is not something a surface test has to seed; it answers as a
+ * post.
+ */
+function pageRoot(seeded: Record<string, SeededStance>) {
+  return gqlLink.query("PageStances", ({ variables }) => {
+    const ids = (variables.ids as readonly unknown[]).map(String);
+    return HttpResponse.json({
+      data: {
+        nodes: ids.map((id) => ({
+          __typename: "Post",
+          id,
+          viewerStance: stanceBundle(seeded[id] ?? NEVER_STANCED),
+        })),
+      },
+    });
+  });
+}
+
+/**
+ * Handlers for all four roots and the page read, keyed by target id — a
+ * topic's being its canonical name, the same key the seam hands the
+ * control. An id with nothing seeded answers as a target this viewer has
+ * never stanced, so the control shows the affordance — the ordinary case,
+ * not a refusal.
  */
 export function stanceHandlers(seeded: Record<string, SeededStance> = {}): RequestHandler[] {
   return [
@@ -87,6 +109,7 @@ export function stanceHandlers(seeded: Record<string, SeededStance> = {}): Reque
     root("CommentStance", "comment", "Comment", seeded),
     root("ProfileStance", "user", "User", seeded),
     root("HashtagStance", "hashtag", "Hashtag", seeded, "name"),
+    pageRoot(seeded),
   ];
 }
 
