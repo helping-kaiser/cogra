@@ -55,26 +55,26 @@ describe("a thing's standing", () => {
 
   it("the_card_adopts_the_figure_the_trace_found", () => {
     holdRanking("u1", answer([["p1", 15.2]]), "u1");
-    adoptTrace("p1", 14.7);
+    adoptTrace("p1", 14.7, "u1");
     expect(standingOf("u1", "p1", false)).toEqual({ kind: "figure", score: 14.7 });
   });
 
   it("an_absent_target_reads_the_moved_on_state_and_the_card_adopts_the_dash", () => {
     holdRanking("u1", answer([["p1", 15.2]]), "u1");
-    adoptTrace("p1", null);
+    adoptTrace("p1", null, "u1");
     // after_a_no_paths_trace_the_old_figure_never_shows_again
     expect(standingOf("u1", "p1", false)).toEqual({ kind: "dash" });
   });
 
   it("a trace answers a lookup miss: its figure is adopted", () => {
     holdRanking("u1", answer([]), "u1");
-    adoptTrace("p9", 3.1);
+    adoptTrace("p9", 3.1, "u1");
     expect(standingOf("u1", "p9", false)).toEqual({ kind: "figure", score: 3.1 });
   });
 
   it("the_next_feed_fetch_replaces_every_adopted_figure (the_next_feed_fetch_dissolves_the_dash)", () => {
     holdRanking("u1", answer([["p1", 15.2]]), "u1");
-    adoptTrace("p1", null);
+    adoptTrace("p1", null, "u1");
     holdRanking("u1", answer([["p1", 12.4]]), "u1");
     expect(standingOf("u1", "p1", false)).toEqual({ kind: "figure", score: 12.4 });
   });
