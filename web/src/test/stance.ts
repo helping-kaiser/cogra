@@ -27,6 +27,12 @@ export type SeededStance = {
    */
   readonly rawPDirected?: number;
   readonly rawPInterest?: number;
+  /**
+   * The class the server holds this id as — what the page read's slot says
+   * (`PageStances`), which the seam matches against the control's kind. A
+   * post by default.
+   */
+  readonly kind?: "post" | "comment" | "profile";
 };
 
 /**
@@ -75,11 +81,11 @@ function root(
   });
 }
 
+const PAGE_CLASS = { post: "Post", comment: "Comment", profile: "User" } as const;
+
 /**
- * The page read (`PageStances`): every id answered in its slot, in order.
- * The seam reads a slot by its id alone — the id names the node — so the
- * slot's kind is not something a surface test has to seed; it answers as a
- * post.
+ * The page read (`PageStances`): every id answered in its slot, in order, as
+ * the class the test seeded for it — a post where it seeded none.
  */
 function pageRoot(seeded: Record<string, SeededStance>) {
   return gqlLink.query("PageStances", ({ variables }) => {
@@ -87,7 +93,7 @@ function pageRoot(seeded: Record<string, SeededStance>) {
     return HttpResponse.json({
       data: {
         nodes: ids.map((id) => ({
-          __typename: "Post",
+          __typename: PAGE_CLASS[seeded[id]?.kind ?? "post"],
           id,
           viewerStance: stanceBundle(seeded[id] ?? NEVER_STANCED),
         })),
