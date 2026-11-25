@@ -13126,6 +13126,10 @@ drawing.
   unkeyed beside its keyed copies. Nothing gone; no string added. The
   Retry is via 23 on the comments tabs, 24 on `ProfilePosts` and 25 on
   `ProfilePostsOwn`. Backlog 310 closes.
+- **Corrected** (seams 220 and 226; impl seam 469): the plain-text
+  sentence in `ExploreSearch.md`, `Saved.md` and `History.md` follows
+  jakob's search law — a handle match brings the person alone, and plain
+  text finds no comment.
 - **Held**: the Everything tab's next page, drawn only on the unregistered
   `ProfileMoreFailed` (backlog 311).
 ---
