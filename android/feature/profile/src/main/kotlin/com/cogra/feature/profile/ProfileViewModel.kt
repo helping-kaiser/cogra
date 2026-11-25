@@ -13,6 +13,9 @@ import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.history.SeenTracker
+import com.cogra.domain.profile.SignedProfile
+import com.cogra.domain.profile.over
+import com.cogra.domain.profile.wearing
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -107,6 +110,12 @@ private const val PAGE = 20
  * tab it was left on (ProfilePosts.md:77), and a process the OS ended in the
  * background restores it (design/readme.md §4, "restores by the platform's
  * convention — Android's saved state").
+ *
+ * THE HEAD WEARS A CHANGE THIS DEVICE SIGNED FROM ITS FIRST FRAME
+ * (ProfileEditSeal.md:45, AvatarSeal.md:37, Profile.md:97): the profile under
+ * the edit keeps its head, and a change taken since lays what was signed over
+ * it ([SignedProfile]) until the return's read answers, so the values from
+ * before the edit never stand under the snackbar.
  */
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -114,6 +123,7 @@ class ProfileViewModel @Inject constructor(
     private val profiles: ProfileRepository,
     private val account: AccountRepository,
     private val seenTracker: SeenTracker,
+    private val signed: SignedProfile,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -123,6 +133,21 @@ class ProfileViewModel @Inject constructor(
 
     private var handle: String? = null
     private var started = false
+
+    /** The profile as the last read served it, before anything signed is laid over it. */
+    private var read: ProfileView? = null
+
+    init {
+        // A change laid or let go while the profile stands — taken under the
+        // edit it opened, or dropped with the account — re-dresses the head
+        // the screen holds, so the return draws it from its first frame.
+        viewModelScope.launch {
+            signed.laid.collect { laid ->
+                val held = read ?: return@collect
+                _state.update { it.copy(profile = held.wearing(laid.over(held.id))) }
+            }
+        }
+    }
 
     /** The standing tab's read: a tab switch cancels it, so an old tab's page never lands on the new one. */
     private var rowsJob: Job? = null
@@ -135,12 +160,21 @@ class ProfileViewModel @Inject constructor(
         refresh()
     }
 
-    fun refresh() {
+    fun refresh() = reread(quiet = false)
+
+    /**
+     * A return from a taken edit or a changed handle: the profile "reads
+     * profile.identity's facts again beneath them" (Profile.md:97) — quietly;
+     * the platform's refresh indicator is the pull's (Profile.md:93).
+     */
+    fun onReturn() = reread(quiet = true)
+
+    private fun reread(quiet: Boolean) {
         // PostDetailViewModel's twin: a profile already on screen keeps
         // its content and shows the pull indicator; only the
         // nothing-loaded state goes full-screen (the shared degrade
         // rule this mirrors).
-        _state.update { it.copy(loading = it.profile == null, refreshing = true) }
+        _state.update { it.copy(loading = it.profile == null, refreshing = it.refreshing || !quiet) }
         viewModelScope.launch {
             val read = readProfile() ?: return@launch
             loadRows(reset = true)
@@ -156,6 +190,9 @@ class ProfileViewModel @Inject constructor(
             is Outcome.Failed -> null
         }
         val target = handle
+        // Marked before the read leaves: only a read asked after a change was
+        // taken confirms it.
+        val asked = signed.asked()
         return when (val outcome = if (target == null) profiles.myProfile() else profiles.profileByHandle(target)) {
             is Outcome.Success -> {
                 val profile = outcome.value
@@ -164,13 +201,18 @@ class ProfileViewModel @Inject constructor(
                     null
                 } else {
                     val own = viewer != null && viewer.id == profile.id
+                    // The server is the truth about the profile: its answer
+                    // replaces what was signed before this read was asked, and
+                    // the head wears only what was taken since.
+                    signed.answered(asked, profile.id)
+                    read = profile
                     _state.update {
                         it.copy(
                             loading = false,
                             refreshing = false,
                             notFound = false,
                             transportFailed = false,
-                            profile = profile,
+                            profile = profile.wearing(signed.laid.value.over(profile.id)),
                             own = own,
                             applicant = viewer?.accountState == AccountState.APPLICANT,
                             vouchesBack = viewer?.accountState == AccountState.MEMBER &&

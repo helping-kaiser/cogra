@@ -20,6 +20,7 @@ import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
 import com.cogra.domain.UserProfile
 import com.cogra.domain.history.SeenTracker
+import com.cogra.domain.profile.SignedProfile
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
@@ -107,7 +108,13 @@ class ChronicleSettlingViewModelTest {
         Page(rows.toList(), endCursor = next, hasNextPage = next != null)
 
     private fun onEverything(): ProfileViewModel {
-        val vm = ProfileViewModel(SavedStateHandle(), chronicle, Member(), seenTracker)
+        val vm = ProfileViewModel(
+            SavedStateHandle(),
+            chronicle,
+            Member(),
+            seenTracker,
+            SignedProfile(session, TestScope(dispatcher)),
+        )
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
         vm.onTabChange(ProfileTab.EVERYTHING)

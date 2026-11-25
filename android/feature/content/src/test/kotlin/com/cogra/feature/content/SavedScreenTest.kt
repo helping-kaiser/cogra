@@ -12,6 +12,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -25,6 +26,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.domain.ActorRef
@@ -412,5 +414,36 @@ class SavedScreenTest {
         ).assertIsDisplayed()
         assertThat(shown("saved.searchField")).isFalse()
         assertThat(shown("saved.empty.action")).isFalse()
+    }
+
+    private fun box(tag: String): Rect = compose.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
+
+    private fun px(dp: Int): Float = with(compose.density) { dp.dp.toPx() }
+
+    @Test
+    fun `saved empty registers the content box, the page's padding outside it`() {
+        // EmptyState.jsx: the node is the box, 8dp above and below, flush left;
+        // the 8dp 24dp around it is SavedEmpty.jsx's unregistered wrapper.
+        render(emptyList())
+        val node = box("saved.empty")
+        val title = box("saved.empty.title")
+        assertThat(title.left).isEqualTo(node.left)
+        assertThat(title.top - node.top).isWithin(0.5f).of(px(8))
+        assertThat(node.bottom - title.bottom).isWithin(0.5f).of(px(8))
+    }
+
+    @Test
+    fun `saved none registers the content box, the action 12dp under the title`() {
+        render(emptyList(), typed = "brackish cartography", narrowedBy = "brackish cartography")
+        val node = box("saved.empty")
+        val title = box("saved.empty.title")
+        val action = box("saved.empty.action")
+        // Material 3 centres the drawn button in its 48dp minimum touch target,
+        // so the board's 12dp and 8dp land on the target's edges, not the drawn ones.
+        val touchInset = ((px(48) - action.height) / 2).coerceAtLeast(0f)
+        assertThat(title.left).isEqualTo(node.left)
+        assertThat(title.top - node.top).isWithin(0.5f).of(px(8))
+        assertThat(action.top - title.bottom).isWithin(0.5f).of(px(12) + touchInset)
+        assertThat(node.bottom - action.bottom).isWithin(0.5f).of(px(8) + touchInset)
     }
 }

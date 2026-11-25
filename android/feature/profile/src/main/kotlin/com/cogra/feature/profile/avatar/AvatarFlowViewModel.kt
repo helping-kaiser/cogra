@@ -9,6 +9,10 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.overPictureCap
+import com.cogra.domain.profile.Setting
+import com.cogra.domain.profile.SignedPicture
+import com.cogra.domain.profile.SignedProfile
+import com.cogra.domain.profile.SignedProfileFields
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.SentProfile
@@ -44,6 +48,7 @@ class AvatarFlowViewModel @Inject constructor(
     private val media: MediaRepository,
     private val processor: MediaProcessor,
     private val signer: WriteSigner,
+    private val signedProfile: SignedProfile,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AvatarFlowState())
@@ -145,7 +150,7 @@ class AvatarFlowViewModel @Inject constructor(
             // A profile picture carries no description: it is not content
             // a reader reads, and the monogram is its stated fallback.
             val next = when (val outcome = media.uploadMedia(picture)) {
-                is Outcome.Success -> AvatarUpload.Done(outcome.value.id, outcome.value.known())
+                is Outcome.Success -> AvatarUpload.Done(outcome.value.id, outcome.value.known(), outcome.value.url)
                 is Outcome.Refused ->
                     AvatarUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED)
                 is Outcome.Failed -> AvatarUpload.Failed(TRANSPORT)
@@ -203,13 +208,25 @@ class AvatarFlowViewModel @Inject constructor(
             val known = (flow.upload as? AvatarUpload.Done)?.known
             val ledger = known?.let { mapOf(mediaId to it) }.orEmpty()
             val expected = profileExpectation(profile.id, sent, ledger)
+            val signing = signedProfile.begin()
             val results = signer.sign(prepared, Expectation(listOf(profileUpdate(expected))))
             if (results.all { it is WriteResult.Done }) {
+                layPicture(signing, profile.id, flow.upload as? AvatarUpload.Done)
                 _state.update { it.copy(submitting = false, saved = true) }
             } else {
                 _state.update { it.copy(submitting = false, signingFailed = true) }
             }
         }
+    }
+
+    /**
+     * Taken: the profile shows the new picture from the return's first frame
+     * (AvatarSeal.md:37). The fields re-stated beside it are not the change's,
+     * so only the picture is laid.
+     */
+    private suspend fun layPicture(signing: SignedProfile.Signing, profileId: String, upload: AvatarUpload.Done?) {
+        val url = upload?.url ?: return
+        signedProfile.lay(signing, profileId, SignedProfileFields(avatar = Setting(SignedPicture(upload.mediaId, url))))
     }
 
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
