@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT k.ord                                    AS \"ord!\",\n                  COALESCE(SUM(l.p_d::text::numeric), 0)::text AS \"p_d!\",\n                  COALESCE(SUM(l.p_i::text::numeric), 0)::text AS \"p_i!\",\n                  COUNT(*)::bigint              AS \"records!\",\n                  COALESCE((ARRAY_AGG(NOT (l.p_d = 0 AND l.p_i = 0)\n                                      ORDER BY r.epoch DESC, r.position DESC))[1],\n                           FALSE)               AS \"newest_says!\"\n           FROM UNNEST($1::text[], $2::text[], $3::text[])\n                WITH ORDINALITY AS k(source, family, target, ord)\n           JOIN mirror_record_legs l\n             ON l.leg = 'binary' AND l.family = k.family\n            AND l.source = k.source AND l.target = k.target\n           JOIN mirror_records r ON r.record_id = l.record_id\n           WHERE NOT r.payload_marked\n             AND NOT l.census_unknown\n           GROUP BY k.ord",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ord!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "p_d!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "p_i!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "records!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "newest_says!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f82d8474aad2c9b93b88ba3023a8bf98f7b52b6642351e2aa0437e34f86695ab"
+}

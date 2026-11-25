@@ -43,6 +43,36 @@ query ProfileStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean
   }
 }
 
+# A PAGE'S FACES IN ONE REQUEST. The controls a page mounts together ask
+# their standings through this one read rather than one root read each
+# (apollo-stance-data.ts `bundle`): the server answers the faces at one
+# depth of a document in one grouped bundle read, whatever the page's size
+# (api-spec.md "The generic stance"). Standing only — a projection names a
+# pick and keeps the per-root read above. `nodes` is priced at its ids times
+# the row and capped at the server's page size, so the seam sends at most
+# that many ids at once. A topic is not a `Node` and keeps `HashtagStance`.
+query PageStances($ids: [UUID!]!, $includePending: Boolean!) {
+  nodes(ids: $ids) {
+    __typename
+    id
+    ... on Post {
+      viewerStance(includePending: $includePending) {
+        ...StanceBundleFields
+      }
+    }
+    ... on Comment {
+      viewerStance(includePending: $includePending) {
+        ...StanceBundleFields
+      }
+    }
+    ... on User {
+      viewerStance(includePending: $includePending) {
+        ...StanceBundleFields
+      }
+    }
+  }
+}
+
 # The follow control's own read (hashtag.md §3, D9): a topic's identity
 # is its name, not a UUID, so this root takes `name` where the other
 # three take `id` — otherwise the identical `viewerStance` shape.
