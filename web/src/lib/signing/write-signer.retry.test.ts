@@ -1,16 +1,19 @@
 // @vitest-environment node
 
-// CHARACTERISATION, NOT A FIX: what the device does today when a signing
-// parks and the surface's Retry is pressed, and Home's Resume is pressed
-// after it (audit-parked-acts 2026-11-25, Q1 (c), defect 5).
+// Retry after a parked signing, then Resume. Two halves: what the SIGNER does
+// with two independent prepares of one gesture (the hazard a fresh-prepare
+// Retry created, still live for stance picks and edit tags), and what the
+// post and reply surfaces do now that Retry asks the same signing again
+// (same-signing.ts). Audit-parked-acts 2026-11-25, Q1 (c), defect 5.
 //
 // The REAL write signer runs every leg with real crypto — pre-sign, a real
 // host seal, the approve witness — against an MSW host whose prepare rules
-// mirror the Rust ones, cited per rule below. Each surface's Retry is a
-// fresh prepare followed by `signer.sign` (wizard-view.tsx submit,
-// reply-wizard-view.tsx, post-edit-route.tsx:358/453, comment-editor.tsx:482,
-// apollo-stance-data.ts:310-321, approval-stance-data.ts:92-110); the tests
-// play that pair directly rather than mounting the surfaces.
+// mirror the Rust ones, cited per rule below. The edit, stance and approval
+// surfaces' Retry is still a fresh prepare followed by `signer.sign`
+// (post-edit-route.tsx, comment-editor.tsx, apollo-stance-data.ts commit,
+// approval-stance-data.ts commit); the post and reply surfaces ask
+// `askAgain` first. The tests play those calls directly rather than
+// mounting the surfaces.
 //
 // The proposals carry each kind's real family and shape — own mint, middle,
 // chained parent, census-fixed parameters — with an EMPTY payload. The
@@ -27,7 +30,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import type { StagedWriteState } from "@/__generated__/graphql";
 import type { UserError } from "@/lib/api/outcome";
-import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchStagedWrite, type StagedWriteView } from "@/lib/api/writes-api";
+import { askAgain, type SigningAttempt } from "@/lib/compose/same-signing";
 import { ActorKey } from "@/lib/crypto/actor-key";
 import { fromBase64, randomBytes, toBase64 } from "@/lib/crypto/bytes";
 import { Tags } from "@/lib/crypto/hashing";
@@ -351,14 +355,14 @@ function ordered(write: Omit<ExpectedWrite, "payload">): ExpectedWrite {
  * every call mints a fresh node (`Uuid::new_v4()`, content.rs:713) and a
  * fresh seq.
  */
-function preparePost(host: Host): Prepared {
+function preparePost(host: Host, pD = 0.1): Prepared {
   host.prepares += 1;
   const genesisSeq = host.allocate();
   const mint = `mint:act:${DEVICE_ADDRESS}:${genesisSeq}:publish`;
   const genesis = host.stage(
     "publish",
     mint,
-    body({ seq: genesisSeq, family: "publish", middle: null, target: mint, pD: 0.1, pI: 1, license: "a=0;o=0" }),
+    body({ seq: genesisSeq, family: "publish", middle: null, target: mint, pD, pI: 1, license: "a=0;o=0" }),
   );
   const tagSeq = host.allocate();
   const tag = host.stage(
@@ -374,7 +378,7 @@ function preparePost(host: Host): Prepared {
         family: "publish",
         middle: null,
         target: { kind: "ownMint" },
-        pDirected: 0.1,
+        pDirected: pD,
         pInterest: 1,
         license: "a=0;o=0",
         parents: "none",
@@ -538,10 +542,11 @@ function prepareApproval(host: Host): Prepared {
 
 type Attempt = { kind: "refused"; errors: UserError[] } | { kind: "signed"; results: WriteResult[] };
 
-describe("Retry after a parked signing, then Resume (characterisation)", () => {
+describe("Retry after a parked signing, then Resume", () => {
   let store: IdentityStore;
   let signer: WriteSigner;
   let host: Host;
+  let client: ApolloClient;
 
   beforeEach(async () => {
     globalThis.indexedDB = new IDBFactory();
@@ -568,11 +573,12 @@ describe("Retry after a parked signing, then Resume (characterisation)", () => {
         }),
       ),
     );
+    client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new HttpLink({ uri: "http://localhost/graphql" }),
+    });
     signer = createWriteSigner({
-      client: new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new HttpLink({ uri: "http://localhost/graphql" }),
-      }),
+      client,
       guard: passthroughGuard,
       store,
       carried: createCarriedExpectationStore({ activeAccountId: () => "acct-1" }),
@@ -600,9 +606,161 @@ describe("Retry after a parked signing, then Resume (characterisation)", () => {
     return ids;
   }
 
+  // ---- the fix: the creation surfaces' Retry (same-signing.ts) ----
+
+  /**
+   * A post or reply surface as built: it remembers the attempt it prepared,
+   * and its press asks that attempt again before anything is prepared anew.
+   * `fault` scripts the host for the batch the press prepares.
+   */
+  function surface(prepare: (host: Host) => Prepared) {
+    let attempt: (SigningAttempt & { expected: Expectation }) | null = null;
+    return {
+      attempt: () => attempt,
+      async press(intent: string, fault: (ids: string[]) => void = () => {}): Promise<"taken" | "fault" | "refused"> {
+        if (attempt !== null) {
+          const asked = await askAgain(
+            {
+              signer,
+              read: (id) => fetchStagedWrite(client, id),
+              retire: (id) => store.clearHandshake(id),
+            },
+            attempt,
+            intent,
+            attempt.expected,
+          );
+          if (asked.kind === "unread") return "fault";
+          if (asked.kind === "landing") {
+            attempt = null;
+            return "taken";
+          }
+          if (asked.kind === "signed") {
+            if (asked.results.every((r) => r.kind === "done")) {
+              attempt = null;
+              return "taken";
+            }
+            return "fault";
+          }
+          attempt = null;
+        }
+        const prepared = prepare(host);
+        if (prepared.kind === "refused") return "refused";
+        const ids = prepared.writes.map((w) => w.id);
+        attempt = { node: ids[0], writes: ids, intent, expected: prepared.expected };
+        fault(ids);
+        const results = await signer.sign(prepared.writes, prepared.expected);
+        if (results.every((r) => r.kind === "done")) {
+          attempt = null;
+          return "taken";
+        }
+        return "fault";
+      },
+    };
+  }
+
+  const approveDies = (ids: string[]) => ids.forEach((id) => host.approveFault.add(id));
+
+  it("a retried post asks the same signing again: one post lands (parked at AWAITING_APPROVAL)", async () => {
+    const post = surface(preparePost);
+    expect(await post.press("words", approveDies)).toBe("fault");
+    expect(await post.press("words")).toBe("taken");
+    expect(host.prepares).toBe(1);
+    expect(host.landed("publish")).toHaveLength(1);
+    expect(host.landed("tag")).toHaveLength(1);
+    // Resume after the Retry has nothing left to approve.
+    expect(await signer.resume()).toEqual([]);
+    expect(host.approvals).toHaveLength(2);
+  });
+
+  it("a retried post asks the same signing again: one post lands (parked at SEALING)", async () => {
+    const post = surface(preparePost);
+    expect(await post.press("words", (ids) => ids.forEach((id) => host.slowSeal.add(id)))).toBe("fault");
+    host.releaseSeals();
+    expect(await post.press("words")).toBe("taken");
+    expect(host.prepares).toBe(1);
+    expect(host.landed("publish")).toHaveLength(1);
+    expect(await signer.resume()).toEqual([]);
+  });
+
+  it("a retried post asks the same signing again: one post lands (submit died unseen)", async () => {
+    const post = surface(preparePost);
+    expect(await post.press("words", (ids) => ids.forEach((id) => host.submitFault.add(id)))).toBe("fault");
+    expect(await post.press("words")).toBe("taken");
+    expect(host.prepares).toBe(1);
+    expect(host.landed("publish")).toHaveLength(1);
+    expect(await signer.resume()).toEqual([]);
+  });
+
+  it("a retried post after a lost approve answer prepares nothing: the first answer was the post", async () => {
+    const post = surface(preparePost);
+    expect(await post.press("words", (ids) => host.approveAnswerLost.add(ids[0]))).toBe("fault");
+    expect(await post.press("words")).toBe("taken");
+    expect(host.prepares).toBe(1);
+    expect(host.landed("publish")).toHaveLength(1);
+    // One approval per write: the genesis is never approved twice.
+    expect(host.approvals).toHaveLength(2);
+  });
+
+  it("a retried reply asks the same signing again: one reply lands", async () => {
+    const reply = surface(prepareReply);
+    expect(await reply.press("words", approveDies)).toBe("fault");
+    expect(await reply.press("words")).toBe("taken");
+    expect(host.prepares).toBe(1);
+    expect(host.landed("review")).toHaveLength(1);
+    expect(await signer.resume()).toEqual([]);
+  });
+
+  it("a press after the post changed retires the unapproved first attempt and lands exactly one act with the new content", async () => {
+    let pick = 0.1;
+    const post = surface((h) => preparePost(h, pick));
+    expect(await post.press("words", approveDies)).toBe("fault");
+    const first = post.attempt()!.writes;
+    pick = 0.2;
+    expect(await post.press("other words")).toBe("taken");
+    expect(host.prepares).toBe(2);
+    const landed = host.landed("publish");
+    expect(landed).toHaveLength(1);
+    expect(landed[0].proposal.body.pD).toBe(0.2);
+    // The first attempt stays unapproved and has no material left: Resume cannot land it.
+    for (const id of first) expect(host.row(id).state).toBe("AWAITING_APPROVAL");
+    expect(await signer.resume()).toEqual([]);
+    expect(host.landed("publish")).toHaveLength(1);
+  });
+
+  it("a press after the post changed, over a first attempt already approved, prepares nothing: that post is landing", async () => {
+    const post = surface(preparePost);
+    expect(await post.press("words", (ids) => host.approveAnswerLost.add(ids[0]))).toBe("fault");
+    expect(await post.press("other words")).toBe("taken");
+    expect(host.prepares).toBe(1);
+    expect(host.landed("publish")).toHaveLength(1);
+  });
+
+  it("an expired first attempt is retired, then exactly one fresh prepare lands one post", async () => {
+    const post = surface(preparePost);
+    expect(await post.press("words", approveDies)).toBe("fault");
+    for (const id of post.attempt()!.writes) host.row(id).state = "EXPIRED";
+    expect(await post.press("words")).toBe("taken");
+    expect(host.prepares).toBe(2);
+    expect(host.landed("publish")).toHaveLength(1);
+    expect(await store.handshakeIds()).toEqual([]);
+  });
+
+  it("signAgain over a batch not read whole signs nothing and spends nothing", async () => {
+    const prepared = preparePost(host);
+    if (prepared.kind !== "staged") throw new Error("must stage");
+    approveDies(prepared.writes.map((w) => w.id));
+    await signer.sign(prepared.writes, prepared.expected);
+    const ids = prepared.writes.map((w) => w.id);
+    const results = await signer.signAgain!([...ids, "sw-missing"], prepared.expected);
+    expect(results.map((r) => r.kind)).toEqual(["failed", "failed", "refused"]);
+    expect(host.approvals).toHaveLength(0);
+    expect((await store.handshakeIds()).sort()).toEqual([...ids].sort());
+  });
+
+  // ---- what the signer does with two independent prepares (characterisation) ----
   // ---- post ----
 
-  it("a retried post leaves its first attempt parked and Resume approves it too: two posts land", async () => {
+  it("the signer, handed a second prepare of a post beside a parked first, approves both once Resume runs: what a fresh-prepare Retry did, and what stance picks and edit tags still do", async () => {
     const first = await parkAtApproval(preparePost);
     expect(await store.handshakeIds()).toEqual(expect.arrayContaining(first));
 
@@ -624,7 +782,7 @@ describe("Retry after a parked signing, then Resume (characterisation)", () => {
     expect(await store.handshakeIds()).toEqual([]);
   });
 
-  it("a post parked at SEALING (seal budget spent) is approved by Resume after the retry landed: two posts", async () => {
+  it("a second prepare beside a post parked at SEALING: Resume approves the first too, two posts", async () => {
     const before = new Set(host.rows.keys());
     const prepared = preparePost(host);
     if (prepared.kind !== "staged") throw new Error("attempt 1 must stage");
@@ -643,7 +801,7 @@ describe("Retry after a parked signing, then Resume (characterisation)", () => {
     expect(host.landed("publish")).toHaveLength(2);
   });
 
-  it("a post whose submit died before the server saw it is re-submitted by Resume after the retry: two posts", async () => {
+  it("a second prepare beside a post whose submit died unseen: Resume re-submits the first, two posts", async () => {
     const prepared = preparePost(host);
     if (prepared.kind !== "staged") throw new Error("attempt 1 must stage");
     // The genesis's submit dies on the wire; the material was saved first (write-signer.ts:278).
@@ -659,7 +817,7 @@ describe("Retry after a parked signing, then Resume (characterisation)", () => {
     expect(host.landed("publish")).toHaveLength(2);
   });
 
-  it("a post whose approval was taken but whose answer was lost lands twice on Retry alone, with no Resume", async () => {
+  it("a second prepare after a lost approve answer lands two posts with no Resume at all", async () => {
     const prepared = preparePost(host);
     if (prepared.kind !== "staged") throw new Error("attempt 1 must stage");
     host.approveAnswerLost.add(prepared.writes[0].id);
@@ -681,7 +839,7 @@ describe("Retry after a parked signing, then Resume (characterisation)", () => {
 
   // ---- reply ----
 
-  it("a retried reply leaves its first attempt parked and Resume approves it too: two replies land", async () => {
+  it("a second prepare of a reply beside a parked first: Resume approves both, two replies", async () => {
     const first = await parkAtApproval(prepareReply);
     await press(prepareReply);
     expect(host.prepares).toBe(2);
