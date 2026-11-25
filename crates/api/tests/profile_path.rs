@@ -913,7 +913,10 @@ mod pictures {
             .await
             .expect("prepares the picture change once the text landed");
         rig.sign_and_relay(picture.id, &key).await;
-        match rig.update(actor, draft(None, Some("Second bio"), None)).await {
+        match rig
+            .update(actor, draft(None, Some("Second bio"), None))
+            .await
+        {
             Err(ProfileError::BadInput { field, .. }) => assert_eq!(field, "input"),
             other => panic!("expected the text change refused, got {other:?}"),
         }
