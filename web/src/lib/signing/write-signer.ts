@@ -310,19 +310,32 @@ export function createWriteSigner(deps: {
     }
   }
 
+  /**
+   * The staged write as the server holds it now, or the result that ends
+   * this id when it cannot be read: a read-leg refusal or fault keeps the
+   * material, a write that is gone spends it.
+   */
+  async function current(
+    id: string,
+  ): Promise<{ kind: "staged"; staged: StagedWriteView } | { kind: "ended"; result: WriteResult }> {
+    const read = await guard.run(() => fetchStagedWrite(client, id));
+    if (read.kind === "refused") return { kind: "ended", result: refuseKeeping(id, read.errors) };
+    if (read.kind === "failed") return { kind: "ended", result: { kind: "failed", id, cause: read.cause } };
+    if (read.value === null) {
+      // Collected long ago — the handshake can never finish.
+      return { kind: "ended", result: await refuse(id, [synthesized("NOT_FOUND", "staged write is gone")]) };
+    }
+    return { kind: "staged", staged: read.value };
+  }
+
   async function resumeOne(key: ActorKey, id: string): Promise<WriteResult> {
     const pre = await store.handshake(id);
     if (pre === null) {
       return { kind: "failed", id, cause: new Error("no handshake material for this id") };
     }
-    const read = await guard.run(() => fetchStagedWrite(client, id));
-    if (read.kind === "refused") return refuseKeeping(id, read.errors);
-    if (read.kind === "failed") return { kind: "failed", id, cause: read.cause };
-    if (read.value === null) {
-      // Collected long ago — the handshake can never finish.
-      return refuse(id, [synthesized("NOT_FOUND", "staged write is gone")]);
-    }
-    return signOne(key, read.value);
+    const read = await current(id);
+    if (read.kind === "ended") return read.result;
+    return signOne(key, read.staged);
   }
 
   /**
