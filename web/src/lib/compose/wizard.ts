@@ -25,6 +25,7 @@ import { PUBLIC_DOMAIN } from "@/lib/license";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { KeyboardClass } from "@/lib/ui2/screen-layer";
+import type { SigningAttempt } from "@/lib/compose/same-signing";
 
 /**
  * The write side's cap; a whole-batch refusal, so the picker enforces it too.
@@ -282,6 +283,12 @@ export type WizardState = {
    * free number here and not a pair; the low-defaults policy value is +0.1.
    */
   readonly pDirected: number;
+  /**
+   * The signing this draft already started, if one did not answer: what a
+   * Retry asks again rather than preparing a second post (same-signing.ts).
+   * It rides the draft so a reload still asks the same signing.
+   */
+  readonly attempt: SigningAttempt | null;
 };
 
 /** The policy default the seal shows before anyone touches it. */
@@ -305,6 +312,7 @@ export function emptyWizard(): WizardState {
     sensitive: false,
     sensitiveReason: "",
     pDirected: DEFAULT_P_DIRECTED,
+    attempt: null,
   };
 }
 
@@ -609,6 +617,26 @@ export function bodyContent(state: WizardState): string | null {
 export function descriptionContent(state: WizardState): string | null {
   if (state.mode !== "media") return null;
   return state.description.trim() === "" ? null : state.description;
+}
+
+/**
+ * The `preparePost` request this state sends — one value read twice, by the
+ * API layer and by the payload expectation, and the key of a signing attempt
+ * (same-signing.ts `intentOf`).
+ */
+export function postRequestOf(state: WizardState) {
+  return {
+    title: state.title.trim() === "" ? null : state.title,
+    description: descriptionContent(state),
+    content: bodyContent(state),
+    sensitive: state.sensitive,
+    sensitiveReason: state.sensitiveReason,
+    license: state.license,
+    pDirected: state.pDirected,
+    tags: state.tags,
+    references: state.references,
+    attachments: attachmentClaims(state) ?? undefined,
+  };
 }
 
 export function shapeRatio(state: WizardState): number {
