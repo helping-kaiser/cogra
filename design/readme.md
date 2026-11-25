@@ -13102,6 +13102,30 @@ drawing.
   page's base is `img/`, and a bad chip stops the run. With eight proofs
   at once, 3 of 60 `SeveranceConfirm` comparisons wobbled once and
   matched on the second render. Backlog 307 closes.
+
+### Round 68, the first-page fault's two forms, the comments tabs' next page — 2026-11-25
+
+- **Written** (impl seam 462.2; jakob 2026-11-12, question 19):
+  copy-voice, *A read with nothing loaded*, names `posts` and
+  `comments` and tells the two forms apart — a whole surface's read sets
+  the line over an outlined `Retry`; a list's first page under a
+  standing header sets it as the quiet row in the list's place, `Retry`
+  inline ending the line (`ProfileTabFirstPage`).
+- **Drawn** (impl seam 463.3): the next page that does not arrive on
+  `ProfileComments` and `ProfileCommentsOwn` is the `load` chip's
+  `more`, `Notifications`' twin — the cards stay and `Couldn't load
+  more — Retry` stands below the last card at the first page's quiet
+  row's rung and inset (`ProfileTabNextPage`). Law: `Profile.md`'s two
+  next-page lines, now in both sidecars by node name.
+- **Registered**: `profile.comments.moreFault` and `.retry` keyed `more`
+  on both boards, `Notifications`' grammar; the first page's copy of the
+  path stays unkeyed beside it, as `CommentEditVideo`'s `sign` stands
+  unkeyed beside its keyed copies. Nothing gone; no string added. The
+  Retry is via 23 on both boards.
+- **Held**: the posts tabs (backlog 310) — their last card already runs
+  past the bottom bar, so where the board stands is a choice; the
+  Everything tab's next page, drawn only on the unregistered
+  `ProfileMoreFailed` (backlog 311).
 ---
 
 ## 14. The canvases
