@@ -161,8 +161,9 @@ export function LoginForm({
     // The notices post before the token save: saving flips the auth phase
     // and this form unmounts on the redirect, so the shell's banner must
     // already be pending (auth.md "Reuse detection" — delivered exactly
-    // once, a dropped notice never comes back).
-    if (grant.reuseDetectedAt !== null) notices.post(grant.reuseDetectedAt);
+    // once, a dropped notice never comes back). The reuse notice is kept on
+    // this device for the account signing in, not the one still active.
+    if (grant.reuseDetectedAt !== null) notices.post(grant.reuseDetectedAt, accountId);
     if (lockLost.current) {
       lockLost.current = false;
       notices.postLockLost();
