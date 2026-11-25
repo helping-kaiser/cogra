@@ -12,7 +12,10 @@
    sixteenth): only `Everything` carries the applicant's sentence. Its Posts
    figure reads `0`, the list's count (readme §7). The `load`
    chip draws the first page's wait and failure, `ProfileTabFirstPage`'s, as
-   on `ProfilePosts`.
+   on `ProfilePosts`, and its `more` the next page that did not come,
+   `ProfileTabNextPage`'s (round 68): the board draws the list's foot, the
+   head and the tab row standing — the gallery post hidden, the board's
+   shortest sample (`SOL_SECOND_POST`, landed) standing over the row.
 
    YOUR REMOVED POST KEEPS ITS PLACE (round 57; jakob 2026-11-18, profiles
    (a), no toggle) — the `posts` chip's `removed`: @sol's salt maps as the
@@ -43,12 +46,12 @@
 export const NODE = "profile";
 export const PROPS = {
   posts: { editor: "enum", options: ["some", "none", "settling", "settling-two", "removed", "settling-removed"], default: "some" },
-  load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
+  load: { editor: "enum", options: ["loaded", "loading", "failed", "more"], default: "loaded" },
 };
 /* The second post still settling (`settling-two`): an existing post drawn as
    the reader's own, as `ReelMenu` draws @mira's clip as @sol's. */
 const SOL_SECOND_POST = { ...MIRA_WORDS_POST, author: SOL };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", liveShown: this.props.posts === "removed" || this.props.posts === "settling" || this.props.posts === "settling-two" || this.props.posts === "settling-removed" ? "none" : "contents", settlingRemovedShown: this.props.posts === "settling-removed" ? "contents" : "none", settlingShown: this.props.posts === "settling" || this.props.posts === "settling-two" ? "contents" : "none", secondSettlingShown: this.props.posts === "settling-two" ? "contents" : "none", removedShown: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", postsFigure: this.props.posts === "none" ? "0" : "5"`;
+export const VALS = `someShown: (this.props.load === "loaded" || this.props.load === "more") && this.props.posts !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", liveShown: this.props.load === "more" || this.props.posts === "removed" || this.props.posts === "settling" || this.props.posts === "settling-two" || this.props.posts === "settling-removed" ? "none" : "contents", settlingRemovedShown: this.props.posts === "settling-removed" ? "contents" : "none", settlingShown: this.props.posts === "settling" || this.props.posts === "settling-two" ? "contents" : "none", secondSettlingShown: this.props.posts === "settling-two" ? "contents" : "none", removedShown: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", moreShown: this.props.load === "more" ? "block" : "none", footShown: this.props.load === "more" && this.props.posts === "some" ? "contents" : "none", postsFigure: this.props.posts === "none" ? "0" : "5"`;
 export function Screen() {
   return (
     <ProfileTabTop own tab="posts" posts="{{postsFigure}}">
@@ -68,6 +71,12 @@ export function Screen() {
         <div style={{ display: "{{settlingRemovedShown}}" }} data-node-chip="posts" data-node-key="settling-removed">
           <PostCard id={SOL_POST.id} author={SOL} timestamp="now" pending redacted={{ reason: "author", when: "now" }} score={null} comments={SOL_POST.comments} bundle={mkBundle(0.1, 1)} menuItems={OWN_REMOVED_CARD_MENU} node="card" />
         </div>
+        {/* The list's foot at the load chip's more (round 68): the board's
+            shortest sample, the second post landed, standing over the row. */}
+        <div style={{ display: "{{footShown}}" }} data-node-chip="posts" data-node-key="some">
+          <PostCard {...SOL_SECOND_POST} menuItems={OWN_POST_MENU.filter((row) => row !== LICENSE_ROW)} node="card" />
+        </div>
+        <ProfileTabNextPage />
       </div>
       <div style={{ display: "{{noneShown}}", padding: "0 16px" }}>
         <EmptyState title="Nothing here yet." node="empty" />
