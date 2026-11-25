@@ -11,7 +11,7 @@ import type { AttachFault, RegistrationProgress } from "@/lib/signing/registrati
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeCeremony, fakeFlow } from "@/test/registration";
-import { ApplicantStatus } from "./applicant-status";
+import { ApplicantCardsHead, ApplicantStatus } from "./applicant-status";
 
 const server = startMswServer();
 
@@ -110,6 +110,31 @@ describe("ApplicantStatus", () => {
     // ApplicantLanding, keyAt = here).
     expect(screen.queryByTestId("feed.application.body")).toBeNull();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  // ApplicantFeed.jsx: a list that heads with the cards takes them; the
+  // stack's status lines stay where the stack is rendered.
+  it("renders_the_cards_into_the_head_a_list_provides", async () => {
+    const head = document.createElement("li");
+    document.body.append(head);
+    const placed = (progress: RegistrationProgress | null) =>
+      renderWithProviders(
+        <ApplicantCardsHead.Provider value={head}>
+          <div data-testid="stack-place">
+            <ApplicantStatus progress={progress} />
+          </div>
+        </ApplicantCardsHead.Provider>,
+        { store: signedInStore(), flow: fakeFlow().flow, ceremony: fakeCeremony() },
+      );
+    const { unmount } = placed(approval({ keyOnDevice: true, keyAttached: true }));
+    expect(head).toContainElement(screen.getByTestId("feed.verifyCard"));
+    expect(screen.getByTestId("stack-place")).toBeEmptyDOMElement();
+    unmount();
+
+    placed(null);
+    expect(screen.getByTestId("stack-place")).toContainElement(screen.getByTestId("home_status_loading"));
+    expect(head).toBeEmptyDOMElement();
+    head.remove();
   });
 
   it("leaves the restore prompt to the screen's collapsing top", () => {
