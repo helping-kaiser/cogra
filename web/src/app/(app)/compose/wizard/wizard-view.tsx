@@ -39,12 +39,13 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
-import type { StagedWriteView } from "@/lib/api/writes-api";
 import { fetchGraphIds } from "@/lib/api/graph-ids-api";
 import { postExpectation } from "@/lib/compose/intent";
 import { snapDimension } from "@/lib/stance/model";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
 import type { Expectation } from "@/lib/signing/intent";
+import type { WriteResult } from "@/lib/signing/write-signer";
+import { askAgain, intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
 import {
   advanceGate,
   attachmentClaims,
@@ -767,6 +768,47 @@ export function ComposeWizard({
       references: state.references,
       attachments: attachmentClaims(state) ?? undefined,
     };
+    const intent = intentOf(sent);
+    const expectedFor = (node: string): Expectation =>
+      postExpectation(state, contentExpectation(node, sent, "post", wizardLedger(state)), graphIds.value);
+
+    // RETRY ASKS THE SAME SIGNING AGAIN (SigningAfterClose.md:27). A press
+    // that follows a signing which did not answer continues that signing; a
+    // second prepare would stage a second post beside it (same-signing.ts).
+    let draft = state;
+    if (state.attempt !== null) {
+      const attempt = state.attempt;
+      const asked = await askAgain(
+        {
+          signer,
+          read: (id) => guard.run(() => fetchStagedWrite(client, id)),
+          retire: (id) => store.clearHandshake(id),
+        },
+        attempt,
+        intent,
+        expectedFor(attempt.node),
+      );
+      if (asked.kind === "unread") {
+        setBusy(false);
+        setFault(sealFaultOfOutcome(asked.outcome));
+        return;
+      }
+      if (asked.kind === "landing") {
+        // The first content was approved and is landing: the post is taken,
+        // exactly as if the first press had answered.
+        setBusy(false);
+        await taken(attempt.node, attempt.writes, false);
+        return;
+      }
+      if (asked.kind === "signed") {
+        await finish(attempt, asked.results);
+        return;
+      }
+      // Retired: nothing of it can land, and the fresh prepare below may run.
+      draft = { ...state, attempt: null };
+      setState((current) => ({ ...current, attempt: null }));
+    }
+
     const prepared = await guard.run(() => preparePost(client, sent));
 
     if (prepared.kind === "failed") {
@@ -784,50 +826,67 @@ export function ComposeWizard({
     }
 
     const node = prepared.value.node;
-    const content = contentExpectation(node, sent, "post", wizardLedger(state));
-    await finish(node, prepared.value.writes, postExpectation(state, content, graphIds.value));
+    const attempt: SigningAttempt = {
+      node,
+      writes: prepared.value.writes.map((write) => write.id),
+      intent,
+    };
+    // The attempt rides the draft BEFORE anything is signed, so a reload in
+    // the middle of the signing still asks this one again.
+    draft = { ...draft, attempt };
+    setState((current) => ({ ...current, attempt }));
+    void drafts.save(draft).catch(() => {});
+    await finish(attempt, await signer.sign(prepared.value.writes, expectedFor(node)));
   };
 
-  const finish = async (
-    node: string,
-    writes: readonly StagedWriteView[],
-    expected: Expectation,
-  ) => {
-    const results = await signer.sign(writes, expected);
+  /**
+   * The post is taken: its draft is sealed out of the composer and the post's
+   * own page opens. `landed` says the whole batch has already landed, so no
+   * fate is left open and no copy is needed.
+   */
+  const taken = async (node: string, writes: readonly string[], landedAlready: boolean) => {
+    // The draft has become a post, so it stops being a draft. The latch goes
+    // up BEFORE the clear, so a save the reader's last keystroke armed cannot
+    // slip in behind it.
+    landed.current = true;
+    // TAKEN IS NOT LANDED (FC-G5). A write still relaying can be collected
+    // unlanded epochs from now, and the expiry notice promises the draft is
+    // kept then (ComposeExpired.md:3). So the composed state is SEALED — out
+    // of the composer, never offered while the write is alive — and the
+    // same transaction drops the working draft, so there is no instant at
+    // which neither holds the post. A batch that has already landed has no
+    // fate left open and needs no copy.
+    if (!landedAlready) {
+      try {
+        await seals.seal({ ...state, attempt: null }, { node, writes });
+      } catch {
+        // The seal did not take, so the working draft was not dropped
+        // either (one transaction). It is written current and LEFT: a draft
+        // offered while its post settles is the lesser fault next to one
+        // the expiry would find gone.
+        await drafts.save({ ...state, attempt: null }).catch(() => {});
+        router.push(`/posts/${node}?published=1`);
+        return;
+      }
+    }
+    // Still cleared here, after the seal: `clear` is what retires a save
+    // already reading blobs when the post was signed (draft-store.ts).
+    await drafts.clear();
+    // ComposeLanded is the POST'S OWN PAGE carrying a confirmation, not the
+    // feed carrying a card: what an author wants after publishing is to see
+    // the thing they published, and the board draws exactly that.
+    router.push(`/posts/${node}?published=1`);
+  };
+
+  const finish = async (attempt: SigningAttempt, results: readonly WriteResult[]) => {
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {
-      // The draft has become a post, so it stops being a draft. The latch goes
-      // up BEFORE the clear, so a save the reader's last keystroke armed cannot
-      // slip in behind it.
-      landed.current = true;
-      // TAKEN IS NOT LANDED (FC-G5). A write still relaying can be collected
-      // unlanded epochs from now, and the expiry notice promises the draft is
-      // kept then (ComposeExpired.md:3). So the composed state is SEALED — out
-      // of the composer, never offered while the write is alive — and the
-      // same transaction drops the working draft, so there is no instant at
-      // which neither holds the post. A batch that has already landed has no
-      // fate left open and needs no copy.
-      if (results.some((result) => result.kind === "done" && result.state !== "LANDED")) {
-        try {
-          await seals.seal(state, { node, writes: writes.map((write) => write.id) });
-        } catch {
-          // The seal did not take, so the working draft was not dropped
-          // either (one transaction). It is written current and LEFT: a draft
-          // offered while its post settles is the lesser fault next to one
-          // the expiry would find gone.
-          await drafts.save(state).catch(() => {});
-          router.push(`/posts/${node}?published=1`);
-          return;
-        }
-      }
-      // Still cleared here, after the seal: `clear` is what retires a save
-      // already reading blobs when the post was signed (draft-store.ts).
-      await drafts.clear();
-      // ComposeLanded is the POST'S OWN PAGE carrying a confirmation, not the
-      // feed carrying a card: what an author wants after publishing is to see
-      // the thing they published, and the board draws exactly that.
-      router.push(`/posts/${node}?published=1`);
+      await taken(
+        attempt.node,
+        attempt.writes,
+        results.every((result) => result.kind === "done" && result.state === "LANDED"),
+      );
       return;
     }
 
@@ -839,11 +898,15 @@ export function ComposeWizard({
         result.kind === "refused" &&
         result.errors.some((error) => error.code === "STAGED_WRITE_EXPIRED"),
     );
-    await drafts.save(state);
     if (expired) {
+      // An expired batch is no signing to ask again: the kept draft carries none.
+      await drafts.save({ ...state, attempt: null });
+      setState((current) => ({ ...current, attempt: null }));
       router.push("/feed?compose=expired");
       return;
     }
+    // The draft keeps the attempt, so the Retry below asks THIS signing again.
+    await drafts.save({ ...state, attempt });
     setFault(sealFaultOfResults(results, state.references));
   };
 
