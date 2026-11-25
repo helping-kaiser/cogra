@@ -52,7 +52,7 @@ import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationProgress } from "@/lib/signing/provider";
 import { onStanceSigned } from "@/lib/stance/signed-events";
-import { RestoreCard } from "@/app/applicant-status";
+import { ApplicantCardsHead, RestoreCard } from "@/app/applicant-status";
 import { StatusBanners } from "@/app/status-banners";
 import {
   BorrowedViewBand,
@@ -843,6 +843,8 @@ export function FeedView({
   // Attached at the list, so the card stays the feed's (`seen-tracker.ts`
   // says what counts and when it is sent). A sheet over the feed covers it.
   const listRef = useRef<HTMLUListElement>(null);
+  // The list's head row the applicant's cards render into (ApplicantFeed.jsx).
+  const [applicantHead, setApplicantHead] = useState<HTMLLIElement | null>(null);
   const postIds = useMemo(() => shown.map((post) => post.id), [shown]);
   useSeenTracker({ root: host, list: listRef, ids: postIds, suspended: commentsOpen || sheetOpen });
   // Where the drawn cards cross into the seen tail: the derive stands every
@@ -888,6 +890,7 @@ export function FeedView({
     // spent itself on the collapsing region's zero-height sentinel and on the
     // banners' slot while empty, dropping the band 16px and the list 32px.
     // The slots that hold something carry their own spacing instead.
+    <ApplicantCardsHead.Provider value={applicantHead}>
     <main className="mx-auto flex w-full max-w-2xl flex-col pb-6">
       <CollapsingTop
         // Mirrors `scroll-pin.ts`'s own "nothing is anchored at the origin":
@@ -1046,6 +1049,14 @@ export function FeedView({
               (`VouchBack.jsx`), after the security notice and the key card
               that head the column (ruling 45). */}
           {phase === "signedIn" && <VouchCard refreshSignal={listEra} />}
+          {/* THE APPLICANT'S CARDS HEAD THE LIST (ApplicantFeed.jsx: the task
+              cards are `FeedList`'s first children, full width, 8px apart and
+              8px above the first post), not the banners' gutter above it. An
+              applicant has no vouch card, so for them this row is first; it
+              takes no room while it holds nothing. */}
+          {phase === "signedIn" && (
+            <li ref={setApplicantHead} className="flex flex-col gap-2 empty:hidden" data-testid="feed-applicant-cards" />
+          )}
           {/* What the wizard just did, if anything: a task card at the head of
               the list, full width like the posts under it (ComposeExpired).
               Dismissing drops the query value, so the notice cannot come
@@ -1229,5 +1240,6 @@ export function FeedView({
         />
       )}
     </main>
+    </ApplicantCardsHead.Provider>
   );
 }

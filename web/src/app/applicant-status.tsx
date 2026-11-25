@@ -23,7 +23,8 @@
 // words need one waits for it rather than printing a placeholder.
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchMyApplication } from "@/lib/api/invites-api";
@@ -50,6 +51,21 @@ const KEY: DataNode = { path: "feed.keyCard" };
 /** The fault line of the key that did not attach, drawn only at the chip's `attach`. */
 const ATTACH_FAULT: DataNode = { path: "feed.keyCard.attachFault", key: "attach" };
 const LANDING: DataNode = { path: "feed.application" };
+
+/**
+ * WHERE THE CARDS STAND (ApplicantFeed.jsx and its sibling boards: the task
+ * cards are `FeedList`'s first children, full width, 8px under the band, 8px
+ * apart and 8px above the first post). A list that heads with them provides
+ * its head element here and the cards render into it; the stack's status
+ * lines keep the banners' gutter. Without a head (the profile, or the head not
+ * mounted yet) the cards stand where the stack is rendered.
+ */
+export const ApplicantCardsHead = createContext<HTMLElement | null>(null);
+
+function Cards({ children }: { children: ReactNode }) {
+  const head = useContext(ApplicantCardsHead);
+  return head === null ? <div className="flex flex-col gap-2">{children}</div> : createPortal(children, head);
+}
 
 /** The approver's `@handle`, read once from the application the cards share. */
 function useApprover(refreshKey: unknown): string | null {
@@ -92,11 +108,13 @@ export function ApplicantStatus({
       return null;
     case "awaitingLanding":
       return approver === null ? null : (
-        <TaskCard
-          title="Approved — your registration is landing"
-          node={LANDING}
-          testId="home_landing"
-        />
+        <Cards>
+          <TaskCard
+            title="Approved — your registration is landing"
+            node={LANDING}
+            testId="home_landing"
+          />
+        </Cards>
       );
     case "awaitingSigningKey":
       // The restore card rides the screen's collapsing top (the
@@ -125,7 +143,7 @@ export function ApplicantStatus({
     case "awaitingApproval": {
       const { emailVerified, keyAttached, keyOnDevice } = progress;
       return (
-        <div className="flex flex-col gap-2">
+        <Cards>
           {!emailVerified && <VerifyCard />}
           {!keyAttached && !keyOnDevice && approver !== null && <CeremonyCard approver={approver} />}
           {!keyAttached && keyOnDevice && <UnattachedKeyCard fault={progress.attachFault} />}
@@ -138,7 +156,7 @@ export function ApplicantStatus({
             stepsDone={keyAttached && keyOnDevice && emailVerified}
             refreshKey={progress}
           />
-        </div>
+        </Cards>
       );
     }
   }
