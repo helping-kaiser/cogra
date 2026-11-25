@@ -288,12 +288,17 @@ pub async fn prepare_profile_update<B: L1Boundary>(
 /// the merged version row exists and every reader is served it, marked
 /// pending — the profile-side branch of `content::stage_pending`.
 ///
-/// The row is the update merged onto the **landed** profile: an update is
-/// a delta, and the graph has accepted only what landed. The one update
-/// that could be pending beside it is this write's own — the backend
-/// serializes profile updates per author ([`prepare_profile_update`]) —
-/// so a retried pre-sign merges onto the same base, and its row collides
-/// with the one already written rather than adding a second.
+/// The row is the update merged onto the **current** profile, its pending
+/// version included: an update is a delta along its chain, and the fold is
+/// newest-wins per field (user.md §3). The backend serializes profile
+/// updates per author ([`prepare_profile_update`]), so a pending row
+/// beside this write's own can only be its predecessor's, whose write
+/// has landed but whose row the ingestion pass has not promoted yet — the
+/// record this update chains behind, whose fields stand until this one
+/// replaces them. Merging onto the landed profile instead would restate
+/// what that predecessor changed. A retried pre-sign merges onto its own
+/// row, which yields the same fields, and collides with it rather than
+/// adding a second.
 ///
 /// An unchained Registration is the admission (or a genesis cast): its
 /// payload is not a profile update and onboarding owns it, so there is
@@ -322,7 +327,8 @@ pub async fn stage_pending(
     }
     let update = CograProfile::decode_payload(&write.proposal.payload)
         .map_err(|e| ProfileError::Internal(format!("staged payload not admissible: {e}")))?;
-    let merged = merge_update(pool, write.actor_id, update).await?;
+    let base = profile::current_profile(pool, write.actor_id).await?;
+    let merged = merge_update(pool, write.actor_id, update, base).await?;
     let mut tx = pool
         .begin()
         .await
@@ -476,7 +482,8 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         .await?
         .ok_or_else(|| ProfileError::Internal("promoted record missing from mirror".into()))?;
     let landing = meta.landing();
-    let merged = merge_update(pool, write.actor_id, update).await?;
+    let base = profile::landed_profile(pool, write.actor_id).await?;
+    let merged = merge_update(pool, write.actor_id, update, base).await?;
     let mut tx = pool
         .begin()
         .await
@@ -511,8 +518,8 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
     Ok(())
 }
 
-/// A profile update merged onto the actor's landed profile — the full
-/// field set its version row carries.
+/// A profile update merged onto a base version — the full field set its
+/// version row carries.
 struct MergedProfile {
     display_name: String,
     bio: Option<String>,
@@ -520,9 +527,11 @@ struct MergedProfile {
     website_url: Option<String>,
 }
 
-/// Merges an update onto the actor's landed profile
-/// ([`profile::landed_profile`]), copy-forward: what the update leaves
-/// absent keeps the landed value.
+/// Merges an update onto the version its caller builds it on, copy-forward:
+/// what the update leaves absent keeps the base's value. The pre-commitment
+/// builds on the current profile ([`stage_pending`]); the landing's insert
+/// branch on the landed one ([`land_one`]), since the pending row it would
+/// otherwise find is never its own.
 ///
 /// The update must name its own actor: the payload's node is the binding,
 /// and a version row written under another actor would put one person's
@@ -531,14 +540,14 @@ async fn merge_update(
     pool: &PgPool,
     actor_id: Uuid,
     update: CograProfile,
+    base: Option<profile::ProfileVersion>,
 ) -> Result<MergedProfile, ProfileError> {
     if update.node != actor_id {
         return Err(ProfileError::Internal(
             "profile payload names a different actor".into(),
         ));
     }
-    let base = profile::landed_profile(pool, actor_id)
-        .await?
+    let base = base
         .ok_or_else(|| ProfileError::Internal("actor without a seeded profile version".into()))?;
     let display_name = match update.display_name {
         None => base.display_name,
