@@ -24,8 +24,10 @@
 // React state and the history is reconciled to it after every change: a
 // stage reached by the forward action pushes; one left by the arrow, by a
 // jump back to the pick, or by a refusal sending the author to the details
-// pops (`history.go`). A popstate this hook caused itself is recognised by
-// the depth it expected to land on and changes nothing.
+// pops (`history.go`). One traversal of this hook's is out at a time: the
+// popstate it causes is its own and changes nothing, and a stage change made
+// before it arrives — a fast double press of the arrow — is reconciled from
+// where it lands, never read as the browser's own Back or Forward.
 //
 // AN OPEN SHEET TAKES BACK FIRST (ComposeWizardViewModel.onBack: the sheet,
 // then the stage). Every wizard sheet is a modal `<dialog>`, which the
@@ -125,8 +127,13 @@ export function useStageHistory({
   // The depth of the entry the browser is on, as far as this hook knows.
   // Null until the mount has read it.
   const at = useRef<number | null>(null);
-  // The depth a traversal this hook started will land on.
-  const expected = useRef<number | null>(null);
+  // A traversal this hook started whose popstate has not arrived yet. Only
+  // one is ever out: a stage change made meanwhile — a second press of the
+  // arrow before the first one's pop — waits for that pop and is reconciled
+  // from where it landed, so the late pop is never read as the browser's own
+  // Back or Forward, and two quick `history.go` calls (which browsers may
+  // fold into one) are never relied on.
+  const traversing = useRef(false);
   const alive = useRef(false);
   // Bumped by every pop, so the reconciliation runs even when the answer to
   // it — a sheet closing, a gate refusing — left the level where it was.
@@ -161,8 +168,8 @@ export function useStageHistory({
     const onPop = (event: PopStateEvent) => {
       if (here() !== home.current) return;
       const landed = markedDepth(event.state, surface);
-      const ours = expected.current === landed;
-      expected.current = null;
+      const ours = traversing.current;
+      traversing.current = false;
       at.current = landed;
       if (!ours) answer(landed);
       setPops((count) => count + 1);
@@ -186,15 +193,15 @@ export function useStageHistory({
 
   useEffect(() => {
     const current = at.current;
-    if (current === null) return;
+    // Our own pop is still to come; its arrival runs this again.
+    if (current === null || traversing.current) return;
     if (level > current) {
       for (let depth = current + 1; depth <= level; depth++) {
         window.history.pushState(mark(surface, depth), "");
       }
       at.current = level;
     } else if (level < current) {
-      expected.current = level;
-      at.current = level;
+      traversing.current = true;
       window.history.go(level - current);
     }
   }, [surface, level, pops]);
