@@ -49,6 +49,8 @@
     <string name="explore_couldnt_load_more">Couldn\'t load more</string>
     <string name="explore_retry">Retry</string>
     <string name="explore_cant_reach">Can\'t reach the server. Check your connection and try again.</string>
+    <!-- The search's results, nothing loaded, over Retry (ExploreSearch.md:69). -->
+    <string name="explore_results_cant_reach">Can\'t reach the server — results can\'t load right now.</string>
 
     <!-- Your topics (YourTopics.jsx; copy-voice, *The list is Your topics*). -->
     <string name="your_topics_title">Your tags</string>

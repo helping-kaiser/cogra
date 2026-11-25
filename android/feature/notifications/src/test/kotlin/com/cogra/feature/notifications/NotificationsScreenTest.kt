@@ -227,7 +227,8 @@ class NotificationsScreenTest {
     fun `a list that cannot load says it cannot reach the server`() {
         var retried = 0
         render(NotificationsUiState(loading = false, failed = true), onRetry = { retried += 1 })
-        compose.onNodeWithText("Can't reach the server. Check your connection and try again.").assertIsDisplayed()
+        // Notifications.md:65 — the noun form over the outlined Retry.
+        compose.onNodeWithText("Can't reach the server — notifications can't load right now.").assertIsDisplayed()
         compose.onNodeWithTag("notifications.list.fault.retry").performClick()
         assertThat(retried).isEqualTo(1)
     }
