@@ -84,6 +84,7 @@ import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograMark
 import com.cogra.core.designsystem.v2.atom.EmptyState
 import com.cogra.core.designsystem.v2.atom.FilterTrigger
+import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.atom.Seam
 import com.cogra.core.designsystem.v2.atom.filterTriggerName
 import com.cogra.core.designsystem.v2.atom.taskRing
@@ -112,6 +113,7 @@ import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.score.TraceThingKind
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
+import com.cogra.feature.content.edit.rememberSlowAnswer
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.feedfilter.FeedFilterSheet
 import com.cogra.feature.saved.LocalSavedHost
@@ -658,10 +660,18 @@ fun FeedScreen(
                 }
             },
         ) { padding ->
+            // The pull's spinner answers the pull alone (design/readme.md
+            // "Loading": "the pull itself asked for it"); a read nobody pulled
+            // waits on the ladder in the list's place instead.
+            var pulled by remember { mutableStateOf(false) }
+            LaunchedEffect(state.loading) { if (!state.loading) pulled = false }
             PullToRefreshBox(
-                isRefreshing = state.loading,
+                isRefreshing = pulled && state.loading,
                 // A PULL INSIDE THE FILTER SHEET NEVER REFRESHES THE FEED (FeedSheet.md:77).
-                onRefresh = sheet.gated(onRefresh),
+                onRefresh = sheet.gated {
+                    pulled = true
+                    onRefresh()
+                },
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize(),
@@ -680,7 +690,8 @@ fun FeedScreen(
                     // The status banners ride every branch — an applicant with an
                     // empty feed still sees their application cards.
                     when {
-                        state.transportFault != null && drawn.cards.isEmpty() -> Column(
+                        // A retried read leaves the fault for the ladder, timing its own wait.
+                        state.transportFault != null && !state.loading && drawn.cards.isEmpty() -> Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
@@ -827,6 +838,11 @@ fun FeedScreen(
                                     if (seen.isNotEmpty()) {
                                         item(key = FEED_SEEN_SEPARATOR) { SeenSeparator() }
                                         items(seen, key = { it.id }) { cardRow(it) }
+                                    }
+                                    // THE FIRST PAGE, NOT YET IN: the ladder where
+                                    // the cards will stand, under the head row.
+                                    if (drawn.cards.isEmpty()) {
+                                        item(key = FEED_FIRST_PAGE) { FeedFirstPageWait(state.loading) }
                                     }
                                     // The slot the next page fills. At rest it draws
                                     // nothing — the page comes because the reader
@@ -1138,6 +1154,22 @@ private fun FeedTailSlot(state: FeedUiState, onLoadMore: () -> Unit) {
                 Text(stringResource(R.string.content_retry))
             }
         }
+    }
+}
+
+/** The list's slot for the first page while it is not yet in. */
+internal const val FEED_FIRST_PAGE = "feed_first_page"
+
+/**
+ * The feed's first page, not yet in: M3's ladder and nothing else
+ * (design/readme.md "Loading"; EmptyState.prompt.md) — nothing under 200ms,
+ * then `Loading…` in the slot the cards will take, never a spinner. The wait
+ * is keyed on the read: a read that starts again times its own 200ms.
+ */
+@Composable
+private fun FeedFirstPageWait(waiting: Boolean) {
+    if (rememberSlowAnswer(waiting)) {
+        Gutter { LoadingState(testTag = "feed_first_page_loading") }
     }
 }
 

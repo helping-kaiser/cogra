@@ -8,10 +8,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -80,10 +80,10 @@ class ApplicantCheckingTest {
 
     private val loading get() = compose.onAllNodesWithTag("home_status_loading")
 
-    private val aSpinner = SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo)
-
+    /** No spinner: no indeterminate progress indicator, as M3 draws one. */
     private fun noSpinner() {
-        compose.onAllNodes(aSpinner, useUnmergedTree = true).assertCountEquals(0)
+        compose.onAllNodes(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate), useUnmergedTree = true)
+            .assertCountEquals(0)
     }
 
     @Test
