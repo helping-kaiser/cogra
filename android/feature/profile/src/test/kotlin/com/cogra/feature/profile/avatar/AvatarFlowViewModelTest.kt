@@ -14,7 +14,11 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.profile.Setting
+import com.cogra.domain.profile.SignedPicture
 import com.cogra.domain.profile.SignedProfile
+import com.cogra.domain.profile.SignedProfileFields
+import com.cogra.domain.profile.over
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteSigner
@@ -402,5 +406,38 @@ class AvatarFlowViewModelTest {
         vm.onSavedConsumed()
 
         assertThat(vm.state.value.saved).isFalse()
+    }
+
+    // -- A TAKEN PICTURE IS LAID OVER THE PROFILE'S HEAD (AvatarSeal.md:37) --
+
+    @Test
+    fun aTakenPictureLaysThePictureAlone() = runTest(dispatcher) {
+        val vm = startedAtSeal()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.saved).isTrue()
+        // The fields re-stated beside it are not the change's.
+        assertThat(signedProfile.laid.value.over(TEST_PROFILE_ID))
+            .isEqualTo(SignedProfileFields(avatar = Setting(SignedPicture("m1", "https://media/m1"))))
+    }
+
+    @Test
+    fun aPictureThatDidNotSignLaysNothing() = runTest(dispatcher) {
+        // The device refuses a payload that is not what the flow re-stated.
+        profiles.prepareOutcome = Outcome.Success(
+            sealer.stageFaithful(
+                faithfulProfileUpdate(
+                    TEST_PROFILE_ID,
+                    SentProfile("Mallory", "Old bio", "https://example.test", MediaFieldUpdate.Set("m1")),
+                ),
+            ),
+        )
+        val vm = startedAtSeal()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.signingFailed).isTrue()
+        assertThat(signedProfile.laid.value).isNull()
     }
 }
