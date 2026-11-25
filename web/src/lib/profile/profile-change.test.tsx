@@ -1,8 +1,9 @@
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { act, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { UserError } from "@/lib/api/outcome";
+import { tokenStore } from "@/lib/session/token-store";
 import type { WriteResult } from "@/lib/signing/write-signer";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 import { NOT_THROUGH_LINE, UNVERIFIED_LINE } from "@/lib/ui/error-messages";
@@ -16,6 +17,7 @@ import {
   type ProfileChangeOutcome,
   type ProfileChangeState,
 } from "./profile-change";
+import { readSignedProfile, resetSignedProfileForTests } from "./signed-profile";
 
 function Readout() {
   const change: ProfileChangeState | null = useProfileChange();
@@ -92,6 +94,69 @@ describe("a profile change and the seal that started it", () => {
       outcome = await signProfileChange(() => Promise.reject(new Error("socket")));
     });
     expect(outcome).toEqual({ kind: "offline" });
+  });
+});
+
+// ProfileEditSeal.md:45 / :75-79, Profile.md:99: the head wears a change once
+// it is taken, and stands as it was while it signs or after it did not go
+// through. The change is the signing account's (auth.md "Multi-account device
+// custody").
+describe("what a change lays over the head", () => {
+  const signed = { profileId: "pa", fields: { bio: "New." } };
+  const signInAs = (accountId: string) =>
+    tokenStore.save({ accessToken: `access-${accountId}`, refreshToken: `refresh-${accountId}`, accountId });
+
+  beforeEach(() => {
+    window.localStorage.clear();
+    resetSignedProfileForTests();
+    signInAs("a");
+  });
+
+  it("lays nothing while it signs, and its fields once taken, with the seal open or closed", async () => {
+    const open = deferred();
+    act(() => void signProfileChange(() => open.promise, { signed }));
+    expect(readSignedProfile("pa")).toBeNull();
+    await act(async () => open.answer({ kind: "taken" }));
+    expect(readSignedProfile("pa")).toEqual({ bio: "New." });
+
+    resetSignedProfileForTests();
+    const closed = deferred();
+    act(() => void signProfileChange(() => closed.promise, { signed }));
+    act(() => closeProfileChangeSeal());
+    await act(async () => closed.answer({ kind: "taken" }));
+    expect(readSignedProfile("pa")).toEqual({ bio: "New." });
+  });
+
+  it.each(["offline", "writeRule", "bug"] as const)("lays nothing for a change that came to %s", async (kind) => {
+    await act(async () => {
+      await signProfileChange(async () => ({ kind }) as ProfileChangeOutcome, { signed });
+    });
+    expect(readSignedProfile("pa")).toBeNull();
+  });
+
+  it("lays what a Retry under the head took", async () => {
+    render(<Readout />);
+    const run = vi
+      .fn<() => Promise<ProfileChangeOutcome>>()
+      .mockResolvedValueOnce({ kind: "offline" })
+      .mockResolvedValueOnce({ kind: "taken" });
+    const first = signProfileChange(run, { signed });
+    act(() => closeProfileChangeSeal());
+    await act(async () => void (await first));
+    expect(readSignedProfile("pa")).toBeNull();
+    await act(async () => screen.getByTestId("retry").click());
+    expect(readSignedProfile("pa")).toEqual({ bio: "New." });
+  });
+
+  it("lays nothing for a change taken after the tab moved to another account", async () => {
+    const pending = deferred();
+    act(() => void signProfileChange(() => pending.promise, { signed }));
+    act(() => closeProfileChangeSeal());
+    signInAs("b");
+    await act(async () => pending.answer({ kind: "taken" }));
+    expect(readSignedProfile("pa")).toBeNull();
+    signInAs("a");
+    expect(readSignedProfile("pa")).toBeNull();
   });
 });
 

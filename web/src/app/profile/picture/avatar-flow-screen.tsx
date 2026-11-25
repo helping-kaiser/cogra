@@ -57,6 +57,8 @@ type Staged = {
   readonly writes: readonly StagedWriteView[];
   readonly selection: MediaSelection;
   readonly ledger: MediaLedger;
+  /** The picture as it went up, which the profile's head wears once the change is taken. */
+  readonly picture: { readonly id: string; readonly url: string };
 };
 
 /** What stopped Next: a line in today's words, or no answer at all. */
@@ -140,7 +142,12 @@ export function AvatarFlowScreen({ store = identityStore }: { store?: IdentitySt
       return;
     }
     // AvatarCrop.md:17: from the badge, Next opens the picture's own seal.
-    setStaged({ writes: prepared.value, selection: uploaded.selection, ledger: uploaded.ledger });
+    setStaged({
+      writes: prepared.value,
+      selection: uploaded.selection,
+      ledger: uploaded.ledger,
+      picture: uploaded.picture,
+    });
   };
 
   if (staged !== null) {
@@ -156,6 +163,7 @@ export function AvatarFlowScreen({ store = identityStore }: { store?: IdentitySt
         }
         hasKey={async () => keyOnDevice !== false && (await store.actorKey()) !== null}
         sign={async () => outcomeOf(await signer.sign(staged.writes, expected))}
+        signed={{ profileId: profileNode, fields: { avatar: staged.picture } }}
         onTaken={() => {
           carrySnackbar(PROFILE_SIGNED);
           leave();

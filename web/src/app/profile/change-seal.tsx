@@ -50,6 +50,7 @@ import {
   signProfileChange,
   type ProfileChangeOutcome,
 } from "@/lib/profile/profile-change";
+import type { SignedProfileChange } from "@/lib/profile/signed-profile";
 
 export const SEAL_TITLE = "What you sign";
 export const SEAL_LEAVE = "Leave";
@@ -92,12 +93,15 @@ export function ChangeSeal({
   avatar,
   hasKey,
   sign,
+  signed,
   onTaken,
   onBack,
   onLeave,
   onClosed,
 }: {
   reading: ChangeSealReading;
+  /** What the change sets, for the head to wear once it is taken (`signed-profile.ts`). */
+  signed?: SignedProfileChange;
   /** The head row's picture, as the change will set it. */
   avatar: ReactNode;
   /** Whether the signing key is on this browser, asked at the press. */
@@ -128,7 +132,7 @@ export function ChangeSeal({
       return;
     }
     setFoot({ kind: "signing" });
-    const outcome = await signProfileChange(sign);
+    const outcome = await signProfileChange(sign, { signed });
     if (outcome.kind === "taken") onTaken();
     else setFoot(outcome);
   };
