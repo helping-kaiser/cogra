@@ -1109,7 +1109,10 @@ describe("TopicView — the tag page's registered nodes (TagPage, TagPageHeldPad
   // The board's cards wear an opinion (`mkBundle(0.1, 0.1)`), so each anchor
   // draws its exact pair beside the face.
   const NICE = { pDirected: 0.1, pInterest: 0.1 };
-  const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: NICE, "c-pictures": NICE, "c-clip": NICE };
+  // The comments are comments to the page read too (`PageStances` answers each
+  // id as the class the server holds it as).
+  const COMMENT = { ...NICE, kind: "comment" } as const;
+  const cardStances = { "p-text": NICE, "p-gallery": NICE, c1: COMMENT, "c-pictures": COMMENT, "c-clip": COMMENT };
 
   async function census(rows: unknown[], removedOn = false, name = "rust"): Promise<Set<string | null>> {
     if (removedOn) writeCommittedFeedFilter("u1", { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] });
