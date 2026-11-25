@@ -274,6 +274,8 @@
     <string name="content_error_signing">Signing did not finish — the write stays pending.</string>
     <string name="content_error_signing_no_key">Signing needs your key, which isn\'t on this device — the write waits as pending. Restore your key to finish it.</string>
     <string name="content_error_transport">Can\'t reach the server. Check the connection and retry.</string>
+    <!-- No noun and no Retry beside it: the house long line (copy-voice, *No answer at all*). -->
+    <string name="content_comments_transport">Can\'t reach the server. Check your connection and try again.</string>
     <string name="content_feed_stale">Can\'t reach the server — new posts can\'t load right now.</string>
     <string name="content_thread_stale">Can\'t reach the server — more comments can\'t load right now.</string>
     <string name="content_error_not_found">This post no longer resolves.</string>

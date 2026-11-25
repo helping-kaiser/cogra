@@ -704,7 +704,7 @@ private fun FaultLine(text: String, testTag: String, onRetry: () -> Unit) {
 private fun HouseFault(onRetry: () -> Unit) {
     EmptyState(
         testTag = "explore_transport_error",
-        title = stringResource(R.string.explore_cant_reach),
+        title = stringResource(R.string.explore_results_cant_reach),
         actionLabel = stringResource(R.string.explore_retry),
         onAction = onRetry,
         modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x2),

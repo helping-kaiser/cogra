@@ -242,8 +242,9 @@ class ExploreScreenTest {
 
     @Test
     fun `a failed read with nothing loaded says the house line with Retry`() {
+        // ExploreSearch.md:69 — the noun form, and NEVER the line says try again.
         render(member.copy(query = "salt", failed = true))
-        compose.onNodeWithText("Can't reach the server. Check your connection and try again.", useUnmergedTree = true)
+        compose.onNodeWithText("Can't reach the server — results can't load right now.", useUnmergedTree = true)
             .assertExists()
         compose.onNodeWithText("Retry", useUnmergedTree = true).assertExists()
     }
