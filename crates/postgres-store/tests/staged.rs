@@ -909,37 +909,50 @@ async fn a_record_landing_after_expiry_still_promotes(pool: PgPool) {
     );
 }
 
-/// A staged write answers as live for its own actor and only at its own
-/// target; once expired it is a tombstone and answers no longer.
+/// A staged write answers only once its author signed it — pre-signed, or
+/// carried to sign with the vouch-in batch — for its own actor at its own
+/// target; a prepare nobody signed is no act in flight, and once expired a
+/// signed one is a tombstone and answers no longer.
 ///
-/// A staged write answers as live only for its own actor at its own target, and never once expired.
-/// ´claim:staged:a-live-write-answers-only-for-its-author-at-its-target´
+/// A staged write answers only once signed or carried, only for its own actor at its own target, and never once expired.
+/// ´claim:staged:a-signed-write-answers-only-for-its-author-at-its-target´
 #[sqlx::test(migrations = "../../migrations")]
-async fn has_live_targeting_sees_only_live_writes_at_the_target(pool: PgPool) {
+async fn has_signed_targeting_sees_only_signed_writes_at_the_target(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
     let other_id = actor(&pool, "carol", "carol").await;
+    let signed = |who: Uuid, target: &'static str| {
+        let pool = pool.clone();
+        async move {
+            staged::has_signed_targeting(&pool, who, Family::Opinion, target)
+                .await
+                .expect("query")
+        }
+    };
     let id = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
+    assert!(
+        !signed(actor_id, "prof:bob").await,
+        "a prepare nobody signed is not in flight"
+    );
 
-    let hit = staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:bob")
+    staged::record_pre_signed(&pool, id, &pre_parts())
         .await
-        .expect("query");
-    assert!(hit);
-    assert!(
-        !staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:carol")
-            .await
-            .expect("query")
-    );
-    assert!(
-        !staged::has_live_targeting(&pool, other_id, Family::Opinion, "prof:bob")
-            .await
-            .expect("query")
-    );
+        .expect("pre-sign");
+    assert!(signed(actor_id, "prof:bob").await);
+    assert!(!signed(actor_id, "prof:carol").await);
+    assert!(!signed(other_id, "prof:bob").await);
 
     staged::expire_one(&pool, id, 0).await.expect("expires");
+    assert!(!signed(actor_id, "prof:bob").await);
+
+    let carried = stage(&pool, actor_id, &proposal("alice", 1), 0).await;
+    sqlx::query("UPDATE staged_writes SET carried = true WHERE id = $1")
+        .bind(carried)
+        .execute(&pool)
+        .await
+        .expect("carry");
     assert!(
-        !staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:bob")
-            .await
-            .expect("query")
+        signed(actor_id, "prof:bob").await,
+        "a carried act signs with the vouch-in batch, so it is in flight"
     );
 }
 
