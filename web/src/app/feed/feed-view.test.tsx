@@ -3,6 +3,7 @@ import { HttpResponse } from "msw/http";
 import { useLayoutEffect, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { securityNotices } from "@/lib/session/security-notices";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { gqlLink, startMswServer } from "@/test/msw";
@@ -765,9 +766,56 @@ describe("FeedView", () => {
     const list = screen.getByTestId("feed-list");
     const item = card.closest("li");
     expect(item?.parentElement).toBe(list);
-    expect(list.firstElementChild).toBe(item);
+    // Only the security notice's row stands before it, empty with no notice.
+    const noticeRow = screen.getByTestId("feed-security-notice");
+    expect(list.firstElementChild).toBe(noticeRow);
+    expect(noticeRow).toBeEmptyDOMElement();
+    expect(noticeRow.nextElementSibling).toBe(item);
     expect(item).not.toHaveAttribute("data-seen-id");
     expect(card.querySelector("[data-seen-id]")).toBeNull();
+  });
+
+  // VouchBack.md:58: the security notice stands first, then the vouch card.
+  it("stands the security notice above the vouch card", async () => {
+    server.use(
+      ...rankedFeed([post("p1", "First")]),
+      gqlLink.query("Me", () =>
+        HttpResponse.json({
+          data: {
+            me: {
+              __typename: "User",
+              id: "acct-1",
+              handle: "noa",
+              displayName: { __typename: "ModeratedText", value: null },
+              accountState: "MEMBER",
+              hasReciprocated: false,
+              vouchBackDismissed: false,
+              invitedBy: {
+                __typename: "User",
+                id: "inv-1",
+                handle: "mira",
+                displayName: { __typename: "ModeratedText", value: "Mira Voss" },
+                avatar: null,
+              },
+            },
+          },
+        }),
+      ),
+    );
+    securityNotices.post("2026-08-10T09:30:00Z");
+    try {
+      renderWithProviders(<FeedView />, { store: signedInStore() });
+      const card = await screen.findByTestId("feed.vouchCard");
+      const notice = await screen.findByTestId("security_notice");
+      const list = screen.getByTestId("feed-list");
+      const head = screen.getByTestId("feed-security-notice");
+      expect(list.firstElementChild).toBe(head);
+      expect(head).toContainElement(notice);
+      expect(head.nextElementSibling).toBe(card.closest("li"));
+      expect(screen.getByRole("region", { name: "Account status" })).toBeEmptyDOMElement();
+    } finally {
+      securityNotices.dismiss();
+    }
   });
 
   // The band wears the vantage's own face (`... on User { avatar }`).
@@ -1066,9 +1114,45 @@ describe("FeedView", () => {
       const head = screen.getByTestId("feed-applicant-cards");
       expect(verify.parentElement).toBe(head);
       expect(head.parentElement).toBe(list);
-      expect(list.firstElementChild).toBe(head);
+      // Only the security notice's row stands before it, empty with no notice.
+      const noticeRow = screen.getByTestId("feed-security-notice");
+      expect(list.firstElementChild).toBe(noticeRow);
+      expect(noticeRow).toBeEmptyDOMElement();
+      expect(noticeRow.nextElementSibling).toBe(head);
       expect(head.nextElementSibling).toContainElement(first);
       expect(screen.getByRole("region", { name: "Account status" })).toBeEmptyDOMElement();
+    });
+
+    // FeedSecurityNotice.jsx:35-46: the notice is `FeedList`'s first child,
+    // above an applicant's cards too (FeedSecurityNotice.md:5) — never the
+    // banners' gutter.
+    it("stands_the_security_notice_first_above_the_applicants_cards", async () => {
+      server.use(meHandler("APPLICANT"));
+      securityNotices.post("2026-08-10T09:30:00Z");
+      try {
+        renderFeed({
+          kind: "awaitingApproval",
+          emailVerified: false,
+          keyAttached: true,
+          keyOnDevice: true,
+        });
+        const notice = await screen.findByTestId("security_notice");
+        const verify = await screen.findByTestId("feed.verifyCard");
+        const list = screen.getByTestId("feed-list");
+        const head = screen.getByTestId("feed-security-notice");
+        expect(head.parentElement).toBe(list);
+        expect(list.firstElementChild).toBe(head);
+        expect(head).toContainElement(notice);
+        expect(head.nextElementSibling).toBe(screen.getByTestId("feed-applicant-cards"));
+        expect(screen.getByTestId("feed-applicant-cards")).toContainElement(verify);
+        expect(screen.getByRole("region", { name: "Account status" })).toBeEmptyDOMElement();
+
+        fireEvent.click(screen.getByTestId("security_notice_dismiss"));
+        expect(screen.queryByTestId("security_notice")).not.toBeInTheDocument();
+        expect(head).toBeEmptyDOMElement();
+      } finally {
+        securityNotices.dismiss();
+      }
     });
 
     // A member's loop never reports, so a null progress must not withhold the
