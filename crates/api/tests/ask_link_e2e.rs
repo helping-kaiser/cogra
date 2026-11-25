@@ -942,6 +942,94 @@ async fn a_vouch_in_flight_holds_the_asker_and_its_lapse_keeps_one_row(pool: PgP
     assert_eq!(codes(&again), vec!["ASK_LINK_UNUSABLE"], "{again}");
 }
 
+/// The approval prepare holds a second attempt back: the mark is set at
+/// the prepare, so a second `approveApplicants` while the first vouch is
+/// sealed and awaits its approval is refused as already approved and
+/// stages nothing, and the first vouch still takes its approval. The
+/// web pad's Retry re-calls this mutation, so there it is a dead end
+/// (audit defect 3), not a second vouch.
+///
+/// A second approval while the first vouch is sealed and awaits its approval is refused as already approved, stages nothing, and the first vouch still relays.
+/// ´claim:onboarding:a-second-approval-in-flight-is-already-approved´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_second_approval_while_the_vouch_awaits_approval_is_already_approved(pool: PgPool) {
+    use common::l1::proposal::{PreSigned, SealedAct};
+    let rig = unlimited(pool);
+    let mira = member(&rig, "mira").await;
+    let noa = applicant(&rig, &mira, "noa").await;
+    prove(&rig, &noa).await;
+    let approved = approve(&rig, &mira.token, &noa.application).await;
+    assert_eq!(approved["userErrors"], json!([]), "{approved}");
+    let vouch = &approved["writes"][0];
+    assert_eq!(approved["writes"].as_array().expect("writes").len(), 1);
+    assert_eq!(vouch["family"], "OPINION");
+
+    let proposal = common::l1::wire::decode_proposal(
+        &B64.decode(vouch["canonicalProposal"].as_str().expect("proposal"))
+            .expect("b64"),
+    )
+    .expect("decodes");
+    let pre = PreSigned::sign(&mira.key, proposal);
+    let sealed = rig
+        .gql(
+            Some(&mira.token),
+            "mutation($input: SubmitProposalsInput!) {
+               submitProposals(input: $input) {
+                 stagedWrites { state verifiedAct } userErrors { code message }
+               }
+             }",
+            json!({ "input": { "proposals": [{
+                "stagedWriteId": vouch["id"],
+                "signature": B64.encode(pre.pre_commitment_blob().encode()),
+            }]}}),
+        )
+        .await;
+    assert_eq!(sealed["submitProposals"]["userErrors"], json!([]), "{sealed}");
+    let staged = &sealed["submitProposals"]["stagedWrites"][0];
+    assert_eq!(staged["state"], "AWAITING_APPROVAL", "{sealed}");
+
+    let again = approve(&rig, &mira.token, &noa.application).await;
+    assert_eq!(codes(&again), vec!["BAD_INPUT"], "{again}");
+    assert_eq!(again["userErrors"][0]["message"], "already approved");
+    assert!(
+        again["writes"].as_array().is_none_or(Vec::is_empty),
+        "nothing staged: {again}"
+    );
+    let opinions: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM staged_writes WHERE actor_id = $1 AND family = 'opinion'",
+    )
+    .bind(mira.id)
+    .fetch_one(&rig.pool)
+    .await
+    .expect("counts");
+    assert_eq!(opinions, 1, "one vouch, never a second");
+
+    let act = SealedAct::decode(
+        &B64.decode(staged["verifiedAct"].as_str().expect("sealed"))
+            .expect("b64"),
+    )
+    .expect("decodes");
+    let host_key = rig.standin.host_public_key().await.expect("host key");
+    let witness = pre.approve(&mira.key, &act, &host_key).expect("approves");
+    let relayed = rig
+        .gql(
+            Some(&mira.token),
+            "mutation($input: ApproveActsInput!) {
+               approveActs(input: $input) { stagedWrites { state } userErrors { code message } }
+             }",
+            json!({ "input": { "approvals": [{
+                "stagedWriteId": vouch["id"],
+                "signature": B64.encode(witness.approval_signature),
+            }]}}),
+        )
+        .await;
+    assert_eq!(relayed["approveActs"]["userErrors"], json!([]), "{relayed}");
+    assert_eq!(
+        relayed["approveActs"]["stagedWrites"][0]["state"], "RELAYING",
+        "{relayed}"
+    );
+}
+
 /// R11 at the wire: an applicant taken up from their ask link and vouched
 /// in by that member names that member as `invitedBy` once the ceremony
 /// lands — not the issuer of the link they registered through, who stays
