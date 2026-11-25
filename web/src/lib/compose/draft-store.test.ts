@@ -9,7 +9,9 @@ import {
   draftSummary,
   type ComposeDraftStore,
 } from "./draft-store";
-import { emptyWizard, wizardReducer, type WizardState } from "./wizard";
+import { emptyWizard, postRequestOf, wizardReducer, type WizardState } from "./wizard";
+import { intentOf } from "./same-signing";
+import { newTagDraft } from "@/lib/topics/draft";
 
 /** The digests a finished upload is held to — custody of the draft it belongs to. */
 const KNOWN = { digest: "11".repeat(32), uploadDigest: "22".repeat(32), mime: "image/webp" };
@@ -324,5 +326,47 @@ describe("what the draft card says", () => {
     expect(
       draftIsWorthKeeping(draft((s) => wizardReducer(s, { type: "description", description: "x" }))),
     ).toBe(true);
+  });
+});
+
+// A Retry after a reload asks the same signing only if the request rebuilt
+// from the restored draft is byte-identical to the first prepare's
+// (same-signing.ts `intentOf`). These pin when it is — and when it is not.
+describe("the signing attempt across a reload", () => {
+  const ATTEMPT = { node: "post-1", writes: ["w1", "w2"], intent: "x" };
+
+  it("rides the draft and comes back with it", async () => {
+    await composeDraftStore.save({ ...draft(), attempt: ATTEMPT });
+    expect((await composeDraftStore.load())!.attempt).toEqual(ATTEMPT);
+  });
+
+  it("an older draft without one reads as none", async () => {
+    const { attempt: _dropped, ...older } = draft();
+    void _dropped;
+    await composeDraftStore.save(older as WizardState);
+    expect((await composeDraftStore.load())!.attempt).toBeNull();
+  });
+
+  it("a media post's request is byte-identical after the reload, so Retry asks the same signing", async () => {
+    const state = draft(
+      picked("a0"),
+      picked("a1"),
+      (s) => wizardReducer(s, { type: "upload", id: "a0", upload: { kind: "done", mediaId: "m-1", media: KNOWN } }),
+      (s) => wizardReducer(s, { type: "upload", id: "a1", upload: { kind: "done", mediaId: "m-2", media: KNOWN } }),
+      (s) => wizardReducer(s, { type: "title", title: "Salt maps" }),
+      (s) => wizardReducer(s, { type: "tags", tags: [newTagDraft("coast")] }),
+    );
+    await composeDraftStore.save(state);
+    const restored = (await composeDraftStore.load())!;
+    expect(intentOf(postRequestOf(restored))).toBe(intentOf(postRequestOf(state)));
+  });
+
+  it("a finished upload saved without its digests goes up again, so its request differs: the changed path", async () => {
+    const state = draft(picked("a0"), (s) =>
+      wizardReducer(s, { type: "upload", id: "a0", upload: { kind: "done", mediaId: "m-1" } }),
+    );
+    await composeDraftStore.save(state);
+    const restored = (await composeDraftStore.load())!;
+    expect(intentOf(postRequestOf(restored))).not.toBe(intentOf(postRequestOf(state)));
   });
 });

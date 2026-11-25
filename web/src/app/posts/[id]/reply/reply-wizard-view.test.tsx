@@ -1288,3 +1288,57 @@ describe("the reply wizard as a covering layer", () => {
     expect(raisedLayersForTests()).toEqual(["suspend"]);
   });
 });
+
+// RETRY ASKS THE SAME SIGNING AGAIN (SigningAfterClose.md:27): the batch this
+// mount prepared, never a second reply beside it.
+describe("Retry after a signing that did not answer", () => {
+  it("does not prepare a second reply: Retry asks the first batch again and the reply is taken", async () => {
+    let prepares = 0;
+    server.use(
+      gqlLink.mutation("PrepareComment", () => {
+        prepares += 1;
+        return HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: `comment-${prepares}`,
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: `w${prepares}`,
+                  family: "REVIEW",
+                  canonicalProposal: "AA==",
+                  gcAfterEpochs: 3,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => ({ kind: "failed", id: write.id, cause: new Error("no answer") }),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "done" as const, id, state: "RELAYING" as const })),
+      ),
+    });
+    const onSigned = vi.fn();
+    renderWithProviders(
+      <ReplyWizard
+        target={POST_TARGET}
+        store={fakeIdentityStore({ keyOnDevice: true })}
+        onLeave={vi.fn()}
+        onSigned={onSigned}
+      />,
+      { store: signedInStore(), writeSigner: signer },
+    );
+    await toSeal("Answering you.");
+    fireEvent.click(screen.getByTestId("reply-sign"));
+    fireEvent.click(await screen.findByTestId("reply-retry"));
+
+    await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-1"));
+    expect(prepares).toBe(1);
+    expect(signer.signAgain).toHaveBeenCalledWith(["w1"], expect.anything());
+  });
+});

@@ -33,6 +33,7 @@
 import type { Outcome } from "@/lib/api/outcome";
 import type { PostView } from "@/lib/api/content-api";
 
+import { onAccountChange } from "@/lib/session/account-change";
 import { personHref, personOrigin } from "@/lib/ui/back-origin";
 
 import { isStreamClip } from "./stream-clip";
@@ -259,6 +260,14 @@ export class StreamSession {
 }
 
 let current: StreamSession | null = null;
+
+// The held list is the opening reader's — their feed, their Saved, their
+// History. When the tab's active account ends or changes it is let go, so
+// another account arriving on one of its clips is a cold link, never a
+// reader of that list.
+onAccountChange(() => {
+  current = null;
+});
 
 /**
  * A portrait clip's tap opens the stream on it (Reel.md:3; graph.json «post

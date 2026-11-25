@@ -246,6 +246,7 @@ export function restored(stored: StoredState): WizardState {
     sensitive: take("sensitive"),
     sensitiveReason: take("sensitiveReason"),
     pDirected: take("pDirected"),
+    attempt: take("attempt"),
   };
 }
 

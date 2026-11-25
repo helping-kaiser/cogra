@@ -54,6 +54,7 @@ import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { useActiveAccountId, useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard, useDeviceLock } from "@/lib/session/runtime";
+import { securityNotices } from "@/lib/session/security-notices";
 import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { eraseEverything } from "@/lib/settings/erase-everything";
 import {
@@ -437,6 +438,9 @@ export function SettingsView({
         // sign-out proceeds regardless
       }
     }
+    // A pending security notice is a device-local flag, purged with the rest
+    // (auth.md "Sign-out"); a remembered account's sign-out keeps it.
+    if (accountId !== null) securityNotices.forget(accountId);
   };
 
   const endSession = async (purge: boolean) => {

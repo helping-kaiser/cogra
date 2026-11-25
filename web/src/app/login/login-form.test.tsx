@@ -135,6 +135,41 @@ describe("LoginForm", () => {
     expect(notices.reuseDetectedAt()).toBe("2026-08-10T09:30:00Z");
   });
 
+  // FeedSecurityNotice.md:9 — delivered exactly once: the notice is on the
+  // device for the account signing in before the session is saved, so a tab
+  // closed before the shell paints does not lose it; and it is that
+  // account's, not the one active when the press began.
+  it("keeps the reuse notice on this device for the signing-in account before the save", async () => {
+    server.use(loginSuccessWithNotice("2026-08-10T09:30:00Z"));
+    const before = createTokenStore();
+    before.save({ accessToken: "a-0", refreshToken: "r-0", accountId: "acct-0" });
+    const notices = createSecurityNotices();
+    const saved: (string | null)[] = [];
+    const { store } = renderWithProviders(<LoginForm notices={notices} />, { store: before });
+    const save = store.save.bind(store);
+    vi.spyOn(store, "save").mockImplementation((auth) => {
+      saved.push(window.localStorage.getItem("cogra.securityNotice.acct-1"));
+      save(auth);
+    });
+    fillAndSubmit();
+    await waitFor(() => expect(store.activeAccountId()).toBe("acct-1"));
+    expect(saved).toEqual(["2026-08-10T09:30:00Z"]);
+    expect(window.localStorage.getItem("cogra.securityNotice.acct-0")).toBeNull();
+    expect(createSecurityNotices().reuseDetectedAt()).toBe("2026-08-10T09:30:00Z");
+  });
+
+  it("posts nothing on a refused sign-in", async () => {
+    server.use(loginRefused);
+    const notices = createSecurityNotices();
+    const { store } = renderWithProviders(<LoginForm notices={notices} />);
+    fillAndSubmit();
+    await screen.findByTestId("signIn.fault");
+    expect(store.hasSession()).toBe(false);
+    expect(
+      Object.keys(window.localStorage).filter((key) => key.startsWith("cogra.securityNotice.")),
+    ).toEqual([]);
+  });
+
   it("posts nothing on a clean login", async () => {
     server.use(loginSuccess());
     const notices = createSecurityNotices();

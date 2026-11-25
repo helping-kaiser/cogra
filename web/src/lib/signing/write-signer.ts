@@ -116,6 +116,28 @@ export type WriteSigner = {
   signCarriedAtLanding(writes: readonly StagedWriteView[]): Promise<WriteResult[]>;
   /** Continues every persisted handshake — the parked-acts entry point. */
   resume(): Promise<WriteResult[]>;
+  /**
+   * Asks ONE earlier signing again: the batch a surface already prepared,
+   * by its staged-write ids, against the same expectation — a Retry's
+   * "the same signing is asked again … AND NEVER anything else is signed"
+   * (SigningAfterClose.md:27). Nothing is prepared.
+   *
+   * Every id is read back first, and the batch is then signed exactly as
+   * `sign` signs it — the whole-batch intent check, then each write from
+   * the state it is in now, with the material this device stored for it:
+   * an approved write answers `done`, a pre-committed one is approved from
+   * its stored nonces, an unsubmitted one re-sends them, and one that never
+   * reached its pre-signature is pre-signed for the first time.
+   *
+   * A batch not read whole is not signed: an id that did not answer keeps
+   * its result (`failed` or a read refusal, material kept), one that is gone
+   * answers NOT_FOUND (material spent), and every other id answers `failed`
+   * with nothing decided.
+   *
+   * Optional, as `hasKey` is, so a stand-in that omits it still types; a
+   * caller without it retires the attempt instead of asking it again.
+   */
+  signAgain?(ids: readonly string[], expected: Expectation): Promise<WriteResult[]>;
 };
 
 /**
@@ -310,19 +332,32 @@ export function createWriteSigner(deps: {
     }
   }
 
+  /**
+   * The staged write as the server holds it now, or the result that ends
+   * this id when it cannot be read: a read-leg refusal or fault keeps the
+   * material, a write that is gone spends it.
+   */
+  async function current(
+    id: string,
+  ): Promise<{ kind: "staged"; staged: StagedWriteView } | { kind: "ended"; result: WriteResult }> {
+    const read = await guard.run(() => fetchStagedWrite(client, id));
+    if (read.kind === "refused") return { kind: "ended", result: refuseKeeping(id, read.errors) };
+    if (read.kind === "failed") return { kind: "ended", result: { kind: "failed", id, cause: read.cause } };
+    if (read.value === null) {
+      // Collected long ago — the handshake can never finish.
+      return { kind: "ended", result: await refuse(id, [synthesized("NOT_FOUND", "staged write is gone")]) };
+    }
+    return { kind: "staged", staged: read.value };
+  }
+
   async function resumeOne(key: ActorKey, id: string): Promise<WriteResult> {
     const pre = await store.handshake(id);
     if (pre === null) {
       return { kind: "failed", id, cause: new Error("no handshake material for this id") };
     }
-    const read = await guard.run(() => fetchStagedWrite(client, id));
-    if (read.kind === "refused") return refuseKeeping(id, read.errors);
-    if (read.kind === "failed") return { kind: "failed", id, cause: read.cause };
-    if (read.value === null) {
-      // Collected long ago — the handshake can never finish.
-      return refuse(id, [synthesized("NOT_FOUND", "staged write is gone")]);
-    }
-    return signOne(key, read.value);
+    const read = await current(id);
+    if (read.kind === "ended") return read.result;
+    return signOne(key, read.staged);
   }
 
   /**
@@ -571,6 +606,20 @@ export function createWriteSigner(deps: {
       const results: WriteResult[] = [];
       for (const id of ids) results.push(await resumeOne(answer.key, id));
       return results;
+    },
+
+    async signAgain(ids, expected) {
+      const reads: Awaited<ReturnType<typeof current>>[] = [];
+      for (const id of ids) reads.push(await current(id));
+      const staged: StagedWriteView[] = [];
+      for (const read of reads) if (read.kind === "staged") staged.push(read.staged);
+      if (staged.length === reads.length) return signChecked(staged, expected);
+      return reads.map(
+        (read, i): WriteResult =>
+          read.kind === "ended"
+            ? read.result
+            : { kind: "failed", id: ids[i], cause: new Error("the batch was not read whole; nothing signed") },
+      );
     },
   };
 }
