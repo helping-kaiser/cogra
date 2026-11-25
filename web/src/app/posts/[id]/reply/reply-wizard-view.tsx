@@ -33,10 +33,12 @@ import { prepareComment } from "@/lib/api/content-api";
 import { hasFieldErrors, partitionFieldErrors, pathIndex } from "@/lib/api/field-errors";
 import { refusesTagName, tagNameRefusal } from "@/lib/topics/picker";
 import { writeRefusalMessage } from "@/lib/ui/error-messages";
-import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchStagedWrite } from "@/lib/api/writes-api";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
 import { commentExpectation } from "@/lib/compose/intent";
 import type { Expectation } from "@/lib/signing/intent";
+import type { WriteResult } from "@/lib/signing/write-signer";
+import { askAgain, intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -154,6 +156,9 @@ export function ReplyWizard({
   const [fault, setFault] = useState<SealFault | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
+  // The signing this mount started and that did not answer: what Retry asks
+  // again. In memory only — a reply keeps no draft (SigningAfterClose.md:45).
+  const attempt = useRef<SigningAttempt | null>(null);
 
   const previews = usePreviewUrls(state.media);
 
@@ -480,6 +485,55 @@ export function ReplyWizard({
       sensitive: state.sensitive,
       sensitiveReason: state.sensitiveReason,
     };
+    const intent = intentOf(sent);
+    const expectedFor = (node: string): Expectation =>
+      commentExpectation(
+        graphIdOf(graphIds.value, state.target.id),
+        state,
+        contentExpectation(
+          node,
+          sent,
+          "comment",
+          commentMediaLedger(state.media, state.cover, state.autoCover),
+        ),
+        graphIds.value,
+      );
+
+    // RETRY ASKS THE SAME SIGNING AGAIN (SigningAfterClose.md:27), from the
+    // attempt this mount remembers — a reply keeps no draft (:45), so a
+    // reload forgets it and Home's Resume is what continues it then.
+    const remembered = attempt.current;
+    if (remembered !== null) {
+      const asked = await askAgain(
+        {
+          signer,
+          read: (id) => guard.run(() => fetchStagedWrite(client, id)),
+          retire: (id) => store.clearHandshake(id),
+        },
+        remembered,
+        intent,
+        expectedFor(remembered.node),
+      );
+      if (asked.kind === "unread") {
+        setBusy(false);
+        setFault(sealFaultOfOutcome(asked.outcome));
+        return;
+      }
+      if (asked.kind === "landing") {
+        // The first words were approved and are landing: the reply is taken.
+        setBusy(false);
+        attempt.current = null;
+        onSigned(remembered.node);
+        return;
+      }
+      if (asked.kind === "signed") {
+        finish(remembered, asked.results);
+        return;
+      }
+      // Retired: nothing of it can land, and the fresh prepare below may run.
+      attempt.current = null;
+    }
+
     const prepared = await guard.run(() => prepareComment(client, sent));
 
     if (prepared.kind === "failed") {
@@ -516,30 +570,21 @@ export function ReplyWizard({
     }
 
     const node = prepared.value.node;
-    const expected = commentExpectation(
-      graphIdOf(graphIds.value, state.target.id),
-      state,
-      contentExpectation(
-        node,
-        sent,
-        "comment",
-        commentMediaLedger(state.media, state.cover, state.autoCover),
-      ),
-      graphIds.value,
-    );
-    await finish(node, prepared.value.writes, expected);
+    const started: SigningAttempt = {
+      node,
+      writes: prepared.value.writes.map((write) => write.id),
+      intent,
+    };
+    attempt.current = started;
+    finish(started, await signer.sign(prepared.value.writes, expectedFor(node)));
   };
 
-  const finish = async (
-    node: string,
-    writes: readonly StagedWriteView[],
-    expected: Expectation,
-  ) => {
-    const results = await signer.sign(writes, expected);
+  const finish = (signed: SigningAttempt, results: readonly WriteResult[]) => {
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {
-      onSigned(node);
+      attempt.current = null;
+      onSigned(signed.node);
       return;
     }
 
