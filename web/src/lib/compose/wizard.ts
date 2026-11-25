@@ -619,6 +619,26 @@ export function descriptionContent(state: WizardState): string | null {
   return state.description.trim() === "" ? null : state.description;
 }
 
+/**
+ * The `preparePost` request this state sends — one value read twice, by the
+ * API layer and by the payload expectation, and the key of a signing attempt
+ * (same-signing.ts `intentOf`).
+ */
+export function postRequestOf(state: WizardState) {
+  return {
+    title: state.title.trim() === "" ? null : state.title,
+    description: descriptionContent(state),
+    content: bodyContent(state),
+    sensitive: state.sensitive,
+    sensitiveReason: state.sensitiveReason,
+    license: state.license,
+    pDirected: state.pDirected,
+    tags: state.tags,
+    references: state.references,
+    attachments: attachmentClaims(state) ?? undefined,
+  };
+}
+
 export function shapeRatio(state: WizardState): number {
   return POST_SHAPES[state.shape].ratio;
 }
