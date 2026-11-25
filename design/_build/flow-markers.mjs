@@ -1853,8 +1853,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 14, find: ">On “", tag: "button", all: true },
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
     ...nav(16),
-    // The load chip's failed first page (round 45): its Retry.
-    { n: 22, find: ">Retry</button>", tag: "button" },
+    // The load chip's failed first page (round 45): its Retry, unkeyed.
+    { n: 22, find: 'data-node="profile.comments.moreFault.retry">', tag: "button" },
+    // The load chip's next page that did not come (round 68), the next free number.
+    { n: 23, find: 'data-node="profile.comments.moreFault.retry" data-node-key="more"', tag: "button" },
   ],
   Profile: [
     ...ownProfile(),
@@ -2036,8 +2038,8 @@ Object.assign(FLOW_MARKERS, {
     // The `target` chip's hole (round 59): the second card's pointer, both copies.
     { n: 17, find: ">On {{targetLine}}", tag: "button", all: true },
     ...nav(12),
-    // The load chip's failed first page (round 45): its Retry.
-    { n: 19, find: ">Retry</button>", tag: "button" },
+    // The load chip's failed first page (round 45): its Retry, unkeyed.
+    { n: 19, find: 'data-node="profile.comments.moreFault.retry">', tag: "button" },
     // The second comment's tags line (round 63, seam 419): its tag and its
     // count, the next free numbers; `all`, its settling copy too.
     { n: 20, find: '<a href="/t/', tag: "a", all: true },
@@ -2045,6 +2047,8 @@ Object.assign(FLOW_MARKERS, {
     // The `comments` chip's clip (round 64, seam 424): its sound, as
     // `TagPage`'s 17, the next free number.
     { n: 22, find: 'aria-label="Turn sound on"', tag: "button" },
+    // The load chip's next page that did not come (round 68), the next free number.
+    { n: 23, find: 'data-node="profile.comments.moreFault.retry" data-node-key="more"', tag: "button" },
   ],
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
