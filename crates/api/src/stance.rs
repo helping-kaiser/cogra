@@ -193,6 +193,107 @@ pub async fn topic_bundle(
     })
 }
 
+/// The node a viewer's stance face reads toward: an L2 id, as
+/// [`bundle`] takes it, or a topic by its canonical name, as
+/// [`topic_bundle`] does.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum FaceTarget {
+    Node(Uuid),
+    Topic(String),
+}
+
+/// One stance face a batched read answers: whose bundle, toward what, in
+/// which view — every argument [`bundle`] and [`topic_bundle`] take.
+///
+/// The viewer is part of the key, never a property of whoever batches:
+/// a batch can gather the faces of several requests at once, and each
+/// face is answered from its own viewer's bundle.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct FaceKey {
+    pub viewer: Uuid,
+    pub target: FaceTarget,
+    pub include_pending: bool,
+}
+
+/// [`bundle`] and [`topic_bundle`] for many faces, in a constant number
+/// of round trips whatever the batch size: the viewers' addresses, the
+/// targets ([`nodes::resolve_targets_many`]), then the grouped bundle
+/// read ([`stance_store::standings`]).
+///
+/// A face is present exactly when the single read answers it with a
+/// bundle, and absent where the single read refuses it as
+/// [`StanceError::BadInput`] or [`StanceError::Internal`]: a viewer
+/// without an attached address, an id nothing answers to, a name the
+/// substrate could never carry. A storage fault the single read raises as
+/// [`StanceError::Storage`] fails the batch.
+pub async fn bundles(
+    pool: &PgPool,
+    keys: &[FaceKey],
+) -> Result<std::collections::HashMap<FaceKey, TargetBundle>, StanceError> {
+    use std::collections::HashMap;
+
+    let mut viewers: Vec<Uuid> = keys.iter().map(|k| k.viewer).collect();
+    viewers.sort_unstable();
+    viewers.dedup();
+    let authors: HashMap<Uuid, String> =
+        match postgres_store::auth::actor_identities_by_ids(pool, &viewers).await {
+            Ok(actors) => actors
+                .into_iter()
+                .filter_map(|actor| actor.realization_address.map(|a| (actor.id, a)))
+                .collect(),
+            Err(_) => HashMap::new(),
+        };
+    let keys: Vec<(&FaceKey, &String)> = keys
+        .iter()
+        .filter_map(|k| Some((k, authors.get(&k.viewer)?)))
+        .collect();
+
+    let mut ids: Vec<Uuid> = keys
+        .iter()
+        .filter_map(|(k, _)| match &k.target {
+            FaceTarget::Node(id) => Some(*id),
+            FaceTarget::Topic(_) => None,
+        })
+        .collect();
+    ids.sort_unstable();
+    ids.dedup();
+    let resolved = nodes::resolve_targets_many(pool, &ids).await?;
+
+    let mut faces: Vec<(&FaceKey, NodeId, stance_store::StandingKey)> = Vec::new();
+    for (key, author) in keys {
+        let node = match &key.target {
+            FaceTarget::Node(id) => match resolved.get(id) {
+                Some(r) => r.node.clone(),
+                None => continue,
+            },
+            FaceTarget::Topic(raw) => match canonicalize(raw)
+                .ok()
+                .and_then(|name| NodeId::name(&name).ok())
+            {
+                Some(node) => node,
+                None => continue,
+            },
+        };
+        let standing_key = stance_store::StandingKey {
+            author_atom: author.clone(),
+            family: family_for(&node),
+            target: node.to_string(),
+            view: BundleView::from_include_pending(key.include_pending),
+        };
+        faces.push((key, node, standing_key));
+    }
+    let standing_keys: Vec<stance_store::StandingKey> =
+        faces.iter().map(|(_, _, k)| k.clone()).collect();
+    let standings = stance_store::standings(pool, &standing_keys).await?;
+    Ok(faces
+        .into_iter()
+        .filter_map(|(key, node, standing_key)| {
+            let standing = *standings.get(&standing_key)?;
+            Some((key.clone(), TargetBundle { node, standing }))
+        })
+        .collect())
+}
+
 /// The author's Publish bundle toward their own post: the sums of every
 /// Publish record the viewer wrote toward `node`, genesis and edits
 /// alike, unclipped. The caller has already established that the viewer

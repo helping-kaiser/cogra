@@ -1,7 +1,10 @@
 // The profile's identity block against ProfileHeader.jsx: the long-name cases
 // (NamesLong.md, round 40), the name's two-line rule (Profile.md:85-87,
 // ProfileOther.md:87-91, round 47), the figures' two doors (Profile.md:13,
-// ProfileOther.md:9) and the website row.
+// ProfileOther.md:9), the figures' place (PROFILE_TOP_CSS) and the website row.
+
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { act, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -213,6 +216,31 @@ describe("ProfileHeader's name, whole on at most two lines", () => {
 describe("ProfileHeader's figures", () => {
   const figures = { posts: 12, opinionsOn: 1204, opinionsBy: 7 };
   const href = (direction: "on" | "by") => (direction === "by" ? "/u/ada/opinions?tab=by" : "/u/ada/opinions");
+
+  // ProfileHeader.jsx `PROFILE_TOP_CSS` (round 60): the figures move under the
+  // avatar below the master's own measured fit, read from the master itself
+  // so the web's constant cannot drift from it or swap own for another's.
+  it.each([
+    ["own", true],
+    ["other", false],
+  ] as const)("moves %s figures under the avatar at the master's measured width", (container, own) => {
+    const master = readFileSync(join(process.cwd(), "..", "design", "components", "people", "ProfileHeader.jsx"), "utf8");
+    const fit = new RegExp(`@container cg-profile-${container} \\(width < calc\\(96px \\+ ([0-9.]+rem)\\)\\)`).exec(master)?.[1];
+    expect(fit).toBeDefined();
+    const query = `@max-[calc(96px+${fit})]`;
+    render(
+      <ProfileHeader node={IDENTITY} handle="ada" own={own} figures={figures}>
+        <span />
+      </ProfileHeader>,
+    );
+    const row = screen.getByTestId("profile.identity.figures");
+    const grid = row.parentElement!;
+    const nameBlock = screen.getByTestId("profile.identity.name").parentElement!;
+    expect(grid.className.split(" ")).toContain(`${query}:[grid-template-areas:'avatar_name''figures_figures']`);
+    expect(nameBlock.className.split(" ")).toContain(`${query}:self-center`);
+    expect(row.className.split(" ")).toContain(`${query}:mt-3`);
+    expect(`${grid.className} ${nameBlock.className} ${row.className}`.match(/@max-\[[^\]]+\]/g)).toEqual([query, query, query]);
+  });
 
   it("makes each opinion figure its own door, in reading order, and the row none", () => {
     render(
