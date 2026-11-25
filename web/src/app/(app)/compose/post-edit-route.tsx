@@ -33,7 +33,9 @@ import {
 } from "@/lib/api/content-api";
 import { prepareTag } from "@/lib/api/topics-api";
 import { prepareReference, prepareReferenceWithdrawal } from "@/lib/api/references-api";
-import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchStagedWrite, type StagedWriteView } from "@/lib/api/writes-api";
+import { askAgain, intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
+import type { WriteResult } from "@/lib/signing/write-signer";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
 import { fetchKnownMedia } from "@/lib/api/media-api";
 import { editExpectation } from "@/lib/compose/intent";
@@ -153,6 +155,9 @@ export function PostEditRoute({
   const client = useApolloClient();
   const guard = useAuthGuard();
   const signer = useWriteSigner();
+  // The batch this edit prepared and that did not answer: what Retry asks
+  // again. In memory only — an edit keeps no draft (SigningAfterClose.md:45).
+  const attempt = useRef<SigningAttempt | null>(null);
   const router = useRouter();
   const keyOnDevice = useKeyOnDevice(store);
 
@@ -339,6 +344,48 @@ export function PostEditRoute({
       record = postEdit(postGraphId, contentExpectation(postId, sent, "post", ledger), sent.pDirected);
     }
     const expected = editExpectation(postGraphId, record, touched, graphIds.value);
+    const intent = intentOf({
+      record: state.recordStaged ? sent : null,
+      tags: touched.tags,
+      references: touched.references,
+    });
+
+    // RETRY ASKS THE SAME SIGNING AGAIN (SigningAfterClose.md:27,
+    // EditCompose.md:79): the batch this edit prepared, never a second prepare
+    // beside it — the server refuses a second edit while the first is in
+    // flight, and a second citation would be summed with the first.
+    const remembered = attempt.current;
+    if (remembered !== null) {
+      const asked = await askAgain(
+        {
+          signer,
+          read: (id) => guard.run(() => fetchStagedWrite(client, id)),
+          retire: (id) => store.clearHandshake(id),
+        },
+        remembered,
+        intent,
+        expected,
+      );
+      if (asked.kind === "unread") {
+        end();
+        unanswered(asked.outcome);
+        return;
+      }
+      if (asked.kind === "landing") {
+        // The FIRST version was approved and is landing; an edit keeps no
+        // draft (SigningAfterClose.md:45), so the edit finishes as taken.
+        end();
+        attempt.current = null;
+        router.push(`/posts/${postId}`);
+        return;
+      }
+      if (asked.kind === "signed") {
+        settle(asked.results);
+        return;
+      }
+      // Retired: nothing of it can land, and a fresh prepare may run.
+      attempt.current = null;
+    }
 
     const writes: StagedWriteView[] = [];
     const perTag: Record<number, string> = {};
@@ -354,6 +401,9 @@ export function PostEditRoute({
       return firstRefusalMessage(errors, "The server refused this write.");
     };
 
+    // THE RECORD IS PREPARED FIRST, and a refused record stops the batch: no
+    // tag or citation is staged for an edit the server will not take.
+    let recordRefused = false;
     if (state.recordStaged) {
       const prepared = await guard.run(() => preparePostEdit(client, sent));
       if (prepared.kind === "failed") {
@@ -361,11 +411,13 @@ export function PostEditRoute({
         unanswered(prepared);
         return;
       }
-      if (prepared.kind === "refused") general = refused(prepared.errors);
-      else writes.push(...prepared.value.writes);
+      if (prepared.kind === "refused") {
+        recordRefused = true;
+        general = refused(prepared.errors);
+      } else writes.push(...prepared.value.writes);
     }
 
-    for (const change of touched.tags) {
+    for (const change of recordRefused ? [] : touched.tags) {
       const prepared = await guard.run(() =>
         prepareTag(client, {
           target: postId,
@@ -391,7 +443,7 @@ export function PostEditRoute({
         writes.push(...prepared.value);
       }
     }
-    for (const change of touched.references) {
+    for (const change of recordRefused ? [] : touched.references) {
       const prepared = await guard.run(() =>
         change.kind === "reference"
           ? prepareReference(client, {
@@ -450,9 +502,17 @@ export function PostEditRoute({
       return;
     }
 
-    const results = await signer.sign(writes, expected);
-    end();
+    // The batch is remembered BEFORE it is signed, so a press after a signing
+    // that did not answer asks this one again (same-signing.ts).
+    attempt.current = { node: postId, writes: writes.map((write) => write.id), intent };
+    settle(await signer.sign(writes, expected));
+  };
+
+  /** What one signing of the batch answered, read onto the edit. */
+  const settle = (results: readonly WriteResult[]) => {
+    setBusy(false);
     if (results.every((result) => result.kind === "done")) {
+      attempt.current = null;
       // The post opens with the edit settling.
       router.push(`/posts/${postId}`);
     } else {

@@ -1649,3 +1649,81 @@ describe("PostEditRoute — opening", () => {
     await waitFor(() => expect(document.activeElement).toBe(heading));
   });
 });
+
+// RETRY ASKS THE SAME SIGNING AGAIN (SigningAfterClose.md:27, EditCompose.md:79):
+// the batch this edit prepared, never a second prepare — which the server
+// would refuse while the first is in flight.
+describe("PostEditRoute — Retry after a signing that did not answer", () => {
+  beforeEach(() => push.mockClear());
+
+  it("asks the first batch again: preparePostEdit runs once and the post opens", async () => {
+    let prepares = 0;
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () => {
+        prepares += 1;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+    );
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => ({ kind: "failed", id: write.id, cause: new Error("no answer") }),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "done" as const, id, state: "RELAYING" as const })),
+      ),
+    });
+    draw({ signer });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    fireEvent.click(await screen.findByTestId("post-edit-retry"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(prepares).toBe(1);
+    expect(signer.signAgain).toHaveBeenCalledWith(["w0"], expect.anything());
+  });
+
+  it("a refused edit record stages nothing else: no tag is prepared for it", async () => {
+    let tagPrepares = 0;
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () =>
+        HttpResponse.json({
+          data: {
+            preparePostEdit: {
+              __typename: "PrepareContentPayload",
+              node: null,
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  code: "BAD_INPUT",
+                  message: "an edit of this content is already in flight",
+                  field: ["id"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+      gqlLink.mutation("PrepareTag", () => {
+        tagPrepares += 1;
+        return HttpResponse.json({
+          data: { prepareTag: { __typename: "PreparePayload", writes: writes(1, "TAG"), userErrors: [] } },
+        });
+      }),
+    );
+    const signer = draw();
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(await screen.findByTestId("postEdit.tags.add"));
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Name a tag" }), {
+      target: { value: "saltmaps" },
+    });
+    fireEvent.click(await screen.findByTestId(byNode("tagPicker.tag", "saltmaps")));
+    fireEvent.click(screen.getByTestId("tagPicker.done"));
+    await screen.findByTestId("postEdit.header");
+    fireEvent.click(sign());
+
+    await screen.findByTestId("post-edit-refused");
+    expect(tagPrepares).toBe(0);
+    expect(signer.signStaged).not.toHaveBeenCalled();
+  });
+});
