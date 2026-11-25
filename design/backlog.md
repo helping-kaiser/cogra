@@ -7079,3 +7079,26 @@ shape over `TransportError`'s default line `Can't reach the server. Check your c
 again.` (existing words, but beside `Retry` it says try again twice); (c) draw the thread sheet's
 own failed read first (`… comments can't load right now.`, an existing line) and the references
 sheet as its twin. Recommendation (a).
+
+### 310 · The posts tabs' next page that does not arrive — where the board stands · *design* · **filed 2026-11-25**
+
+Round 68, item 2 (impl seam 463.3). `ProfileComments` and `ProfileCommentsOwn` draw it as the `load`
+chip's `more`, `Notifications`' twin: the cards stay and `Couldn't load more — Retry` stands below the
+last card (`profile.comments.moreFault` keyed `more`). On `ProfilePosts` and `ProfilePostsOwn` the
+last card already runs past the bottom bar (its foot at 963 and 1051 against the bar's 779 at 390 px),
+so a row below it is off the board, and `Notifications` shows its foot by hiding its earlier rows
+under the header — a choice of what scrolls away. Options: (a) the page drawn scrolled to the list's
+foot, the header bar standing and the head, the tab row and the cards above scrolled off, as
+`FeedScrolled` draws a root mid-scroll; (b) the head and tab row standing and the cards before the last
+hidden, `Notifications`' own way — `ProfilePostsOwn`'s one gallery card (702 px) still does not fit;
+(c) a board of its own per tab, as `ProfileMoreFailed` is the chronicle's. Recommendation (a). Then
+`profile.posts.moreFault` keyed `more`, as on the comments tabs.
+
+### 311 · The Everything tab's next page that does not arrive — registered · *design* · **filed 2026-11-25**
+
+Round 68, item 2. The chronicle's failed next page is drawn only on `ProfileMoreFailed`, a board of its
+own that registers nothing (pattern-exemplar exempt); `Profile` and `ProfileOther` carry no `load`
+chip, and `profile.chronicle` has no `moreFault`. The comments tabs' `more` (round 68) is the twin to
+copy: a `load` chip on both boards with `more`, the row at the chronicle's foot through
+`ProfileOwnBody`'s `tail` (`ProfileOtherBody` has no such slot yet), keyed `more` under `profile.chronicle`. Held for the word that it is wanted;
+the first page's fault needs a noun from jakob (462.1).
