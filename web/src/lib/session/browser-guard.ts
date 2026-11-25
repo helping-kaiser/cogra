@@ -78,7 +78,38 @@ export function createGuardedClient<T extends ApolloClient>(
   );
   guards.set(client, guard);
   deviceLocks.set(client, deviceLock);
+  clearAtAccountBoundary(store, client);
   return client;
+}
+
+/**
+ * Empty the cache whenever the active account ends or changes.
+ *
+ * The cache is keyed by query, not by viewer (web.md "a viewer-scoped read
+ * always asks the server"), so what one account was answered must not
+ * outlive it in a tab that keeps accounts side by side. Every boundary —
+ * sign-out, a refused refresh, another tab's sign-out or switch, a sign-in
+ * or join over a session — moves the token store's active account, so the
+ * store is the one place they share. A rotation keeps the account and keeps
+ * the cache.
+ *
+ * The reset is the cache's own, the step Apollo's `clearStore` ends with,
+ * without the step it begins with: `clearStore` also rejects every read
+ * still in the chain, and that includes the reads parked on the session gate
+ * while a refused refresh signs the tab out — reads that then go out, and
+ * must be answered, as the guest the tab now is. Nothing refetches, as with
+ * `clearStore`: the app keeps no watched query, and its `watchFragment`s
+ * pass over an incomplete read. A late answer the old account earned is
+ * refused by the chain instead (`answeredAsSender`, `apollo-link.ts`).
+ */
+function clearAtAccountBoundary(store: TokenStore, client: ApolloClient): void {
+  let account = store.activeAccountId();
+  store.subscribe(() => {
+    const next = store.activeAccountId();
+    if (next === account) return;
+    account = next;
+    void client.cache.reset();
+  });
 }
 
 export function guardOf(client: ApolloClient): AuthGuard {
