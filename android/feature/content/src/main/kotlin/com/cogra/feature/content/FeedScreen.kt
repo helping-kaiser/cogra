@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -35,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -660,18 +662,11 @@ fun FeedScreen(
                 }
             },
         ) { padding ->
-            // The pull's spinner answers the pull alone (design/readme.md
-            // "Loading": "the pull itself asked for it"); a read nobody pulled
-            // waits on the ladder in the list's place instead.
-            var pulled by remember { mutableStateOf(false) }
-            LaunchedEffect(state.loading) { if (!state.loading) pulled = false }
+            val pull = rememberPullAnswer(state.loading)
             PullToRefreshBox(
-                isRefreshing = pulled && state.loading,
+                isRefreshing = pull.refreshing,
                 // A PULL INSIDE THE FILTER SHEET NEVER REFRESHES THE FEED (FeedSheet.md:77).
-                onRefresh = sheet.gated {
-                    pulled = true
-                    onRefresh()
-                },
+                onRefresh = sheet.gated(pull.asked(onRefresh)),
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize(),
@@ -690,8 +685,7 @@ fun FeedScreen(
                     // The status banners ride every branch — an applicant with an
                     // empty feed still sees their application cards.
                     when {
-                        // A retried read leaves the fault for the ladder, timing its own wait.
-                        state.transportFault != null && !state.loading && drawn.cards.isEmpty() -> Column(
+                        faultWithoutCards(state, drawn) -> Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
@@ -719,8 +713,7 @@ fun FeedScreen(
                             // requested: a failed refresh on this banner, a
                             // failed page fetch at the load-more slot below
                             // (android.md "Degrade, never crash").
-                            // The with-content line: never over a retried first page.
-                            if (state.transportFault == TransportFault.REFRESH && drawn.cards.isNotEmpty()) {
+                            if (staleOverCards(state, drawn)) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -840,11 +833,7 @@ fun FeedScreen(
                                         item(key = FEED_SEEN_SEPARATOR) { SeenSeparator() }
                                         items(seen, key = { it.id }) { cardRow(it) }
                                     }
-                                    // THE FIRST PAGE, NOT YET IN: the ladder where
-                                    // the cards will stand, under the head row.
-                                    if (drawn.cards.isEmpty()) {
-                                        item(key = FEED_FIRST_PAGE) { FeedFirstPageWait(state.loading) }
-                                    }
+                                    firstPageWait(drawn, state.loading)
                                     // The slot the next page fills. At rest it draws
                                     // nothing — the page comes because the reader
                                     // kept going (`WatchFeedTail` above). In flight
@@ -1160,6 +1149,48 @@ private fun FeedTailSlot(state: FeedUiState, onLoadMore: () -> Unit) {
 
 /** The list's slot for the first page while it is not yet in. */
 private const val FEED_FIRST_PAGE = "feed_first_page"
+
+/**
+ * The pull's own spinner (design/readme.md "Loading": the pull-to-refresh
+ * spinner "answers the gesture at once, because the pull itself asked for
+ * it"): [refreshing] only from a pull until that pull's load ends. A read
+ * nobody pulled waits on the ladder in the list's place instead.
+ */
+@Stable
+private class PullAnswer(private val loading: () -> Boolean) {
+    var pulled by mutableStateOf(false)
+
+    val refreshing: Boolean get() = pulled && loading()
+
+    /** [refresh], marked as asked by the pull. */
+    fun asked(refresh: () -> Unit): () -> Unit = {
+        pulled = true
+        refresh()
+    }
+}
+
+@Composable
+private fun rememberPullAnswer(loading: Boolean): PullAnswer {
+    val current by rememberUpdatedState(loading)
+    val answer = remember { PullAnswer { current } }
+    LaunchedEffect(loading) { if (!loading) answer.pulled = false }
+    return answer
+}
+
+/** The no-cards fault — but a retried read leaves it for the ladder, timing its own wait. */
+private fun faultWithoutCards(state: FeedUiState, drawn: FeedUiState): Boolean =
+    state.transportFault != null && !state.loading && drawn.cards.isEmpty()
+
+/** The with-content stale line: never over a first page not yet in. */
+private fun staleOverCards(state: FeedUiState, drawn: FeedUiState): Boolean =
+    state.transportFault == TransportFault.REFRESH && drawn.cards.isNotEmpty()
+
+/** THE FIRST PAGE, NOT YET IN: the ladder where the cards will stand, under the head row. */
+private fun LazyListScope.firstPageWait(drawn: FeedUiState, loading: Boolean) {
+    if (drawn.cards.isEmpty()) {
+        item(key = FEED_FIRST_PAGE) { FeedFirstPageWait(loading) }
+    }
+}
 
 /**
  * The feed's first page, not yet in: M3's ladder and nothing else
