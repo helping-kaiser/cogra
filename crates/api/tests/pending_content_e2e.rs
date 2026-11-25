@@ -2343,9 +2343,7 @@ async fn a_tag_on_content_that_never_lands_expires_with_it(pool: PgPool) {
 /// A second post prepare while the first awaits approval stages a second write under a fresh node, and both land as two posts.
 /// ´claim:pending:a-second-post-prepare-stages-a-second-write´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_second_post_prepare_while_the_first_awaits_approval_stages_a_second_write(
-    pool: PgPool,
-) {
+async fn a_second_post_prepare_while_the_first_awaits_approval_stages_a_second_write(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (_, key) = rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;
@@ -2383,7 +2381,10 @@ async fn a_second_post_prepare_while_the_first_awaits_approval_stages_a_second_w
     rig.approve(&token, &key, &first_signed).await;
     rig.land(&token, &key, &second["preparePost"]["writes"])
         .await;
-    assert_eq!(rig.staged_state(&token, &first_signed[0].id).await, "LANDED");
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "LANDED"
+    );
     assert_eq!(rig.staged_state(&token, second_ids[0]).await, "LANDED");
 
     let listing = rig.listed(None, "first: 10").await;
@@ -2392,7 +2393,11 @@ async fn a_second_post_prepare_while_the_first_awaits_approval_stages_a_second_w
         .map(|e| &e["node"])
         .filter(|n| n["title"]["value"] == "Same post")
         .collect();
-    assert_eq!(landed.len(), 2, "the reader sees the post twice: {listing:?}");
+    assert_eq!(
+        landed.len(),
+        2,
+        "the reader sees the post twice: {listing:?}"
+    );
     assert!(
         landed.iter().all(|n| n["landing"]["state"] == "LANDED"),
         "{landed:?}"
@@ -2441,7 +2446,11 @@ async fn a_second_reply_prepare_while_the_first_awaits_approval_stages_a_second_
     );
 
     let second = prepare().await;
-    assert_eq!(second["prepareComment"]["userErrors"], json!([]), "{second}");
+    assert_eq!(
+        second["prepareComment"]["userErrors"],
+        json!([]),
+        "{second}"
+    );
     let second_id = second["prepareComment"]["writes"][0]["id"]
         .as_str()
         .expect("id")
@@ -2460,7 +2469,10 @@ async fn a_second_reply_prepare_while_the_first_awaits_approval_stages_a_second_
     rig.approve(&token, &key, &first_signed).await;
     rig.land(&token, &key, &second["prepareComment"]["writes"])
         .await;
-    assert_eq!(rig.staged_state(&token, &first_signed[0].id).await, "LANDED");
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "LANDED"
+    );
     assert_eq!(rig.staged_state(&token, &second_id).await, "LANDED");
 
     let thread = rig
@@ -2538,7 +2550,10 @@ async fn a_second_edit_prepare_while_the_first_awaits_approval_is_refused(pool: 
     );
 
     rig.approve_and_close(&token, &key, &first_signed).await;
-    assert_eq!(rig.staged_state(&token, &first_signed[0].id).await, "LANDED");
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "LANDED"
+    );
     let post = rig
         .gql(
             None,

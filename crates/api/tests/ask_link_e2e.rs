@@ -984,7 +984,11 @@ async fn a_second_approval_while_the_vouch_awaits_approval_is_already_approved(p
             }]}}),
         )
         .await;
-    assert_eq!(sealed["submitProposals"]["userErrors"], json!([]), "{sealed}");
+    assert_eq!(
+        sealed["submitProposals"]["userErrors"],
+        json!([]),
+        "{sealed}"
+    );
     let staged = &sealed["submitProposals"]["stagedWrites"][0];
     assert_eq!(staged["state"], "AWAITING_APPROVAL", "{sealed}");
 
