@@ -124,6 +124,49 @@ impl Rig {
             .expect("ingests")
     }
 
+    /// The first half of an ingestion pass alone: every epoch since the
+    /// cursor mirrored and its staged writes marked landed, without the
+    /// confirm-side promotions `ingest::ingest_pending` runs only once
+    /// every epoch is in. A request served between the two halves — or
+    /// after a profile promotion that failed — finds the update's record
+    /// in the mirror and its write landed, while its version row is still
+    /// pending. Returns the promoted writes, for the late promotion.
+    async fn close_and_mirror_unpromoted(&self) -> Vec<staged::PromotedWrite> {
+        self.standin.close_epoch().await.expect("closes");
+        let cursor = mirror::last_ingested_epoch(&self.pool)
+            .await
+            .expect("reads cursor");
+        let packages = self
+            .boundary
+            .epochs_since(cursor)
+            .await
+            .expect("reads epochs");
+        let mut promoted = Vec::new();
+        for package in &packages {
+            mirror::ingest_epoch(&self.pool, package)
+                .await
+                .expect("mirrors");
+            promoted.extend(
+                staged::promote_landed(&self.pool, package.epoch)
+                    .await
+                    .expect("promotes"),
+            );
+        }
+        promoted
+    }
+
+    /// The second half of the pass: the confirm-side promotions of writes
+    /// [`Self::close_and_mirror_unpromoted`] marked landed, in the order
+    /// `ingest::ingest_pending` runs them.
+    async fn promote_late(&self, promoted: &[staged::PromotedWrite]) {
+        let mut failures = api::content::land_promoted(&self.pool, promoted).await;
+        failures.extend(profile::land_promoted(&self.pool, promoted).await);
+        assert!(
+            failures.is_empty(),
+            "confirm-side promotion failed: {failures:?}"
+        );
+    }
+
     async fn update(
         &self,
         actor: Uuid,
@@ -835,5 +878,185 @@ mod pictures {
         rig.update(actor, with_picture(Some(Some(face))))
             .await
             .expect("prepares");
+    }
+
+    /// Neither order of a text change and a picture change gets a second
+    /// change in while the first settles: the prepare is refused, the
+    /// first change stays on screen, and once it lands the next change
+    /// builds on it.
+    ///
+    /// A picture change and a text change wait for each other: while one is signed and unlanded the other's prepare is refused, and the settling change stays on screen.
+    /// ´claim:profile:a-text-and-a-picture-change-wait-for-each-other´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn a_text_and_a_picture_change_wait_for_each_other(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, key) = rig.registered_actor("ada").await;
+        let face = asset(&rig.pool, actor, 1).await;
+
+        let text = rig
+            .update(actor, draft(Some("Ada L"), Some("First bio"), None))
+            .await
+            .expect("prepares the text change");
+        rig.sign_and_relay(text.id, &key).await;
+        match rig.update(actor, with_picture(Some(Some(face)))).await {
+            Err(ProfileError::BadInput { field, .. }) => assert_eq!(field, "input"),
+            other => panic!("expected the picture change refused, got {other:?}"),
+        }
+        let shown = super::current(&rig.pool, actor).await;
+        assert!(shown.pending);
+        assert_eq!(shown.bio.as_deref(), Some("First bio"));
+        assert_eq!(shown.avatar_id, None);
+        rig.close_and_ingest().await;
+
+        let picture = rig
+            .update(actor, with_picture(Some(Some(face))))
+            .await
+            .expect("prepares the picture change once the text landed");
+        rig.sign_and_relay(picture.id, &key).await;
+        match rig.update(actor, draft(None, Some("Second bio"), None)).await {
+            Err(ProfileError::BadInput { field, .. }) => assert_eq!(field, "input"),
+            other => panic!("expected the text change refused, got {other:?}"),
+        }
+        let shown = super::current(&rig.pool, actor).await;
+        assert!(shown.pending);
+        assert_eq!(shown.avatar_id, Some(face));
+        assert_eq!(shown.bio.as_deref(), Some("First bio"));
+        rig.close_and_ingest().await;
+
+        let after = super::current(&rig.pool, actor).await;
+        assert!(!after.pending);
+        assert_eq!(after.display_name, "Ada L");
+        assert_eq!(after.bio.as_deref(), Some("First bio"));
+        assert_eq!(after.avatar_id, Some(face));
+    }
+
+    /// The window the serialization does not cover: the ingestion pass
+    /// marks the first update's write landed before the profile promotion
+    /// drops its row's pending mark, so a change signed in between is
+    /// prepared — chained behind the first update's record — while that
+    /// row is still pending. The profile fold is newest-wins per field
+    /// along that chain (user.md §3), so a picture-only change leaves the
+    /// first update's text standing, and the row the server serves must
+    /// say so from the signature on and after both land.
+    ///
+    /// An update signed while its landed predecessor's version row is still pending builds on that predecessor, so the predecessor's text stays on screen and stands once both land.
+    /// ´claim:profile:an-update-builds-on-its-unpromoted-predecessor´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn an_update_signed_before_its_predecessor_promotes_builds_on_it(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, key) = rig.registered_actor("ada").await;
+        let face = asset(&rig.pool, actor, 1).await;
+
+        let text = rig
+            .update(actor, draft(Some("Ada L"), Some("First bio"), None))
+            .await
+            .expect("prepares the text change");
+        rig.sign_and_relay(text.id, &key).await;
+        let first = rig.close_and_mirror_unpromoted().await;
+        let shown = super::current(&rig.pool, actor).await;
+        assert!(shown.pending, "the text change's row is not promoted yet");
+        assert_eq!(shown.bio.as_deref(), Some("First bio"));
+
+        let picture = rig
+            .update(actor, with_picture(Some(Some(face))))
+            .await
+            .expect("the landed text change no longer holds the chain");
+        assert_eq!(
+            picture
+                .proposal
+                .body
+                .asserted_parents
+                .iter()
+                .map(|p| p.to_string())
+                .collect::<Vec<_>>(),
+            vec![text.proposal.body.act_id().to_string()],
+            "the picture change chains behind the text change's record"
+        );
+        rig.sign_and_relay(picture.id, &key).await;
+
+        let shown = super::current(&rig.pool, actor).await;
+        assert!(shown.pending);
+        assert_eq!(shown.avatar_id, Some(face));
+        assert_eq!(
+            shown.bio.as_deref(),
+            Some("First bio"),
+            "the picture change must not put the older bio back"
+        );
+        assert_eq!(shown.display_name, "Ada L");
+
+        rig.promote_late(&first).await;
+        rig.close_and_ingest().await;
+
+        let after = super::current(&rig.pool, actor).await;
+        assert!(!after.pending);
+        assert_eq!(after.avatar_id, Some(face));
+        assert_eq!(after.bio.as_deref(), Some("First bio"));
+        assert_eq!(after.display_name, "Ada L");
+    }
+
+    /// A change that expires unlanded leaves nothing for the next one to
+    /// inherit: its row goes at the expiry, and the next change merges
+    /// onto what had landed — the expired text is never served again and
+    /// never lands through another change's row.
+    ///
+    /// The change after an expired one builds on the landed profile, so the expired change's text is never served again.
+    /// ´claim:profile:an-expired-change-leaves-nothing-to-inherit´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn an_expired_change_leaves_nothing_for_the_next_to_inherit(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, key) = rig.registered_actor("ada").await;
+        let face = asset(&rig.pool, actor, 1).await;
+        rig.land_update(actor, &key, draft(None, Some("Landed bio"), None))
+            .await;
+
+        let text = rig
+            .update(actor, draft(Some("Gone"), Some("Expired bio"), None))
+            .await
+            .expect("prepares the text change");
+        rig.sign_and_relay(text.id, &key).await;
+        staged::expire_one(&rig.pool, text.id, 999)
+            .await
+            .expect("expires");
+
+        let picture = rig
+            .update(actor, with_picture(Some(Some(face))))
+            .await
+            .expect("an expired change holds nothing");
+        rig.sign_and_relay(picture.id, &key).await;
+        let shown = super::current(&rig.pool, actor).await;
+        assert!(shown.pending);
+        assert_eq!(shown.bio.as_deref(), Some("Landed bio"));
+        assert_eq!(shown.display_name, "ada");
+        assert_eq!(shown.avatar_id, Some(face));
+    }
+
+    /// What the member signs is the change alone: a picture-only update's
+    /// payload carries the picture and no text, whatever the profile shows
+    /// beside it — the merged field set is a render, never signed.
+    ///
+    /// A profile update's payload carries only the fields it changes, so the merged version row is never what the member signs.
+    /// ´claim:profile:an-update-signs-only-what-it-changes´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn an_update_signs_only_the_fields_it_changes(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, key) = rig.registered_actor("ada").await;
+        let face = asset(&rig.pool, actor, 2).await;
+        rig.land_update(
+            actor,
+            &key,
+            draft(Some("Ada L"), Some("Curious."), Some("https://ada.example")),
+        )
+        .await;
+
+        let prepared = rig
+            .update(actor, with_picture(Some(Some(face))))
+            .await
+            .expect("prepares");
+        let update = common::envelope::CograProfile::decode_payload(&prepared.proposal.payload)
+            .expect("decodes");
+        assert_eq!(update.display_name, None);
+        assert_eq!(update.bio, None);
+        assert_eq!(update.website_url, None);
+        assert!(matches!(update.avatar, Some(Some(_))));
     }
 }
