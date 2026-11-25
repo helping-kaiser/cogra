@@ -32,7 +32,8 @@
    as `ApplicantFeed` names it. The card is that board's key card in another
    state — the sidecar's `the key card` — so it is `keyCard`, `Restore the
    key` its `restore` as on `KeyElsewhere`, and the one part this state adds,
-   `Make a new key`, is `newKey`. */
+   `Make a new key`, is `remake` — one word, so the body's own `make a new
+   key` never reads as the node. */
 export const NODE = "feed";
 export const PROPS = {
   wording: { editor: "enum", options: ["browser", "app"], default: "browser" },
@@ -55,7 +56,7 @@ export function Screen() {
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             <Button variant="inverse" style={{ display: "{{restoreDoor}}" }} node="restore">Restore the key</Button>
-            <Button variant="outline" node="newKey">Make a new key</Button>
+            <Button variant="outline" node="remake">Make a new key</Button>
           </div>
         </TaskCard>
         <PostCard {...ADA_POST} signedIn={false} stanceOpacity="var(--state-disabled)" node="card" />
