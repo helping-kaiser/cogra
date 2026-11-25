@@ -7080,20 +7080,14 @@ again.` (existing words, but beside `Retry` it says try again twice); (c) draw t
 own failed read first (`… comments can't load right now.`, an existing line) and the references
 sheet as its twin. Recommendation (a).
 
-### 310 · The posts tabs' next page that does not arrive — where the board stands · *design* · **filed 2026-11-25**
+### 310 · The posts tabs' next page that does not arrive · *design* · **filed 2026-11-25** · **closed 2026-11-25**
 
-Round 68, item 2 (impl seam 463.3). `ProfileComments` and `ProfileCommentsOwn` draw it as the `load`
-chip's `more`, `Notifications`' twin: the cards stay and `Couldn't load more — Retry` stands below the
-last card (`profile.comments.moreFault` keyed `more`). On `ProfilePosts` and `ProfilePostsOwn` the
-last card already runs past the bottom bar (its foot at 963 and 1051 against the bar's 779 at 390 px),
-so a row below it is off the board, and `Notifications` shows its foot by hiding its earlier rows
-under the header — a choice of what scrolls away. Options: (a) the page drawn scrolled to the list's
-foot, the header bar standing and the head, the tab row and the cards above scrolled off, as
-`FeedScrolled` draws a root mid-scroll; (b) the head and tab row standing and the cards before the last
-hidden, `Notifications`' own way — `ProfilePostsOwn`'s one gallery card (702 px) still does not fit;
-(c) a board of its own per tab, as `ProfileMoreFailed` is the chronicle's. Recommendation (a). Then
-`profile.posts.moreFault` keyed `more`, as on the comments tabs.
-
+Round 68, item 2 and addendum 1 (impl seam 463.3). Drawn on all four card tabs as the `load` chip's
+`more`, `Notifications`' twin: `Couldn't load more — Retry` below the last card, keyed `more` under
+`profile.posts.moreFault` and `profile.comments.moreFault`. At `more` the board draws the list's foot,
+the head and the tab row standing: `ProfilePosts` hides its first post and keeps the second;
+`ProfilePostsOwn` hides the gallery post and keeps the board's shortest sample, `SOL_SECOND_POST`
+landed.
 ### 311 · The Everything tab's next page that does not arrive — registered · *design* · **filed 2026-11-25**
 
 Round 68, item 2. The chronicle's failed next page is drawn only on `ProfileMoreFailed`, a board of its
