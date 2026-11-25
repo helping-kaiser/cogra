@@ -915,6 +915,59 @@ async fn the_vouch_back_ends_the_borrowing(pool: PgPool) {
     );
 }
 
+/// A finding, pinned as the server answers today: `hasReciprocated`
+/// counts every staged Opinion toward the voucher that has not expired
+/// (`staged::has_live_targeting`), so a vouch-back that was only prepared
+/// — no signature of the member's exists — already answers true, and the
+/// vouch card leaves before anything is signed. The borrowing beside it
+/// reads "signed" as the pre-commitment and holds. VouchBack.md names
+/// only a signed vouch-back (`WHEN a signed vouch-back expires instead of
+/// landing`); auth.md "Reciprocation is the joiner's own act" says "in
+/// flight as one of the viewer's staged writes".
+///
+/// A vouch-back that is only prepared, never signed, already reads as reciprocated, while the borrowing beside it holds.
+/// ´claim:vouch:an-unsigned-vouch-back-prepare-reads-as-reciprocated´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unsigned_vouch_back_prepare_already_reads_as_reciprocated(pool: PgPool) {
+    let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
+    let (mira, _) = rig.seed_member("mira", "mira@example.com").await;
+    let (account, _key, token) = wire_member(&rig, mira, "noa").await;
+    let read = "{ me { invitedBy { id } hasReciprocated } }";
+
+    let before = rig.gql(Some(&token), read, json!({})).await;
+    assert_eq!(before["me"]["invitedBy"]["id"], mira.to_string());
+    assert_eq!(
+        before["me"]["hasReciprocated"], false,
+        "the pair starts incomplete"
+    );
+
+    let writes = prepare_stance(&rig, &token, json!({ "target": mira })).await;
+    assert_eq!(writes.as_array().expect("writes").len(), 1, "{writes}");
+    assert_eq!(writes[0]["family"], "OPINION");
+    assert_eq!(
+        staged_state(&rig, &token, &writes[0]["id"]).await,
+        "AWAITING_PRE_SIGN",
+        "the vouch-back is prepared and nothing of it is signed"
+    );
+
+    let after = rig.gql(Some(&token), read, json!({})).await;
+    assert_eq!(
+        after["me"]["hasReciprocated"], true,
+        "an unsigned prepare already answers the prompt"
+    );
+    assert_eq!(
+        wire_borrowed(&rig, &token).await.as_deref(),
+        Some("mira"),
+        "the borrowing waits for the signature"
+    );
+    assert!(
+        !store::reciprocation_latched(&rig.pool, account)
+            .await
+            .expect("query"),
+        "the in-flight answer never latches"
+    );
+}
+
 /// The genesis account came through no invite at all, so there is no
 /// vantage to hand over and none to name.
 ///
