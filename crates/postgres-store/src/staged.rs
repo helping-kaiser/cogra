@@ -600,11 +600,17 @@ async fn load_row(pool: &PgPool, id: Uuid) -> Result<(Promotable, bool), StagedE
     Ok((Promotable::Full(Box::new(write)), kept))
 }
 
-/// Whether the actor has a live staged write of the family toward the
-/// target — the in-flight half of a graph-derived read (auth.md
-/// "Reciprocation is the joiner's own act"). Expired stagings are
-/// ignored; a landed one is fine — its record is in the mirror anyway.
-pub async fn has_live_targeting(
+/// Whether the actor has signed a staged write of the family toward the
+/// target that has not expired — the in-flight half of a graph-derived
+/// read (auth.md "Reciprocation is the joiner's own act").
+///
+/// Signed is the test every pending read uses: the pre-commitment reached
+/// the server, or the act is carried and signs with the vouch-in batch.
+/// A prepare nobody signed is no act in flight (see
+/// [`supersede_unsigned_targeting`]); the vouch card leaves at the
+/// signature and returns when a signed one expires (VouchBack.md:66). A
+/// landed row still counts — its record is in the mirror anyway.
+pub async fn has_signed_targeting(
     pool: &PgPool,
     actor_id: Uuid,
     family: Family,
@@ -614,6 +620,7 @@ pub async fn has_live_targeting(
         r#"SELECT EXISTS(
                SELECT 1 FROM staged_writes
                WHERE actor_id = $1 AND family = $2 AND target = $3
+                 AND (pre_signed_at IS NOT NULL OR carried)
                  AND state <> 'expired'
            ) AS "exists!""#,
         actor_id,
@@ -627,7 +634,7 @@ pub async fn has_live_targeting(
 /// Whether the actor has an unlanded, unexpired staged write of the
 /// family toward the target — the edit-serialization guard (post.md §4:
 /// the backend serializes edits per (node, author)). Unlike
-/// `has_live_targeting`, a landed row does not count: its record is in
+/// [`has_signed_targeting`], a landed row does not count: its record is in
 /// the mirror and the next edit chains behind it.
 pub async fn has_pending_targeting(
     pool: &PgPool,

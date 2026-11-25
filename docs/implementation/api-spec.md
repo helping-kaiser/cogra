@@ -1436,7 +1436,7 @@ type User implements Node & Actor {
   invitedBy: Actor
   "Whether the viewer's reciprocal Opinion toward invitedBy exists —
    confirmed in the record mirror (latched on the landed application
-   row) or in flight as one of the viewer's staged writes. Drives
+   row) or in flight as one of the viewer's signed staged writes. Drives
    the first-login reciprocation prompt (auth.md \"Reciprocation is
    the joiner's own act\"). Vacuously true when invitedBy is null —
    and for any viewer but the account's own: the field exists only
