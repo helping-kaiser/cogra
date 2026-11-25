@@ -340,6 +340,43 @@ describe("LoginForm", () => {
     });
   });
 
+  it("a_dead_lock_seen_for_one_account_is_never_told_to_another_signing_in_here", async () => {
+    // auth.md "Multi-account device custody": the dead lock is acct-1's; a
+    // changed credential then signs in acct-2, which is not told of it.
+    let logins = 0;
+    server.use(
+      gqlLink.mutation("LogIn", () => {
+        logins += 1;
+        return HttpResponse.json({
+          data: {
+            logIn: {
+              __typename: "LogInPayload",
+              auth: {
+                __typename: "AuthSession",
+                accessToken: `access-${logins}`,
+                refreshToken: `refresh-${logins}`,
+                user: { __typename: "User", id: `acct-${logins}` },
+              },
+              reuseDetectedAt: null,
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const notices = createSecurityNotices();
+    const leg = fakeLeg([
+      { ready: false, lockLost: true },
+      { ready: true, lockLost: false },
+    ]);
+    const { store } = renderWithProviders(<LoginForm notices={notices} deviceLock={leg} />);
+    fillAndSubmit();
+    await screen.findByTestId("signIn.fault");
+    fillAndSubmit("other@example.com", "another password");
+    await waitFor(() => expect(store.activeAccountId()).toBe("acct-2"));
+    expect(notices.lockLost()).toBe(false);
+  });
+
   it("offers the Android app as a download from the served APK path", () => {
     renderWithProviders(<LoginForm />);
     const link = screen.getByTestId("signIn.apk");
