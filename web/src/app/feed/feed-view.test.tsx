@@ -1050,6 +1050,27 @@ describe("FeedView", () => {
       expect(await screen.findByTestId("feed.keyCard.restore")).toHaveAttribute("href", "/restore");
     });
 
+    // ApplicantFeed.jsx: the applicant's task cards are `FeedList`'s first
+    // children, full width above the first post — never the banners' gutter.
+    it("stands_the_applicants_cards_at_the_head_of_the_list", async () => {
+      server.use(meHandler("APPLICANT"));
+      renderFeed({
+        kind: "awaitingApproval",
+        emailVerified: false,
+        keyAttached: true,
+        keyOnDevice: true,
+      });
+      const first = await screen.findByTestId(byNode("feed.card", "p1"));
+      const verify = await screen.findByTestId("feed.verifyCard");
+      const list = screen.getByTestId("feed-list");
+      const head = screen.getByTestId("feed-applicant-cards");
+      expect(verify.parentElement).toBe(head);
+      expect(head.parentElement).toBe(list);
+      expect(list.firstElementChild).toBe(head);
+      expect(head.nextElementSibling).toContainElement(first);
+      expect(screen.getByRole("region", { name: "Account status" })).toBeEmptyDOMElement();
+    });
+
     // A member's loop never reports, so a null progress must not withhold the
     // one card that tells them why they cannot act.
     it("keeps asking a member with no key here, progress or none", async () => {
