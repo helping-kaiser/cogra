@@ -15731,7 +15731,8 @@
       "keys": {
         "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
         "profile.posts.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "profile.posts.moreFault": "the load chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.bottomBar": [],
@@ -15875,8 +15876,12 @@
         "profile.posts.empty": [],
         "profile.posts.empty.title": [],
         "profile.posts.loading": [],
-        "profile.posts.moreFault": [],
-        "profile.posts.moreFault.retry": [],
+        "profile.posts.moreFault": [
+          "more"
+        ],
+        "profile.posts.moreFault.retry": [
+          "more"
+        ],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
@@ -16153,7 +16158,8 @@
       "keys": {
         "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
         "profile.posts.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "profile.posts.moreFault": "the load chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.band": [],
@@ -16212,7 +16218,8 @@
           "d6d4651b-1dfe-467b-8142-85ea954558c3"
         ],
         "profile.posts.card.actionRow.score.value": [
-          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
+          "d6d4651b-1dfe-467b-8142-85ea954558c3"
         ],
         "profile.posts.card.actionRow.share": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
@@ -16302,8 +16309,12 @@
         "profile.posts.empty": [],
         "profile.posts.empty.title": [],
         "profile.posts.loading": [],
-        "profile.posts.moreFault": [],
-        "profile.posts.moreFault.retry": [],
+        "profile.posts.moreFault": [
+          "more"
+        ],
+        "profile.posts.moreFault.retry": [
+          "more"
+        ],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
