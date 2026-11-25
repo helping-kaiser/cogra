@@ -37,8 +37,10 @@
    is typed, a post when any word of its title or of its author's display
    name does, with no `@`; `las` would reach none of them. A handle match
    brings the person alone, what they made following only the `@`, the
-   deliberate person cue; a comment is never found by plain text. The post and the tag stand in the content as
-   before.
+   deliberate person cue; a comment is never found by plain text. The tags
+   stand by their names, `Salt maps of the coast road` by its title, and Sal
+   Torres's `Two hives moved inland for the winter` by its author's display
+   name alone — no word of its title starts with `sal`.
 
    REGISTERED under the `explore` prefix (design ⇄ impl seam 062/063), named
    as `ExploreSearch` names its rows: each is a `result`, keyed by its position
@@ -51,7 +53,8 @@
    content, and under Ranked each section that has an unscored rest closes
    its head with its own seam, keyed by the section: Salome Ward stands past
    the people's seam, unranked and bare-edged, before the door; `saltcrust`
-   past the topics'; the 2024 rubbing past the content's, wearing its date.
+   past the topics'; Sal Torres's 2024 post past the content's, wearing its
+   date.
 
    EVERY SECTION IS CAPTIONED (jakob 2026-11-11, Q2): `Profiles`, `Tags`,
    `Posts and comments`, each the people's own `SectionLabel`, so the last
@@ -84,7 +87,7 @@ export function Screen() {
         <SectionLabel node="contentLabel">Posts and comments</SectionLabel>
         <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="6" />
         <Seam node="seam" nodeKey="content" />
-        <ReferenceRow kind="post" name="First try at a rubbing" value="06.09.2024" onOpen={() => {}} node="result" nodeKey="7" />
+        <ReferenceRow kind="post" name="Two hives moved inland for the winter" value="06.09.2024" onOpen={() => {}} node="result" nodeKey="7" />
       </div>
       <BottomNav active="search" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
