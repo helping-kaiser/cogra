@@ -139,12 +139,24 @@ class FeedFirstPageLoadingTest {
         upTo(SLOW_MS - 50)
         hand(state.copy(loading = true))
         count("feed_transport_error").assertCountEquals(0)
+        // The with-content line and its Retry never stand over a page not yet in.
+        count("feed_transport_banner").assertCountEquals(0)
+        count("feed_retry").assertCountEquals(0)
         drawnAt(SLOW_MS / 2)
         count(LOADING).assertCountEquals(0)
         noEmptyLine()
         drawnAt(SLOW_MS / 2 + FRAME_MS)
         loadingReads()
         spinners().assertCountEquals(0)
+        count("feed_transport_banner").assertCountEquals(0)
+        count("feed_retry").assertCountEquals(0)
+
+        // The retry fails again: the no-cards fault is back as it was.
+        hand(state.copy(loading = false))
+        count("feed_transport_error").assertCountEquals(1)
+        count("feed_retry").assertCountEquals(1)
+        count("feed_transport_banner").assertCountEquals(0)
+        count(LOADING).assertCountEquals(0)
     }
 
     @Test

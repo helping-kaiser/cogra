@@ -719,7 +719,8 @@ fun FeedScreen(
                             // requested: a failed refresh on this banner, a
                             // failed page fetch at the load-more slot below
                             // (android.md "Degrade, never crash").
-                            if (state.transportFault == TransportFault.REFRESH) {
+                            // The with-content line: never over a retried first page.
+                            if (state.transportFault == TransportFault.REFRESH && drawn.cards.isNotEmpty()) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
