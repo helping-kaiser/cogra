@@ -27,6 +27,36 @@ describe("MemberStatus", () => {
     await waitFor(() => expect(writeSigner.resume).toHaveBeenCalled());
   });
 
+  // A resume whose device read fails rejects; nothing signed, so the card
+  // stands with Resume answering again, and nothing rejects unhandled.
+  it("a_resume_that_rejects_gives_the_button_back_and_signs_nothing_new", async () => {
+    const store = fakeIdentityStore({ keyOnDevice: false, handshakeIds: ["w1"] });
+    const writeSigner = fakeWriteSigner({
+      resume: vi.fn(() => Promise.reject(new Error("custody read failed"))),
+    });
+    const rejections: unknown[] = [];
+    const caught = (reason: unknown) => void rejections.push(reason);
+    process.on("unhandledRejection", caught);
+    try {
+      renderWithProviders(<MemberStatus store={store} />, {
+        store: signedInStore(),
+        writeSigner,
+      });
+      fireEvent.click(await screen.findByTestId("home_resume"));
+      await waitFor(() => expect(screen.getByTestId("home_resume")).toBeEnabled());
+      fireEvent.click(screen.getByTestId("home_resume"));
+      await waitFor(() => expect(writeSigner.resume).toHaveBeenCalledTimes(2));
+      await waitFor(() => expect(screen.getByTestId("home_resume")).toBeEnabled());
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    } finally {
+      process.off("unhandledRejection", caught);
+    }
+    expect(rejections).toEqual([]);
+    expect(screen.getByTestId("home_pending")).toHaveTextContent("1 signed act(s)");
+    expect(writeSigner.signStaged).not.toHaveBeenCalled();
+    expect(writeSigner.sign).not.toHaveBeenCalled();
+  });
+
   // The vouch card is the feed's own first card now (`feed/vouch-card.tsx`):
   // this stack never carries it, on the feed or on the own profile.
   it("carries no vouch card, and nothing at all with no parked handshake", async () => {
