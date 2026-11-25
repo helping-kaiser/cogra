@@ -224,7 +224,7 @@ class StatusBannersTest {
     @Test
     fun anApplicantAwaitingVerificationGetsTheVerifyCardWithNoTokenField() {
         render(applicant(awaiting(emailVerified = false)))
-        compose.onNodeWithTag("home_verify").assertTextEquals("Verify your email")
+        compose.onNodeWithTag("feed.verifyCard.title", useUnmergedTree = true).assertTextEquals("Verify your email")
         compose.onNodeWithTag("verify_resend").assertExists()
         compose.onNodeWithTag("verify_token").assertDoesNotExist()
         compose.onNodeWithTag("verify_submit").assertDoesNotExist()
@@ -258,7 +258,7 @@ class StatusBannersTest {
         // The two proofs are independent (auth.md "Application"): both
         // cards can show at once.
         render(applicant(awaiting(emailVerified = false, keyAttached = false, keyOnDevice = false)))
-        compose.onNodeWithTag("home_verify").assertExists()
+        compose.onNodeWithTag("feed.verifyCard").assertExists()
         compose.onNodeWithTag("home_create_key").assertExists()
     }
 
@@ -326,7 +326,7 @@ class StatusBannersTest {
     @Test
     fun landingRendersItsStatusLine() {
         render(applicant(RegistrationProgress.AwaitingLanding))
-        compose.onNodeWithTag("home_landing").assertExists()
+        compose.onNodeWithTag("feed.application").assertExists()
     }
 
     @Test
