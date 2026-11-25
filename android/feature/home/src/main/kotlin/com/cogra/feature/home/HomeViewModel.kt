@@ -13,6 +13,7 @@ import com.cogra.domain.invites.InvitesRepository
 import com.cogra.domain.invites.MyApplication
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
+import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.RegistrationFlow
 import com.cogra.domain.signing.RegistrationProgress
 import com.cogra.domain.signing.WriteSigner
@@ -333,10 +334,19 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** Continues every parked handshake (process-death recovery). */
+    /**
+     * Continues every parked handshake (process-death recovery). Without
+     * the key on this device nothing signs (KeyElsewhere.md) and the
+     * material stays parked for the key's return — never a crash
+     * (android.md "Degrade, never crash").
+     */
     fun onResumePending() {
         viewModelScope.launch {
-            signer.resume()
+            try {
+                signer.resume()
+            } catch (_: NoActorKeyException) {
+                // Nothing to do here: the key card at the feed's head is the way back.
+            }
             _state.update { it.copy(pendingHandshakes = identity.handshakeIds().size) }
         }
     }
