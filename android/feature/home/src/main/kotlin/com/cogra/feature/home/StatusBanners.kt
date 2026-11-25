@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -212,11 +213,10 @@ fun StatusBanners(
     onRetryAttach: () -> Unit = {},
 ) {
     if (state.loading) return
-    // The host pads horizontally — the feed's list padding, the
-    // profile's item wrap — so the cards line up with its content.
+    val layout = StackLayout.of(application.surface)
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(layout.gap),
     ) {
         if (state.applicant) {
             ApplicantStatus(
@@ -226,6 +226,7 @@ fun StatusBanners(
                 onStartKeyCeremony = onStartKeyCeremony,
                 onRetryAttach = onRetryAttach,
                 application = application,
+                inset = layout.lineInset,
             )
         } else {
             // The member husk warning rides the screen's collapsing top
@@ -234,7 +235,7 @@ fun StatusBanners(
             // The vouch card is the feed's own first card (`VouchCardRoute`),
             // never this stack — which the own profile carries too.
             if (state.pendingHandshakes > 0) {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(modifier = Modifier.padding(horizontal = layout.lineInset).fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             stringResource(R.string.home_pending, state.pendingHandshakes),
@@ -267,9 +268,10 @@ private fun ApplicantStatus(
     onStartKeyCeremony: () -> Unit,
     application: ApplicationCardActions,
     onRetryAttach: () -> Unit,
+    inset: Dp,
 ) {
     when (val progress = state.progress) {
-        null -> ApplicantChecking()
+        null -> Line(inset) { ApplicantChecking() }
         is RegistrationProgress.AwaitingApproval -> {
             if (!progress.emailVerified) {
                 VerifyCard(state, onResendEmailChange, onResend, feedNode(application.surface, "verifyCard"))
@@ -288,8 +290,8 @@ private fun ApplicantStatus(
                     AttachKeyCard(onRetryAttach, application.surface)
                 // A key sits on the device but the attach was refused —
                 // it belongs to another account (ACTOR_KEY_IN_USE). No
-                // board draws this card yet.
-                !progress.keyAttached && progress.keyOnDevice -> KeyElsewhereCard(onStartKeyCeremony)
+                // board draws this card yet, so it keeps the gutter.
+                !progress.keyAttached && progress.keyOnDevice -> Line(inset) { KeyElsewhereCard(onStartKeyCeremony) }
                 // keyAttached && !keyOnDevice: the restore ask rides the
                 // screen's collapsing top (KeyRestoreBanner), not this
                 // stack.
@@ -316,19 +318,45 @@ private fun ApplicantStatus(
             )
         // The restore ask rides the screen's collapsing top.
         RegistrationProgress.AwaitingSigningKey -> Unit
-        RegistrationProgress.Member ->
+        RegistrationProgress.Member -> Line(inset) {
             // Momentary: the refresh re-reads the member shape.
             Text(
                 text = stringResource(R.string.home_welcome),
                 modifier = Modifier.testTag("home_landed"),
             )
-        is RegistrationProgress.RejectedByDevice ->
+        }
+        is RegistrationProgress.RejectedByDevice -> Line(inset) {
             ErrorLine(R.string.home_application_rejected, testTag = "home_application_rejected")
-        is RegistrationProgress.Refused ->
+        }
+        is RegistrationProgress.Refused -> Line(inset) {
             ErrorLine(R.string.error_generic, testTag = "home_application_refused")
-        is RegistrationProgress.Failed ->
+        }
+        is RegistrationProgress.Failed -> Line(inset) {
             ErrorLine(R.string.error_transport, testTag = "home_application_offline")
+        }
     }
+}
+
+/**
+ * Where the stack's rows stand on their host. ON THE FEED the drawn task
+ * cards are cards of the list (`ApplicantFeed.jsx:64-114` inside `FeedList`,
+ * `_shared.jsx:531-537`; seam 464): full width, 8dp apart, and every row that
+ * is not one of them keeps the list's 16dp gutter. ELSEWHERE (the own
+ * profile) the host pads the whole stack, its rows 16dp apart.
+ */
+private data class StackLayout(val gap: Dp, val lineInset: Dp) {
+    companion object {
+        fun of(surface: ApplicationSurface): StackLayout = when (surface) {
+            ApplicationSurface.FEED -> StackLayout(gap = Space.x2, lineInset = Space.x4)
+            ApplicationSurface.PROFILE -> StackLayout(gap = 16.dp, lineInset = 0.dp)
+        }
+    }
+}
+
+/** A row of the stack that is not a drawn task card: it keeps [inset] at each side. */
+@Composable
+private fun Line(inset: Dp, content: @Composable () -> Unit) {
+    Box(Modifier.padding(horizontal = inset)) { content() }
 }
 
 /** The board registers the applicant's cards on the feed; elsewhere they stand unnamed. */
