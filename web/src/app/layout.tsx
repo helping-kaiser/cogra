@@ -28,9 +28,16 @@ const figtree = Figtree({
   subsets: ["latin", "latin-ext"],
 });
 
+// TEXT SCALE IS HONOURED (design/readme.md, "Text scale is honoured and never
+// capped"). Chrome on a phone keeps 1rem at 16px whatever the phone's font
+// size, unless the page opts in with `<meta name="text-scale"
+// content="scale">`: then the initial font size, and with it every `rem`,
+// follows the OS setting (developer.chrome.com, "Respect Operating System Text
+// Scale"). `other` is Next's documented door for a meta it has no field for.
 export const metadata: Metadata = {
   title: "CoGra",
   description: "The CoGra web app.",
+  other: { "text-scale": "scale" },
 };
 
 // cover lets the fixed bottom bar extend into the home-indicator area,
