@@ -96,8 +96,14 @@ function stanceServer(targets: readonly StanceTarget[]) {
     return gqlLink.query(operation, ({ variables }) => {
       const id = String(variables.id);
       asked.push({ operation, ids: [id], includePending: variables.includePending });
+      // A root answers only an id of its own class, as the server does.
       return HttpResponse.json({
-        data: { [field]: { __typename: TYPENAME[kind], id, viewerStance: wire(id, Boolean(variables.includePending), state.era) } },
+        data: {
+          [field]:
+            kindOf.get(id) === kind
+              ? { __typename: TYPENAME[kind], id, viewerStance: wire(id, Boolean(variables.includePending), state.era) }
+              : null,
+        },
       });
     });
   });
@@ -288,8 +294,39 @@ describe("a page's faces", () => {
     expect(refresh).not.toHaveBeenCalled();
   });
 
+  it("a target whose id is a node of another kind is refused as its own read refuses it", async () => {
+    // The server holds n2 as a comment; the reader's control names it a post.
+    const held = page(3);
+    const { asked } = stanceServer(held);
+    const named: StanceTarget[] = [held[0], { id: "n2", kind: "post" }, held[2]];
+    const alone = createApolloStanceData({ client: client(), guard, signer: signer() });
+    const single = await alone.bundle(named[1]);
+    expect(single.kind).toBe("refused");
+    asked.length = 0;
+
+    server.use(
+      gqlLink.mutation("PrepareStance", () => {
+        asked.push({ operation: "PrepareStance", ids: [], includePending: null });
+        return HttpResponse.json({ data: { prepareStance: { __typename: "PreparePayload", writes: [], userErrors: [] } } });
+      }),
+    );
+    const data = createApolloStanceData({ client: client(), guard, signer: signer() });
+    const [post, mislabelled, profile] = await Promise.all(named.map((target) => data.bundle(target)));
+    expect(asked.map((a) => a.operation)).toEqual(["PageStances"]);
+    expect(mislabelled).toEqual(single);
+    expect(post.kind).toBe("success");
+    expect(profile.kind).toBe("success");
+
+    // No node was remembered for it: an act asks its own root first, which
+    // refuses, and nothing is prepared toward the comment's node.
+    asked.length = 0;
+    expect((await data.commit(named[1], { pDirected: 0.4, pInterest: 0.1 })).kind).toBe("refused");
+    expect(asked.map((a) => a.operation)).toEqual(["PostStance"]);
+  });
+
   it("a page answered with no viewer at all is refreshed and replayed whole", async () => {
     const targets = page(4);
+    const classOf = new Map(targets.map((target) => [target.id, TYPENAME[target.kind as keyof typeof TYPENAME]]));
     let reads = 0;
     server.use(
       gqlLink.query("PageStances", ({ variables }) => {
@@ -297,7 +334,11 @@ describe("a page's faces", () => {
         const ids = (variables.ids as unknown[]).map(String);
         return HttpResponse.json({
           data: {
-            nodes: ids.map((id) => ({ __typename: "Post", id, viewerStance: reads === 1 ? null : wire(id, true) })),
+            nodes: ids.map((id) => ({
+              __typename: classOf.get(id),
+              id,
+              viewerStance: reads === 1 ? null : wire(id, true),
+            })),
           },
         });
       }),

@@ -48,6 +48,7 @@ import {
   KeptPickProfileDocument,
   KeyBackupStateDocument,
   PageStancesDocument,
+  type PageStancesQuery,
   PostBorrowedStanceDocument,
   PostStanceDocument,
   ProfileBorrowedStanceDocument,
@@ -194,6 +195,9 @@ function wireBundle(
   }
 }
 
+/** A target as the seam keys it: its kind and id together, since the id alone names no root. */
+const keyOfTarget = (target: StanceTarget) => `${target.kind}:${target.id}`;
+
 /**
  * The most ids one `PageStances` request names: the server's cap on a
  * `nodes(ids:)` lookup (`Query.nodes`, `client-constants.json`
@@ -212,13 +216,24 @@ export const PAGE_STANCES_CHUNK = 100;
 const PAGE_POLICY = "no-cache";
 
 /**
+ * The class each id-keyed kind's own root answers (`post`, `comment`, `user`),
+ * typed against the page read's own slots so it cannot name a class the
+ * document does not.
+ */
+const PAGE_CLASS = {
+  post: "Post",
+  comment: "Comment",
+  profile: "User",
+} as const satisfies Record<Exclude<StanceTarget["kind"], "topic">, NonNullable<PageStancesQuery["nodes"][number]>["__typename"]>;
+
+/**
  * The standings of many id-keyed targets in one request, each target's own
- * outcome. A slot answers its target only when it is that very id: the id
- * names the node, as it does on the write side (`prepareStance(target:)`),
- * so the bundle — and the `targetGraphId` an act toward it will name — is
- * always the one the server holds for that id. An unknown id, or a node of
- * a kind that carries no stance, is the refusal the target's own root read
- * gives it.
+ * outcome. A slot answers its target only when it is that very id AND of the
+ * class the target's kind names — what the target's own root read would have
+ * answered (`post(id:)` is null for a comment's id) — so the bundle, and the
+ * `targetGraphId` an act toward it will name, is never another class's. An
+ * unknown id, a node of another kind, or one that carries no stance, is the
+ * refusal the target's own root read gives it.
  *
  * Every target null is the request's own refusal, not each target's: the
  * server answers a request it did not authenticate with a null on every
@@ -235,17 +250,21 @@ async function pageRead(
     client.query({ query: PageStancesDocument, variables: { ids, includePending }, fetchPolicy: PAGE_POLICY }),
   );
   if (fetched.kind !== "success") return fetched;
-  const answered = new Map<string, WireBundle>();
+  const answered = new Map<string, { readonly class: string; readonly wire: WireBundle }>();
   for (const node of fetched.value.nodes) {
     if (node !== null && "viewerStance" in node && node.viewerStance != null) {
-      answered.set(node.id, node.viewerStance);
+      answered.set(node.id, { class: node.__typename, wire: node.viewerStance });
     }
   }
   if (answered.size === 0) return unauthenticated();
   const outcomes = new Map<string, Outcome<WireBundle>>();
-  for (const id of ids) {
-    const wire = answered.get(id);
-    outcomes.set(id, wire === undefined ? unauthenticated() : success(wire));
+  for (const target of targets) {
+    if (target.kind === "topic") continue;
+    const slot = answered.get(target.id);
+    outcomes.set(
+      keyOfTarget(target),
+      slot !== undefined && slot.class === PAGE_CLASS[target.kind] ? success(slot.wire) : unauthenticated(),
+    );
   }
   return success(outcomes);
 }
@@ -309,7 +328,7 @@ export function createApolloStanceData(deps: {
 
   /** The node each target's last read named — what its acts must point at. */
   const graphIds = new Map<string, string>();
-  const keyOf = (target: StanceTarget) => `${target.kind}:${target.id}`;
+  const keyOf = keyOfTarget;
 
   const read = async (
     target: StanceTarget,
@@ -381,7 +400,7 @@ export function createApolloStanceData(deps: {
           return Promise.all(chunk.map(own));
         }
         return chunk.map((target) => {
-          const outcome = page.kind === "success" ? (page.value.get(target.id) ?? unauthenticated()) : page;
+          const outcome = page.kind === "success" ? (page.value.get(keyOf(target)) ?? unauthenticated()) : page;
           // The node an act toward this target names, from this very slot.
           if (outcome.kind === "success") graphIds.set(keyOf(target), outcome.value.targetGraphId);
           return [keyOf(target), outcome] as const;
