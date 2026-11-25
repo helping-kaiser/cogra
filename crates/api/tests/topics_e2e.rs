@@ -1049,9 +1049,7 @@ async fn un_tagging_is_a_further_tag_at_zero_zero(pool: PgPool) {
 /// A second identical tag prepare while the first awaits approval stages a second Tag; both land, and the reader's fold is unchanged.
 /// ´claim:topics:a-second-tag-prepare-in-flight-lands-a-second-record´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_second_tag_prepare_while_the_first_awaits_approval_lands_a_second_record(
-    pool: PgPool,
-) {
+async fn a_second_tag_prepare_while_the_first_awaits_approval_lands_a_second_record(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (author_id, ak) = rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;

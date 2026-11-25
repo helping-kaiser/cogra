@@ -735,7 +735,10 @@ async fn a_second_citation_prepare_while_the_first_awaits_approval_sums_twice(po
 
     rig.approve(&token, &key, &first_signed).await;
     rig.land(&token, &key, second_writes).await;
-    assert_eq!(rig.staged_state(&token, &first_signed[0].id).await, "LANDED");
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "LANDED"
+    );
     assert_eq!(rig.staged_state(&token, &second_id).await, "LANDED");
 
     let rows = rig.references_of_post(None, &carrier).await;
