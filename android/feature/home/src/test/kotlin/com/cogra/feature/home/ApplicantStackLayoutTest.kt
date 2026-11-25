@@ -119,8 +119,10 @@ class ApplicantStackLayoutTest {
     }
 
     @Test
-    fun onTheFeedTheLoadingSpinnerKeepsTheGutter() {
+    fun onTheFeedTheLoadingLineKeepsTheGutter() {
         render(applicant(progress = null))
+        // The check's `Loading…` stands only once it is 200ms late (ApplicantChecking).
+        compose.mainClock.advanceTimeBy(CHECKING_AFTER_MS + FRAME_MS)
         assertThat(bounds("home_status_loading").left - bounds("host").left).isWithin(0.5f).of(px(16.dp))
     }
 
@@ -153,5 +155,6 @@ class ApplicantStackLayoutTest {
 
     private companion object {
         val HOST = 400.dp
+        const val FRAME_MS = 16L
     }
 }
