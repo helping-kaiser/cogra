@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -209,7 +210,7 @@ fun SettingsRow(
 private val StatusGap = 2.dp
 
 @Composable
-private fun RowLabel(label: String, kind: SettingsRowKind, node: DataNode?) {
+private fun RowLabel(label: String, kind: SettingsRowKind, node: DataNode?, modifier: Modifier = Modifier) {
     Text(
         text = label,
         style = MaterialTheme.typography.labelLarge,
@@ -218,12 +219,12 @@ private fun RowLabel(label: String, kind: SettingsRowKind, node: DataNode?) {
         } else {
             MaterialTheme.colorScheme.onSurface
         },
-        modifier = Modifier.dataNode(node?.div("label")),
+        modifier = modifier.dataNode(node?.div("label")),
     )
 }
 
 @Composable
-private fun RowStatus(status: String?, node: DataNode?) {
+private fun RowStatus(status: String?, node: DataNode?, modifier: Modifier = Modifier) {
     if (status != null) {
         // TEXT THAT WRAPS (NamesLong.md; `SettingsRow.jsx`): a handle
         // in the status is one unit, whole or end-cut.
@@ -231,10 +232,13 @@ private fun RowStatus(status: String?, node: DataNode?) {
             text = status,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.dataNode(node?.div("status")),
+            modifier = modifier.dataNode(node?.div("status")),
         )
     }
 }
+
+/** The parts [WordsBesideValue] measures, picked by id so their order stays the reading order. */
+private enum class WordsPart { LABEL, STATUS, VALUE }
 
 /**
  * A VALUE TOO LONG FOR THE ROW IS CUT, THE LABEL KEEPS ITS ROOM
@@ -254,8 +258,10 @@ private fun WordsBesideValue(
     modifier: Modifier,
 ) {
     Layout(
+        // The reading order is the drawn words' order: label, status, value.
         content = {
-            RowLabel(label, kind, node)
+            RowLabel(label, kind, node, Modifier.layoutId(WordsPart.LABEL))
+            RowStatus(status, node, Modifier.layoutId(WordsPart.STATUS))
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyMedium,
@@ -263,15 +269,14 @@ private fun WordsBesideValue(
                 maxLines = 1,
                 softWrap = false,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.dataNode(node?.div("value")),
+                modifier = Modifier.layoutId(WordsPart.VALUE).dataNode(node?.div("value")),
             )
-            RowStatus(status, node)
         },
         modifier = modifier,
     ) { measurables, constraints ->
-        val labelPart = measurables[0]
-        val valuePart = measurables[1]
-        val statusPart = measurables.getOrNull(2)
+        val labelPart = measurables.first { it.layoutId == WordsPart.LABEL }
+        val valuePart = measurables.first { it.layoutId == WordsPart.VALUE }
+        val statusPart = measurables.firstOrNull { it.layoutId == WordsPart.STATUS }
         val gap = Space.x4.roundToPx()
         val labelFloor = labelPart.maxIntrinsicWidth(Constraints.Infinity)
         val width = if (constraints.hasBoundedWidth) {

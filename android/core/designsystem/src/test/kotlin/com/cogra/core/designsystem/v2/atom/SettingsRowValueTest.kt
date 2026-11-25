@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -100,6 +101,15 @@ class SettingsRowValueTest {
         assertThat(layout("row.status").lineCount).isAtLeast(1)
         assertThat(bounds("row.status").left).isEqualTo(bounds("row.label").left)
         assertThat(bounds("row.status").top).isAtLeast(bounds("row.label").bottom)
+    }
+
+    @Test
+    fun aValueRowReadsLabelThenStatusThenValue() {
+        show("Public domain", status = "Used on every new post.")
+        // The row merges its words into one target; its texts are read in order.
+        val read = compose.onNodeWithTag("row").fetchSemanticsNode().config[SemanticsProperties.Text]
+            .map { it.text }
+        assertThat(read).containsExactly("Email", "Used on every new post.", "Public domain").inOrder()
     }
 
     @Test
