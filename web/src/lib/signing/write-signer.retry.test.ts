@@ -157,7 +157,7 @@ class Host {
   }
 
   private json(id: string) {
-    return { __typename: "StagedWrite", ...this.view(id), record: null };
+    return { __typename: "StagedWrite", ...this.view(id), carried: false, record: null };
   }
 
   row(id: string): Row {
@@ -205,7 +205,7 @@ class Host {
       (r) => r.family === family && r.target === target && r.state !== "EXPIRED",
     );
     return pending
-      ? { code: "BAD_INPUT", message: "an edit of this content is already in flight", field: "id" }
+      ? { code: "BAD_INPUT", message: "an edit of this content is already in flight", field: ["id"] }
       : null;
   }
 
@@ -518,7 +518,7 @@ function prepareStance(host: Host): Prepared {
 function prepareApproval(host: Host): Prepared {
   host.prepares += 1;
   if (host.approvedApplications.has("app-1")) {
-    return { kind: "refused", errors: [{ code: "BAD_INPUT", message: "already approved", field: "application" }] };
+    return { kind: "refused", errors: [{ code: "BAD_INPUT", message: "already approved", field: ["application"] }] };
   }
   host.approvedApplications.add("app-1");
   const seq = host.allocate();
