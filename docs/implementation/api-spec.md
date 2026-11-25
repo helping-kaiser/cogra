@@ -4034,7 +4034,9 @@ reader chooses the **L1 view** — only what has landed — or the
 **L2 view**, which also counts the viewer's own acts in flight
 from the pre-commitment onward. Severance computes its batch
 against the L2 view, so severing and refetching reads `(0, 0)` at
-once rather than an epoch later.
+once rather than an epoch later. The faces at one depth of a
+document share one batch, a constant number of reads whatever the
+page's size.
 
 **The borrowed view's stance.** `borrowedStance: BorrowedStance`
 sits beside `viewerStance` on every stance-able node and serves a
