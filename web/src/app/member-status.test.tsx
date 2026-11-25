@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
@@ -38,5 +38,35 @@ describe("MemberStatus", () => {
 
     await waitFor(() => expect(container).toBeEmptyDOMElement());
     expect(screen.queryByTestId("feed.vouchCard")).not.toBeInTheDocument();
+  });
+
+  // The device's read can answer after the stack has gone — a route left
+  // mid-read, a test's teardown — and React reads `window.event` to schedule
+  // even an update it will drop, so a count set then throws where no window is.
+  it("sets nothing once it has gone", async () => {
+    let answer: (ids: string[]) => void = () => {};
+    const store = {
+      ...fakeIdentityStore({ keyOnDevice: true }),
+      handshakeIds: () => new Promise<string[]>((resolve) => (answer = resolve)),
+    };
+    const { unmount } = renderWithProviders(<MemberStatus store={store} />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    unmount();
+    // React's own work from the unmount runs first, with its window.
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    const rejections: unknown[] = [];
+    const caught = (reason: unknown) => void rejections.push(reason);
+    process.on("unhandledRejection", caught);
+    vi.stubGlobal("window", undefined);
+    try {
+      answer(["w1"]);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    } finally {
+      vi.unstubAllGlobals();
+      process.off("unhandledRejection", caught);
+    }
+    expect(rejections).toEqual([]);
   });
 });
