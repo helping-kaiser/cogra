@@ -25,6 +25,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.LocalShowExactValues
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceControl
@@ -507,7 +508,7 @@ class TopicScreenTest {
     @Test
     fun aLegalNameNothingCarriesOpensEmptyNeverNotFound() {
         render(emptied)
-        compose.onNodeWithTag("topic_content_empty").assertTextEquals("Nothing carries this tag right now.")
+        compose.onNodeWithTag("tagPage.empty").assertTextEquals("Nothing carries this tag right now.")
         assertThat(shown("topic_not_found")).isFalse()
     }
 
@@ -517,7 +518,7 @@ class TopicScreenTest {
     @Test
     fun theEmptyPageReadsNothingCarriesThisTag() {
         render(emptied, stanceControl = row)
-        compose.onNodeWithTag("topic_content_empty").assertTextEquals("Nothing carries this tag right now.")
+        compose.onNodeWithTag("tagPage.empty").assertTextEquals("Nothing carries this tag right now.")
     }
 
     // :5 — never says not found, never says first.
@@ -535,7 +536,7 @@ class TopicScreenTest {
     fun theEmptyPageOffersNoActionAndNoErrorColour() {
         render(emptied)
         assertThat(everyNode().filter { it.config.contains(SemanticsProperties.LiveRegion) }).isEmpty()
-        assertThat(clickablesUnder("topic_content_empty")).isEmpty()
+        assertThat(clickablesUnder("tagPage.empty")).isEmpty()
     }
 
     // :9 — the emptied page carries the topic's own row.
@@ -544,7 +545,21 @@ class TopicScreenTest {
         render(emptied, stanceControl = wideAnchor)
         assertThat(shown("tagPage.actionRow")).isTrue()
         assertThat(shown("tagPage.actionRow.stance.anchor.face")).isTrue()
-        assertThat(top("tagPage.actionRow").bottom).isAtMost(top("topic_content_empty").top)
+        assertThat(top("tagPage.actionRow").bottom).isAtMost(top("tagPage.empty").top)
+    }
+
+    // TagPageEmpty.jsx: `tagPage.empty` is EmptyState's own box — its 8 above
+    // the title, flush left — and the 24 at the sides is the page's wrapper.
+    @Test
+    fun theEmptyPageRegistersTheEmptyStatesOwnBox() {
+        render(emptied)
+        val list = top("topic_list")
+        val node = top("tagPage.empty")
+        val title = top("tagPage.empty.title")
+        val px = { n: Int -> with(compose.density) { n.dp.toPx() } }
+        assertThat(node.left - list.left).isWithin(0.5f).of(px(24))
+        assertThat(title.left).isEqualTo(node.left)
+        assertThat(title.top - node.top).isWithin(0.5f).of(px(8))
     }
 
     // TagPageMenu.md:7, TagPageCommentMenu.md:7 — the cards' menus hide and
