@@ -159,7 +159,7 @@ fun ProfileRoute(
     LaunchedEffect(handleChangedResult) {
         if (handleChangedResult) {
             onHandleChangedResultConsumed()
-            viewModel.refresh()
+            viewModel.onReturn()
         }
     }
     // The re-read is separated from the confirmation on purpose. The
@@ -169,9 +169,10 @@ fun ProfileRoute(
     // replaced for the whole four seconds — and drop the refetch
     // entirely whenever the snackbar was cancelled early. One read is
     // enough: a signed edit is served from its signature on, pending
-    // until it lands (substrate.md §6).
+    // until it lands (substrate.md §6). The read is quiet: no refresh
+    // indicator stands over a return (Profile.md:93, :97).
     LaunchedEffect(profileSavedResult) {
-        if (profileSavedResult) viewModel.refresh()
+        if (profileSavedResult) viewModel.onReturn()
     }
     ProfileScreen(
         state = state,

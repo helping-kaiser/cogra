@@ -19,6 +19,7 @@ import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.UserProfile
 import com.cogra.domain.history.SeenTracker
+import com.cogra.domain.profile.SignedProfile
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
@@ -85,7 +86,7 @@ class ProfileLandingTest {
     }
 
     private fun opened(handle: String?, saved: SavedStateHandle = SavedStateHandle()) =
-        ProfileViewModel(saved, profiles, Member(), seenTracker).also {
+        ProfileViewModel(saved, profiles, Member(), seenTracker, SignedProfile(session, TestScope(dispatcher))).also {
             it.start(handle)
             dispatcher.scheduler.advanceUntilIdle()
         }
