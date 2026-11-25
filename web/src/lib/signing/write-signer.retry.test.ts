@@ -56,6 +56,7 @@ import {
   expectation,
   node,
   stanceRecord,
+  referenceClaim,
   tagClaim,
   type Expectation,
   type ExpectedWrite,
@@ -434,7 +435,7 @@ function prepareReply(host: Host): Prepared {
 }
 
 /** A post edit: chained Publish toward the own post — content.rs:870-938, guarded by `chained_edit_target`. */
-function preparePostEdit(host: Host): Prepared {
+function preparePostEdit(host: Host, pD = 0): Prepared {
   host.prepares += 1;
   const refused = host.editGuard("publish", OWN_POST);
   if (refused !== null) return { kind: "refused", errors: [refused] };
@@ -443,7 +444,7 @@ function preparePostEdit(host: Host): Prepared {
   const write = host.stage(
     "publish",
     OWN_POST,
-    body({ seq, family: "publish", middle: null, target: OWN_POST, pD: 0, pI: 1, license: null, parents: [head] }),
+    body({ seq, family: "publish", middle: null, target: OWN_POST, pD, pI: 1, license: null, parents: [head] }),
     true,
   );
   return {
@@ -454,7 +455,7 @@ function preparePostEdit(host: Host): Prepared {
         family: "publish",
         middle: null,
         target: node(OWN_POST),
-        pDirected: 0,
+        pDirected: pD,
         pInterest: 1,
         license: null,
         parents: "ownChainHead",
@@ -519,6 +520,46 @@ function prepareEditTag(host: Host): Prepared {
     kind: "staged",
     writes: [write],
     expected: expectation([tagClaim(node(OWN_POST), "rust", 0.3, 1)]),
+  };
+}
+
+/**
+ * A citation inside an edit: one Reference act from the own post to the
+ * cited node — references.rs `prepare_reference`, no in-flight guard. Its
+ * bundle is the SUM of the author's records (like a stance's), so a second
+ * act doubles the citation.
+ */
+function prepareEditReference(host: Host): StagedWriteView {
+  const seq = host.allocate();
+  return host.stage(
+    "reference",
+    PARENT_POST,
+    body({ seq, family: "reference", middle: OWN_POST, target: PARENT_POST, pD: 0.1, pI: 0.1, license: null }),
+  );
+}
+
+/**
+ * The post editor's whole batch as it prepares it: the edit record FIRST,
+ * and only when the server takes it the tag and the citation — a refused
+ * record stages nothing else (post-edit-route.tsx `recordRefused`).
+ */
+function prepareEditBatch(host: Host, pD = 0): Prepared {
+  const record = preparePostEdit(host, pD);
+  if (record.kind === "refused") return record;
+  const tag = host.stage(
+    "tag",
+    "name:rust",
+    body({ seq: host.allocate(), family: "tag", middle: OWN_POST, target: "name:rust", pD: 0.3, pI: 1, license: null }),
+  );
+  const citation = prepareEditReference(host);
+  return {
+    kind: "staged",
+    writes: [...record.writes, tag, citation],
+    expected: expectation([
+      ...record.expected.writes,
+      tagClaim(node(OWN_POST), "rust", 0.3, 1),
+      referenceClaim(node(OWN_POST), PARENT_POST, 0.1, 0.1),
+    ]),
   };
 }
 
@@ -804,6 +845,77 @@ describe("Retry after a parked signing, then Resume", () => {
     expect((await store.handshakeIds()).sort()).toEqual([...ids].sort());
   });
 
+  // ---- the fix: the editors' Retry (post-edit-route.tsx, comment-editor.tsx) ----
+
+  /** The author's citation bundle toward the cited node, as the reads sum it. */
+  const citationBundle = () =>
+    host
+      .landed("reference")
+      .reduce((acc, r) => ({ pD: acc.pD + r.proposal.body.pD, pI: acc.pI + r.proposal.body.pI }), { pD: 0, pI: 0 });
+
+  it("a retried post edit asks the same signing again: one edit, one tag and one citation land, and nothing is refused as in flight", async () => {
+    const edit = surface(prepareEditBatch);
+    expect(await edit.press("v1", approveDies)).toBe("fault");
+    expect(await edit.press("v1")).toBe("taken");
+    expect(host.prepares).toBe(1);
+    expect(host.landed("publish")).toHaveLength(1);
+    expect(host.landed("tag")).toHaveLength(1);
+    expect(host.landed("reference")).toHaveLength(1);
+    const bundle = citationBundle();
+    expect(bundle.pD).toBeCloseTo(0.1);
+    expect(bundle.pI).toBeCloseTo(0.1);
+    expect(await signer.resume()).toEqual([]);
+  });
+
+  it("a retried comment edit asks the same signing again: one edit lands", async () => {
+    const edit = surface(prepareCommentEdit);
+    expect(await edit.press("v1", approveDies)).toBe("fault");
+    expect(await edit.press("v1")).toBe("taken");
+    expect(host.prepares).toBe(1);
+    expect(host.landed("review")).toHaveLength(1);
+    expect(await signer.resume()).toEqual([]);
+  });
+
+  it("a retried post edit after a lost approve answer prepares nothing: the first answer was the edit", async () => {
+    const edit = surface(prepareEditBatch);
+    expect(await edit.press("v1", (ids) => {
+      host.approveAnswerLost.add(ids[0]);
+      approveDies(ids.slice(1));
+    })).toBe("fault");
+    expect(await edit.press("v1")).toBe("taken");
+    expect(host.prepares).toBe(1);
+    expect(host.landed("publish")).toHaveLength(1);
+    expect(host.landed("reference")).toHaveLength(1);
+  });
+
+  it("a changed post edit over an unsubmitted first attempt retires it and lands exactly the new one", async () => {
+    let pick = 0;
+    const edit = surface((h) => prepareEditBatch(h, pick));
+    expect(await edit.press("v1", (ids) => ids.forEach((id) => host.submitFault.add(id)))).toBe("fault");
+    pick = -0.3;
+    expect(await edit.press("v2")).toBe("taken");
+    expect(host.prepares).toBe(2);
+    const records = host.landed("publish");
+    expect(records).toHaveLength(1);
+    expect(records[0].proposal.body.pD).toBe(-0.3);
+    expect(host.landed("reference")).toHaveLength(1);
+    expect(await signer.resume()).toEqual([]);
+  });
+
+  // STOPPED POINT (reported): the server's edit serialization counts a
+  // pre-committed edit as in flight until it lands or is collected, so a
+  // changed edit over one cannot be prepared — retired on the device, the
+  // first can no longer land either, and the edit waits out the collection.
+  it("a changed post edit over a pre-committed first attempt retires it, and the server refuses the new one as in flight: nothing lands", async () => {
+    const edit = surface((h) => prepareEditBatch(h, 0));
+    expect(await edit.press("v1", approveDies)).toBe("fault");
+    expect(await edit.press("v2")).toBe("refused");
+    expect(host.landed("publish")).toHaveLength(0);
+    // Retired: Home's Resume has nothing to land, so the old words never do.
+    expect(await signer.resume()).toEqual([]);
+    expect(host.landed("publish")).toHaveLength(0);
+  });
+
   // ---- what the signer does with two independent prepares (characterisation) ----
   // ---- post ----
 
@@ -898,7 +1010,7 @@ describe("Retry after a parked signing, then Resume", () => {
 
   // ---- post edit and comment edit ----
 
-  it("a retried post edit is refused while the first is in flight, and Resume lands the first: one edit", async () => {
+  it("a second prepare of a post edit while the first is in flight is refused by the server, and Resume lands the first: one edit", async () => {
     const first = await parkAtApproval(preparePostEdit);
     const retry = await press(preparePostEdit);
     // The server's serialization refuses the second prepare; nothing new is signed.
@@ -912,7 +1024,7 @@ describe("Retry after a parked signing, then Resume", () => {
     expect(host.landed("publish")).toHaveLength(1);
   });
 
-  it("a post edit whose submit died unseen is superseded by the retry, and Resume clears it: one edit", async () => {
+  it("a second prepare supersedes a post edit whose submit died unseen, and Resume clears the first: one edit", async () => {
     const prepared = preparePostEdit(host);
     if (prepared.kind !== "staged") throw new Error("attempt 1 must stage");
     host.submitFault.add(prepared.writes[0].id);
@@ -933,7 +1045,7 @@ describe("Retry after a parked signing, then Resume", () => {
     expect(await store.handshakeIds()).toEqual([]);
   });
 
-  it("a retried comment edit is refused while the first is in flight, and Resume lands the first: one edit", async () => {
+  it("a second prepare of a comment edit while the first is in flight is refused by the server, and Resume lands the first: one edit", async () => {
     const first = await parkAtApproval(prepareCommentEdit);
     const retry = await press(prepareCommentEdit);
     expect(retry.kind).toBe("refused");
@@ -942,7 +1054,7 @@ describe("Retry after a parked signing, then Resume", () => {
     expect(host.landed("review")).toHaveLength(1);
   });
 
-  it("a retried tag added inside an edit is not serialized, and Resume approves the first too: two Tag acts", async () => {
+  it("a second prepare of a tag inside an edit is not serialized by the server: Resume approves both, two Tag acts", async () => {
     const first = await parkAtApproval(prepareEditTag);
     await press(prepareEditTag);
     const resumed = await signer.resume();
