@@ -153,16 +153,12 @@ describe("the read marks are sent only as the account that made them", () => {
 });
 
 describe("the held picture is the picking account's", () => {
-  it("hands B nothing for A's pick, and A its own pick again", () => {
+  it("hands B nothing for A's pick", () => {
     signInAs("acct-a");
-    const picture = new File(["a's face"], "a.jpg", { type: "image/jpeg" });
-    holdPicture(picture);
+    holdPicture(new File(["a's face"], "a.jpg", { type: "image/jpeg" }));
 
     signInAs("acct-b");
     expect(heldPicture()).toBeNull();
-
-    signInAs("acct-a");
-    expect(heldPicture()).toBe(picture);
   });
 
   it("hands nothing to a signed-out tab", () => {
@@ -170,6 +166,14 @@ describe("the held picture is the picking account's", () => {
     holdPicture(new File(["a's face"], "a.jpg"));
     tokenStore.clear();
     expect(heldPicture()).toBeNull();
+  });
+
+  it("keeps the pick through a rotation of the same account's tokens", () => {
+    signInAs("acct-a");
+    const picture = new File(["a's face"], "a.jpg");
+    holdPicture(picture);
+    tokenStore.save({ accessToken: "access-a-2", refreshToken: "refresh-a-2", accountId: "acct-a" });
+    expect(heldPicture()).toBe(picture);
   });
 });
 
@@ -201,6 +205,25 @@ describe("a profile change still signing is the changing account's", () => {
 
     signInAs("acct-a");
     expect(readProfileChange()?.kind).toBe("failed");
+  });
+
+  it("never answers A's late outcome into the change B pressed meanwhile", async () => {
+    signInAs("acct-a");
+    let answerA!: (outcome: { kind: "offline" }) => void;
+    const signingA = signProfileChange(() => new Promise((resolve) => (answerA = resolve)));
+    closeProfileChangeSeal();
+
+    signInAs("acct-b");
+    let answerB!: (outcome: { kind: "taken" }) => void;
+    const signingB = signProfileChange(() => new Promise((resolve) => (answerB = resolve)));
+    closeProfileChangeSeal();
+
+    answerA({ kind: "offline" });
+    await signingA;
+    expect(readProfileChange()).toEqual({ kind: "signing" });
+    answerB({ kind: "taken" });
+    await signingB;
+    expect(readProfileChange()).toBeNull();
   });
 });
 
