@@ -344,40 +344,47 @@ export function SavedScreen({
       )}
       {empty && (
         // SAVEDEMPTY: words only — no action button, no error colour, and the
-        // save named in words, never drawn as its glyph.
-        <div className="px-6 pt-2" data-testid="saved.empty">
-          <p
-            ref={emptyRef}
-            tabIndex={-1}
-            data-testid="saved.empty.title"
-            className="py-2 text-body-medium text-on-surface-variant outline-none"
-          >
-            {SAVED_EMPTY}
-          </p>
+        // save named in words, never drawn as its glyph. `saved.empty` is the
+        // empty state's own box (EmptyState.jsx); the board's 8px 24px wrapper
+        // around it is the page's, unregistered (SavedEmpty.jsx).
+        <div className="px-6 py-2">
+          <div className="flex flex-col items-start gap-3 py-2" data-testid="saved.empty">
+            <p
+              ref={emptyRef}
+              tabIndex={-1}
+              data-testid="saved.empty.title"
+              className="text-body-medium text-on-surface-variant outline-none"
+            >
+              {SAVED_EMPTY}
+            </p>
+          </div>
         </div>
       )}
       {none && (
         // SAVEDNONE: the reader's own search found nothing — the field keeps
-        // the query, and the one way back clears it.
-        <div className="flex flex-col items-start gap-3 px-6 pt-2" data-testid="saved.empty">
-          <p
-            ref={emptyRef}
-            tabIndex={-1}
-            data-testid="saved.empty.title"
-            className="py-2 text-body-medium text-on-surface-variant outline-none"
-          >
-            {SAVED_NONE}
-          </p>
-          <Button
-            testId="saved-none-action"
-            node={{ path: "saved.empty.action" }}
-            variant="outline"
-            size="sm"
-            selfStart
-            onClick={() => setQuery("")}
-          >
-            {SHOW_EVERYTHING}
-          </Button>
+        // the query, and the one way back clears it. The node and its
+        // wrapper as SavedEmpty's (SavedNone.jsx).
+        <div className="px-6 py-2">
+          <div className="flex flex-col items-start gap-3 py-2" data-testid="saved.empty">
+            <p
+              ref={emptyRef}
+              tabIndex={-1}
+              data-testid="saved.empty.title"
+              className="text-body-medium text-on-surface-variant outline-none"
+            >
+              {SAVED_NONE}
+            </p>
+            <Button
+              testId="saved-none-action"
+              node={{ path: "saved.empty.action" }}
+              variant="outline"
+              size="sm"
+              selfStart
+              onClick={() => setQuery("")}
+            >
+              {SHOW_EVERYTHING}
+            </Button>
+          </div>
         </div>
       )}
       {shown.length > 0 && (

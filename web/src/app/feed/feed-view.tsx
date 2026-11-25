@@ -53,7 +53,7 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationProgress } from "@/lib/signing/provider";
 import { onStanceSigned } from "@/lib/stance/signed-events";
 import { ApplicantCardsHead, RestoreCard } from "@/app/applicant-status";
-import { StatusBanners } from "@/app/status-banners";
+import { SecurityNoticeHead, StatusBanners } from "@/app/status-banners";
 import {
   BorrowedViewBand,
   borrowedViewLine,
@@ -845,6 +845,8 @@ export function FeedView({
   const listRef = useRef<HTMLUListElement>(null);
   // The list's head row the applicant's cards render into (ApplicantFeed.jsx).
   const [applicantHead, setApplicantHead] = useState<HTMLLIElement | null>(null);
+  // The list's first row, the security notice's (FeedSecurityNotice.jsx).
+  const [securityHead, setSecurityHead] = useState<HTMLLIElement | null>(null);
   const postIds = useMemo(() => shown.map((post) => post.id), [shown]);
   useSeenTracker({ root: host, list: listRef, ids: postIds, suspended: commentsOpen || sheetOpen });
   // Where the drawn cards cross into the seen tail: the derive stands every
@@ -891,6 +893,7 @@ export function FeedView({
     // banners' slot while empty, dropping the band 16px and the list 32px.
     // The slots that hold something carry their own spacing instead.
     <ApplicantCardsHead.Provider value={applicantHead}>
+    <SecurityNoticeHead.Provider value={securityHead}>
     <main className="mx-auto flex w-full max-w-2xl flex-col pb-6">
       <CollapsingTop
         // Mirrors `scroll-pin.ts`'s own "nothing is anchored at the origin":
@@ -1045,6 +1048,14 @@ export function FeedView({
           competes for it, and it lands at the feed's own hard top. */}
       <StageHost key={listEra}>
         <ul ref={listRef} className="flex flex-col gap-2" data-testid="feed-list">
+          {/* THE SECURITY NOTICE HEADS THE LIST (FeedSecurityNotice.jsx: the
+              task card is `FeedList`'s first child, full width, above the
+              posts; VouchBack.md:58: the notice first, then the vouch card).
+              Its own row, so its place never rests on portal mount order; it
+              takes no room while it holds nothing. */}
+          {phase === "signedIn" && (
+            <li ref={setSecurityHead} className="flex flex-col empty:hidden" data-testid="feed-security-notice" />
+          )}
           {/* The vouch card is the list's first child, above the posts
               (`VouchBack.jsx`), after the security notice and the key card
               that head the column (ruling 45). */}
@@ -1240,6 +1251,7 @@ export function FeedView({
         />
       )}
     </main>
+    </SecurityNoticeHead.Provider>
     </ApplicantCardsHead.Provider>
   );
 }
