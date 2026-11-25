@@ -1284,6 +1284,28 @@ describe("the compose wizard", () => {
       expect(screen.getByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
     });
 
+    // A fast double tap on the arrow: the second press comes before the
+    // first press's pop has landed. One stage per press — the reader stands
+    // on the words, and the late pop never puts the details back under them.
+    it("two presses of the arrow without a wait step two stages back", async () => {
+      render();
+      await toSeal();
+      const arrow = () =>
+        screen.getByTestId(byAnyTestId("header-back", "composeDetails.header.back", "composeCrop.header.back"));
+
+      fireEvent.click(arrow());
+      // The details stand at once; the first press's pop has not landed.
+      expect(screen.getByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
+      expect(stageDepth()).toBe(2);
+      fireEvent.click(arrow());
+      await screen.findByTestId("wizard-words");
+      await waitFor(() => expect(stageDepth()).toBe(0));
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      expect(screen.getByTestId("wizard-words")).toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("composeDetails.title.input"))).toBeNull();
+      expect(push).not.toHaveBeenCalled();
+    });
+
     it("re-advances on Forward, through the stage's own gate", async () => {
       render();
       await toSeal();
@@ -1970,10 +1992,9 @@ describe("Retry after a signing that did not answer", () => {
 
   /**
    * The seal's arrow, twice, back to the words — each press waiting for its
-   * own history pop to land. The arrow moves the stage at once and pops the
-   * stage's entry asynchronously (stage-history.ts); a second press made
-   * while the first pop is still in flight is answered by that late pop as a
-   * browser Back, which puts the details stage back under the test.
+   * own history pop to land, so the helper returns with the history settled.
+   * (Presses without the wait are pinned by "two presses of the arrow
+   * without a wait step two stages back".)
    */
   const stageDepth = () =>
     (window.history.state as { cograStage?: { depth: number } } | null)?.cograStage?.depth ?? 0;

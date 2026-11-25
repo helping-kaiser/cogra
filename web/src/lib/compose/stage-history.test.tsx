@@ -164,6 +164,32 @@ describe("useStageHistory", () => {
     expect(onBack).not.toHaveBeenCalled();
   });
 
+  // A fast double tap: the second press lands before the first press's pop
+  // has arrived. One stage per press — two presses, two stages back — and the
+  // late pop is the arrow's own, never the browser's Forward re-advancing.
+  it("two arrow presses without a wait land two stages back", async () => {
+    const surface = freshSurface();
+    const onBack = vi.fn();
+    const onForward = vi.fn();
+    // The entry the surface was opened on, told apart from the one before it.
+    window.history.pushState({ arrival: surface }, "");
+    render(<Harness surface={surface} onBack={onBack} onForward={onForward} />);
+    fireEvent.click(screen.getByTestId("next"));
+    fireEvent.click(screen.getByTestId("next"));
+    await settle();
+
+    fireEvent.click(screen.getByTestId("arrow"));
+    fireEvent.click(screen.getByTestId("arrow"));
+    await settle();
+    await settle();
+    expect(level()).toBe(0);
+    expect(depth(surface)).toBe(0);
+    // Back on the arrival entry, never past it: the flow was not left.
+    expect((window.history.state as { arrival?: string } | null)?.arrival).toBe(surface);
+    expect(onBack).not.toHaveBeenCalled();
+    expect(onForward).not.toHaveBeenCalled();
+  });
+
   it("follows a jump of several stages with one traversal", async () => {
     const surface = freshSurface();
     const onBack = vi.fn();
