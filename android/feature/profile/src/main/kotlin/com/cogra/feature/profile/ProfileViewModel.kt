@@ -160,12 +160,21 @@ class ProfileViewModel @Inject constructor(
         refresh()
     }
 
-    fun refresh() {
+    fun refresh() = reread(quiet = false)
+
+    /**
+     * A return from a taken edit or a changed handle: the profile "reads
+     * profile.identity's facts again beneath them" (Profile.md:97) — quietly;
+     * the platform's refresh indicator is the pull's (Profile.md:93).
+     */
+    fun onReturn() = reread(quiet = true)
+
+    private fun reread(quiet: Boolean) {
         // PostDetailViewModel's twin: a profile already on screen keeps
         // its content and shows the pull indicator; only the
         // nothing-loaded state goes full-screen (the shared degrade
         // rule this mirrors).
-        _state.update { it.copy(loading = it.profile == null, refreshing = true) }
+        _state.update { it.copy(loading = it.profile == null, refreshing = it.refreshing || !quiet) }
         viewModelScope.launch {
             val read = readProfile() ?: return@launch
             loadRows(reset = true)

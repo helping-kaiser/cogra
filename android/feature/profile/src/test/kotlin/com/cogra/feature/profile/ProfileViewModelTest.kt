@@ -588,11 +588,14 @@ class ProfileViewModelTest {
         assertThat(head.copy(profile = held.profile)).isEqualTo(held)
         assertThat(profiles.rowRequests.size).isEqualTo(rowReads)
 
-        // The return's read, still on its way: the head keeps wearing it.
+        // The return's read, still on its way: the head keeps wearing it, and
+        // the read is quiet — no refresh indicator, no loading state (Profile.md:93, :97).
         profiles.mineGate = CompletableDeferred()
-        vm.refresh()
+        vm.onReturn()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.profile?.displayName?.value).isEqualTo("Noa")
+        assertThat(vm.state.value.refreshing).isFalse()
+        assertThat(vm.state.value.loading).isFalse()
 
         // The server serves the change from its signature on; its answer stands.
         profiles.mine = Outcome.Success(
@@ -711,9 +714,24 @@ class ProfileViewModelTest {
     fun anOrdinaryReturnWithoutAnEditIsUnchanged() = runTest(dispatcher) {
         val vm = ownProfileRead()
         val held = vm.state.value
-        vm.refresh()
+        profiles.mineGate = CompletableDeferred()
+        vm.onReturn()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value).isEqualTo(held)
+        profiles.mineGate?.complete(Unit)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.profile).isEqualTo(held.profile)
         assertThat(signedProfile.laid.value).isNull()
+    }
+
+    @Test
+    fun aPullStillShowsThePlatformsRefreshIndicator() = runTest(dispatcher) {
+        val vm = ownProfileRead()
+        profiles.mineGate = CompletableDeferred()
+        vm.refresh()
+        assertThat(vm.state.value.refreshing).isTrue()
+        profiles.mineGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refreshing).isFalse()
     }
 }
