@@ -25,6 +25,7 @@ import { PUBLIC_DOMAIN } from "@/lib/license";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { KeyboardClass } from "@/lib/ui2/screen-layer";
+import type { SigningAttempt } from "@/lib/compose/same-signing";
 
 /**
  * The write side's cap; a whole-batch refusal, so the picker enforces it too.
@@ -282,6 +283,12 @@ export type WizardState = {
    * free number here and not a pair; the low-defaults policy value is +0.1.
    */
   readonly pDirected: number;
+  /**
+   * The signing this draft already started, if one did not answer: what a
+   * Retry asks again rather than preparing a second post (same-signing.ts).
+   * It rides the draft so a reload still asks the same signing.
+   */
+  readonly attempt: SigningAttempt | null;
 };
 
 /** The policy default the seal shows before anyone touches it. */
@@ -305,6 +312,7 @@ export function emptyWizard(): WizardState {
     sensitive: false,
     sensitiveReason: "",
     pDirected: DEFAULT_P_DIRECTED,
+    attempt: null,
   };
 }
 
