@@ -2032,11 +2032,12 @@ describe("Retry after a signing that did not answer", () => {
     expect(await store.handshakeIds()).not.toContain("w1");
   });
 
-  it("a press after the words changed, over a first attempt already approved, takes that post and prepares nothing", async () => {
+  it("a press after the words changed, over a first attempt already approved, opens that post, prepares nothing, and keeps the new words as the draft", async () => {
     const prepare = counting();
     server.use(prepare.handler, stagedAt("RELAYING"));
     const signer = failedOnce();
-    mount(fakeDrafts(), signer);
+    const drafts = fakeDrafts();
+    mount(drafts, signer);
     await signWords("Low tide.");
     await screen.findByTestId("wizard-retry");
 
@@ -2049,5 +2050,45 @@ describe("Retry after a signing that did not answer", () => {
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
     expect(prepare.count()).toBe(1);
+    // Nothing the reader wrote is lost: the changed words stay the working
+    // draft, with no signing of their own, neither sealed nor cleared.
+    await waitFor(() => expect(drafts.held()?.words).toBe("High tide."));
+    expect(drafts.held()?.attempt).toBeNull();
+  });
+
+  it("puts the attempt on the draft before the first pre-signature: a late save holds the signing back", async () => {
+    const prepare = counting();
+    server.use(prepare.handler);
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const drafts = fakeDrafts();
+    const attemptSaves: WizardState[] = [];
+    const slow: ReturnType<typeof fakeDrafts> = {
+      ...drafts,
+      save: async (state) => {
+        if (state.attempt !== null) {
+          attemptSaves.push(state);
+          await gate;
+        }
+        await drafts.save(state);
+      },
+    };
+    const signStaged = vi.fn(async (write: { id: string }) => ({
+      kind: "done" as const,
+      id: write.id,
+      state: "RELAYING" as const,
+    }));
+    mount(slow, fakeWriteSigner({ signStaged }));
+    await signWords("Low tide.");
+
+    await waitFor(() => expect(attemptSaves).toHaveLength(1));
+    // The save has not settled: nothing is pre-signed yet.
+    await act(async () => {});
+    expect(signStaged).not.toHaveBeenCalled();
+    release();
+    await waitFor(() => expect(signStaged).toHaveBeenCalledTimes(1));
+    expect(attemptSaves[0]!.attempt).toEqual(expect.objectContaining({ node: "post-1", writes: ["w1"] }));
   });
 });
