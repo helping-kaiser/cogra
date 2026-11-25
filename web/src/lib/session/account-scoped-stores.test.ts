@@ -141,7 +141,28 @@ describe("the read marks are sent only as the account that made them", () => {
     expect(sent.marks.filter((mark) => mark.as === "acct-b")).toEqual([]);
   });
 
-  it("sends nothing after a sign-out, and keeps A's marks for A", async () => {
+  it("sends nothing when the account changes while the guard waits on a refresh", async () => {
+    const net = network();
+    signInAs("acct-a");
+    net.offline();
+    await markRead(client, net.guard, "note-of-a");
+
+    const guard = {
+      run: async <T>(block: () => Promise<Outcome<T>>): Promise<Outcome<T>> => {
+        // The guard's refresh answers as another account before the send.
+        signInAs("acct-b");
+        return block();
+      },
+    };
+    await flushMarks(client, guard);
+    expect(sent.marks).toEqual([]);
+
+    signInAs("acct-a");
+    await flushMarks(client, network().guard);
+    expect(sent.marks).toEqual([{ mark: "read:note-of-a", as: "acct-a" }]);
+  });
+
+  it("sends nothing after a sign-out", async () => {
     const net = network();
     signInAs("acct-a");
     net.offline();

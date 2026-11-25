@@ -24,6 +24,7 @@
 import type { ApolloClient } from "@apollo/client";
 
 import { markNotificationRead, markNotificationsSeen } from "@/lib/api/notifications-api";
+import { failed, type Outcome } from "@/lib/api/outcome";
 import type { AuthGuard } from "@/lib/session/guard";
 import { tokenStore } from "@/lib/session/token-store";
 
@@ -81,17 +82,20 @@ async function flush(client: ApolloClient, guard: Guarded): Promise<void> {
     const account = active();
     const entry = owed.get(account);
     if (entry === undefined) return;
-    // Every send re-asks whose the tab is: an account that changed under the
-    // flush keeps the rest of its marks for its own next checkpoint.
+    // Every send re-asks whose the tab is, again inside the guard — after any
+    // refresh it waited on, as the request is issued: an account that changed
+    // under the flush keeps the rest of its marks for its own next checkpoint.
     const stillTheirs = () => active() === account;
+    const asTheirs = <T>(send: () => Promise<Outcome<T>>) =>
+      guard.run(() => (stillTheirs() ? send() : Promise.resolve(failed(new Error("account changed")))));
     const through = entry.through;
     if (through !== null && stillTheirs()) {
-      const outcome = await guard.run(() => markNotificationsSeen(client, through));
+      const outcome = await asTheirs(() => markNotificationsSeen(client, through));
       if (outcome.kind === "success" && entry.through === through) entry.through = null;
     }
     for (const id of [...entry.reads]) {
       if (!stillTheirs()) break;
-      const outcome = await guard.run(() => markNotificationRead(client, id));
+      const outcome = await asTheirs(() => markNotificationRead(client, id));
       if (outcome.kind === "success") entry.reads.delete(id);
     }
   } finally {
