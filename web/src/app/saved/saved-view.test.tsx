@@ -868,6 +868,29 @@ describe("SavedScreen — states", () => {
     expect(screen.queryByTestId("saved.searchField")).not.toBeInTheDocument();
   });
 
+  // THE NODE IS EmptyState's OWN BOX (EmptyState.jsx: `data-node` on the div
+  // padded `--space-2 0`), inside the board's unregistered `8px 24px` wrapper
+  // (SavedEmpty.jsx, SavedNone.jsx). jsdom has no layout; the harness measures.
+  it.each([
+    ["the empty state", [] as const, null],
+    ["the none state", THREE, "brackish cartography"],
+  ])("saved_empty_is_the_empty_states_own_box_in_%s", async (_, items, query) => {
+    serveSaved(({ query: asked }) => page(asked === null ? items : []));
+    renderWithProviders(<SavedScreen searchDebounceMs={0} />, { store: signedIn() });
+    if (query !== null) {
+      await screen.findByTestId("saved-list");
+      search(query);
+    }
+    const title = await screen.findByTestId("saved.empty.title");
+    const node = screen.getByTestId("saved.empty");
+    expect(title.parentElement).toBe(node);
+    expect(node.className.split(" ")).toEqual(expect.arrayContaining(["flex", "flex-col", "items-start", "gap-3", "py-2"]));
+    expect(node.className).not.toMatch(/\bp[xtl]-/);
+    expect(node.parentElement!.className.split(" ")).toEqual(expect.arrayContaining(["px-6", "py-2"]));
+    expect(node.parentElement!.hasAttribute("data-testid")).toBe(false);
+    expect(title.className).not.toMatch(/\bp[ytb]?-/);
+  });
+
   it("a_failed_next_page_uses_the_load_more_fault", async () => {
     let reads = 0;
     server.use(
