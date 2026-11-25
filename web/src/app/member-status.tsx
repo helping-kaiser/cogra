@@ -48,9 +48,17 @@ export function MemberStatus({
   const onResume = async () => {
     if (resuming) return;
     setResuming(true);
-    await signer.resume();
-    setResuming(false);
-    await readDevice();
+    // resume() answers a missing or foreign key with per-write results and
+    // keeps the material; what still rejects is the device itself — a custody
+    // read that failed. Nothing signed and nothing was spent, so the card
+    // stands as it was and Resume answers again ("Degrade, never crash").
+    try {
+      await signer.resume();
+    } catch {
+      // The parked material is untouched; the re-read below shows it.
+    }
+    if (live.current) setResuming(false);
+    await readDevice().catch(() => {});
   };
 
   return (
