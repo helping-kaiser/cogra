@@ -68,17 +68,17 @@ export const ACCOUNT_REMOVAL_DETAIL =
 
 /*
  * THE FIGURES MOVE UNDER WHEN THEY DO NOT FIT (ProfileHeader.jsx
- * `PROFILE_TOP_CSS`): below 96px of avatar and gap plus 15.5rem of another's
- * labels (14.5rem of one's own), the figures take the second row's full
+ * `PROFILE_TOP_CSS`): below 96px of avatar and gap plus 16.375rem of another's
+ * labels (15.5rem of one's own), the figures take the second row's full
  * width, the name centres on the avatar and the figures keep the header's
  * own 12px gap. Spelled whole for each case so the class scanner sees them.
  */
-const UNDER_OTHER = "@max-[calc(96px+15.5rem)]:[grid-template-areas:'avatar_name''figures_figures']";
-const UNDER_OWN = "@max-[calc(96px+14.5rem)]:[grid-template-areas:'avatar_name''figures_figures']";
-const UNDER_OTHER_NAME = "@max-[calc(96px+15.5rem)]:self-center";
-const UNDER_OWN_NAME = "@max-[calc(96px+14.5rem)]:self-center";
-const UNDER_OTHER_FIGURES = "@max-[calc(96px+15.5rem)]:mt-3";
-const UNDER_OWN_FIGURES = "@max-[calc(96px+14.5rem)]:mt-3";
+const UNDER_OTHER = "@max-[calc(96px+16.375rem)]:[grid-template-areas:'avatar_name''figures_figures']";
+const UNDER_OWN = "@max-[calc(96px+15.5rem)]:[grid-template-areas:'avatar_name''figures_figures']";
+const UNDER_OTHER_NAME = "@max-[calc(96px+16.375rem)]:self-center";
+const UNDER_OWN_NAME = "@max-[calc(96px+15.5rem)]:self-center";
+const UNDER_OTHER_FIGURES = "@max-[calc(96px+16.375rem)]:mt-3";
+const UNDER_OWN_FIGURES = "@max-[calc(96px+15.5rem)]:mt-3";
 
 /** Figures are grouped the way every figure in the product groups them (copy-voice: `5,000`). */
 const FIGURE_FORMAT = new Intl.NumberFormat("en-US");
