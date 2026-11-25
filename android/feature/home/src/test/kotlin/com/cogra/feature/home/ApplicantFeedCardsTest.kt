@@ -70,21 +70,20 @@ class ApplicantFeedCardsTest {
         fault: AttachFault? = null,
     ) = RegistrationProgress.AwaitingApproval(emailVerified, keyAttached, keyOnDevice, fault)
 
-    private fun banners(state: HomeUiState, surface: ApplicationSurface = ApplicationSurface.FEED) =
-        @Composable {
-            StatusBanners(
-                state = state,
-                onResendEmailChange = { typed = it },
-                onResend = { resends += 1 },
-                onResumePending = {},
-                onStartKeyCeremony = { ceremonies += 1 },
-                application = ApplicationCardActions(surface = surface),
-            )
-        }
+    @Composable
+    private fun Banners(state: HomeUiState, surface: ApplicationSurface = ApplicationSurface.FEED) {
+        StatusBanners(
+            state = state,
+            onResendEmailChange = { typed = it },
+            onResend = { resends += 1 },
+            onResumePending = {},
+            onStartKeyCeremony = { ceremonies += 1 },
+            application = ApplicationCardActions(surface = surface),
+        )
+    }
 
     private fun render(state: HomeUiState, surface: ApplicationSurface = ApplicationSurface.FEED) {
-        val content = banners(state, surface)
-        compose.setContent { content() }
+        compose.setContent { Banners(state, surface) }
     }
 
     // ApplicantFeed.jsx:65, :95, :97-99; ApplicantFeed.md:11, :29.
@@ -97,14 +96,14 @@ class ApplicantFeedCardsTest {
             "An account left unverified for seven days is removed — joining again then starts over.",
         )
         compose.onNodeWithTag("feed.verifyCard.resend", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("verify_resend", useUnmergedTree = true).assertTextEquals("Resend the link")
+        compose.onNodeWithTag("verify_resend").assertTextEquals("Resend the link")
     }
 
     // ApplicantFeed.md:43 — the resend still sends; the typed address still rides the field.
     @Test
     fun theVerifyCardsResendStillCallsTheResend() {
         render(applicant(owed(keyAttached = true, keyOnDevice = true), resendEmail = ""))
-        compose.onNodeWithTag("verify_resend", useUnmergedTree = true).assertIsNotEnabled()
+        compose.onNodeWithTag("verify_resend").assertIsNotEnabled()
         compose.onNodeWithTag("resend_email").performTextInput("noor@fieldmail.org")
         assertThat(typed).isEqualTo("noor@fieldmail.org")
     }
@@ -112,7 +111,7 @@ class ApplicantFeedCardsTest {
     @Test
     fun aTypedAddressLetsTheResendGoOut() {
         render(applicant(owed(keyAttached = true, keyOnDevice = true)))
-        compose.onNodeWithTag("verify_resend", useUnmergedTree = true).assertIsEnabled().performClick()
+        compose.onNodeWithTag("verify_resend").assertIsEnabled().performClick()
         assertThat(resends).isEqualTo(1)
     }
 
@@ -125,13 +124,13 @@ class ApplicantFeedCardsTest {
         compose.onNodeWithTag("feed.keyCard.body", useUnmergedTree = true)
             .assertTextEquals("Your application needs a key in this app before @mira can approve it.")
         compose.onNodeWithTag("feed.keyCard.create", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("home_create_key", useUnmergedTree = true).assertTextEquals("Create my key")
+        compose.onNodeWithTag("home_create_key").assertTextEquals("Create my key")
     }
 
     @Test
     fun createMyKeyStillOpensTheCeremony() {
         render(applicant(owed(emailVerified = true)))
-        compose.onNodeWithTag("home_create_key", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("home_create_key").performClick()
         assertThat(ceremonies).isEqualTo(1)
     }
 
@@ -141,7 +140,7 @@ class ApplicantFeedCardsTest {
         render(applicant(owed(emailVerified = true), approver = null))
         compose.onNodeWithTag("feed.keyCard.title", useUnmergedTree = true).assertTextEquals("Create your key")
         compose.onNodeWithTag("feed.keyCard.body", useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithTag("home_create_key", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("home_create_key").assertExists()
     }
 
     // ApplicantFeed.md:23 — both owed cards at once.
@@ -158,8 +157,8 @@ class ApplicantFeedCardsTest {
         render(applicant(owed()), surface = ApplicationSurface.PROFILE)
         compose.onNodeWithTag("feed.verifyCard").assertDoesNotExist()
         compose.onNodeWithTag("feed.keyCard").assertDoesNotExist()
-        compose.onNodeWithTag("verify_resend", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("home_create_key", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("verify_resend").assertExists()
+        compose.onNodeWithTag("home_create_key").assertExists()
     }
 
     // ApplicantLanding.jsx:47; ApplicantLanding.md:5, :7, :11.
@@ -182,12 +181,12 @@ class ApplicantFeedCardsTest {
     fun everyRegisteredCardPathIsWornInSomeState() {
         val registered = applicantFeedCardTags()
         assertThat(registered).containsAtLeastElementsIn(OWED)
-        val first = banners(applicant(owed()))
-        val attach = banners(applicant(owed(emailVerified = true, keyOnDevice = true, fault = AttachFault.FAILED)))
         compose.setContent {
             Column {
-                first()
-                attach()
+                // Both owed cards, the key not made yet.
+                Banners(applicant(owed()))
+                // The key card's `attach` value.
+                Banners(applicant(owed(emailVerified = true, keyOnDevice = true, fault = AttachFault.FAILED)))
             }
         }
         val missing = (registered - OWED).filter { tag ->
