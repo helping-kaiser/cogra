@@ -539,16 +539,30 @@ private fun SavedLoadFailed(onRefresh: () -> Unit) {
     }
 }
 
+/**
+ * The empty state's own box (EmptyState.jsx): `saved.empty` is the content-only column, 8dp
+ * above and below, 12dp between its lines; the board's 8dp 24dp wrapper around it is the
+ * page's, unregistered (SavedEmpty.jsx, SavedNone.jsx).
+ */
+@Composable
+private fun SavedEmptyBox(content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxWidth().padding(horizontal = Space.x6, vertical = Space.x2)) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(vertical = Space.x2).dataNode(SAVED / "empty"),
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
+        ) { content() }
+    }
+}
+
 /** SAVEDEMPTY: words only — no action, no error colour, and the save named in words, never drawn as its glyph. */
 @Composable
 private fun SavedEmpty(focus: FocusRequester) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = Space.x6, vertical = Space.x2).dataNode(SAVED / "empty")) {
+    SavedEmptyBox {
         Text(
             stringResource(SavedR.string.saved_empty),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .padding(vertical = Space.x2)
                 .dataNode(SAVED / "empty" / "title")
                 .focusRequester(focus)
                 .focusable(),
@@ -559,19 +573,12 @@ private fun SavedEmpty(focus: FocusRequester) {
 /** SAVEDNONE: the reader's own search found nothing — the field keeps the query, and the one way back clears it. */
 @Composable
 private fun SavedNone(focus: FocusRequester, onShowEverything: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Space.x6, vertical = Space.x2)
-            .dataNode(SAVED / "empty"),
-        verticalArrangement = Arrangement.spacedBy(Space.x3),
-    ) {
+    SavedEmptyBox {
         Text(
             stringResource(R.string.content_saved_none),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .padding(vertical = Space.x2)
                 .dataNode(SAVED / "empty" / "title")
                 .focusRequester(focus)
                 .focusable(),
