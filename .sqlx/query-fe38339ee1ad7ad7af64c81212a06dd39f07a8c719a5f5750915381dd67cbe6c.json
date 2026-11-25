@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM staged_writes\n               WHERE actor_id = $1 AND family = $2 AND target = $3\n                 AND (pre_signed_at IS NOT NULL OR carried)\n                 AND state <> 'expired'\n           ) AS \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "fe38339ee1ad7ad7af64c81212a06dd39f07a8c719a5f5750915381dd67cbe6c"
+}
