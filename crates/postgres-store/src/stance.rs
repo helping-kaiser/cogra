@@ -20,7 +20,7 @@ use sqlx::PgPool;
 
 /// Which view of the graph a bundle read takes: L1's — only what has
 /// landed — or L2's, which also counts the author's acts still in flight.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BundleView {
     Landed,
     IncludingPending,
@@ -132,6 +132,185 @@ pub async fn standing(
         sum: sum.bundle(),
         newest_says_something,
     })
+}
+
+/// One bundle a batched [`standings`] read names: the author's address
+/// atom, the family the target's node class fixes, the target in its
+/// stored form, and the view — the four arguments [`standing`] takes.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct StandingKey {
+    pub author_atom: String,
+    pub family: Family,
+    pub target: String,
+    pub view: BundleView,
+}
+
+/// [`standing`] for many bundles, of any number of authors, in at most
+/// two reads whatever the batch size: one grouped read of the landed
+/// halves, and one of the pending halves the keys asking the L2 view
+/// name. Every key is answered, an empty bundle included, and each answer
+/// is the one [`standing`] gives for the same arguments: the same
+/// filters, the same sums and the same newest-record reading, grouped per
+/// bundle instead of asked once per bundle.
+///
+/// Each distinct bundle is named to the database once. Two keys can
+/// share one — the same target read in both views — and a bundle named
+/// twice in the joined key list would sum its records twice.
+pub async fn standings(
+    pool: &PgPool,
+    keys: &[StandingKey],
+) -> Result<HashMap<StandingKey, Standing>, sqlx::Error> {
+    let mut bundles: Vec<(&str, Family, &str)> = keys
+        .iter()
+        .map(|k| (k.author_atom.as_str(), k.family, k.target.as_str()))
+        .collect();
+    bundles.sort_unstable_by(|a, b| (a.0, a.1.as_str(), a.2).cmp(&(b.0, b.1.as_str(), b.2)));
+    bundles.dedup();
+    let mut pending: Vec<(&str, Family, &str)> = keys
+        .iter()
+        .filter(|k| k.view == BundleView::IncludingPending)
+        .map(|k| (k.author_atom.as_str(), k.family, k.target.as_str()))
+        .collect();
+    pending.sort_unstable_by(|a, b| (a.0, a.1.as_str(), a.2).cmp(&(b.0, b.1.as_str(), b.2)));
+    pending.dedup();
+
+    let landed = landed_halves(pool, &bundles).await?;
+    let in_flight = pending_halves(pool, &pending).await?;
+
+    let mut out = HashMap::with_capacity(keys.len());
+    for key in keys {
+        let bundle = (key.author_atom.clone(), key.family, key.target.clone());
+        let (p_d, p_i, records, newest_says) = landed
+            .get(&bundle)
+            .cloned()
+            .unwrap_or_else(|| ("0".to_string(), "0".to_string(), 0, false));
+        let mut sum = ExactSums::default();
+        sum.absorb(&p_d, &p_i, records)?;
+        let mut newest_says_something = newest_says;
+        if key.view == BundleView::IncludingPending {
+            let (p_d, p_i, records, newest_says) = in_flight
+                .get(&bundle)
+                .cloned()
+                .unwrap_or_else(|| ("0".to_string(), "0".to_string(), 0, None));
+            sum.absorb(&p_d, &p_i, records)?;
+            if let Some(says) = newest_says {
+                newest_says_something = says;
+            }
+        }
+        out.insert(
+            key.clone(),
+            Standing {
+                sum: sum.bundle(),
+                newest_says_something,
+            },
+        );
+    }
+    Ok(out)
+}
+
+/// A bundle as [`standings`] groups it: author atom, family, target.
+type BundleRef = (String, Family, String);
+
+/// The landed halves of [`standings`]: the mirror read of [`standing`],
+/// grouped per bundle. A bundle with no landed record is absent.
+async fn landed_halves(
+    pool: &PgPool,
+    bundles: &[(&str, Family, &str)],
+) -> Result<HashMap<BundleRef, (String, String, i64, bool)>, sqlx::Error> {
+    if bundles.is_empty() {
+        return Ok(HashMap::new());
+    }
+    let sources: Vec<String> = bundles
+        .iter()
+        .map(|(author, _, _)| NodeId::Addr((*author).to_string()).to_string())
+        .collect();
+    let families: Vec<&str> = bundles.iter().map(|(_, f, _)| f.as_str()).collect();
+    let targets: Vec<&str> = bundles.iter().map(|(_, _, t)| *t).collect();
+    let rows = sqlx::query!(
+        r#"SELECT k.ord                                    AS "ord!",
+                  COALESCE(SUM(l.p_d::text::numeric), 0)::text AS "p_d!",
+                  COALESCE(SUM(l.p_i::text::numeric), 0)::text AS "p_i!",
+                  COUNT(*)::bigint              AS "records!",
+                  COALESCE((ARRAY_AGG(NOT (l.p_d = 0 AND l.p_i = 0)
+                                      ORDER BY r.epoch DESC, r.position DESC))[1],
+                           FALSE)               AS "newest_says!"
+           FROM UNNEST($1::text[], $2::text[], $3::text[])
+                WITH ORDINALITY AS k(source, family, target, ord)
+           JOIN mirror_record_legs l
+             ON l.leg = 'binary' AND l.family = k.family
+            AND l.source = k.source AND l.target = k.target
+           JOIN mirror_records r ON r.record_id = l.record_id
+           WHERE NOT r.payload_marked
+             AND NOT l.census_unknown
+           GROUP BY k.ord"#,
+        &sources,
+        &families as &[&str],
+        &targets as &[&str],
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .filter_map(|row| {
+            Some((
+                bundle_at(bundles, row.ord)?,
+                (row.p_d, row.p_i, row.records, row.newest_says),
+            ))
+        })
+        .collect())
+}
+
+/// The bundle a grouped row answers for, by its 1-based ordinality in the
+/// key list the read unnested.
+fn bundle_at(bundles: &[(&str, Family, &str)], ord: i64) -> Option<BundleRef> {
+    let index = usize::try_from(ord).ok()?.checked_sub(1)?;
+    let (author, family, target) = bundles.get(index)?;
+    Some(((*author).to_string(), *family, (*target).to_string()))
+}
+
+/// The pending halves of [`standings`]: the staged read of [`standing`],
+/// grouped per bundle. A bundle with no counted act in flight is absent.
+async fn pending_halves(
+    pool: &PgPool,
+    bundles: &[(&str, Family, &str)],
+) -> Result<HashMap<BundleRef, (String, String, i64, Option<bool>)>, sqlx::Error> {
+    if bundles.is_empty() {
+        return Ok(HashMap::new());
+    }
+    let authors: Vec<&str> = bundles.iter().map(|(a, _, _)| *a).collect();
+    let families: Vec<&str> = bundles.iter().map(|(_, f, _)| f.as_str()).collect();
+    let targets: Vec<&str> = bundles.iter().map(|(_, _, t)| *t).collect();
+    let rows = sqlx::query!(
+        r#"SELECT k.ord                                       AS "ord!",
+                  COALESCE(SUM(s.p_d::text::numeric), 0)::text AS "p_d!",
+                  COALESCE(SUM(s.p_i::text::numeric), 0)::text AS "p_i!",
+                  COUNT(*)::bigint             AS "records!",
+                  (ARRAY_AGG(NOT (s.p_d = 0 AND s.p_i = 0) ORDER BY s.seq DESC))[1]
+                                               AS "newest_says?"
+           FROM UNNEST($1::text[], $2::text[], $3::text[])
+                WITH ORDINALITY AS k(author, family, target, ord)
+           JOIN staged_writes s
+             ON s.family = k.family AND s.author = k.author AND s.target = k.target
+           WHERE s.middle IS NULL
+             AND octet_length(s.payload) = 0
+             AND (s.pre_signed_at IS NOT NULL OR s.carried)
+             AND s.state NOT IN ('landed', 'expired')
+           GROUP BY k.ord"#,
+        &authors as &[&str],
+        &families as &[&str],
+        &targets as &[&str],
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .filter_map(|row| {
+            Some((
+                bundle_at(bundles, row.ord)?,
+                (row.p_d, row.p_i, row.records, row.newest_says),
+            ))
+        })
+        .collect())
 }
 
 /// [`standing`]'s landed half for many targets of one author, in one read
