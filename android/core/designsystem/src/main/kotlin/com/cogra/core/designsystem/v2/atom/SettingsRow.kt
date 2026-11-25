@@ -292,6 +292,7 @@ private fun WordsBesideValue(
         val wordsHeight = labelPlaced.height + (statusPlaced?.let { statusGap + it.height } ?: 0)
         val height = maxOf(wordsHeight, valuePlaced.height).coerceIn(constraints.minHeight, constraints.maxHeight)
         layout(width, height) {
+            // Placed label, status, value: the place order is the semantics (reading) order.
             val wordsTop = (height - wordsHeight) / 2
             labelPlaced.placeRelative(0, wordsTop)
             statusPlaced?.placeRelative(0, wordsTop + labelPlaced.height + statusGap)
