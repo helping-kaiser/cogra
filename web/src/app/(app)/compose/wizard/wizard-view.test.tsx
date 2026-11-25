@@ -1968,6 +1968,24 @@ describe("Retry after a signing that did not answer", () => {
     );
   }
 
+  /**
+   * The seal's arrow, twice, back to the words — each press waiting for its
+   * own history pop to land. The arrow moves the stage at once and pops the
+   * stage's entry asynchronously (stage-history.ts); a second press made
+   * while the first pop is still in flight is answered by that late pop as a
+   * browser Back, which puts the details stage back under the test.
+   */
+  const stageDepth = () =>
+    (window.history.state as { cograStage?: { depth: number } } | null)?.cograStage?.depth ?? 0;
+
+  async function backToTheWords() {
+    fireEvent.click(screen.getByRole("button", { name: "Back a step" }));
+    await waitFor(() => expect(stageDepth()).toBe(1));
+    fireEvent.click(await screen.findByRole("button", { name: "Back a step" }));
+    await waitFor(() => expect(stageDepth()).toBe(0));
+    await screen.findByTestId("wizard-words");
+  }
+
   async function signWords(words: string) {
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
     fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: words } });
@@ -2018,8 +2036,7 @@ describe("Retry after a signing that did not answer", () => {
     await screen.findByTestId("wizard-retry");
 
     // Back to the words, changed, and signed again.
-    fireEvent.click(screen.getByRole("button", { name: "Back a step" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Back a step" }));
+    await backToTheWords();
     fireEvent.change(await screen.findByTestId("wizard-words"), { target: { value: "High tide." } });
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
@@ -2041,8 +2058,7 @@ describe("Retry after a signing that did not answer", () => {
     await signWords("Low tide.");
     await screen.findByTestId("wizard-retry");
 
-    fireEvent.click(screen.getByRole("button", { name: "Back a step" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Back a step" }));
+    await backToTheWords();
     fireEvent.change(await screen.findByTestId("wizard-words"), { target: { value: "High tide." } });
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));

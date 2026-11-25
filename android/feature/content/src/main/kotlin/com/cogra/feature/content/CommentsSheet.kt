@@ -698,7 +698,7 @@ private fun CommentsList(
                     when {
                         state.loading -> LoadingState(testTag = "comments_loading")
                         state.transportFault != null -> ErrorLine(
-                            R.string.content_error_transport,
+                            R.string.content_comments_transport,
                             "comments_transport_error",
                         )
                         else -> Text(

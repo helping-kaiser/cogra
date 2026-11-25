@@ -986,11 +986,11 @@ pattern; rationale for this project below.
   read-and-cleared atomically behind the verified password —
   delivered exactly once, and never on a refusal, so the field
   leaks nothing to an unauthenticated caller. Clients surface it
-  as a dismissible alert on the signed-in shell: login navigates
-  away the moment the tokens land, so the value rides an
-  in-memory hand-off, and a client that dies between login and
-  rendering loses the notice — an accepted trade-off of this
-  narrow carrier. If more security-event kinds ever arise, the
+  as a dismissible alert on the signed-in shell. The web keeps
+  the stamp it received on the device, for the account it
+  belongs to, until the reader dismisses it — across reloads and
+  restarts; a forgetting account's sign-out purges it with its
+  other device-local flags. If more security-event kinds ever arise, the
   narrow field is removed in favor of a general security-event
   surface, not extended field-by-field.
 

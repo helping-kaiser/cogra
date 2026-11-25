@@ -50,6 +50,8 @@
 import { ApolloLink } from "@apollo/client";
 import { SetContextLink } from "@apollo/client/link/context";
 import UploadHttpLink from "apollo-upload-client/UploadHttpLink.mjs";
+import { OperationTypeNode } from "graphql";
+import { map } from "rxjs";
 
 import type { TokenStore } from "@/lib/session/token-store";
 
@@ -91,5 +93,31 @@ export function authorizedLink(
       headers: { ...prevContext.headers, authorization: `Bearer ${accessToken}` },
     };
   });
-  return ApolloLink.from([authLink, new UploadHttpLink({ uri })]);
+  return ApolloLink.from([authLink, answeredAsSender(store), new UploadHttpLink({ uri })]);
+}
+
+/**
+ * A READ'S ANSWER BELONGS TO THE ACCOUNT IT WAS SENT AS. The account boundary
+ * empties the cache (`session/browser-guard.ts`), and a read already on the
+ * wire when it does would otherwise land afterwards and write the ended
+ * account's answer back. So a query answered after the active account moved
+ * is refused here, before the cache sees it — the same refusal Apollo's own
+ * `clearStore` gives a read in flight. It sits after the session gate, so a
+ * read parked there through a refused refresh is sent, and answered, as the
+ * guest it then is. Mutations pass: an act the server took is the caller's
+ * to hear.
+ */
+function answeredAsSender(store: TokenStore): ApolloLink {
+  return new ApolloLink((operation, forward) => {
+    if (operation.operationType !== OperationTypeNode.QUERY) return forward(operation);
+    const sentAs = store.activeAccountId();
+    return forward(operation).pipe(
+      map((result) => {
+        if (store.activeAccountId() !== sentAs) {
+          throw new Error("answered after the account it was sent as ended");
+        }
+        return result;
+      }),
+    );
+  });
 }

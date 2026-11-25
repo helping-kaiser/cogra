@@ -369,26 +369,30 @@ pub(crate) async fn has_reciprocated(
 /// Nothing about the viewer's own stance is an error on a read: a viewer
 /// without an attached actor key has no bundle to read, and an id this
 /// viewer could not stance has none either. Both answer null.
+///
+/// Batched through [`crate::loaders::ViewerStanceLoader`], keyed on the
+/// session's own viewer, so a page of faces costs a constant number of
+/// reads whatever its size.
 pub(crate) async fn viewer_stance(
     ctx: &Context<'_>,
-    target: Uuid,
+    target: crate::stance::FaceTarget,
     pick: Option<StancePickInput>,
     include_pending: bool,
 ) -> async_graphql::Result<Option<StanceBundle>> {
     let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
         return Ok(None);
     };
-    let pool = ctx.data::<PgPool>()?;
-    match crate::stance::bundle(pool, viewer.user_id, target, include_pending).await {
-        Ok(read) => Ok(Some(StanceBundle {
-            target: read.node.to_string(),
-            standing: read.standing,
-            pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
-        })),
-        Err(crate::stance::StanceError::BadInput { .. })
-        | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
-        Err(e) => Err(e.into()),
-    }
+    let loader = ctx.data::<DataLoader<crate::loaders::ViewerStanceLoader>>()?;
+    let key = crate::stance::FaceKey {
+        viewer: viewer.user_id,
+        target,
+        include_pending,
+    };
+    Ok(loader.load_one(key).await?.map(|read| StanceBundle {
+        target: read.node.to_string(),
+        standing: read.standing,
+        pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
+    }))
 }
 
 /// Resolves the `borrowedStance` field shared by every stance-able node:
@@ -2258,7 +2262,13 @@ impl User {
         pick: Option<StancePickInput>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
-        viewer_stance(ctx, self.identity.id, pick, include_pending).await
+        viewer_stance(
+            ctx,
+            crate::stance::FaceTarget::Node(self.identity.id),
+            pick,
+            include_pending,
+        )
+        .await
     }
 
     /// The borrowed view's own landed stance toward this person's
@@ -3610,7 +3620,13 @@ impl PostType {
         pick: Option<StancePickInput>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
-        viewer_stance(ctx, self.0.id, pick, include_pending).await
+        viewer_stance(
+            ctx,
+            crate::stance::FaceTarget::Node(self.0.id),
+            pick,
+            include_pending,
+        )
+        .await
     }
 
     /// The borrowed view's own landed stance toward this post, for a
@@ -3974,7 +3990,13 @@ impl CommentType {
         pick: Option<StancePickInput>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
-        viewer_stance(ctx, self.0.id, pick, include_pending).await
+        viewer_stance(
+            ctx,
+            crate::stance::FaceTarget::Node(self.0.id),
+            pick,
+            include_pending,
+        )
+        .await
     }
 
     /// The borrowed view's own landed stance toward this comment, for a
@@ -4095,20 +4117,13 @@ impl HashtagType {
         pick: Option<StancePickInput>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
-        let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
-            return Ok(None);
-        };
-        let pool = ctx.data::<PgPool>()?;
-        match crate::stance::topic_bundle(pool, viewer.user_id, &self.name, include_pending).await {
-            Ok(read) => Ok(Some(StanceBundle {
-                target: read.node.to_string(),
-                standing: read.standing,
-                pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
-            })),
-            Err(crate::stance::StanceError::BadInput { .. })
-            | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
-            Err(e) => Err(e.into()),
-        }
+        viewer_stance(
+            ctx,
+            crate::stance::FaceTarget::Topic(self.name.clone()),
+            pick,
+            include_pending,
+        )
+        .await
     }
 
     /// The borrowed view's own landed Affinity bundle toward this topic,
