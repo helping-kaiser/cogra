@@ -116,6 +116,28 @@ export type WriteSigner = {
   signCarriedAtLanding(writes: readonly StagedWriteView[]): Promise<WriteResult[]>;
   /** Continues every persisted handshake — the parked-acts entry point. */
   resume(): Promise<WriteResult[]>;
+  /**
+   * Asks ONE earlier signing again: the batch a surface already prepared,
+   * by its staged-write ids, against the same expectation — a Retry's
+   * "the same signing is asked again … AND NEVER anything else is signed"
+   * (SigningAfterClose.md:27). Nothing is prepared.
+   *
+   * Every id is read back first, and the batch is then signed exactly as
+   * `sign` signs it — the whole-batch intent check, then each write from
+   * the state it is in now, with the material this device stored for it:
+   * an approved write answers `done`, a pre-committed one is approved from
+   * its stored nonces, an unsubmitted one re-sends them, and one that never
+   * reached its pre-signature is pre-signed for the first time.
+   *
+   * A batch not read whole is not signed: an id that did not answer keeps
+   * its result (`failed` or a read refusal, material kept), one that is gone
+   * answers NOT_FOUND (material spent), and every other id answers `failed`
+   * with nothing decided.
+   *
+   * Optional, as `hasKey` is, so a stand-in that omits it still types; a
+   * caller without it retires the attempt instead of asking it again.
+   */
+  signAgain?(ids: readonly string[], expected: Expectation): Promise<WriteResult[]>;
 };
 
 /**
@@ -584,6 +606,20 @@ export function createWriteSigner(deps: {
       const results: WriteResult[] = [];
       for (const id of ids) results.push(await resumeOne(answer.key, id));
       return results;
+    },
+
+    async signAgain(ids, expected) {
+      const reads: Awaited<ReturnType<typeof current>>[] = [];
+      for (const id of ids) reads.push(await current(id));
+      const staged: StagedWriteView[] = [];
+      for (const read of reads) if (read.kind === "staged") staged.push(read.staged);
+      if (staged.length === reads.length) return signChecked(staged, expected);
+      return reads.map(
+        (read, i): WriteResult =>
+          read.kind === "ended"
+            ? read.result
+            : { kind: "failed", id: ids[i], cause: new Error("the batch was not read whole; nothing signed") },
+      );
     },
   };
 }
