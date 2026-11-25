@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT k.ord                                       AS \"ord!\",\n                  COALESCE(SUM(s.p_d::text::numeric), 0)::text AS \"p_d!\",\n                  COALESCE(SUM(s.p_i::text::numeric), 0)::text AS \"p_i!\",\n                  COUNT(*)::bigint             AS \"records!\",\n                  (ARRAY_AGG(NOT (s.p_d = 0 AND s.p_i = 0) ORDER BY s.seq DESC))[1]\n                                               AS \"newest_says?\"\n           FROM UNNEST($1::text[], $2::text[], $3::text[])\n                WITH ORDINALITY AS k(author, family, target, ord)\n           JOIN staged_writes s\n             ON s.family = k.family AND s.author = k.author AND s.target = k.target\n           WHERE s.middle IS NULL\n             AND octet_length(s.payload) = 0\n             AND (s.pre_signed_at IS NOT NULL OR s.carried)\n             AND s.state NOT IN ('landed', 'expired')\n           GROUP BY k.ord",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ord!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "p_d!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "p_i!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "records!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "newest_says?",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "4bcb5e7198f9deaac330eef3f02e742e82068ada55366e8065bcff3e58a3bfc7"
+}

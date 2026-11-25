@@ -688,7 +688,7 @@ fun FeedScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.dp),
                         ) {
-                            Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+                            banners()
                             vouchCard()
                             ErrorLine(R.string.content_error_transport, "feed_transport_error")
                             TextButton(onClick = onRefresh, modifier = Modifier.testTag("feed_retry")) {
@@ -764,7 +764,10 @@ fun FeedScreen(
                                     // the board draws it (`_shared.jsx` `FeedList`).
                                     item(key = "feed_banners") {
                                         Column {
-                                            SeamedSlot { Gutter { banners() } }
+                                            // The applicant's task cards are cards of the
+                                            // list, full width (`ApplicantFeed.jsx`): the
+                                            // stack keeps the gutter for its other rows.
+                                            SeamedSlot { banners() }
                                             // The vouch card is a feed card, full-width,
                                             // the list's first above the posts (`VouchBack.jsx`).
                                             SeamedSlot { vouchCard() }
@@ -982,7 +985,7 @@ private fun FeedEmpty(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+        banners()
         vouchCard()
         Text(
             stringResource(R.string.content_feed_empty),
@@ -1010,7 +1013,7 @@ private fun FeedNothing(
             .verticalScroll(rememberScrollState())
             .padding(vertical = Space.x2),
     ) {
-        Box(Modifier.padding(horizontal = Space.x4)) { banners() }
+        banners()
         vouchCard()
         // The board's own `8 24` body (FeedNothing.jsx).
         EmptyState(

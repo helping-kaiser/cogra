@@ -459,6 +459,35 @@ impl Loader<String> for GuestStanceLoader {
     }
 }
 
+/// A signed-in viewer's own bundles, keyed on the viewer, the target and
+/// the view ([`crate::stance::FaceKey`]).
+///
+/// `viewerStance` asks once per face, and the single read costs a round
+/// trip per lookup step; the loader answers a page of faces in a constant
+/// number of reads ([`crate::stance::bundles`]). The viewer rides in the
+/// key for the reason it rides in [`BookmarkLoader`]'s: the loaders are
+/// registered once on the schema, so one batch can hold the faces of
+/// several requests, and a viewer fixed anywhere but the key would answer
+/// one reader's faces from another's bundle. The candidate `pick` is not
+/// in the key because no read depends on it: the resolver attaches it to
+/// the bundle the key answers. A face the single read answers with
+/// nothing is absent, which the resolver reads as null.
+pub struct ViewerStanceLoader(PgPool);
+
+impl Loader<crate::stance::FaceKey> for ViewerStanceLoader {
+    type Value = crate::stance::TargetBundle;
+    type Error = LoadError;
+
+    async fn load(
+        &self,
+        keys: &[crate::stance::FaceKey],
+    ) -> Result<HashMap<crate::stance::FaceKey, crate::stance::TargetBundle>, LoadError> {
+        crate::stance::bundles(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)
+    }
+}
+
 /// The post a comment's thread hangs under, keyed on the comment's id.
 ///
 /// A Saved comment row names "the post it answers" and opens the post it
@@ -524,6 +553,7 @@ pub struct NodeLoaders {
     pub thread_posts: DataLoader<ThreadPostLoader>,
     pub reference_counts: DataLoader<ReferenceCountLoader>,
     pub guest_stances: DataLoader<GuestStanceLoader>,
+    pub viewer_stances: DataLoader<ViewerStanceLoader>,
 }
 
 impl NodeLoaders {
@@ -545,7 +575,8 @@ impl NodeLoaders {
             bookmarks: DataLoader::new(BookmarkLoader(pool.clone()), tokio::spawn),
             thread_posts: DataLoader::new(ThreadPostLoader(pool.clone()), tokio::spawn),
             reference_counts: DataLoader::new(ReferenceCountLoader(pool.clone()), tokio::spawn),
-            guest_stances: DataLoader::new(GuestStanceLoader(pool), tokio::spawn),
+            guest_stances: DataLoader::new(GuestStanceLoader(pool.clone()), tokio::spawn),
+            viewer_stances: DataLoader::new(ViewerStanceLoader(pool), tokio::spawn),
         }
     }
 }
