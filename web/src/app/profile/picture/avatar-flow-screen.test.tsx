@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { holdPicture, heldPicture, releaseHeldPicture } from "@/lib/profile/held-picture";
 import { resetProfileChangeForTests } from "@/lib/profile/profile-change";
+import { readSignedProfile } from "@/lib/profile/signed-profile";
 import { createTokenStore } from "@/lib/session/token-store";
 import { TOO_BIG_PICTURE } from "@/lib/compose/pick";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
@@ -260,6 +261,9 @@ describe("the picture's seal in its flow", () => {
     expect(screen.getByTestId("carried-snackbar")).toHaveTextContent(
       "Signed — your profile shows it now, still settling.",
     );
+    // AvatarSeal.md:37 "the profile shows the change": the head wears the new
+    // picture — and no other field — until its next read answers.
+    expect(readSignedProfile("u1")).toEqual({ avatar: { id: "m-9", url: "https://media.test/m-9.webp" } });
   });
 
   it("brings the crop back, one stage behind, from Back and the arrow (AvatarSeal.md:41-43)", async () => {

@@ -67,6 +67,7 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import type { Expectation } from "@/lib/signing/intent";
 import { outcomeOf, PROFILE_SIGNED } from "@/lib/profile/profile-change";
+import type { SignedProfileChange, SignedProfileFields } from "@/lib/profile/signed-profile";
 import { AvatarCrop } from "./avatar-crop";
 import { changeSummary, type ProfileFields } from "./change-summary";
 import { ProfileEditSeal } from "./profile-edit-seal";
@@ -86,6 +87,7 @@ type Sealing = {
   readonly writes: readonly StagedWriteView[];
   readonly expected: Expectation;
   readonly summary: string;
+  readonly signed: SignedProfileChange;
 };
 
 export function ProfileEditScreen({ store = identityStore }: { store?: IdentityStore }) {
@@ -166,13 +168,13 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
    */
   const resolve = async (
     choice: ProfileMediaChoice,
-  ): Promise<{ selection: MediaSelection; ledger: MediaLedger; error?: string }> => {
+  ): Promise<{ selection: MediaSelection; ledger: MediaLedger; picture?: SignedProfileFields["avatar"]; error?: string }> => {
     const none: MediaLedger = new Map();
     if (choice.kind === "unchanged") return { selection: "unchanged", ledger: none };
-    if (choice.kind === "cleared") return { selection: { clear: true }, ledger: none };
+    if (choice.kind === "cleared") return { selection: { clear: true }, ledger: none, picture: null };
     const uploaded = await uploadProfilePicture(client, guard, choice);
     return uploaded.kind === "uploaded"
-      ? { selection: uploaded.selection, ledger: uploaded.ledger }
+      ? { selection: uploaded.selection, ledger: uploaded.ledger, picture: uploaded.picture }
       : { selection: "unchanged", ledger: none, error: uploaded.message };
   };
 
@@ -232,6 +234,17 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
       writes: prepared.value,
       expected: expectation([profileUpdate(profile)]),
       summary: changeSummary(before, { displayName, bio, websiteUrl }, avatar),
+      // What the profile's head wears once the change is taken: the fields as
+      // sent, the picture only where the change touched it.
+      signed: {
+        profileId: profileNode,
+        fields: {
+          displayName: sent.displayName,
+          bio: sent.bio,
+          websiteUrl: sent.websiteUrl,
+          ...(uploaded[0].picture !== undefined && { avatar: uploaded[0].picture }),
+        },
+      },
     });
   };
 
@@ -252,6 +265,7 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
         change={sealing.summary}
         hasKey={async () => keyOnDevice !== false && (await store.actorKey()) !== null}
         sign={async () => outcomeOf(await signer.sign(sealing.writes, sealing.expected))}
+        signed={sealing.signed}
         onTaken={() => {
           carrySnackbar(PROFILE_SIGNED);
           router.push("/profile");
