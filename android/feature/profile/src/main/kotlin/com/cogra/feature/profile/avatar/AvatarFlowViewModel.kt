@@ -211,22 +211,22 @@ class AvatarFlowViewModel @Inject constructor(
             val signing = signedProfile.begin()
             val results = signer.sign(prepared, Expectation(listOf(profileUpdate(expected))))
             if (results.all { it is WriteResult.Done }) {
-                // Taken: the profile shows the new picture from the return's
-                // first frame (AvatarSeal.md:37). The fields re-stated beside
-                // it are not the change's, so only the picture is laid.
-                val url = (flow.upload as? AvatarUpload.Done)?.url
-                if (url != null) {
-                    signedProfile.lay(
-                        signing,
-                        profile.id,
-                        SignedProfileFields(avatar = Setting(SignedPicture(mediaId, url))),
-                    )
-                }
+                layPicture(signing, profile.id, flow.upload as? AvatarUpload.Done)
                 _state.update { it.copy(submitting = false, saved = true) }
             } else {
                 _state.update { it.copy(submitting = false, signingFailed = true) }
             }
         }
+    }
+
+    /**
+     * Taken: the profile shows the new picture from the return's first frame
+     * (AvatarSeal.md:37). The fields re-stated beside it are not the change's,
+     * so only the picture is laid.
+     */
+    private suspend fun layPicture(signing: SignedProfile.Signing, profileId: String, upload: AvatarUpload.Done?) {
+        val url = upload?.url ?: return
+        signedProfile.lay(signing, profileId, SignedProfileFields(avatar = Setting(SignedPicture(upload.mediaId, url))))
     }
 
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
