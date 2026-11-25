@@ -62,9 +62,8 @@ pub async fn current_profile(
 }
 
 /// The actor's current *landed* profile — [`current_profile`] with
-/// pending versions left out. An update is a delta, so its version row is
-/// merged onto this: what the graph has already accepted, never another
-/// update still in flight.
+/// pending versions left out: what an update landing without a pending
+/// row of its own is merged onto, and the name an author already holds.
 pub async fn landed_profile(
     pool: &PgPool,
     actor_id: Uuid,

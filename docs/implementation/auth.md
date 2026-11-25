@@ -604,7 +604,8 @@ auth step; auth's involvement ends at landing.
 The prompt derives from the graph, not from client state: the
 viewer-only `User.hasReciprocated` field is true iff the joiner's
 reciprocal Opinion exists — confirmed in the record mirror, or in
-flight as one of the viewer's staged writes. The confirmed check
+flight as one of the viewer's signed staged writes; a prepare nobody
+has signed is not in flight. The confirmed check
 latches: once the mirror shows the Opinion, `reciprocated_at` is
 set on the landed application row and the mirror is not queried
 again. The latch is a derived cache that cannot diverge — the
