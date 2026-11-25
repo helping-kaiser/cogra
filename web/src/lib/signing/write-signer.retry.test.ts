@@ -111,6 +111,8 @@ class Host {
   private nextId = 1;
   /** Ids whose next ApproveActs dies on the wire (the server never sees it). */
   readonly approveFault = new Set<string>();
+  /** Ids whose next ApproveActs the server ACCEPTS, but whose answer is lost. */
+  readonly approveAnswerLost = new Set<string>();
   /** Ids whose next SubmitProposals dies on the wire before the server sees it. */
   readonly submitFault = new Set<string>();
   /** Ids the host is slow to seal: SEALING until `releaseSeals()`. */
@@ -292,6 +294,8 @@ class Host {
         const row = this.row(id);
         row.state = "RELAYING";
         this.approvals.push(id);
+        // The server took the approval; only its answer dies on the wire.
+        if (this.approveAnswerLost.delete(id)) return HttpResponse.error();
         return HttpResponse.json({
           data: {
             approveActs: {
@@ -653,6 +657,26 @@ describe("Retry after a parked signing, then Resume (characterisation)", () => {
     const resumed = await signer.resume();
     expect(resumed.map((r) => r.kind)).toEqual(["done", "done"]);
     expect(host.landed("publish")).toHaveLength(2);
+  });
+
+  it("a post whose approval was taken but whose answer was lost lands twice on Retry alone, with no Resume", async () => {
+    const prepared = preparePost(host);
+    if (prepared.kind !== "staged") throw new Error("attempt 1 must stage");
+    host.approveAnswerLost.add(prepared.writes[0].id);
+    const results = await signer.sign(prepared.writes, prepared.expected);
+    // The device reads a failure — the surface offers Retry — while the
+    // server already relays the genesis.
+    expect(results[0].kind).toBe("failed");
+    expect(host.row(prepared.writes[0].id).state).toBe("RELAYING");
+
+    const retry = await press(preparePost);
+    expect(retry.kind === "signed" && retry.results.every((r) => r.kind === "done")).toBe(true);
+    expect(host.landed("publish")).toHaveLength(2);
+
+    // Resume only tidies up: it reads RELAYING and clears the material.
+    const resumed = await signer.resume();
+    expect(resumed).toEqual([{ kind: "done", id: prepared.writes[0].id, state: "RELAYING" }]);
+    expect(host.approvals).toHaveLength(4);
   });
 
   // ---- reply ----
