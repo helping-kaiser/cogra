@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -270,7 +269,7 @@ private fun ApplicantStatus(
     onRetryAttach: () -> Unit,
 ) {
     when (val progress = state.progress) {
-        null -> CircularProgressIndicator(modifier = Modifier.testTag("home_status_loading"))
+        null -> ApplicantChecking()
         is RegistrationProgress.AwaitingApproval -> {
             if (!progress.emailVerified) {
                 VerifyCard(state, onResendEmailChange, onResend, feedNode(application.surface, "verifyCard"))
