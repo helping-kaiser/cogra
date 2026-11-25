@@ -5,6 +5,7 @@
 // reads what B is handed — then moves back to A, whose state is kept, since a
 // remembered account's sign-out clears nothing (auth.md "Sign-out").
 
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApolloClient } from "@apollo/client";
 
@@ -23,6 +24,7 @@ import {
 import { forgetStream, openStream, streamFor } from "@/lib/reel/stream-session";
 import { adoptTrace, forgetStandings, holdRanking, standingOf } from "@/lib/score/standing";
 import { beginTrace, forgetTrace, holdTraceRead, openTrace } from "@/lib/score/trace-session";
+import { markSettling, resetSettlingForTests, useSettling } from "@/lib/stance/settling";
 import { resetCarriedSnackbarForTests } from "@/lib/ui/carried-snackbar";
 import { tokenStore } from "./token-store";
 
@@ -77,6 +79,7 @@ afterEach(() => {
   forgetStandings();
   forgetTrace();
   forgetStream();
+  resetSettlingForTests();
 });
 
 describe("the read marks are sent only as the account that made them", () => {
@@ -252,6 +255,20 @@ describe("an open trace is the opening reader's (FeedEntry.md:5)", () => {
 
     signInAs("acct-b");
     expect(openTrace("post-1")).toMatchObject({ viewer: null, read: { kind: "idle" } });
+  });
+});
+
+describe("the records settling are the signing account's", () => {
+  it("never wear Still settling on B's anchor for what A signed", () => {
+    signInAs("acct-a");
+    const target = { kind: "post", id: "post-1" } as const;
+    markSettling([target]);
+    const anchor = renderHook(() => useSettling(target));
+    expect(anchor.result.current).toBe(true);
+
+    act(() => signInAs("acct-b"));
+    expect(anchor.result.current).toBe(false);
+    anchor.unmount();
   });
 });
 
