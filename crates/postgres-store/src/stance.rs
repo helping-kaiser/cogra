@@ -160,19 +160,11 @@ pub async fn standings(
     pool: &PgPool,
     keys: &[StandingKey],
 ) -> Result<HashMap<StandingKey, Standing>, sqlx::Error> {
-    let mut bundles: Vec<(&str, Family, &str)> = keys
-        .iter()
-        .map(|k| (k.author_atom.as_str(), k.family, k.target.as_str()))
-        .collect();
-    bundles.sort_unstable_by(|a, b| (a.0, a.1.as_str(), a.2).cmp(&(b.0, b.1.as_str(), b.2)));
-    bundles.dedup();
-    let mut pending: Vec<(&str, Family, &str)> = keys
-        .iter()
-        .filter(|k| k.view == BundleView::IncludingPending)
-        .map(|k| (k.author_atom.as_str(), k.family, k.target.as_str()))
-        .collect();
-    pending.sort_unstable_by(|a, b| (a.0, a.1.as_str(), a.2).cmp(&(b.0, b.1.as_str(), b.2)));
-    pending.dedup();
+    let bundles = distinct_bundles(keys.iter());
+    let pending = distinct_bundles(
+        keys.iter()
+            .filter(|k| k.view == BundleView::IncludingPending),
+    );
 
     let landed = landed_halves(pool, &bundles).await?;
     let in_flight = pending_halves(pool, &pending).await?;
@@ -210,6 +202,16 @@ pub async fn standings(
 
 /// A bundle as [`standings`] groups it: author atom, family, target.
 type BundleRef = (String, Family, String);
+
+/// The bundles the keys name, each once, in first-seen order.
+fn distinct_bundles<'a>(
+    keys: impl Iterator<Item = &'a StandingKey>,
+) -> Vec<(&'a str, Family, &'a str)> {
+    let mut seen = std::collections::HashSet::new();
+    keys.map(|k| (k.author_atom.as_str(), k.family, k.target.as_str()))
+        .filter(|bundle| seen.insert(*bundle))
+        .collect()
+}
 
 /// The landed halves of [`standings`]: the mirror read of [`standing`],
 /// grouped per bundle. A bundle with no landed record is absent.
