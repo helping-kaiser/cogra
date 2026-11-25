@@ -33,12 +33,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.NameInText
@@ -187,32 +190,108 @@ fun SettingsRow(
         if (kind is SettingsRowKind.Choice) {
             ChoiceDot(selected = kind.selected, modifier = Modifier.dataNode(node?.div("choice")))
         }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                color = if (kind == SettingsRowKind.Action) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
-                modifier = Modifier.dataNode(node?.div("label")),
-            )
-            if (status != null) {
-                // TEXT THAT WRAPS (NamesLong.md; `SettingsRow.jsx`): a handle
-                // in the status is one unit, whole or end-cut.
-                NameInText(
-                    text = status,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.dataNode(node?.div("status")),
-                )
+        if (value == null) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(StatusGap),
+            ) {
+                RowLabel(label, kind, node)
+                RowStatus(status, node)
             }
+        } else {
+            WordsBesideValue(label, kind, status, value, node, Modifier.weight(1f))
         }
-        RowTail(kind, value, trailing, node)
+        RowTail(kind, trailing, node)
+    }
+}
+
+/** The gap between the label and its status line (`SettingsRow.jsx` words column). */
+private val StatusGap = 2.dp
+
+@Composable
+private fun RowLabel(label: String, kind: SettingsRowKind, node: DataNode?) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelLarge,
+        color = if (kind == SettingsRowKind.Action) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        modifier = Modifier.dataNode(node?.div("label")),
+    )
+}
+
+@Composable
+private fun RowStatus(status: String?, node: DataNode?) {
+    if (status != null) {
+        // TEXT THAT WRAPS (NamesLong.md; `SettingsRow.jsx`): a handle
+        // in the status is one unit, whole or end-cut.
+        NameInText(
+            text = status,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.dataNode(node?.div("status")),
+        )
+    }
+}
+
+/**
+ * A VALUE TOO LONG FOR THE ROW IS CUT, THE LABEL KEEPS ITS ROOM
+ * (`SettingsRow.jsx`, round 62): the value is a one-line place that never
+ * wraps and ends in "…", and beside a value the label holds its whole width,
+ * so a long e-mail address yields and the word naming it never does. The
+ * label is measured first at its own width; the value gets what is left;
+ * the words take the rest, so a value that fits sits where it always did.
+ */
+@Composable
+private fun WordsBesideValue(
+    label: String,
+    kind: SettingsRowKind,
+    status: String?,
+    value: String,
+    node: DataNode?,
+    modifier: Modifier,
+) {
+    Layout(
+        content = {
+            RowLabel(label, kind, node)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.dataNode(node?.div("value")),
+            )
+            RowStatus(status, node)
+        },
+        modifier = modifier,
+    ) { measurables, constraints ->
+        val labelPart = measurables[0]
+        val valuePart = measurables[1]
+        val statusPart = measurables.getOrNull(2)
+        val gap = Space.x4.roundToPx()
+        val labelFloor = labelPart.maxIntrinsicWidth(Constraints.Infinity)
+        val width = if (constraints.hasBoundedWidth) {
+            constraints.maxWidth
+        } else {
+            labelFloor + gap + valuePart.maxIntrinsicWidth(Constraints.Infinity)
+        }
+        val valuePlaced = valuePart.measure(Constraints(maxWidth = (width - labelFloor - gap).coerceAtLeast(0)))
+        val wordsWidth = (width - gap - valuePlaced.width).coerceAtLeast(0)
+        val labelPlaced = labelPart.measure(Constraints(maxWidth = wordsWidth))
+        val statusPlaced = statusPart?.measure(Constraints(maxWidth = wordsWidth))
+        val statusGap = StatusGap.roundToPx()
+        val wordsHeight = labelPlaced.height + (statusPlaced?.let { statusGap + it.height } ?: 0)
+        val height = maxOf(wordsHeight, valuePlaced.height).coerceIn(constraints.minHeight, constraints.maxHeight)
+        layout(width, height) {
+            val wordsTop = (height - wordsHeight) / 2
+            labelPlaced.placeRelative(0, wordsTop)
+            statusPlaced?.placeRelative(0, wordsTop + labelPlaced.height + statusGap)
+            valuePlaced.placeRelative(width - valuePlaced.width, (height - valuePlaced.height) / 2)
+        }
     }
 }
 
@@ -224,22 +303,13 @@ private fun Modifier.rowTarget(kind: SettingsRowKind, onClick: () -> Unit): Modi
     SettingsRowKind.Inert -> this
 }
 
-/** The trailing edge: the value, a row's own control, the switch, the chevron. */
+/** The trailing edge after the value: a row's own control, the switch, the chevron. */
 @Composable
 private fun RowScope.RowTail(
     kind: SettingsRowKind,
-    value: String?,
     trailing: (@Composable RowScope.() -> Unit)?,
     node: DataNode?,
 ) {
-    if (value != null) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.dataNode(node?.div("value")),
-        )
-    }
     trailing?.invoke(this)
     if (kind is SettingsRowKind.Switch) {
         HouseSwitch(checked = kind.checked, modifier = Modifier.dataNode(node?.div("switch")))
