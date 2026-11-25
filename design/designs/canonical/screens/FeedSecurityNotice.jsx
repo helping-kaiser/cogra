@@ -27,25 +27,33 @@
 
    IT IS AN EXEMPLAR OF `Feed`'S SHELL (readme §13, Canvas pages and flows):
    only the card's two controls carry numbers; the band, the posts and the
-   nav are wired on `Feed`. */
+   nav are wired on `Feed`.
+
+   REGISTERED (impl seam 473.0) under `Feed`'s prefix and body names —
+   `band`, `filterTrigger`, `card`, `bottomBar` — and the notice card named
+   as the applicant's task cards are: the card is `securityNotice`, `Got it`
+   is `dismiss` (`ApplicantWaiting`, the vouch-back card), and `Change
+   password` is `changePassword`, the screen it opens. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
         <TaskCard
           tone="notice"
           title="We signed out every device"
           body="A sign-in this account had already replaced was used again, which can mean someone else had a copy. If your password might be known to anyone, change it."
+          node="securityNotice"
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <Button variant="inverse">Change password</Button>
-            <Button variant="outline">Got it</Button>
+            <Button variant="inverse" node="changePassword">Change password</Button>
+            <Button variant="outline" node="dismiss">Got it</Button>
           </div>
         </TaskCard>
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
