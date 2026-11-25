@@ -13,6 +13,7 @@ import { fakeWriteSigner } from "@/test/registration";
 import { fakeIdentityStore } from "@/test/identity";
 import { ProfileEditScreen } from "./profile-edit-screen";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
+import { readSignedProfile } from "@/lib/profile/signed-profile";
 
 /** The screen with the signing key on this browser. */
 function ProfileEditPage() {
@@ -383,6 +384,9 @@ describe("ProfileEditPage", () => {
     expect(variables).toEqual({
       input: { displayName: "Ada", bio: null, websiteUrl: "https://ada.example" },
     });
+    // ProfileEditSeal.md:45 "the profile shows the change": the profile's head
+    // wears exactly what was signed until its next read answers.
+    expect(readSignedProfile("u1")).toEqual({ displayName: "Ada", bio: null, websiteUrl: "https://ada.example" });
   });
 
   // ProfileEdit.md:81,85: a reserved display name is refused on the field, the

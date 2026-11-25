@@ -29,6 +29,7 @@ import { sealFaultOf, sealFaultOfResults } from "@/lib/compose/seal-fault";
 import { tokenStore } from "@/lib/session/token-store";
 import type { WriteResult } from "@/lib/signing/write-signer";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
+import { laySignedProfile, type SignedProfileChange } from "./signed-profile";
 
 /** What one signing of a profile change came to. */
 export type ProfileChangeOutcome =
@@ -101,14 +102,22 @@ function subscribe(listener: () => void): () => void {
  */
 export async function signProfileChange(
   run: () => Promise<ProfileChangeOutcome>,
-  { fromHead = false }: { fromHead?: boolean } = {},
+  { fromHead = false, signed }: { fromHead?: boolean; signed?: SignedProfileChange } = {},
 ): Promise<ProfileChangeOutcome> {
   // A Retry under the head has no seal to answer to.
   closed = fromHead;
-  owner = tokenStore.activeAccountId();
+  const by = tokenStore.activeAccountId();
+  owner = by;
   const mine = ++signings;
   publish({ kind: "signing" });
   const outcome = await run().catch((): ProfileChangeOutcome => ({ kind: "offline" }));
+  // A change taken is the profile's from now on (ProfileEditSeal.md:45): the
+  // head wears what was signed until a read asked after it answers — laid
+  // only while the tab is still the signing account's, whichever seal or
+  // head is listening, and in the order the changes were signed.
+  if (outcome.kind === "taken" && signed !== undefined && by !== null && tokenStore.activeAccountId() === by) {
+    laySignedProfile(by, signed, mine);
+  }
   // A later change was pressed meanwhile — another account's, it may be:
   // the slot is that change's now.
   if (mine !== signings) return outcome;
@@ -124,7 +133,7 @@ export async function signProfileChange(
   } else {
     publish({
       kind: "failed",
-      retry: () => void signProfileChange(run, { fromHead: true }),
+      retry: () => void signProfileChange(run, { fromHead: true, signed }),
     });
   }
   return outcome;

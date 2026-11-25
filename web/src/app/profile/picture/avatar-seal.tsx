@@ -13,6 +13,7 @@
 import type { ReactNode } from "react";
 
 import type { ProfileChangeOutcome } from "@/lib/profile/profile-change";
+import type { SignedProfileChange } from "@/lib/profile/signed-profile";
 import { ChangeSeal, type ChangeSealReading } from "../change-seal";
 
 export const AVATAR_SEAL_HEAD = "Your profile picture";
@@ -30,6 +31,8 @@ export function AvatarSeal(props: {
   avatar: ReactNode;
   hasKey: () => Promise<boolean>;
   sign: () => Promise<ProfileChangeOutcome>;
+  /** The new picture, for the profile's head once the change is taken. */
+  signed?: SignedProfileChange;
   onTaken: () => void;
   /** One stage back: the crop, the picture as it was framed. */
   onBack: () => void;
