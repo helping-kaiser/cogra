@@ -48,13 +48,11 @@ import type { WriteResult } from "@/lib/signing/write-signer";
 import { askAgain, intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
 import {
   advanceGate,
-  attachmentClaims,
-  bodyContent,
   COVER_FROM_PICTURE,
-  descriptionContent,
   effectiveCover,
   emptyWizard,
   isVideoPost,
+  postRequestOf,
   shapeRatio,
   skipsCoverStep,
   stageKeyboard,
@@ -756,18 +754,7 @@ export function ComposeWizard({
     // One request, read twice: once by the API layer and once by the payload
     // expectation, so the device checks the envelope against exactly what it
     // asked for (payload-expectation.ts).
-    const sent = {
-      title: state.title.trim() === "" ? null : state.title,
-      description: descriptionContent(state),
-      content: bodyContent(state),
-      sensitive: state.sensitive,
-      sensitiveReason: state.sensitiveReason,
-      license: state.license,
-      pDirected: state.pDirected,
-      tags: state.tags,
-      references: state.references,
-      attachments: attachmentClaims(state) ?? undefined,
-    };
+    const sent = postRequestOf(state);
     const intent = intentOf(sent);
     const expectedFor = (node: string): Expectation =>
       postExpectation(state, contentExpectation(node, sent, "post", wizardLedger(state)), graphIds.value);
@@ -794,10 +781,16 @@ export function ComposeWizard({
         return;
       }
       if (asked.kind === "landing") {
-        // The first content was approved and is landing: the post is taken,
-        // exactly as if the first press had answered.
+        // The FIRST content was approved and is landing, while the reader has
+        // changed the post since. INTERIM (no drawn state covers this moment;
+        // it is with design): the first post opens exactly as a success
+        // does, and the changed words stay the working draft, with no signing
+        // of their own — never sealed, never cleared, never signed on top.
         setBusy(false);
-        await taken(attempt.node, attempt.writes, false);
+        const kept = { ...state, attempt: null };
+        setState(kept);
+        await drafts.save(kept).catch(() => {});
+        router.push(`/posts/${attempt.node}?published=1`);
         return;
       }
       if (asked.kind === "signed") {
@@ -835,7 +828,9 @@ export function ComposeWizard({
     // the middle of the signing still asks this one again.
     draft = { ...draft, attempt };
     setState((current) => ({ ...current, attempt }));
-    void drafts.save(draft).catch(() => {});
+    // Awaited, so the save has settled before the first pre-signature; a save
+    // that fails does not hold the signing back.
+    await drafts.save(draft).catch(() => {});
     await finish(attempt, await signer.sign(prepared.value.writes, expectedFor(node)));
   };
 
