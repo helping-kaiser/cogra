@@ -29,6 +29,7 @@
 import { useSyncExternalStore } from "react";
 
 import type { HeldAnswer } from "@/lib/feed/derive";
+import { tokenStore } from "@/lib/session/token-store";
 
 /**
  * What a score slot shows for a thing.
@@ -55,8 +56,12 @@ type Held = {
 };
 
 let held: Held | null = null;
-/** Per thing: the score its trace's fetch found, null where it found no paths. */
-let adopted = new Map<string, number | null>();
+/**
+ * Per reader, per thing: the score that reader's trace fetch found, null
+ * where it found no paths — the reader's own trace (FeedKinds.md:7), so
+ * another reader's figure never reaches this one's slots.
+ */
+let adopted = new Map<string | null, Map<string, number | null>>();
 let version = 0;
 const listeners = new Set<() => void>();
 
@@ -76,9 +81,21 @@ export function holdRanking(reader: string | null, answer: HeldAnswer | null, vi
   changed();
 }
 
-/** A trace's live fetch found `score` for `targetId` (null: no paths). */
-export function adoptTrace(targetId: string, score: number | null): void {
-  adopted.set(targetId, score);
+/**
+ * `reader`'s trace fetch found `score` for `targetId` (null: no paths). The
+ * reader is the one the fetch was sent for, by default the tab's active one.
+ */
+export function adoptTrace(
+  targetId: string,
+  score: number | null,
+  reader: string | null = tokenStore.activeAccountId(),
+): void {
+  let mine = adopted.get(reader);
+  if (mine === undefined) {
+    mine = new Map();
+    adopted.set(reader, mine);
+  }
+  mine.set(targetId, score);
   changed();
 }
 
@@ -105,8 +122,9 @@ export function standingOf(reader: string | null, targetId: string, pending: boo
   if (pending || (answer?.settling.some((row) => row.targetId === targetId) ?? false)) {
     return SETTLING;
   }
-  if (adopted.has(targetId)) {
-    const score = adopted.get(targetId) ?? null;
+  const mine = adopted.get(reader);
+  if (mine?.has(targetId)) {
+    const score = mine.get(targetId) ?? null;
     return score === null ? DASH_STANDING : { kind: "figure", score };
   }
   const entry = answer?.entries.find((row) => row.targetId === targetId);

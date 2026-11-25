@@ -142,7 +142,7 @@ async function readTrace(
   const answer = traced.value;
   // WHAT THE FETCH FOUND IS ADOPTED, number or dash (FeedKinds.md:11), on
   // every surface that draws this thing — never moving a row.
-  adoptTrace(open.targetId, answer.score);
+  adoptTrace(open.targetId, answer.score, reader);
   const ids = new Set<string>([viewer]);
   if (open.cover === null) ids.add(open.targetId);
   // The held thing is "held, not re-read" (score-readout §7): only a cold

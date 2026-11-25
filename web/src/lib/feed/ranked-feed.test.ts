@@ -350,7 +350,7 @@ describe("the held ranking as the score's lookup source (score-readout CD-SR5)",
     expect(heldViewer("reader-1")).toBe("viewer-1");
     expect(standingOf("reader-1", "a", false)).toEqual({ kind: "figure", score: 1 });
 
-    adoptTrace("a", null);
+    adoptTrace("a", null, "reader-1");
     await feed.done({ ...FEED_FILTER_DEFAULT, order: "newest" }, fake.reads);
     expect(standingOf("reader-1", "a", false)).toEqual({ kind: "dash" });
 
