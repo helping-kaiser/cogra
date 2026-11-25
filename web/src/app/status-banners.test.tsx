@@ -46,7 +46,7 @@ describe("StatusBanners", () => {
     // shell says so in the notice vehicle.
     server.use(meHandler("MEMBER"));
     const notices = createSecurityNotices();
-    notices.postLockLost();
+    notices.postLockLost("acct-1");
     renderWithProviders(<StatusBanners notices={notices} />, { store: signedInStore() });
     expect(screen.getByTestId("lock_lost_notice")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("lock_lost_notice_dismiss"));
