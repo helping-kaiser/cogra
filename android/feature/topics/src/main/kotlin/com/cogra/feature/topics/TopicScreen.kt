@@ -506,12 +506,17 @@ private fun TaggedList(state: TopicUiState, listState: LazyListState, cards: Top
             if (!state.contentLoading && state.content.isEmpty()) {
                 // THE EMPTIED PAGE (TagPageEmpty.md:3-7): the calm `EmptyState`,
                 // 24 at the sides and 4 under the row — no action, no error colour.
+                // `tagPage.empty` is the empty state's own box (EmptyState.jsx); the
+                // board's `4px 24px 0` wrapper around it is the page's, unregistered
+                // (TagPageEmpty.jsx) — the 4 is the list's own top padding.
                 item {
-                    EmptyState(
-                        testTag = "topic_content_empty",
-                        title = stringResource(R.string.topics_content_empty),
-                        modifier = Modifier.padding(start = Space.x6, end = Space.x6),
-                    )
+                    Box(Modifier.padding(horizontal = Space.x6)) {
+                        EmptyState(
+                            testTag = (TAG_PAGE / "empty").tag,
+                            title = stringResource(R.string.topics_content_empty),
+                            node = TAG_PAGE / "empty",
+                        )
+                    }
                 }
             }
             items(rows, key = { it.listKey() }) { entry ->
