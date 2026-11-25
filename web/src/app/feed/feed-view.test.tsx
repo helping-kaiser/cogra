@@ -766,7 +766,11 @@ describe("FeedView", () => {
     const list = screen.getByTestId("feed-list");
     const item = card.closest("li");
     expect(item?.parentElement).toBe(list);
-    expect(list.firstElementChild).toBe(item);
+    // Only the security notice's row stands before it, empty with no notice.
+    const noticeRow = screen.getByTestId("feed-security-notice");
+    expect(list.firstElementChild).toBe(noticeRow);
+    expect(noticeRow).toBeEmptyDOMElement();
+    expect(noticeRow.nextElementSibling).toBe(item);
     expect(item).not.toHaveAttribute("data-seen-id");
     expect(card.querySelector("[data-seen-id]")).toBeNull();
   });
@@ -1110,7 +1114,11 @@ describe("FeedView", () => {
       const head = screen.getByTestId("feed-applicant-cards");
       expect(verify.parentElement).toBe(head);
       expect(head.parentElement).toBe(list);
-      expect(list.firstElementChild).toBe(head);
+      // Only the security notice's row stands before it, empty with no notice.
+      const noticeRow = screen.getByTestId("feed-security-notice");
+      expect(list.firstElementChild).toBe(noticeRow);
+      expect(noticeRow).toBeEmptyDOMElement();
+      expect(noticeRow.nextElementSibling).toBe(head);
       expect(head.nextElementSibling).toContainElement(first);
       expect(screen.getByRole("region", { name: "Account status" })).toBeEmptyDOMElement();
     });
