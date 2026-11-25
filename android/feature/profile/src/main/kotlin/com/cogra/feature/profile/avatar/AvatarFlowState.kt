@@ -22,9 +22,10 @@ sealed interface AvatarUpload {
     /**
      * On the server. [known] is what the intent check holds the avatar
      * entry to: the upload digest this device computed and the server
-     * echoed, and the rendition digest.
+     * echoed, and the rendition digest. [url] is where its bytes are: what
+     * the profile's head draws once the change is taken.
      */
-    data class Done(val mediaId: String, val known: KnownMedia? = null) : AvatarUpload
+    data class Done(val mediaId: String, val known: KnownMedia? = null, val url: String? = null) : AvatarUpload
 
     data class Failed(val message: String) : AvatarUpload
 }

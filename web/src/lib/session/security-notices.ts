@@ -20,7 +20,11 @@
 //   found this account's locked custody on this device, but the server could
 //   no longer open its lock, so the locked copy was deleted — and the reader
 //   is told once rather than finding the key gone without a word ("Never
-//   erase silently"). It lives in this tab's memory only.
+//   erase silently"). It lives in this tab's memory only, held for the
+//   account whose lock it was, and shows only while that account is the
+//   active one — the same binding as the reuse notice (auth.md "Multi-account
+//   device custody"), so another account signing in here is never told its
+//   lock was lost.
 
 import { safeStorage, type SafeStorage } from "@/lib/safe-storage";
 import { tokenStore, type TokenStore } from "./token-store";
@@ -37,9 +41,11 @@ export type SecurityNotices = {
   dismiss(): void;
   /** Drops `account`'s pending notice with its other device material. */
   forget(account: string): void;
-  /** Whether a dead device lock's notice waits to be said. */
+  /** Whether a dead device lock's notice waits to be said to the active account. */
   lockLost(): boolean;
-  postLockLost(): void;
+  /** Holds the dead lock's notice for `account`, the account whose lock it was. */
+  postLockLost(account: string): void;
+  /** `Got it`: removes the active account's dead-lock notice. */
   dismissLockLost(): void;
   subscribe(listener: () => void): () => void;
 };
@@ -56,7 +62,7 @@ export function createSecurityNotices({
   /** Whose notice shows: the active account, and word when it changes. */
   accounts?: Pick<TokenStore, "activeAccountId" | "subscribe">;
 } = {}): SecurityNotices {
-  let lockLost = false;
+  const lockLost = new Set<string>();
   const listeners = new Set<() => void>();
 
   const notify = () => [...listeners].forEach((listener) => listener());
@@ -79,15 +85,20 @@ export function createSecurityNotices({
     },
     forget(account) {
       storage.removeItem(keyOf(account));
+      lockLost.delete(account);
       notify();
     },
-    lockLost: () => lockLost,
-    postLockLost() {
-      lockLost = true;
+    lockLost() {
+      const account = accounts.activeAccountId();
+      return account !== null && lockLost.has(account);
+    },
+    postLockLost(account) {
+      lockLost.add(account);
       notify();
     },
     dismissLockLost() {
-      lockLost = false;
+      const account = accounts.activeAccountId();
+      if (account !== null) lockLost.delete(account);
       notify();
     },
     subscribe(listener) {

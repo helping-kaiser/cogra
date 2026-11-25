@@ -129,6 +129,35 @@ describe("securityNotices", () => {
     expect(window.localStorage.getItem("cogra.securityNotice.acct-2")).toBe("2026-08-11T00:00:00Z");
   });
 
+  // auth.md "Multi-account device custody": the dead lock's notice is a
+  // device-local flag bound to the account whose lock it was — another
+  // account signing in in this tab is never told ITS lock was lost.
+  it("a_lost_lock_is_told_only_to_the_account_whose_lock_it_was", () => {
+    const active = accounts("acct-1");
+    const notices = createSecurityNotices({ accounts: active });
+    notices.postLockLost("acct-1");
+    expect(notices.lockLost()).toBe(true);
+    active.switchTo("acct-2");
+    expect(notices.lockLost()).toBe(false);
+    active.switchTo(null);
+    expect(notices.lockLost()).toBe(false);
+    active.switchTo("acct-1");
+    expect(notices.lockLost()).toBe(true);
+  });
+
+  it("got_it_on_a_lost_lock_puts_away_only_the_active_accounts_and_forget_drops_it", () => {
+    const active = accounts("acct-2");
+    const notices = createSecurityNotices({ accounts: active });
+    notices.postLockLost("acct-1");
+    notices.postLockLost("acct-2");
+    notices.dismissLockLost();
+    expect(notices.lockLost()).toBe(false);
+    active.switchTo("acct-1");
+    expect(notices.lockLost()).toBe(true);
+    notices.forget("acct-1");
+    expect(notices.lockLost()).toBe(false);
+  });
+
   describe("with storage refused", () => {
     let restore: (() => void) | null = null;
     afterEach(() => {

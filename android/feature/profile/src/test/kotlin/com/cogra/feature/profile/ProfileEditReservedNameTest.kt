@@ -4,14 +4,17 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.cogra.crypto.ActorKey
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.UserError
+import com.cogra.domain.profile.SignedProfile
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.TEST_PROFILE_ID
 import com.cogra.domain.testing.ThrowingMediaProcessor
@@ -22,6 +25,7 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -69,6 +73,7 @@ class ProfileEditReservedNameTest {
     }
 
     private val profiles = RefusingProfiles()
+    private val session = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", TEST_PROFILE_ID) }
 
     private fun reserved(field: List<String>? = listOf("displayName")) =
         Outcome.Refused(listOf(UserError(ErrorCode.DISPLAY_NAME_RESERVED, "the display name is reserved", field)))
@@ -78,6 +83,7 @@ class ProfileEditReservedNameTest {
         ThrowingMediaRepository(),
         ThrowingMediaProcessor(),
         WriteSigner(sealer, identity),
+        SignedProfile(session, TestScope(dispatcher)),
     )
 
     @Before
