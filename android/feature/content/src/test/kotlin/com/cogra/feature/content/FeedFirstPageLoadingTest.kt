@@ -121,7 +121,8 @@ class FeedFirstPageLoadingTest {
     @Test
     fun theLoadingLineGoesWhenThePageArrives() {
         render(FeedUiState(loading = true))
-        drawnAt(SLOW_MS)
+        drawnAt(SLOW_MS - 1)
+        theWaitEnds()
         loadingReads()
         hand(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
         count(LOADING).assertCountEquals(0)
