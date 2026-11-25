@@ -294,8 +294,11 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
         </div>
       )}
       {hashtag.taggedContent.length === 0 && (
+        // `tagPage.empty` is the empty state's own box (EmptyState.jsx); the
+        // board's 4px 24px 0 wrapper around it is the page's, unregistered
+        // (TagPageEmpty.jsx).
         <div className="px-6 pt-1">
-          <EmptyState title={TAG_EMPTY} testId="topic-empty" />
+          <EmptyState title={TAG_EMPTY} testId="topic-empty" node={{ path: `${NODE}.empty` }} />
         </div>
       )}
       {/* THE TAG PAGE'S ONE STAGE: "ALWAYS at most one clip plays on the tag
