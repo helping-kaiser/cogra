@@ -126,10 +126,16 @@ export function SettingsRow({
   const showChevron =
     chevron ?? (!isSwitch && !isChoice && !action && trailing === undefined && !inert);
 
+  // A VALUE TOO LONG FOR THE ROW IS CUT, THE LABEL KEEPS ITS ROOM
+  // (SettingsRow.jsx, round 62; jakob 2026-11-23, E10 (a)): the value is a
+  // one-line place — it never wraps and ends in "…" — and beside a value the
+  // label holds its whole width, so a long e-mail address yields and the word
+  // naming it never does.
+  const hasValue = value !== undefined;
   const words = (
-    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+    <span className={`flex flex-1 flex-col gap-0.5 ${hasValue ? "min-w-min" : "min-w-0"}`}>
       <span
-        className={`text-label-large ${action ? "text-primary" : ""}`}
+        className={`text-label-large ${hasValue ? "min-w-max" : ""} ${action ? "text-primary" : ""}`}
         {...testAttributes(part(node, "label"))}
       >
         {label}
@@ -151,9 +157,9 @@ export function SettingsRow({
   );
   const tail = (
     <>
-      {value !== undefined && (
+      {hasValue && (
         <span
-          className="flex-none text-body-medium text-on-surface-variant"
+          className="min-w-0 flex-initial truncate text-body-medium text-on-surface-variant"
           {...testAttributes(part(node, "value"))}
         >
           {value}
