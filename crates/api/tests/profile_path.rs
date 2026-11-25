@@ -397,8 +397,8 @@ async fn a_signed_update_is_served_pending_until_it_lands(pool: PgPool) {
 }
 
 /// The pre-sign leg accepts a retry, and staging is idempotent with it:
-/// the retry merges onto the same landed base and its row collides with
-/// the one already written.
+/// the retry merges onto its own row, which yields the same fields, and
+/// collides with the one already written.
 ///
 /// A retried pre-signature stages no second profile version.
 /// ´claim:profile:a-retried-pre-sign-stages-one-row´
