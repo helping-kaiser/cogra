@@ -33,7 +33,9 @@
 
     <!-- The task card's title (ApplicantFeed, feed.verifyCard.title; copy-voice, the applicant task cards). -->
     <string name="home_verify_title">Verify your email</string>
-    <string name="home_verify_resend">Resend the email</string>
+    <!-- ApplicantFeed.jsx:95, :98 (copy-voice, *The verify card prints the address and says the reap once*). -->
+    <string name="home_verify_note">An account left unverified for seven days is removed — joining again then starts over.</string>
+    <string name="home_verify_resend">Resend the link</string>
     <string name="home_verify_resent">If an application holds that address, a fresh token is on its way.</string>
     <string name="home_verify_email">Email</string>
     <!-- The applicant's own application card (ApplicantWaiting, ApplicantRejected,
@@ -54,11 +56,14 @@
     <string name="application_ask_someone_caption">Send it to anyone who is already in. It does not expire, and it works however many people you send it to.</string>
     <string name="application_link_copied">Link copied</string>
     <string name="home_approved">Approved! Your Registration is signed and on its way onto the graph.</string>
+    <!-- ApplicantLanding.jsx:47 (copy-voice, *The landing card*). -->
+    <string name="home_landing_title">Approved — your registration is landing</string>
     <string name="home_welcome">Welcome to CoGra.</string>
     <string name="home_application_rejected">Something didn\'t verify on this phone, so nothing was signed. Try again from a fresh approval.</string>
 
     <string name="home_create_key_title">Create your key</string>
-    <string name="home_create_key_body">Your identity on the graph is a key minted on this phone. Create it now — your inviter can only approve you once it exists.</string>
+    <!-- ApplicantFeed.md:17, the app's wording; %1$s is the approver's @handle. -->
+    <string name="home_create_key_body">Your application needs a key in this app before %1$s can approve it.</string>
     <string name="home_create_key_button">Create my key</string>
     <!-- The key in this app that did not attach (ApplicantFeed.md:19-21, the app's wording). -->
     <string name="home_attach_key_title">Attach your key</string>

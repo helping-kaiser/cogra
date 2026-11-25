@@ -8,7 +8,9 @@
 // a refused read is a dead session — the phase flip handles it, the
 // banners just stop loading.
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
+import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchMe, type MeUser } from "@/lib/api/auth-api";
@@ -16,6 +18,8 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { securityNotices, type SecurityNotices } from "@/lib/session/security-notices";
 import { useRegistrationFlow, useRegistrationProgress } from "@/lib/signing/provider";
 import { TransportError } from "@/lib/ui/transport-error";
+import { pillClassName } from "@/lib/ui2/pill-button";
+import { TaskCard } from "@/lib/ui2/task-card";
 import type { ApplicationSurface } from "./application-card";
 import { ApplicantStatus } from "./applicant-status";
 import { MemberStatus } from "./member-status";
@@ -32,11 +36,50 @@ import { MemberStatus } from "./member-status";
 export const LOCK_LOST_NOTICE =
   "Your key was locked on this browser, but the lock can no longer be opened, so the locked copy is gone. If you made a recovery code, you can restore your key with it.";
 
-function noticeDate(detectedAt: string): string {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(detectedAt));
+/**
+ * WHERE THE SECURITY NOTICE STANDS (FeedSecurityNotice.jsx: the card is
+ * `FeedList`'s first child, full width, above the posts and above an
+ * applicant's cards). A list that heads with it provides its head element
+ * here and the card renders into it; without one (the profile) the card
+ * stands where the banners are rendered.
+ */
+export const SecurityNoticeHead = createContext<HTMLElement | null>(null);
+
+/**
+ * THE SECURITY NOTICE (FeedSecurityNotice.jsx:36-44, FeedSecurityNotice.md):
+ * the olive task card, in words that never name the token beneath a sign-in.
+ * `Change password` (filled, the register's inverse) opens the credential
+ * screen and leaves the notice standing; `Got it` (outlined) puts it away.
+ */
+function SecurityNotice({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div role="alert" className="flex flex-col">
+      <TaskCard
+        tone="notice"
+        title="We signed out every device"
+        body="A sign-in this account had already replaced was used again, which can mean someone else had a copy. If your password might be known to anyone, change it."
+        testId="security_notice"
+      >
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/settings/password"
+            data-testid="security_notice_change_password"
+            className={pillClassName({ variant: "inverse" })}
+          >
+            Change password
+          </Link>
+          <button
+            type="button"
+            data-testid="security_notice_dismiss"
+            onClick={onDismiss}
+            className={pillClassName({ variant: "outlined" })}
+          >
+            Got it
+          </button>
+        </div>
+      </TaskCard>
+    </div>
+  );
 }
 
 export function StatusBanners({
@@ -64,6 +107,7 @@ export function StatusBanners({
     () => null,
   );
   const lockLost = useSyncExternalStore(notices.subscribe, notices.lockLost, () => false);
+  const noticeHead = useContext(SecurityNoticeHead);
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -106,28 +150,12 @@ export function StatusBanners({
 
   return (
     <section aria-label="Account status" className="flex w-full flex-col gap-4">
-      {reuseDetectedAt !== null && (
-        <div
-          role="alert"
-          data-testid="security_notice"
-          className="flex flex-col gap-2 rounded-medium bg-error-container p-4 text-body-medium text-on-error-container"
-        >
-          <p className="text-title-medium">Security notice</p>
-          <p>
-            A signed-out session token for your account was re-used on{" "}
-            {noticeDate(reuseDetectedAt)} — likely token theft. All sessions were signed out
-            as a precaution. If this wasn&apos;t you, consider changing your password.
-          </p>
-          <button
-            type="button"
-            data-testid="security_notice_dismiss"
-            onClick={notices.dismiss}
-            className="self-start rounded-full px-3 py-1.5 text-label-large text-on-error-container"
-          >
-            Got it
-          </button>
-        </div>
-      )}
+      {reuseDetectedAt !== null &&
+        (noticeHead === null ? (
+          <SecurityNotice onDismiss={notices.dismiss} />
+        ) : (
+          createPortal(<SecurityNotice onDismiss={notices.dismiss} />, noticeHead)
+        ))}
       {lockLost && (
         <div
           role="alert"
