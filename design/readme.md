@@ -13102,6 +13102,36 @@ drawing.
   page's base is `img/`, and a bad chip stops the run. With eight proofs
   at once, 3 of 60 `SeveranceConfirm` comparisons wobbled once and
   matched on the second render. Backlog 307 closes.
+
+### Round 68, the first-page fault's two forms, the card tabs' next page — 2026-11-25
+
+- **Written** (impl seam 462.2; jakob 2026-11-12, question 19):
+  copy-voice, *A read with nothing loaded*, names `posts` and
+  `comments` and tells the two forms apart — a whole surface's read sets
+  the line over an outlined `Retry`; a list's first page under a
+  standing header sets it as the quiet row in the list's place, `Retry`
+  inline ending the line (`ProfileTabFirstPage`).
+- **Drawn** (impl seam 463.3): the next page that does not arrive on
+  the four card tabs is the `load` chip's `more`, `Notifications`'
+  twin — the cards stay and `Couldn't load
+  more — Retry` stands below the last card at the first page's quiet
+  row's rung and inset (`ProfileTabNextPage`). At `more` the board
+  draws the list's foot, the head and the tab row standing (addendum 1,
+  option (b)): `ProfilePosts` keeps its second post, `ProfilePostsOwn`
+  its shortest sample, `SOL_SECOND_POST`, landed. Law: `Profile.md`'s
+  two next-page lines, now in the four sidecars by node name.
+- **Registered**: `profile.posts.moreFault`, `profile.comments.moreFault`
+  and their `.retry` keyed `more` on the four boards, `Notifications`'
+  grammar; the first page's copy of the path stays unkeyed beside it, as `CommentEditVideo`'s `sign` stands
+  unkeyed beside its keyed copies. Nothing gone; no string added. The
+  Retry is via 23 on the comments tabs, 24 on `ProfilePosts` and 25 on
+  `ProfilePostsOwn`. Backlog 310 closes.
+- **Corrected** (seams 220 and 226; impl seam 469): the plain-text
+  sentence in `ExploreSearch.md`, `Saved.md` and `History.md` follows
+  jakob's search law — a handle match brings the person alone, and plain
+  text finds no comment.
+- **Held**: the Everything tab's next page, drawn only on the unregistered
+  `ProfileMoreFailed` (backlog 311).
 ---
 
 ## 14. The canvases

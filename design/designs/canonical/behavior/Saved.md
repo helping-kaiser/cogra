@@ -102,7 +102,7 @@ WHEN the reader types in saved.searchField -> Saved narrows to what matches AND 
 
 ALWAYS saved.searchField matches by the one search rule Explore uses: names and titles, and never a body, a description or a bio
 
-ALWAYS plain text in saved.searchField matches a person when any word of their display name or their handle starts with what is typed, and a thing when any word of its title, of its author's display name or of its author's handle starts with what is typed, never needing an @
+ALWAYS plain text in saved.searchField matches a person when any word of their display name or their handle starts with what is typed, and a post when any word of its title or of its author's display name starts with what is typed, never needing an @, a handle match bringing the person alone, what they made following only the @, and a comment never found by plain text
 
 ALWAYS a query reaches everything the reader saved, never only the cards already loaded
 

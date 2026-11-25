@@ -42,13 +42,17 @@
    THE FIRST PAGE'S OTHER MOMENTS (round 45; jakob 2026-11-12, the re-ask's
    fourteenth and fifteenth) are the `load` chip, `ProfileTabFirstPage`'s:
    `loading` the chronicle's `Loading…` in the list's place, `failed`
-   `ProfileMoreFailed`'s quiet row with `Retry` where the list would stand. */
+   `ProfileMoreFailed`'s quiet row with `Retry` where the list would stand.
+   Its `more` is the next page that did not come (round 68),
+   `ProfileTabNextPage`'s row: the board draws the list's foot, the head and
+   the tab row standing — the first post hidden, the second standing over
+   the row, as `Notifications`' `more` hides its earlier rows. */
 export const NODE = "profile";
 export const PROPS = {
   posts: { editor: "enum", options: ["some", "none", "settling", "settling-two", "removed"], default: "some" },
-  load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
+  load: { editor: "enum", options: ["loaded", "loading", "failed", "more"], default: "loaded" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.posts !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" || this.props.posts === "settling-two" || this.props.posts === "removed" ? "none" : "contents", secondSettling: this.props.posts === "settling" || this.props.posts === "settling-two" ? "contents" : "none", firstLanded: this.props.posts === "settling-two" ? "none" : "contents", firstSettling: this.props.posts === "settling-two" ? "contents" : "none", secondRemoved: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", postsFigure: this.props.posts === "none" ? "0" : "12"`;
+export const VALS = `someShown: (this.props.load === "loaded" || this.props.load === "more") && this.props.posts !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" || this.props.posts === "settling-two" || this.props.posts === "removed" ? "none" : "contents", secondSettling: this.props.posts === "settling" || this.props.posts === "settling-two" ? "contents" : "none", firstLanded: this.props.posts === "settling-two" || this.props.load === "more" ? "none" : "contents", firstSettling: this.props.posts === "settling-two" && this.props.load !== "more" ? "contents" : "none", secondRemoved: this.props.posts === "removed" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", moreShown: this.props.load === "more" ? "block" : "none", postsFigure: this.props.posts === "none" ? "0" : "12"`;
 const ADA_SECOND_POST = {
   id: "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a",
   author: ADA,
@@ -110,6 +114,7 @@ export function Screen() {
             <div style={{ display: "{{secondRemoved}}" }} data-node-chip="posts" data-node-key="removed">
               <PostCard id={ADA_SECOND_POST.id} author={ADA} timestamp={ADA_SECOND_POST.timestamp} redacted={{ reason: "author", when: "2h" }} score={ADA_SECOND_POST.score} comments={ADA_SECOND_POST.comments} menuItems={ADA_SECOND_POST.menuItems} node="card" />
             </div>
+            <ProfileTabNextPage />
           </div>
           <div style={{ display: "{{noneShown}}", padding: "8px 16px 0" }}>
             <EmptyState title="Nothing here yet." node="empty" />

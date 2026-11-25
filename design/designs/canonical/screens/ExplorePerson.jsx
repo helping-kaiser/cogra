@@ -32,10 +32,12 @@
 
    A PLAIN WORD, MATCHED BY WORD PREFIX (the law's rule 3, with jakob's
    2026-10-16 extension to handles, seam 226). `sal` reaches Sal Torres and
-   Salome Ward by their first word and Ines Salas by her second — a display
-   name, a handle or a title matches when any of its words starts with what
-   is typed, with no `@`; `las` would reach none of them. `@` stays the
-   deliberate person cue. The post and the tag stand in the content as
+   Salome Ward by their first word and Ines Salas by her second — a person
+   matches when any word of their display name or handle starts with what
+   is typed, a post when any word of its title or of its author's display
+   name does, with no `@`; `las` would reach none of them. A handle match
+   brings the person alone, what they made following only the `@`, the
+   deliberate person cue; a comment is never found by plain text. The post and the tag stand in the content as
    before.
 
    REGISTERED under the `explore` prefix (design ⇄ impl seam 062/063), named

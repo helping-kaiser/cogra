@@ -11,7 +11,8 @@
    line alone, an applicant's own as a member's (jakob 2026-11-12, the
    re-ask's sixteenth): only `Everything` carries the applicant's sentence.
    The `load` chip draws the first page's wait and failure,
-   `ProfileTabFirstPage`'s, as on `ProfileComments`.
+   `ProfileTabFirstPage`'s, as on `ProfileComments`, and its `more` the next
+   page that did not come, `ProfileTabNextPage`'s (round 68).
 
    YOUR REMOVED COMMENT KEEPS ITS PLACE (round 57; jakob 2026-11-18,
    profiles (a), no toggle) — the `comments` chip's `removed`: @sol's comment
@@ -33,9 +34,9 @@
 export const NODE = "profile";
 export const PROPS = {
   comments: { editor: "enum", options: ["some", "none", "removed", "settling", "settling-two"], default: "some" },
-  load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
+  load: { editor: "enum", options: ["loaded", "loading", "failed", "more"], default: "loaded" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "block" : "none", liveShown: this.props.comments === "removed" || this.props.comments === "settling" || this.props.comments === "settling-two" ? "none" : "contents", removedShown: this.props.comments === "removed" ? "contents" : "none", settlingShown: this.props.comments === "settling" || this.props.comments === "settling-two" ? "contents" : "none", secondSettlingShown: this.props.comments === "settling-two" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none"`;
+export const VALS = `someShown: (this.props.load === "loaded" || this.props.load === "more") && this.props.comments !== "none" ? "contents" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "block" : "none", liveShown: this.props.comments === "removed" || this.props.comments === "settling" || this.props.comments === "settling-two" ? "none" : "contents", removedShown: this.props.comments === "removed" ? "contents" : "none", settlingShown: this.props.comments === "settling" || this.props.comments === "settling-two" ? "contents" : "none", secondSettlingShown: this.props.comments === "settling-two" ? "contents" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", moreShown: this.props.load === "more" ? "block" : "none"`;
 export function Screen() {
   return (
     <ProfileTabTop own tab="comments">
@@ -100,6 +101,7 @@ export function Screen() {
           id={SOL_OWN_COMMENT.id}
         />
       </div>
+      <ProfileTabNextPage />
       </div>
       <div style={{ display: "{{noneShown}}", padding: "0 16px" }}>
         <EmptyState title="Nothing here yet." node="empty" />

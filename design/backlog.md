@@ -7079,3 +7079,20 @@ shape over `TransportError`'s default line `Can't reach the server. Check your c
 again.` (existing words, but beside `Retry` it says try again twice); (c) draw the thread sheet's
 own failed read first (`… comments can't load right now.`, an existing line) and the references
 sheet as its twin. Recommendation (a).
+
+### 310 · The posts tabs' next page that does not arrive · *design* · **filed 2026-11-25** · **closed 2026-11-25**
+
+Round 68, item 2 and addendum 1 (impl seam 463.3). Drawn on all four card tabs as the `load` chip's
+`more`, `Notifications`' twin: `Couldn't load more — Retry` below the last card, keyed `more` under
+`profile.posts.moreFault` and `profile.comments.moreFault`. At `more` the board draws the list's foot,
+the head and the tab row standing: `ProfilePosts` hides its first post and keeps the second;
+`ProfilePostsOwn` hides the gallery post and keeps the board's shortest sample, `SOL_SECOND_POST`
+landed.
+### 311 · The Everything tab's next page that does not arrive — registered · *design* · **filed 2026-11-25**
+
+Round 68, item 2. The chronicle's failed next page is drawn only on `ProfileMoreFailed`, a board of its
+own that registers nothing (pattern-exemplar exempt); `Profile` and `ProfileOther` carry no `load`
+chip, and `profile.chronicle` has no `moreFault`. The comments tabs' `more` (round 68) is the twin to
+copy: a `load` chip on both boards with `more`, the row at the chronicle's foot through
+`ProfileOwnBody`'s `tail` (`ProfileOtherBody` has no such slot yet), keyed `more` under `profile.chronicle`. Held for the word that it is wanted;
+the first page's fault needs a noun from jakob (462.1).

@@ -5898,6 +5898,23 @@ function ProfileTabFirstPage({ top = 8, kind = "posts" }) {
     </>
   );
 }
+/* A PROFILE CARD TAB'S NEXT PAGE, NOT COMING (round 68; impl seam 463.3) —
+   the `load` chip's `more`, `Notifications`' twin: the rows on screen stay
+   and `ProfileMoreFailed`'s row, `Couldn't load more — Retry`, stands below
+   the last card where the next page would have, the quiet row's own rung
+   and inset as the first page's above, never `--error`. Named `moreFault`
+   and its `retry` under the `load` chip's value `more`, as `Notifications`
+   keys it; the first page's copy of the path stays unkeyed. Shown by the
+   board's `moreShown`. */
+function ProfileTabNextPage() {
+  return (
+    <div style={{ display: "{{moreShown}}", padding: "0 12px" }} data-node-chip="load" data-node-key="more">
+      <p style={PROFILE_TAB_FAULT} data-node="moreFault">
+        Couldn&apos;t load more <span aria-hidden="true">—</span> <InlineAction size="sm" node="retry">Retry</InlineAction>
+      </p>
+    </div>
+  );
+}
 /* A PROFILE'S POSTS OR COMMENTS VIEW, ITS TOP VIEWPORT (round 36): the page
    `ProfilePosts` and `ProfileComments` draw — @ada's — or the reader's own,
    whose header is `ProfileOwnBody`'s; the tab row lit on `tab`, the list named

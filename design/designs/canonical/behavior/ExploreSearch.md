@@ -32,7 +32,7 @@ ALWAYS search matches names and titles, and never a body, a description or a bio
 
 ALWAYS plain text matches a person when any word of their display name or their handle starts with what is typed, as Mod finds Genesis Moderator and enesis finds nobody, and never needs an @
 
-ALWAYS plain text matches a thing when any word of its title, of its author's display name or of its author's handle starts with what is typed
+ALWAYS plain text matches a post when any word of its title or of its author's display name starts with what is typed, and never needs an @, while a handle match brings the person alone, what they made following only the @
 
 ALWAYS a comment result appears only for a query scoped by @handle or #tag
 

@@ -35,3 +35,7 @@ WHEN the tab's first page does not arrive -> profile.posts.moreFault stands wher
 WHEN the first page has not arrived 200ms after profile.posts.moreFault.retry is tapped -> Loading… stands in the row's place AND NEVER a spinner appears
 
 WHEN the retried first page arrives -> its cards stand below profile.tabRow AND profile.posts.moreFault goes
+
+WHEN the next page has not arrived 200ms after it was asked for -> Loading… stands where the next page will take its place AND NEVER a spinner appears
+
+WHEN the next page does not arrive -> profile.posts.moreFault, Couldn't load more with profile.posts.moreFault.retry, stands where the next page would have AND NEVER the line takes the error colour

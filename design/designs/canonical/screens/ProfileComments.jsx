@@ -60,7 +60,9 @@
    removed (`commentTarget`).
 
    THE FIRST PAGE'S OTHER MOMENTS (round 45) are the `load` chip,
-   `ProfileTabFirstPage`'s, as on `ProfilePosts`.
+   `ProfileTabFirstPage`'s, as on `ProfilePosts`. Its `more` is the next
+   page that did not come while the cards stand (round 68),
+   `ProfileTabNextPage`'s row below the last card, `Notifications`' `more`.
 
    AN APPLICANT'S REPLY (the `reader` chip; jakob 2026-11-13, seam 320-2, 3b —
    this tab is the ruling's model): every card's `Reply` wears the locked
@@ -72,11 +74,11 @@ const ADA_COMMENT_ID = "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e";
 const ADA_SECOND_COMMENT_ID = "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f";
 export const PROPS = {
   comments: { editor: "enum", options: ["some", "none", "removed", "settling", "settling-two", "pictures", "clip"], default: "some" },
-  load: { editor: "enum", options: ["loaded", "loading", "failed"], default: "loaded" },
+  load: { editor: "enum", options: ["loaded", "loading", "failed", "more"], default: "loaded" },
   reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
   target: { editor: "enum", options: ["live", "removed", "deleted", "swept"], default: "live" },
 };
-export const VALS = `someShown: this.props.load === "loaded" && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", secondLive: this.props.comments === "removed" || this.props.comments === "settling" || this.props.comments === "settling-two" || this.props.comments === "pictures" || this.props.comments === "clip" ? "none" : "contents", secondPictures: this.props.comments === "pictures" ? "contents" : "none", secondClip: this.props.comments === "clip" ? "contents" : "none", secondRemoved: this.props.comments === "removed" ? "contents" : "none", secondSettling: this.props.comments === "settling" || this.props.comments === "settling-two" ? "contents" : "none", firstLive: this.props.comments === "settling-two" ? "none" : "contents", firstSettling: this.props.comments === "settling-two" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", targetLine: this.props.target === "removed" ? "@sol's removed post" : this.props.target === "deleted" ? "“Salt maps of the coast road” — Deleted account" : this.props.target === "swept" ? "a deleted account's removed post" : "“Salt maps of the coast road” — @sol"`;
+export const VALS = `someShown: (this.props.load === "loaded" || this.props.load === "more") && this.props.comments !== "none" ? "flex" : "none", noneShown: this.props.load === "loaded" && this.props.comments === "none" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", moreShown: this.props.load === "more" ? "block" : "none", secondLive: this.props.comments === "removed" || this.props.comments === "settling" || this.props.comments === "settling-two" || this.props.comments === "pictures" || this.props.comments === "clip" ? "none" : "contents", secondPictures: this.props.comments === "pictures" ? "contents" : "none", secondClip: this.props.comments === "clip" ? "contents" : "none", secondRemoved: this.props.comments === "removed" ? "contents" : "none", secondSettling: this.props.comments === "settling" || this.props.comments === "settling-two" ? "contents" : "none", firstLive: this.props.comments === "settling-two" ? "none" : "contents", firstSettling: this.props.comments === "settling-two" ? "contents" : "none", lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", targetLine: this.props.target === "removed" ? "@sol's removed post" : this.props.target === "deleted" ? "“Salt maps of the coast road” — Deleted account" : this.props.target === "swept" ? "a deleted account's removed post" : "“Salt maps of the coast road” — @sol"`;
 
 export function Screen() {
   return (
@@ -223,6 +225,7 @@ export function Screen() {
               id={ADA_SECOND_COMMENT_ID}
             />
           </div>
+          <ProfileTabNextPage />
         </div>
         <div style={{ flex: 1, overflow: "hidden", display: "{{noneShown}}", flexDirection: "column", padding: "8px 16px 0" }}>
           <EmptyState title="Nothing here yet." node="empty" />
