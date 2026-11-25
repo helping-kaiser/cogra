@@ -12,6 +12,7 @@
 
 import { useSyncExternalStore } from "react";
 
+import { onAccountChange } from "@/lib/session/account-change";
 import type { StanceTarget } from "./stance-data";
 
 const keyOf = (target: StanceTarget) => `${target.kind}:${target.id}`;
@@ -23,6 +24,13 @@ function publish(next: ReadonlySet<string>): void {
   settling = next;
   for (const listener of listeners) listener();
 }
+
+// The records settling are the signing account's: when the tab's active
+// account ends or changes they are let go, so no other account's anchor ever
+// wears `Still settling` for them.
+onAccountChange(() => {
+  if (settling.size > 0) publish(new Set());
+});
 
 /** The seal's batch was taken: each of these targets is settling. */
 export function markSettling(targets: readonly StanceTarget[]): void {

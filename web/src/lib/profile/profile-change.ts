@@ -16,10 +16,17 @@
 //
 // One change at a time: a profile is one record, and the seal's commit refuses
 // a second press while one signs.
+//
+// The change is the changing account's: several accounts share a tab
+// (auth.md "Multi-account device custody"), so the line is kept beside the
+// account the tab was signed in as at the press, and stands only under that
+// account's head — read again whenever the active account changes. Its
+// landing's snackbar confirms it only to that account.
 
 import { useSyncExternalStore } from "react";
 
 import { sealFaultOf, sealFaultOfResults } from "@/lib/compose/seal-fault";
+import { tokenStore } from "@/lib/session/token-store";
 import type { WriteResult } from "@/lib/signing/write-signer";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 
@@ -60,10 +67,16 @@ export type ProfileChangeState =
 export const PROFILE_SIGNED = "Signed — your profile shows it now, still settling.";
 
 let state: ProfileChangeState | null = null;
+/** The account the tab was signed in as when the change was pressed. */
+let owner: string | null = null;
 let closed = false;
 /** Counts changes taken after their seal closed, so the profile reads itself again. */
 let landed = 0;
+/** Counts signings begun, so only the latest one answers into the slot. */
+let signings = 0;
 const listeners = new Set<() => void>();
+
+const isOwners = () => tokenStore.activeAccountId() === owner;
 
 function publish(next: ProfileChangeState | null): void {
   state = next;
@@ -72,7 +85,11 @@ function publish(next: ProfileChangeState | null): void {
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  const unsubscribeAccounts = tokenStore.subscribe(listener);
+  return () => {
+    listeners.delete(listener);
+    unsubscribeAccounts();
+  };
 }
 
 /**
@@ -88,8 +105,13 @@ export async function signProfileChange(
 ): Promise<ProfileChangeOutcome> {
   // A Retry under the head has no seal to answer to.
   closed = fromHead;
+  owner = tokenStore.activeAccountId();
+  const mine = ++signings;
   publish({ kind: "signing" });
   const outcome = await run().catch((): ProfileChangeOutcome => ({ kind: "offline" }));
+  // A later change was pressed meanwhile — another account's, it may be:
+  // the slot is that change's now.
+  if (mine !== signings) return outcome;
   if (!closed) {
     // The seal is still there: its own states say what happened.
     publish(null);
@@ -98,7 +120,7 @@ export async function signProfileChange(
   if (outcome.kind === "taken") {
     landed += 1;
     publish(null);
-    carrySnackbar(PROFILE_SIGNED);
+    if (isOwners()) carrySnackbar(PROFILE_SIGNED);
   } else {
     publish({
       kind: "failed",
@@ -113,9 +135,14 @@ export function closeProfileChangeSeal(): void {
   if (state?.kind === "signing") closed = true;
 }
 
+/** The head's line now, outside React; null where nothing stands there. */
+export function readProfileChange(): ProfileChangeState | null {
+  return isOwners() ? state : null;
+}
+
 /** The head's line, null where nothing stands there. */
 export function useProfileChange(): ProfileChangeState | null {
-  return useSyncExternalStore(subscribe, () => state, () => null);
+  return useSyncExternalStore(subscribe, readProfileChange, () => null);
 }
 
 /** Bumps each time a closed seal's change is taken — the profile's cue to read itself again. */
@@ -125,6 +152,7 @@ export function useProfileChangesLanded(): number {
 
 export function resetProfileChangeForTests(): void {
   state = null;
+  owner = null;
   closed = false;
   landed = 0;
 }
