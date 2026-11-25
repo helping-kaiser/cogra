@@ -13139,6 +13139,29 @@ drawing.
   text finds no comment.
 - **Held**: the Everything tab's next page, drawn only on the unregistered
   `ProfileMoreFailed` (backlog 311).
+
+### Round 69, two task cards registered, the author's name in the search sample, the Search paragraph — 2026-11-25
+
+- **Registered** (impl seam 473.0): `FeedSecurityNotice` under `feed`,
+  `Feed`'s `band`, `filterTrigger`, `card` and `bottomBar`, the notice
+  card `securityNotice` with `.title` and `.body`, `Change password`
+  `changePassword` and `Got it` `dismiss`, the applicant cards' name for
+  it. `ApplicantKeyElsewhere` under `feed` with `ApplicantFeed`'s shell
+  names: its card is the key card in another state (its sidecar's own
+  words), so `keyCard`, `Restore the key` `restore` as on `KeyElsewhere`,
+  and `Make a new key` `remake`, one word so the body's `make a new key`
+  never reads as the node. Both sidecars name these paths. Nothing gone;
+  no string added.
+- **Drawn**: `ExplorePerson`'s post past the content seam (key 7) is Sal
+  Torres's `Two hives moved inland for the winter`, which `sal` reaches
+  by its author's display name alone; the rubbing it replaces was
+  reached by no rule (round 68's finding).
+- **Written**: §4 *Search* states the stamped search law of 2026-10-16
+  (seam 220) as the three sidecars do — the author's display name, the
+  word-prefix rule, and a bare `@x` or `#x` as a cue that lists its
+  matches first and then what they reach.
+- **Filed**: `TagPage`'s middle sample name draws the fit rule's 390
+  result as fixed numbers (backlog 312; impl seam 471.4).
 ---
 
 ## 14. The canvases
