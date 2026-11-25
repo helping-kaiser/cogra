@@ -10,10 +10,10 @@
 // THE RULE, by what the attempt's writes say now:
 // - The reader changed nothing → the same batch is signed again from where it
 //   stands (`WriteSigner.signAgain`): approved writes answer done, parked ones
-//   continue on their stored material. Only an attempt that can no longer land
-//   — expired, gone, refused for good — is retired, and only then is a fresh
-//   prepare allowed. An attempt a part of which already answered done is never
-//   re-prepared: that part is landing, and a second act would sit on top of it.
+//   continue on their stored material. Only an attempt NO write of which can
+//   still be, or become, approved is retired (`retirable`), and only then is a
+//   fresh prepare allowed: one write without an answer, or one already done,
+//   keeps the whole attempt, since a second act would sit beside it.
 // - The reader changed what would be signed → an attempt this device already
 //   approved is landing with its first content, and the surface finishes as if
 //   it had answered; any other attempt is retired first, so it can never land
@@ -58,12 +58,54 @@ export type AskedAgain =
   /** A state read did not answer: nothing decided, nothing signed. */
   | { readonly kind: "unread"; readonly outcome: Outcome<unknown> };
 
-function ended(result: WriteResult): boolean {
-  if (result.kind === "rejectedByDevice") return true;
+/**
+ * What one write's result decides about whether it can still be approved.
+ *
+ * - `done` — approved: RELAYING or LANDED. Not retirable; the attempt is landing.
+ * - `rejectedByDevice` — ENDED: the device refused to sign it, material spent.
+ * - `refused`, every code terminal (TERMINAL_REFUSALS: expired, gone, refused
+ *   for good) — ENDED: the signer spent the material.
+ * - `refused` with any kept code (a read-leg refusal, a code this build does
+ *   not know, material lost awaiting re-stage) — UNDECIDED: the material is
+ *   kept, and the write may still be approved.
+ * - `awaitingSeal` — NOT APPROVED, decided: the server answered SEALING, so no
+ *   witness has gone out; it becomes unapprovable once its material is cleared.
+ * - `failed` — UNDECIDED: no answer reached the device, and the server may
+ *   already be relaying an approval whose answer was lost.
+ * - `carried` — UNDECIDED: held for the landing, which signs it later.
+ */
+type Decision = "approved" | "ended" | "notApproved" | "undecided";
+
+function decisionOf(result: WriteResult): Decision {
+  switch (result.kind) {
+    case "done":
+      return "approved";
+    case "rejectedByDevice":
+      return "ended";
+    case "refused":
+      return result.errors.length > 0 && result.errors.every((error) => TERMINAL_REFUSALS.has(error.code))
+        ? "ended"
+        : "undecided";
+    case "awaitingSeal":
+      return "notApproved";
+    case "failed":
+    case "carried":
+      return "undecided";
+  }
+}
+
+/**
+ * A fresh prepare is allowed only when NO write of the attempt can still be,
+ * or become, approved: every write ended, or was answered not approved — and
+ * at least one ended, since an attempt that is merely waiting on its seal is
+ * one to ask again, not to replace.
+ */
+function retirable(results: readonly WriteResult[]): boolean {
+  const decisions = results.map(decisionOf);
   return (
-    result.kind === "refused" &&
-    result.errors.length > 0 &&
-    result.errors.every((error) => TERMINAL_REFUSALS.has(error.code))
+    decisions.length > 0 &&
+    decisions.every((d) => d === "ended" || d === "notApproved") &&
+    decisions.some((d) => d === "ended")
   );
 }
 
@@ -89,9 +131,9 @@ export async function askAgain(
     // the one guarantee that matters, that no second act lands beside it.
     if (deps.signer.signAgain === undefined) return retireAll();
     const results = await deps.signer.signAgain(attempt.writes, expected);
-    if (results.some((result) => result.kind === "done")) return { kind: "signed", results };
-    if (results.some(ended)) return retireAll();
-    return { kind: "signed", results };
+    // Anything undecided or approved keeps the attempt: the surface shows its
+    // fault, and the next Retry asks this same signing again.
+    return retirable(results) ? retireAll() : { kind: "signed", results };
   }
 
   for (const id of attempt.writes) {
