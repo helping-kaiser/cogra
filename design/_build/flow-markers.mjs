@@ -1839,8 +1839,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 17, find: 'aria-label="Share this post"', tag: "button", all: true },
     ...nav(18),
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
-    // The load chip's failed first page (round 45): its Retry.
-    { n: 24, find: ">Retry</button>", tag: "button" },
+    // The load chip's failed first page (round 45): its Retry, unkeyed.
+    { n: 24, find: 'data-node="profile.posts.moreFault.retry">', tag: "button" },
+    // The load chip's next page that did not come (round 68), the next free number.
+    { n: 25, find: 'data-node="profile.posts.moreFault.retry" data-node-key="more"', tag: "button" },
   ],
   ProfileCommentsOwn: [
     ...ownProfile(),
@@ -2004,8 +2006,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: 'aria-label="3 comments"', tag: "button", all: true },
     { n: 15, find: 'aria-label="1 comment"', tag: "button", all: true },
     ...nav(16),
-    // The load chip's failed first page (round 45): its Retry.
-    { n: 23, find: ">Retry</button>", tag: "button" },
+    // The load chip's failed first page (round 45): its Retry, unkeyed.
+    { n: 23, find: 'data-node="profile.posts.moreFault.retry">', tag: "button" },
+    // The load chip's next page that did not come (round 68), the next free number.
+    { n: 24, find: 'data-node="profile.posts.moreFault.retry" data-node-key="more"', tag: "button" },
   ],
   ProfileComments: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
