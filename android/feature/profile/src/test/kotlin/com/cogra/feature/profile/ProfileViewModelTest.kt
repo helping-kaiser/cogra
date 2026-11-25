@@ -16,6 +16,10 @@ import com.cogra.domain.Removal
 import com.cogra.domain.RemovalAgent
 import com.cogra.domain.UserProfile
 import com.cogra.domain.history.SeenTracker
+import com.cogra.domain.profile.Setting
+import com.cogra.domain.profile.SignedPicture
+import com.cogra.domain.profile.SignedProfile
+import com.cogra.domain.profile.SignedProfileFields
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
@@ -69,7 +73,13 @@ class ProfileViewModelTest {
             return figures
         }
 
-        override suspend fun myProfile(): Outcome<ProfileView?> = mine
+        /** The own read hangs until the test lets it through: a read still in flight. */
+        var mineGate: CompletableDeferred<Unit>? = null
+
+        override suspend fun myProfile(): Outcome<ProfileView?> {
+            mineGate?.await()
+            return mine
+        }
 
         override suspend fun profileByHandle(handle: String): Outcome<ProfileView?> =
             byHandle[handle] ?: Outcome.Success(null)
@@ -112,7 +122,9 @@ class ProfileViewModelTest {
         SeenTracker(history, session, scope, testSeenRecord(session, scope))
     }
 
-    private fun viewModel() = ProfileViewModel(SavedStateHandle(), profiles, account, seenTracker)
+    private val signedProfile = SignedProfile(session, TestScope(dispatcher))
+
+    private fun viewModel() = ProfileViewModel(SavedStateHandle(), profiles, account, seenTracker, signedProfile)
 
     @Before
     fun setDispatcher() = Dispatchers.setMain(dispatcher)
@@ -528,5 +540,198 @@ class ProfileViewModelTest {
 
         assertThat(vm.state.value.profile?.id).isEqualTo("u2")
         assertThat(history.calls).isEmpty()
+    }
+
+    // -- THE HEAD WEARS A CHANGE THIS DEVICE SIGNED (ProfileEditSeal.md:45,
+    // AvatarSeal.md:37, Profile.md:97) --
+    //
+    // The profile under the edit holds the head it read before it; a change
+    // taken since is laid over it from the return's first frame, and the
+    // first read asked after the change replaces it, whatever it answers.
+
+    private val renamed = SignedProfileFields(
+        displayName = "Noa",
+        bio = Setting("new bio"),
+        websiteUrl = Setting("https://noa.example"),
+    )
+
+    /** The own profile, read with its pre-edit head; the list read once. */
+    private fun TestScope.ownProfileRead(): ProfileViewModel {
+        profiles.mine = Outcome.Success(
+            testProfile(id = "u1", handle = "jakob", displayName = "Jakob", bio = "old bio", websiteUrl = null),
+        )
+        val vm = viewModel()
+        vm.start(null)
+        dispatcher.scheduler.advanceUntilIdle()
+        return vm
+    }
+
+    private suspend fun taken(fields: SignedProfileFields, profileId: String = "u1") =
+        signedProfile.lay(signedProfile.begin(), profileId, fields)
+
+    @Test
+    fun aTakenEditDressesTheHeadBeforeTheReturnsReadAnswers() = runTest(dispatcher) {
+        val vm = ownProfileRead()
+        val rowReads = profiles.rowRequests.size
+        val held = vm.state.value
+
+        taken(renamed)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The return's first frame: no read asked yet, the head already wears it.
+        val head = vm.state.value
+        assertThat(head.profile?.displayName?.value).isEqualTo("Noa")
+        assertThat(head.profile?.bio?.value).isEqualTo("new bio")
+        assertThat(head.profile?.websiteUrl?.value).isEqualTo("https://noa.example")
+        assertThat(head.profile?.handle).isEqualTo("jakob")
+        // Nothing else moves: no loading state, the list as it was left.
+        assertThat(head.copy(profile = held.profile)).isEqualTo(held)
+        assertThat(profiles.rowRequests.size).isEqualTo(rowReads)
+
+        // The return's read, still on its way: the head keeps wearing it, and
+        // the read is quiet — no refresh indicator, no loading state (Profile.md:93, :97).
+        profiles.mineGate = CompletableDeferred()
+        vm.onReturn()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile?.displayName?.value).isEqualTo("Noa")
+        assertThat(vm.state.value.refreshing).isFalse()
+        assertThat(vm.state.value.loading).isFalse()
+
+        // The server serves the change from its signature on; its answer stands.
+        profiles.mine = Outcome.Success(
+            testProfile(
+                id = "u1",
+                handle = "jakob",
+                displayName = "Noa",
+                bio = "new bio",
+                websiteUrl = "https://noa.example",
+            ),
+        )
+        profiles.mineGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile).isEqualTo((profiles.mine as Outcome.Success).value)
+        assertThat(signedProfile.laid.value).isNull()
+    }
+
+    @Test
+    fun aNewPictureAndARemovedPictureShowOnTheHead() = runTest(dispatcher) {
+        val vm = ownProfileRead()
+
+        taken(SignedProfileFields(avatar = Setting(SignedPicture("m1", "https://media/m1"))))
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile?.avatar?.id).isEqualTo("m1")
+        assertThat(vm.state.value.profile?.avatar?.url).isEqualTo("https://media/m1")
+        // A picture-only change leaves the fields it did not set as read.
+        assertThat(vm.state.value.profile?.bio?.value).isEqualTo("old bio")
+
+        taken(SignedProfileFields(avatar = Setting(null)))
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile?.avatar).isNull()
+    }
+
+    @Test
+    fun theReadsAnswerStandsOverWhatWasSigned() = runTest(dispatcher) {
+        val vm = ownProfileRead()
+        taken(renamed)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The read asked after the change answers something else: the
+        // server is the truth about the profile.
+        profiles.mine = Outcome.Success(
+            testProfile(id = "u1", handle = "jakob", displayName = "Jakob", bio = "server bio"),
+        )
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile?.displayName?.value).isEqualTo("Jakob")
+        assertThat(vm.state.value.profile?.bio?.value).isEqualTo("server bio")
+    }
+
+    @Test
+    fun aReadInFlightWhenTheChangeIsTakenConfirmsNothing() = runTest(dispatcher) {
+        val vm = ownProfileRead()
+
+        // A read asked before the change, answering after it was taken.
+        profiles.mineGate = CompletableDeferred()
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        taken(renamed)
+        dispatcher.scheduler.advanceUntilIdle()
+        profiles.mineGate?.complete(Unit)
+        profiles.mineGate = null
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile?.displayName?.value).isEqualTo("Noa")
+        assertThat(vm.state.value.profile?.bio?.value).isEqualTo("new bio")
+
+        // The next read was asked after it: its answer replaces it.
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile?.displayName?.value).isEqualTo("Jakob")
+        assertThat(vm.state.value.profile?.bio?.value).isEqualTo("old bio")
+    }
+
+    @Test
+    fun aSecondChangeBeforeTheFirstReadKeepsTheFirstsUntouchedFields() = runTest(dispatcher) {
+        val vm = ownProfileRead()
+        taken(renamed)
+        taken(SignedProfileFields(avatar = Setting(SignedPicture("m1", "https://media/m1"))))
+        taken(
+            SignedProfileFields(displayName = "Noa", bio = Setting(null), websiteUrl = Setting("https://noa.example")),
+        )
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val head = vm.state.value.profile
+        assertThat(head?.displayName?.value).isEqualTo("Noa")
+        assertThat(head?.bio?.value).isNull()
+        assertThat(head?.websiteUrl?.value).isEqualTo("https://noa.example")
+        assertThat(head?.avatar?.id).isEqualTo("m1")
+    }
+
+    @Test
+    fun anAccountChangeDropsWhatTheLastAccountSigned() = runTest(dispatcher) {
+        val vm = ownProfileRead()
+        taken(renamed)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile?.displayName?.value).isEqualTo("Noa")
+
+        session.tokens.value = AuthTokens("a2", "r2", "u2")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile?.displayName?.value).isEqualTo("Jakob")
+        assertThat(vm.state.value.profile?.bio?.value).isEqualTo("old bio")
+    }
+
+    @Test
+    fun anotherProfilesHeadNeverWearsIt() = runTest(dispatcher) {
+        profiles.byHandle["ada"] = Outcome.Success(testProfile(id = "u2", handle = "ada", displayName = "Ada"))
+        val vm = viewModel()
+        vm.start("ada")
+        dispatcher.scheduler.advanceUntilIdle()
+        taken(renamed)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile?.displayName?.value).isEqualTo("Ada")
+    }
+
+    @Test
+    fun anOrdinaryReturnWithoutAnEditIsUnchanged() = runTest(dispatcher) {
+        val vm = ownProfileRead()
+        val held = vm.state.value
+        profiles.mineGate = CompletableDeferred()
+        vm.onReturn()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value).isEqualTo(held)
+        profiles.mineGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.profile).isEqualTo(held.profile)
+        assertThat(signedProfile.laid.value).isNull()
+    }
+
+    @Test
+    fun aPullStillShowsThePlatformsRefreshIndicator() = runTest(dispatcher) {
+        val vm = ownProfileRead()
+        profiles.mineGate = CompletableDeferred()
+        vm.refresh()
+        assertThat(vm.state.value.refreshing).isTrue()
+        profiles.mineGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refreshing).isFalse()
     }
 }

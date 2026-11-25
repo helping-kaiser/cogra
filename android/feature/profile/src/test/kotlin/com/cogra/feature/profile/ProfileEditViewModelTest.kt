@@ -1,6 +1,7 @@
 package com.cogra.feature.profile
 
 import com.cogra.crypto.ActorKey
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
@@ -13,10 +14,16 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.profile.Setting
+import com.cogra.domain.profile.SignedPicture
+import com.cogra.domain.profile.SignedProfile
+import com.cogra.domain.profile.SignedProfileFields
+import com.cogra.domain.profile.over
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.TEST_PROFILE_ID
 import com.cogra.domain.testing.ThrowingMediaProcessor
@@ -26,9 +33,11 @@ import com.cogra.domain.testing.faithfulProfileUpdate
 import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testProfile
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -58,6 +67,9 @@ class ProfileEditViewModelTest {
 
         var lastAvatar: MediaFieldUpdate? = null
 
+        /** The prepare hangs until the test lets it through: a change still signing. */
+        var prepareGate: CompletableDeferred<Unit>? = null
+
         override suspend fun prepareProfileUpdate(
             displayName: String,
             bio: String?,
@@ -65,6 +77,7 @@ class ProfileEditViewModelTest {
             avatar: MediaFieldUpdate,
         ): Outcome<List<PreparedWriteView>> {
             prepareCalls += 1
+            prepareGate?.await()
             lastUpdate = Triple(displayName, bio, websiteUrl)
             lastAvatar = avatar
             return prepareOutcome ?: Outcome.Success(
@@ -104,9 +117,11 @@ class ProfileEditViewModelTest {
     private val profiles = ScriptedProfiles(sealer)
     private val media = ScriptedMedia()
     private val processor = ScriptedProcessor()
+    private val session = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", TEST_PROFILE_ID) }
+    private val signedProfile = SignedProfile(session, TestScope(dispatcher))
 
     private fun viewModel() =
-        ProfileEditViewModel(profiles, media, processor, WriteSigner(sealer, identity))
+        ProfileEditViewModel(profiles, media, processor, WriteSigner(sealer, identity), signedProfile)
 
     @Before
     fun setDispatcher() = Dispatchers.setMain(dispatcher)
@@ -337,5 +352,92 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(media.calls).isEqualTo(0)
         assertThat(vm.state.value.avatar).isInstanceOf(ProfileImageState.Failed::class.java)
+    }
+
+    // -- A TAKEN CHANGE IS LAID OVER THE PROFILE'S HEAD (ProfileEditSeal.md:45);
+    // one still signing or one that did not go through lays nothing
+    // (ProfileEditSeal.md:75-79, Profile.md:99) --
+
+    private fun laid() = signedProfile.laid.value.over(TEST_PROFILE_ID)
+
+    @Test
+    fun aTakenEditLaysTheFieldsItSet() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDisplayNameChange("Noa")
+        vm.onBioChange("")
+        vm.onWebsiteChange("https://noa.example")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.saved).isTrue()
+        // The form states its full field set; the picture it left alone is not laid.
+        assertThat(laid()).isEqualTo(
+            SignedProfileFields(
+                displayName = "Noa",
+                bio = Setting(null),
+                websiteUrl = Setting("https://noa.example"),
+            ),
+        )
+    }
+
+    @Test
+    fun aTakenEditLaysTheNewPicture() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onAvatarPicked("content://pick/1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(laid()?.avatar).isEqualTo(Setting(SignedPicture("m1", "https://media/m1")))
+    }
+
+    @Test
+    fun aTakenEditLaysTheRemovedPicture() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onAvatarCleared()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(laid()?.avatar).isEqualTo(Setting(null))
+    }
+
+    @Test
+    fun aChangeStillSigningLaysNothing() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.submitting).isTrue()
+        assertThat(signedProfile.laid.value).isNull()
+
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(laid()?.bio).isEqualTo(Setting("Hello"))
+    }
+
+    @Test
+    fun aChangeThatDidNotSignLaysNothing() = runTest(dispatcher) {
+        // The device refuses a payload that is not what the form sent.
+        profiles.prepareOutcome = Outcome.Success(
+            sealer.stageFaithful(
+                faithfulProfileUpdate(TEST_PROFILE_ID, SentProfile("Mallory", "Old bio", null)),
+            ),
+        )
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDisplayNameChange("Noa")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.signingFailed).isTrue()
+        assertThat(signedProfile.laid.value).isNull()
+
+        // A refused prepare never reaches a signing.
+        profiles.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "no fields")))
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(signedProfile.laid.value).isNull()
     }
 }
