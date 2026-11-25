@@ -7096,3 +7096,12 @@ chip, and `profile.chronicle` has no `moreFault`. The comments tabs' `more` (rou
 copy: a `load` chip on both boards with `more`, the row at the chronicle's foot through
 `ProfileOwnBody`'s `tail` (`ProfileOtherBody` has no such slot yet), keyed `more` under `profile.chronicle`. Held for the word that it is wanted;
 the first page's fault needs a noun from jakob (462.1).
+### 312 · `TagPage`'s middle sample name draws the fit rule's 390 result as fixed numbers · *system* · **filed 2026-11-25**
+
+Round 69, item 5 (impl seam 471.4). The `name` chip's `middle` draws the heading at `17px` on `22px`
+(`tagHeadingSize`, `tagHeadingLineHeight` in `TagPage`'s `VALS`): the fit rule's result at 390 wide,
+written as numbers. The board cannot show the rule's result at 360 (16 px on 20) or at 412 (18 px on
+23), and at 360 the board's own render breaks the name to three lines against its two-line rule. The
+sidecar's fit rule (`TagPage.md`, `tagPage.name`: the largest whole pixel from 22 down that holds two
+lines, never below 12, leading round(size × 28 / 22)) is the law; the drawn numbers are a 390 sample.
+No change now.
