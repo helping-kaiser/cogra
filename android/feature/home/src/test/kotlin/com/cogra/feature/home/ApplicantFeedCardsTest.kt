@@ -101,7 +101,7 @@ class ApplicantFeedCardsTest {
 
     // ApplicantFeed.md:43 — the resend still sends; the typed address still rides the field.
     @Test
-    fun theVerifyCardsResendStillCallsTheResend() {
+    fun anEmptyFieldHoldsTheResendAndTheTypedAddressStillRidesIt() {
         render(applicant(owed(keyAttached = true, keyOnDevice = true), resendEmail = ""))
         compose.onNodeWithTag("verify_resend").assertIsNotEnabled()
         compose.onNodeWithTag("resend_email").performTextInput("noor@fieldmail.org")
