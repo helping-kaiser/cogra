@@ -732,18 +732,25 @@ viewer.
 ### Search
 
 **One match rule for every search field** (jakob 2026-10-05, the final
-brief): Explore's and History's. A query matches names and titles — a
-person's handle and display name, a tag's name, a post's title — and
-never a body, a description or a bio. Matching is titles only (jakob
-2026-10-06): an untitled post's stand-in (copy-voice, *The feed
-cards*) is never matched. `@handle <text>`
-scopes the query to one person's work, their comments found through the
+brief): Explore's, History's and Saved's. A query matches names and
+titles — a person's handle and display name, a tag's name, a post's
+title and its author's display name — and never a body, a description
+or a bio; an untitled post's stand-in (copy-voice, *The feed cards*) is
+never matched. Plain text matches by word prefix, with no `@` (jakob
+2026-10-16): a person when any word of their display name or handle
+starts with what is typed, a post when any word of its title or of its
+author's display name does. A handle match brings the person alone,
+what they made following only the `@`, and a comment is never found by
+plain text. A bare `@x` is a person cue: the people whose handle starts
+with it stand first, then what they authored, no second word needed;
+a bare `#x` likewise brings the tags whose name starts with it first,
+where the list holds tags, then the things that carry them.
+`@handle <text>` scopes the query to the work of every person whose
+handle starts with what is typed, their comments found through the
 titles of what they answer, a reply through its thread's root post, and
 the tags they tagged with; `#tag <text>` scopes it to the things that
-carry the tag. A bare `@x` or `#x` is a lookup in progress: it proposes
-people or tags by prefix and never lists anyone's contents — the text
-after it is what makes it a content search (jakob 2026-10-07). A result
-becomes seen only by being opened, never by standing in the viewport.
+carry the tag. A result becomes seen only by being opened, never by
+standing in the viewport.
 Explore searches the graph, in its ranked tiers (§13, *The search
 rulings*) — under Newest, the reader's choice or what the search serves
 before the ranker exists, the tiers stay and each runs newest first, with
