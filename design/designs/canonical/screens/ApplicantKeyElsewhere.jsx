@@ -26,7 +26,14 @@
    WITHOUT A BACKUP THE BODY SAYS SO (jakob 2026-10-05; the `backup` chip):
    `Restore the key` is not drawn, and the body takes `KeyElsewhereNoBackup`'s
    reason with the new-key clause kept, so it never asks for a code that
-   cannot open anything. The body is blessed (jakob 2026-10-05). */
+   cannot open anything. The body is blessed (jakob 2026-10-05).
+
+   REGISTERED (impl seam 473.0) under the feed's own prefix, the shell named
+   as `ApplicantFeed` names it. The card is that board's key card in another
+   state — the sidecar's `the key card` — so it is `keyCard`, `Restore the
+   key` its `restore` as on `KeyElsewhere`, and the one part this state adds,
+   `Make a new key`, is `newKey`. */
+export const NODE = "feed";
 export const PROPS = {
   wording: { editor: "enum", options: ["browser", "app"], default: "browser" },
   backup: { editor: "enum", options: ["made", "none"], default: "made" },
@@ -36,23 +43,24 @@ export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />}>
-        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view." />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band">
+        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view." node="borrowedViewBand" />
       </CograBand>
       <FeedList>
         <TaskCard
           tone="notice"
           title="{{keyTitle}}"
           body="{{keyBody}}"
+          node="keyCard"
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <Button variant="inverse" style={{ display: "{{restoreDoor}}" }}>Restore the key</Button>
-            <Button variant="outline">Make a new key</Button>
+            <Button variant="inverse" style={{ display: "{{restoreDoor}}" }} node="restore">Restore the key</Button>
+            <Button variant="outline" node="newKey">Make a new key</Button>
           </div>
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} stanceOpacity="var(--state-disabled)" />
+        <PostCard {...ADA_POST} signedIn={false} stanceOpacity="var(--state-disabled)" node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline composeOpacity="var(--state-disabled)" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline composeOpacity="var(--state-disabled)" node="bottomBar" />
     </>
   );
 }
