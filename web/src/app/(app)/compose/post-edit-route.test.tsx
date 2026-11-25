@@ -383,7 +383,9 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
                 __typename: "AuthSession",
                 accessToken: "access-2",
                 refreshToken: "refresh-2",
-                user: { __typename: "User", id: "u1" },
+                // The account the stored pair names: a refresh rotates a
+                // session, it never hands the tab another account.
+                user: { __typename: "User", id: "acct-1" },
               },
               userErrors: [],
             },

@@ -59,7 +59,7 @@
     <!-- ApplicantLanding.jsx:47 (copy-voice, *The landing card*). -->
     <string name="home_landing_title">Approved — your registration is landing</string>
     <string name="home_welcome">Welcome to CoGra.</string>
-    <string name="home_application_rejected">Something didn\'t verify on this phone, so nothing was signed. Try again from a fresh approval.</string>
+    <string name="home_application_rejected">Something didn\'t verify in this app, so nothing was signed. Try again from a fresh approval.</string>
 
     <string name="home_create_key_title">Create your key</string>
     <!-- ApplicantFeed.md:17, the app's wording; %1$s is the approver's @handle. -->

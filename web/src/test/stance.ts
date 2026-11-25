@@ -27,6 +27,12 @@ export type SeededStance = {
    */
   readonly rawPDirected?: number;
   readonly rawPInterest?: number;
+  /**
+   * The class the server holds this id as — what the page read's slot says
+   * (`PageStances`), which the seam matches against the control's kind. A
+   * post by default.
+   */
+  readonly kind?: "post" | "comment" | "profile";
 };
 
 /**
@@ -75,11 +81,33 @@ function root(
   });
 }
 
+const PAGE_CLASS = { post: "Post", comment: "Comment", profile: "User" } as const;
+
 /**
- * Handlers for all four roots, keyed by target id — a topic's being its
- * canonical name, the same key the seam hands the control. An id with
- * nothing seeded answers as a target this viewer has never stanced, so
- * the control shows the affordance — the ordinary case, not a refusal.
+ * The page read (`PageStances`): every id answered in its slot, in order, as
+ * the class the test seeded for it — a post where it seeded none.
+ */
+function pageRoot(seeded: Record<string, SeededStance>) {
+  return gqlLink.query("PageStances", ({ variables }) => {
+    const ids = (variables.ids as readonly unknown[]).map(String);
+    return HttpResponse.json({
+      data: {
+        nodes: ids.map((id) => ({
+          __typename: PAGE_CLASS[seeded[id]?.kind ?? "post"],
+          id,
+          viewerStance: stanceBundle(seeded[id] ?? NEVER_STANCED),
+        })),
+      },
+    });
+  });
+}
+
+/**
+ * Handlers for all four roots and the page read, keyed by target id — a
+ * topic's being its canonical name, the same key the seam hands the
+ * control. An id with nothing seeded answers as a target this viewer has
+ * never stanced, so the control shows the affordance — the ordinary case,
+ * not a refusal.
  */
 export function stanceHandlers(seeded: Record<string, SeededStance> = {}): RequestHandler[] {
   return [
@@ -87,6 +115,7 @@ export function stanceHandlers(seeded: Record<string, SeededStance> = {}): Reque
     root("CommentStance", "comment", "Comment", seeded),
     root("ProfileStance", "user", "User", seeded),
     root("HashtagStance", "hashtag", "Hashtag", seeded, "name"),
+    pageRoot(seeded),
   ];
 }
 

@@ -179,7 +179,7 @@ class FeedFilterScreenTest {
     fun everyKindOffShowsTheEmptyStateAloneAndItsWayBack() {
         render(FeedUiState(loading = false, filter = FeedFilter.DEFAULT.copy(kinds = emptySet())))
         compose.onNodeWithText("Nothing").assertIsDisplayed()
-        node("feed.nothing.title").assertTextEquals("Your feed is showing nothing — everything is switched off.")
+        node("feed.nothing.title").assertTextEquals("Everything is switched off.")
         compose.onAllNodesWithTag(FEED_SEEN_SEPARATOR, useUnmergedTree = true).assertCountEquals(0)
         node("feed.nothing.action").performClick()
         assertThat(postsAgain).isEqualTo(1)

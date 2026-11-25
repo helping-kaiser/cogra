@@ -171,8 +171,15 @@ Two rules follow, and both are load-bearing. The null is lifted
 hands the guard a success carrying nothing, and nothing
 refreshes. And a viewer-scoped read always asks the server: the
 cache is keyed by query, not by viewer, so a cached answer
-outlives both the token gap that produced an empty one and the
-account that earned a full one.
+outlives the token gap that produced an empty one.
+
+**The cache ends with the account.** Whenever the tab's active
+account ends or changes — sign-out, a refused refresh, another
+tab's sign-out or switch, a sign-in or join over a session — the
+cache is reset, and a query answered after the account it was
+sent as has ended is refused before the cache sees it. A read
+parked on the session gate through a refused refresh is sent and
+answered as the guest the tab then is.
 
 **Nothing leaves a tab before its session has settled.** The
 access token is per-tab memory, minted by a refresh, so a freshly
