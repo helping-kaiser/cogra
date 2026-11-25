@@ -76,13 +76,15 @@ class SignedProfileTest {
         signed.lay(signed.begin(), "u1", picture)
         assertThat(signed.laid.value.over("u1")).isEqualTo(renamed.copy(avatar = picture.avatar))
 
-        // A change that began signing before the one laid never overrides it.
+        // A change that began signing before the one laid never overrides it;
+        // what the later one left untouched keeps the earlier one's (on another
+        // profile, so the first change's fields stand nowhere in the slot).
         val older = signed.begin()
         val newer = signed.begin()
-        signed.lay(newer, "u1", SignedProfileFields(displayName = "Newer"))
-        signed.lay(older, "u1", SignedProfileFields(displayName = "Older", bio = Setting(null)))
-        assertThat(signed.laid.value.over("u1")?.displayName).isEqualTo("Newer")
-        assertThat(signed.laid.value.over("u1")?.bio).isEqualTo(Setting(null))
+        signed.lay(newer, "u2", SignedProfileFields(displayName = "Newer"))
+        signed.lay(older, "u2", SignedProfileFields(displayName = "Older", bio = Setting(null)))
+        assertThat(signed.laid.value.over("u2")?.displayName).isEqualTo("Newer")
+        assertThat(signed.laid.value.over("u2")?.bio).isEqualTo(Setting(null))
     }
 
     @Test
