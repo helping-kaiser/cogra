@@ -1158,7 +1158,7 @@ private fun FeedTailSlot(state: FeedUiState, onLoadMore: () -> Unit) {
 }
 
 /** The list's slot for the first page while it is not yet in. */
-internal const val FEED_FIRST_PAGE = "feed_first_page"
+private const val FEED_FIRST_PAGE = "feed_first_page"
 
 /**
  * The feed's first page, not yet in: M3's ladder and nothing else
