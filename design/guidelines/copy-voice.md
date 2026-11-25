@@ -1645,9 +1645,14 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
 - A hold's row: `That didn't sign.` with `Retry`. **Drawn** on
   `RowSigning`.
 - A read with nothing loaded: the house line's noun form, `Can't reach
-  the server — {what} can't load right now.`, over an outlined `Retry`
+  the server — {what} can't load right now.` A whole surface's read sets
+  it over an outlined `Retry`
   — `this profile`, `notifications`, `tags`, `results`, and the tag page's `this tag` (*blessed (jakob 2026-11-13, N10)*) (one rule, round
   25: `ProfileUnreachable`, `Notifications`, the two pickers, search);
+  a list's first page under a standing header sets it as the quiet row
+  in the list's place, `Retry` inline ending the line — `posts`,
+  `comments` (jakob 2026-11-12, question 19: `ProfileTabFirstPage` on
+  `ProfilePosts`, `ProfileComments` and their own twins);
   the deletion mail's landing, whose act is a confirm, says `Can't reach
   the server — the deletion can't be confirmed right now.` over its `Try
   again` (`DeleteAccountConfirmed`); the reset link's landing, whose
