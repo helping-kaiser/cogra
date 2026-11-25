@@ -1310,6 +1310,16 @@ class ContentScreensTest {
         assertThat(restored).isEqualTo(1)
     }
 
+    /** No noun and no Retry beside it: the house long line (copy-voice, *No answer at all*). */
+    @Test
+    fun aThreadThatCannotLoadSaysTheHouseLongLine() {
+        renderSheet(CommentsUiState(loading = false, comments = emptyList(), transportFault = TransportFault.REFRESH))
+
+        compose.onNodeWithTag("comments_transport_error")
+            .assertTextEquals("Can't reach the server. Check your connection and try again.")
+        compose.onNodeWithTag("detail_no_comments").assertDoesNotExist()
+    }
+
     /**
      * …and the place is reported on the way OUT, by the only thing that
      * knows it. Every door out of the thread reports it: the composer is

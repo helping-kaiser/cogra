@@ -845,6 +845,7 @@ describe("signing out", () => {
   it("sign_out_remembered_keeps_the_key_and_offers_the_account — and keeps the draft (F4)", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
     const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings();
+    window.localStorage.setItem("cogra.securityNotice.acct-1", "2026-08-10T09:30:00Z");
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
@@ -854,14 +855,22 @@ describe("signing out", () => {
     expect(seals.forget).not.toHaveBeenCalled();
     // a_remembered_sign_out_keeps_the_record
     expect(forgetSeenRecord).not.toHaveBeenCalled();
+    // a_remembered_sign_out_keeps_a_pending_security_notice
+    expect(window.localStorage.getItem("cogra.securityNotice.acct-1")).toBe("2026-08-10T09:30:00Z");
   });
 
   it("sign_out_forgotten_with_a_backup_clears_without_asking", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
     const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
+    window.localStorage.setItem("cogra.securityNotice.acct-1", "2026-08-10T09:30:00Z");
+    window.localStorage.setItem("cogra.securityNotice.acct-2", "2026-08-11T00:00:00Z");
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
+    // a_dont_remember_sign_out_purges_its_pending_security_notice — and no other account's
+    // (auth.md "Sign-out": device-local flags are purged).
+    expect(window.localStorage.getItem("cogra.securityNotice.acct-1")).toBeNull();
+    expect(window.localStorage.getItem("cogra.securityNotice.acct-2")).toBe("2026-08-11T00:00:00Z");
     expect(screen.queryByTestId("settings.dialog")).not.toBeInTheDocument();
     expect(await identity.actorKey()).toBeNull();
     expect(drafts.clear).toHaveBeenCalled();

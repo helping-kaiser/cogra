@@ -802,7 +802,7 @@ describe("FeedView", () => {
         }),
       ),
     );
-    securityNotices.post("2026-08-10T09:30:00Z");
+    securityNotices.post("2026-08-10T09:30:00Z", "acct-1");
     try {
       renderWithProviders(<FeedView />, { store: signedInStore() });
       const card = await screen.findByTestId("feed.vouchCard");
@@ -1128,7 +1128,7 @@ describe("FeedView", () => {
     // banners' gutter.
     it("stands_the_security_notice_first_above_the_applicants_cards", async () => {
       server.use(meHandler("APPLICANT"));
-      securityNotices.post("2026-08-10T09:30:00Z");
+      securityNotices.post("2026-08-10T09:30:00Z", "acct-1");
       try {
         renderFeed({
           kind: "awaitingApproval",
