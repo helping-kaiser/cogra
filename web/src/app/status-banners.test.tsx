@@ -7,7 +7,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeFlow } from "@/test/registration";
-import { StatusBanners } from "./status-banners";
+import { SecurityNoticeHead, StatusBanners } from "./status-banners";
 
 const server = startMswServer();
 
@@ -136,6 +136,65 @@ describe("StatusBanners", () => {
     fireEvent.click(screen.getByTestId("security_notice_dismiss"));
     expect(screen.queryByTestId("security_notice")).not.toBeInTheDocument();
     expect(notices.reuseDetectedAt()).toBeNull();
+  });
+
+  // FeedSecurityNotice.jsx:36-44 and its sidecar (lines 3, 7, 11, 13, 15): the
+  // olive task card in the board's words, `Change password` filled in inverse
+  // opening the credential screen, `Got it` outlined putting the card away.
+  it("says the security notice in the board's words, with its two controls", async () => {
+    server.use(meHandler("MEMBER"));
+    const notices = createSecurityNotices();
+    notices.post("2026-08-10T09:30:00Z");
+    renderWithProviders(<StatusBanners notices={notices} />, { store: signedInStore() });
+    const card = await screen.findByTestId("security_notice");
+    expect(card.querySelector("h2")).toHaveTextContent(/^We signed out every device$/);
+    expect(card.querySelector("p")).toHaveTextContent(
+      /^A sign-in this account had already replaced was used again, which can mean someone else had a copy\. If your password might be known to anyone, change it\.$/,
+    );
+    expect(card).not.toHaveTextContent(/token/i);
+
+    const change = screen.getByTestId("security_notice_change_password");
+    expect(change).toHaveTextContent(/^Change password$/);
+    expect(change).toHaveAttribute("href", "/settings/password");
+    expect(change.className).toContain("bg-on-tertiary-container");
+
+    const gotIt = screen.getByTestId("security_notice_dismiss");
+    expect(gotIt).toHaveTextContent(/^Got it$/);
+    expect(gotIt.className).toContain("border-outline");
+
+    // Change password leaves the notice standing (FeedSecurityNotice.md:13, 17).
+    fireEvent.click(change);
+    expect(notices.reuseDetectedAt()).toBe("2026-08-10T09:30:00Z");
+  });
+
+  // A list that heads with the notice provides its head element: the card
+  // stands there and the banners' own region holds nothing of it.
+  it("stands the security notice in the head a list provides", async () => {
+    server.use(meHandler("MEMBER"));
+    const notices = createSecurityNotices();
+    notices.post("2026-08-10T09:30:00Z");
+    const head = document.createElement("li");
+    document.body.appendChild(head);
+    try {
+      renderWithProviders(
+        <SecurityNoticeHead.Provider value={head}>
+          <StatusBanners notices={notices} />
+        </SecurityNoticeHead.Provider>,
+        { store: signedInStore() },
+      );
+      const card = await screen.findByTestId("security_notice");
+      expect(head).toContainElement(card);
+      await waitFor(() =>
+        expect(screen.queryByTestId("home_loading")).not.toBeInTheDocument(),
+      );
+      expect(screen.getByRole("region", { name: "Account status" })).toBeEmptyDOMElement();
+
+      fireEvent.click(screen.getByTestId("security_notice_dismiss"));
+      expect(head).toBeEmptyDOMElement();
+      expect(notices.reuseDetectedAt()).toBeNull();
+    } finally {
+      head.remove();
+    }
   });
 
   it("shows no security notice when none is pending", async () => {
