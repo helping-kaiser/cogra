@@ -13,6 +13,10 @@ import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.overPictureCap
+import com.cogra.domain.profile.Setting
+import com.cogra.domain.profile.SignedPicture
+import com.cogra.domain.profile.SignedProfile
+import com.cogra.domain.profile.SignedProfileFields
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.KnownMedia
@@ -121,6 +125,7 @@ class ProfileEditViewModel @Inject constructor(
     private val media: MediaRepository,
     private val processor: MediaProcessor,
     private val signer: WriteSigner,
+    private val signedProfile: SignedProfile,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileEditUiState())
@@ -264,14 +269,34 @@ class ProfileEditViewModel @Inject constructor(
             val avatar = s.avatar as? ProfileImageState.Uploaded
             val ledger = avatar?.known?.let { mapOf(avatar.mediaId to it) }.orEmpty()
             val profile = profileExpectation(s.profileId, sent, ledger)
+            val signing = signedProfile.begin()
             val results = signer.sign(prepared, Expectation(listOf(profileUpdate(profile))))
             if (results.all { it is WriteResult.Done }) {
+                // Taken: the profile shows the change from the return's first
+                // frame (ProfileEditSeal.md:45) — exactly the fields it set.
+                signedProfile.lay(signing, s.profileId, sent.signedFields(s.avatar))
                 _state.update { it.copy(submitting = false, saved = true) }
             } else {
                 _state.update { it.copy(submitting = false, signingFailed = true) }
             }
         }
     }
+
+    /**
+     * What this form's change set, as the head wears it: the form states its
+     * full field set, so name, bio and website always; the picture only where
+     * the form changed it — a new one or the explicit clear.
+     */
+    private fun SentProfile.signedFields(picture: ProfileImageState) = SignedProfileFields(
+        displayName = displayName,
+        bio = Setting(bio),
+        websiteUrl = Setting(websiteUrl),
+        avatar = when (picture) {
+            ProfileImageState.Cleared -> Setting(null)
+            is ProfileImageState.Uploaded -> Setting(SignedPicture(picture.mediaId, picture.url))
+            is ProfileImageState.Held, is ProfileImageState.Picked, is ProfileImageState.Failed -> null
+        },
+    )
 
     internal companion object {
         /** D13's fixed crop: a circle-masked square. */

@@ -1,6 +1,7 @@
 package com.cogra.feature.profile.avatar
 
 import com.cogra.crypto.ActorKey
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
@@ -13,10 +14,12 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.profile.SignedProfile
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.TEST_PROFILE_ID
 import com.cogra.domain.testing.ThrowingMediaProcessor
@@ -30,6 +33,7 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -113,9 +117,11 @@ class AvatarFlowViewModelTest {
     private val profiles = ScriptedProfiles(sealer)
     private val media = ScriptedMedia()
     private val processor = ScriptedProcessor()
+    private val session = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", TEST_PROFILE_ID) }
+    private val signedProfile = SignedProfile(session, TestScope(dispatcher))
 
     private fun viewModel() =
-        AvatarFlowViewModel(profiles, media, processor, WriteSigner(sealer, identity))
+        AvatarFlowViewModel(profiles, media, processor, WriteSigner(sealer, identity), signedProfile)
 
     /** Picked, cropped, and stepped on to the seal — the happy path's setup. */
     private fun startedAtSeal(crop: CropSpec? = null): AvatarFlowViewModel {
@@ -190,7 +196,8 @@ class AvatarFlowViewModelTest {
 
         assertThat(media.calls).isEqualTo(1)
         assertThat(processor.lastCrop?.window).isEqualTo(window)
-        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m1", fakeUpload("m1").known()))
+        val m1 = fakeUpload("m1")
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m1", m1.known(), m1.url))
         assertThat(vm.state.value.canSign).isTrue()
     }
 
@@ -251,7 +258,8 @@ class AvatarFlowViewModelTest {
         vm.onRetryUpload()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m2", fakeUpload("m2").known()))
+        val m2 = fakeUpload("m2")
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m2", m2.known(), m2.url))
     }
 
     /** The seal opens on the upload already running, not on a copy taken before it started. */
