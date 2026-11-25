@@ -438,9 +438,12 @@ class SavedScreenTest {
         val node = box("saved.empty")
         val title = box("saved.empty.title")
         val action = box("saved.empty.action")
+        // Material 3 centres the drawn button in its 48dp minimum touch target,
+        // so the board's 12dp and 8dp land on the target's edges, not the drawn ones.
+        val touchInset = ((px(48) - action.height) / 2).coerceAtLeast(0f)
         assertThat(title.left).isEqualTo(node.left)
         assertThat(title.top - node.top).isWithin(0.5f).of(px(8))
-        assertThat(action.top - title.bottom).isWithin(0.5f).of(px(12))
-        assertThat(node.bottom - action.bottom).isWithin(0.5f).of(px(8))
+        assertThat(action.top - title.bottom).isWithin(0.5f).of(px(12) + touchInset)
+        assertThat(node.bottom - action.bottom).isWithin(0.5f).of(px(8) + touchInset)
     }
 }

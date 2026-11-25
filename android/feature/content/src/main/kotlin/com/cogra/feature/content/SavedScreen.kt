@@ -548,7 +548,8 @@ private fun SavedLoadFailed(onRefresh: () -> Unit) {
 private fun SavedEmptyBox(content: @Composable () -> Unit) {
     Box(Modifier.fillMaxWidth().padding(horizontal = Space.x6, vertical = Space.x2)) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = Space.x2).dataNode(SAVED / "empty"),
+            // The node before its own 8dp, so the registered box carries it.
+            modifier = Modifier.fillMaxWidth().dataNode(SAVED / "empty").padding(vertical = Space.x2),
             verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) { content() }
     }
