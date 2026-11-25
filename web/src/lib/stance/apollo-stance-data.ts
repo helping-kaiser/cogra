@@ -5,6 +5,11 @@
 // projection costs one round trip and the standing rides along with it —
 // there is no second query, and nothing here folds one into the other.
 //
+// The standings a page's controls ask together travel together: one
+// `PageStances` request per view, whatever the page's size (`standing`
+// below). A control asking alone, a projection and a topic keep their own
+// root read.
+//
 // Both go through `viewerField` inside the guard, like every other
 // viewer-scoped read (outcome.ts): `viewerStance` answers null rather
 // than an error for a reader the request did not authenticate, so unless
@@ -31,6 +36,7 @@
 // read always runs right before a pick is signed.
 
 import type { ApolloClient } from "@apollo/client";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
 import {
   CommentBorrowedStanceDocument,
@@ -41,13 +47,22 @@ import {
   KeptPickPostDocument,
   KeptPickProfileDocument,
   KeyBackupStateDocument,
+  PageStancesDocument,
   PostBorrowedStanceDocument,
   PostStanceDocument,
   ProfileBorrowedStanceDocument,
   ProfileStanceDocument,
 } from "@/__generated__/graphql";
 import { fetchBorrowedView } from "@/lib/api/auth-api";
-import { failed, fetchOutcome, refused, success, viewerField, type Outcome } from "@/lib/api/outcome";
+import {
+  failed,
+  fetchOutcome,
+  refused,
+  success,
+  unauthenticated,
+  viewerField,
+  type Outcome,
+} from "@/lib/api/outcome";
 import { DeviceRefusalError } from "@/lib/signing/device-refusal";
 import {
   prepareSeverance,
@@ -179,6 +194,62 @@ function wireBundle(
   }
 }
 
+/**
+ * The most ids one `PageStances` request names: the server's cap on a
+ * `nodes(ids:)` lookup (`Query.nodes`, `client-constants.json`
+ * `paging.maxPageSize`), past which it refuses the whole request.
+ */
+export const PAGE_STANCES_CHUNK = 100;
+
+/**
+ * THE PAGE READ WRITES NOTHING TO THE CACHE (`no-cache`, Apollo's "similar to
+ * network-only, except the query's result is not stored in the cache"): it
+ * asks the server every time, as every viewer-scoped read does (web.md, "a
+ * viewer-scoped read always asks the server"), and since no read answers a
+ * face from the cache, storing one would only leave the reader's private
+ * standing in a cache that outlives their sign-out.
+ */
+const PAGE_POLICY = "no-cache";
+
+/**
+ * The standings of many id-keyed targets in one request, each target's own
+ * outcome. A slot answers its target only when it is that very id: the id
+ * names the node, as it does on the write side (`prepareStance(target:)`),
+ * so the bundle — and the `targetGraphId` an act toward it will name — is
+ * always the one the server holds for that id. An unknown id, or a node of
+ * a kind that carries no stance, is the refusal the target's own root read
+ * gives it.
+ *
+ * Every target null is the request's own refusal, not each target's: the
+ * server answers a request it did not authenticate with a null on every
+ * face, so the guard has to see one UNAUTHENTICATED to refresh and replay
+ * the batch, as it does a single read.
+ */
+async function pageRead(
+  client: ApolloClient,
+  targets: readonly StanceTarget[],
+  includePending: boolean,
+): Promise<Outcome<ReadonlyMap<string, Outcome<WireBundle>>>> {
+  const ids = [...new Set(targets.map((target) => target.id))];
+  const fetched = await fetchOutcome(() =>
+    client.query({ query: PageStancesDocument, variables: { ids, includePending }, fetchPolicy: PAGE_POLICY }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  const answered = new Map<string, WireBundle>();
+  for (const node of fetched.value.nodes) {
+    if (node !== null && "viewerStance" in node && node.viewerStance != null) {
+      answered.set(node.id, node.viewerStance);
+    }
+  }
+  if (answered.size === 0) return unauthenticated();
+  const outcomes = new Map<string, Outcome<WireBundle>>();
+  for (const id of ids) {
+    const wire = answered.get(id);
+    outcomes.set(id, wire === undefined ? unauthenticated() : success(wire));
+  }
+  return success(outcomes);
+}
+
 /** The `borrowedStance` selection (`BorrowedStanceFields`). */
 type WireBorrowed = {
   readonly pDirected: number;
@@ -223,6 +294,12 @@ function borrowedRead(client: ApolloClient, target: StanceTarget): Promise<Outco
   }
 }
 
+/** A standing read held for the next batch, and how to answer it. */
+type Waiting = {
+  readonly target: StanceTarget;
+  readonly settle: (outcome: Outcome<WireBundle>) => void;
+};
+
 export function createApolloStanceData(deps: {
   client: ApolloClient;
   guard: AuthGuard;
@@ -242,6 +319,76 @@ export function createApolloStanceData(deps: {
     const outcome = await guard.run(() => wireBundle(client, target, pick, options));
     if (outcome.kind === "success") graphIds.set(keyOf(target), outcome.value.targetGraphId);
     return outcome;
+  };
+
+  /**
+   * THE STANDINGS ASKED TOGETHER GO TOGETHER. Every control reads its own
+   * standing when it mounts, and a page mounts its cards in one commit, so
+   * the reads a commit's effects start are held until the microtask after
+   * them and sent as one `PageStances` per view — the L2 and the L1 view
+   * never share a request, so neither is ever answered from the other. A
+   * read asked after a batch left joins the next one, never the one in
+   * flight: a re-read after the reader's own act always asks after the act.
+   * Nothing is kept once a batch answers.
+   */
+  const waiting = new Map<boolean, Waiting[]>();
+
+  const standing = (target: StanceTarget, includePending: boolean): Promise<Outcome<WireBundle>> =>
+    new Promise((settle) => {
+      let queue = waiting.get(includePending);
+      if (queue === undefined) {
+        const opened: Waiting[] = [];
+        waiting.set(includePending, opened);
+        queueMicrotask(() => {
+          waiting.delete(includePending);
+          dispatch(opened, includePending).then(
+            (answers) => {
+              for (const entry of opened) entry.settle(answers.get(keyOf(entry.target)) ?? unauthenticated());
+            },
+            (error: unknown) => {
+              for (const entry of opened) entry.settle(failed(error));
+            },
+          );
+        });
+        queue = opened;
+      }
+      queue.push({ target, settle });
+    });
+
+  /** Each distinct target's answer, keyed as `keyOf` keys it. */
+  const dispatch = async (
+    queue: readonly Waiting[],
+    includePending: boolean,
+  ): Promise<ReadonlyMap<string, Outcome<WireBundle>>> => {
+    const distinct = [...new Map(queue.map((entry) => [keyOf(entry.target), entry.target])).values()];
+    const own = async (target: StanceTarget) =>
+      [keyOf(target), await read(target, null, { includePending })] as const;
+    // ONE CONTROL ALONE READS AS IT ALWAYS DID — a deep link, a sheet, the
+    // re-read after an act: its own root, its own request.
+    if (distinct.length === 1) return new Map([await own(distinct[0])]);
+    const chunks: StanceTarget[][] = [];
+    for (let from = 0; from < distinct.length; from += PAGE_STANCES_CHUNK) {
+      chunks.push(distinct.slice(from, from + PAGE_STANCES_CHUNK));
+    }
+    const answered = await Promise.all(
+      chunks.map(async (chunk) => {
+        const page = await guard.run(() => pageRead(client, chunk, includePending));
+        // A REQUEST THE SERVER REFUSED AS A WHOLE FAILS NO FACE IT COULD
+        // HAVE ANSWERED: an error one node raised, or a budget, would
+        // otherwise blank every face on the page where it blanked one
+        // before — so each falls back to its own read.
+        if (page.kind === "failed" && CombinedGraphQLErrors.is(page.cause)) {
+          return Promise.all(chunk.map(own));
+        }
+        return chunk.map((target) => {
+          const outcome = page.kind === "success" ? (page.value.get(target.id) ?? unauthenticated()) : page;
+          // The node an act toward this target names, from this very slot.
+          if (outcome.kind === "success") graphIds.set(keyOf(target), outcome.value.targetGraphId);
+          return [keyOf(target), outcome] as const;
+        });
+      }),
+    );
+    return new Map(answered.flat());
   };
 
   /** The node a gesture toward `target` names, read now when no read named it yet. */
@@ -285,7 +432,11 @@ export function createApolloStanceData(deps: {
 
   return {
     async bundle(target, options): Promise<Outcome<StanceBundle>> {
-      const outcome = await read(target, null, options);
+      // A topic is not a `Node`: its face keeps its own `HashtagStance`.
+      const outcome =
+        target.kind === "topic"
+          ? await read(target, null, options)
+          : await standing(target, options?.includePending ?? INCLUDE_PENDING_DEFAULT);
       if (outcome.kind !== "success") return outcome;
       return success(bundleOf(outcome.value));
     },
