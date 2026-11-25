@@ -512,7 +512,7 @@ private fun TaggedList(state: TopicUiState, listState: LazyListState, cards: Top
                 item {
                     Box(Modifier.padding(horizontal = Space.x6)) {
                         EmptyState(
-                            testTag = "topic_content_empty",
+                            testTag = (TAG_PAGE / "empty").tag,
                             title = stringResource(R.string.topics_content_empty),
                             node = TAG_PAGE / "empty",
                         )
