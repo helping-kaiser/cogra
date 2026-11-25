@@ -236,6 +236,63 @@ pub async fn resolve_target(pool: &PgPool, id: Uuid) -> Result<Option<ResolvedNo
     Ok(None)
 }
 
+/// [`resolve_target`] over a batch, in at most five round trips whatever
+/// the batch size: the actors, the content dispatch and its two class
+/// reads, then the registry — each asked only for the ids the step before
+/// left unanswered, which is [`resolve_target`]'s own lookup order.
+///
+/// An id answers here exactly when [`resolve_target`] answers it with a
+/// node. Where the single read fails, the batch keeps the failure's
+/// shape: a storage fault on the actors or the registry fails the batch,
+/// as it fails the single read; a fault on the content reads, which the
+/// single read raises as [`NodeError::Internal`], leaves every id that
+/// reached them unanswered, and a diverged content row leaves its own id
+/// unanswered — the readings a caller that maps `Internal` to "nothing"
+/// gives both.
+pub async fn resolve_targets_many(
+    pool: &PgPool,
+    ids: &[Uuid],
+) -> Result<HashMap<Uuid, ResolvedNode>, NodeError> {
+    let mut out = HashMap::new();
+    if ids.is_empty() {
+        return Ok(out);
+    }
+    for actor in store::actor_identities_by_ids(pool, ids).await? {
+        if let Some(address) = actor.realization_address {
+            out.insert(actor.id, ResolvedNode::settled(NodeId::Prof(address)));
+        }
+    }
+    let rest: Vec<Uuid> = ids
+        .iter()
+        .copied()
+        .filter(|id| !out.contains_key(id))
+        .collect();
+    if rest.is_empty() {
+        return Ok(out);
+    }
+    let Ok(content) = resolve_content_many(pool, &rest).await else {
+        return Ok(out);
+    };
+    for (id, row) in &content {
+        if let Ok(node) = ResolvedNode::of_content(row) {
+            out.insert(*id, node);
+        }
+    }
+    let rest: Vec<Uuid> = rest
+        .into_iter()
+        .filter(|id| !content.contains_key(id))
+        .collect();
+    if rest.is_empty() {
+        return Ok(out);
+    }
+    for (id, name) in hashtag_store::names_by_ids(pool, &rest).await? {
+        if let Ok(node) = NodeId::name(&name) {
+            out.insert(id, ResolvedNode::settled(node));
+        }
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

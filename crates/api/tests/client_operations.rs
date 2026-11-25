@@ -99,7 +99,9 @@ enum IdBatch {
     /// The server's cap on one lookup (`Query.nodes`). The trace reads
     /// chunk at it (Android `MAX_NAMES`, web `TRACE_NODES_CHUNK`, both
     /// 100), and `ContentGraphIds` sends every id a form names, unchunked
-    /// on both clients, so the cap is its worst case.
+    /// on both clients, so the cap is its worst case. `PageStances` sends
+    /// the stance faces a page mounts together, chunked at the cap (web
+    /// `PAGE_STANCES_CHUNK`, 100), so the cap is its worst case too.
     ServerCap,
 }
 
@@ -116,11 +118,12 @@ impl IdBatch {
 /// operation name, with the batch it sends. An operation missing here
 /// fails [`client_variables`] by name rather than measuring its rows at
 /// nothing; a stale row fails `every_nodes_read_has_its_batch`.
-const ID_BATCHES: [(&str, IdBatch); 4] = [
+const ID_BATCHES: [(&str, IdBatch); 5] = [
     ("TaggedComments", IdBatch::TaggedPage),
     ("TraceNames", IdBatch::ServerCap),
     ("TraceNodes", IdBatch::ServerCap),
     ("ContentGraphIds", IdBatch::ServerCap),
+    ("PageStances", IdBatch::ServerCap),
 ];
 
 /// The variables a document's root `nodes(ids:)` selections read their
