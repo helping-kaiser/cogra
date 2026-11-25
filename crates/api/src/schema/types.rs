@@ -330,7 +330,7 @@ pub(crate) async fn borrowed_vantage(
 
 /// Whether the account's reciprocal Opinion toward the member who vouched
 /// it in exists — confirmed in the mirror (latched on the landed
-/// application row) or in flight as one of its staged writes (auth.md
+/// application row) or in flight as one of its signed staged writes (auth.md
 /// "Reciprocation is the joiner's own act"). True with no admitting voucher
 /// — before landing, or for the genesis account: there is nothing to
 /// reciprocate yet.
@@ -359,7 +359,7 @@ pub(crate) async fn has_reciprocated(
         store::latch_reciprocated(pool, account.id).await?;
         return Ok(true);
     }
-    Ok(staged::has_live_targeting(pool, account.id, Family::Opinion, &target).await?)
+    Ok(staged::has_signed_targeting(pool, account.id, Family::Opinion, &target).await?)
 }
 
 /// Resolves the `viewerStance` field shared by every stance-able node.
@@ -2285,7 +2285,7 @@ impl User {
 
     /// Whether the viewer's reciprocal Opinion toward invitedBy exists —
     /// confirmed in the record mirror (latched on the landed application
-    /// row) or in flight as one of the viewer's staged writes. Drives
+    /// row) or in flight as one of the viewer's signed staged writes. Drives
     /// the first-login reciprocation prompt (auth.md "Reciprocation is
     /// the joiner's own act"). Vacuously true when invitedBy is null —
     /// and for any viewer but the account's own: the field exists only
