@@ -99,7 +99,14 @@ async fn a_mixed_viewer_batch_equals_the_single_reads(pool: PgPool) {
     stance(&rig, &ada, json!({ "target": carol_id }), (0.5, 0.5), true).await;
     stance(&rig, &ada, json!({ "topicName": "rust" }), (0.2, 0.8), true).await;
     stance(&rig, &ada, json!({ "target": post }), (0.1, -0.1), false).await;
-    stance(&rig, &bob, json!({ "topicName": "rust" }), (-0.4, 0.4), false).await;
+    stance(
+        &rig,
+        &bob,
+        json!({ "topicName": "rust" }),
+        (-0.4, 0.4),
+        false,
+    )
+    .await;
 
     let viewers = [ada_id, bob_id, carol_id, Uuid::new_v4()];
     let targets = [
@@ -129,9 +136,9 @@ async fn a_mixed_viewer_batch_equals_the_single_reads(pool: PgPool) {
     let mut answered = 0;
     for key in &keys {
         let want = match &key.target {
-            FaceTarget::Node(id) => single(
-                api::stance::bundle(&rig.pool, key.viewer, *id, key.include_pending).await,
-            ),
+            FaceTarget::Node(id) => {
+                single(api::stance::bundle(&rig.pool, key.viewer, *id, key.include_pending).await)
+            }
             FaceTarget::Topic(name) => single(
                 api::stance::topic_bundle(&rig.pool, key.viewer, name, key.include_pending).await,
             ),
@@ -152,9 +159,9 @@ async fn a_mixed_viewer_batch_equals_the_single_reads(pool: PgPool) {
             target: FaceTarget::Node(post),
             include_pending,
         }]
-        .standing
-        .sum
-        .records
+            .standing
+            .sum
+            .records
     };
     assert_eq!(ada_post(false), 1, "the landed half once");
     assert_eq!(ada_post(true), 2, "and the act in flight once beside it");

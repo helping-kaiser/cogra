@@ -167,24 +167,116 @@ impl World {
 
         let ada = &world.ada;
         let bob = &world.bob;
-        world.stance(ada, json!({ "target": world.post("landed") }), 0.6, 0.4, true).await;
-        world.stance(ada, json!({ "target": world.post("both") }), 0.3, 0.3, true).await;
-        world.stance(ada, json!({ "target": world.post("walked") }), 0.8, -0.4, true).await;
+        world
+            .stance(
+                ada,
+                json!({ "target": world.post("landed") }),
+                0.6,
+                0.4,
+                true,
+            )
+            .await;
+        world
+            .stance(ada, json!({ "target": world.post("both") }), 0.3, 0.3, true)
+            .await;
+        world
+            .stance(
+                ada,
+                json!({ "target": world.post("walked") }),
+                0.8,
+                -0.4,
+                true,
+            )
+            .await;
         world.sever(ada, &world.post("walked")).await;
-        world.stance(ada, json!({ "target": world.post("severed") }), 0.5, 0.5, true).await;
-        world.stance(ada, json!({ "target": world.post("severed") }), -0.5, -0.5, true).await;
-        world.stance(ada, json!({ "target": world.post("empty") }), 0.0, 0.0, true).await;
-        world.stance(ada, json!({ "target": world.post("inert") }), 0.4, 0.0, true).await;
-        world.stance(ada, json!({ "target": world.comment }), 0.3, -0.2, true).await;
-        world.stance(ada, json!({ "target": world.carol.id }), 0.5, 0.5, true).await;
-        world.stance(ada, json!({ "topicName": "rust" }), 0.2, 0.8, true).await;
-        world.stance(bob, json!({ "target": world.post("landed") }), -0.3, 0.9, true).await;
-        world.stance(bob, json!({ "target": world.carol.id }), -0.7, 0.1, true).await;
+        world
+            .stance(
+                ada,
+                json!({ "target": world.post("severed") }),
+                0.5,
+                0.5,
+                true,
+            )
+            .await;
+        world
+            .stance(
+                ada,
+                json!({ "target": world.post("severed") }),
+                -0.5,
+                -0.5,
+                true,
+            )
+            .await;
+        world
+            .stance(
+                ada,
+                json!({ "target": world.post("empty") }),
+                0.0,
+                0.0,
+                true,
+            )
+            .await;
+        world
+            .stance(
+                ada,
+                json!({ "target": world.post("inert") }),
+                0.4,
+                0.0,
+                true,
+            )
+            .await;
+        world
+            .stance(ada, json!({ "target": world.comment }), 0.3, -0.2, true)
+            .await;
+        world
+            .stance(ada, json!({ "target": world.carol.id }), 0.5, 0.5, true)
+            .await;
+        world
+            .stance(ada, json!({ "topicName": "rust" }), 0.2, 0.8, true)
+            .await;
+        world
+            .stance(
+                bob,
+                json!({ "target": world.post("landed") }),
+                -0.3,
+                0.9,
+                true,
+            )
+            .await;
+        world
+            .stance(bob, json!({ "target": world.carol.id }), -0.7, 0.1, true)
+            .await;
 
-        world.stance(ada, json!({ "target": world.post("pending") }), 0.7, 0.7, false).await;
-        world.stance(ada, json!({ "target": world.post("both") }), 0.2, -0.1, false).await;
-        world.stance(bob, json!({ "target": world.post("pending") }), -0.2, -0.2, false).await;
-        world.prepare_only(ada, &world.post("unsigned"), 0.9, 0.9).await;
+        world
+            .stance(
+                ada,
+                json!({ "target": world.post("pending") }),
+                0.7,
+                0.7,
+                false,
+            )
+            .await;
+        world
+            .stance(
+                ada,
+                json!({ "target": world.post("both") }),
+                0.2,
+                -0.1,
+                false,
+            )
+            .await;
+        world
+            .stance(
+                bob,
+                json!({ "target": world.post("pending") }),
+                -0.2,
+                -0.2,
+                false,
+            )
+            .await;
+        world
+            .prepare_only(ada, &world.post("unsigned"), 0.9, 0.9)
+            .await;
         world
     }
 
@@ -235,7 +327,11 @@ impl World {
             "{prepared}"
         );
         self.rig
-            .sign_prepared(&who.token, &who.key, &prepared["prepareSeverance"]["writes"])
+            .sign_prepared(
+                &who.token,
+                &who.key,
+                &prepared["prepareSeverance"]["writes"],
+            )
             .await;
         self.rig.close_and_ingest().await;
     }
@@ -352,7 +448,10 @@ async fn landed_content(
 /// went through, one at a time, before the batch — rendered the way
 /// `StanceBundle` renders it. Null exactly where the single read refuses
 /// the face as bad input or internal.
-fn rendered(read: Result<api::stance::TargetBundle, api::stance::StanceError>, pick: Option<(f64, f64)>) -> Value {
+fn rendered(
+    read: Result<api::stance::TargetBundle, api::stance::StanceError>,
+    pick: Option<(f64, f64)>,
+) -> Value {
     let read = match read {
         Ok(read) => read,
         Err(api::stance::StanceError::BadInput { .. } | api::stance::StanceError::Internal(_)) => {
@@ -495,7 +594,10 @@ async fn a_face_never_reads_another_viewers_bundle(pool: PgPool) {
         assert_eq!(ada, own_ada, "ada read beside bob");
         assert_eq!(bob, own_bob, "bob read beside ada");
         for (slot, alias, _) in expected(&world, world.ada.id).await {
-            assert!(face(&guest, &slot, alias).is_null(), "guest {slot} {alias}: {guest}");
+            assert!(
+                face(&guest, &slot, alias).is_null(),
+                "guest {slot} {alias}: {guest}"
+            );
         }
     }
 }
@@ -517,7 +619,9 @@ async fn a_page_of_member_faces_is_one_batch(pool: PgPool) {
         } else {
             "__typename".to_string()
         };
-        let query = format!("query($ids: [UUID!]!) {{ nodes(ids: $ids) {{ id ... on Post {{ {selection} }} }} }}");
+        let query = format!(
+            "query($ids: [UUID!]!) {{ nodes(ids: $ids) {{ id ... on Post {{ {selection} }} }} }}"
+        );
         let rig = &world.rig;
         let token = world.ada.token.clone();
         let ids = ids.to_vec();
