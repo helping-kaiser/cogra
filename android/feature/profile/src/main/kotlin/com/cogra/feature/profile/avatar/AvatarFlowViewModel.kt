@@ -192,7 +192,6 @@ class AvatarFlowViewModel @Inject constructor(
     override fun onCleared() {
         if (_state.value.signing) changes.close() else upload?.cancel()
     }
-
 }
 
 /** A circle-masked square (D13's fixed avatar crop). */
