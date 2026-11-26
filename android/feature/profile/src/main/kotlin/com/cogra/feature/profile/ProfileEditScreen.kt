@@ -47,6 +47,8 @@ fun ProfileEditRoute(
     /** A picked profile picture, handed to the crop. */
     onPicturePicked: (String) -> Unit,
     onBack: () -> Unit,
+    /** The seal's key-absent notice opens the app's restore route (ProfileEditSeal.md:61). */
+    onRestoreKey: () -> Unit = {},
     /** The crop's result on return, or null while there is none. */
     framedPicture: FramedPicture? = null,
     onFramedPictureConsumed: () -> Unit = {},
@@ -88,21 +90,41 @@ fun ProfileEditRoute(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri -> uri?.let { onPicturePicked(it.toString()) } }
 
-    ProfileEditScreen(
-        state = state,
-        onDisplayNameChange = viewModel::onDisplayNameChange,
-        onBioChange = viewModel::onBioChange,
-        onWebsiteChange = viewModel::onWebsiteChange,
-        onPickAvatar = {
-            avatarPicker.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-            )
-        },
-        onClearAvatar = viewModel::onAvatarCleared,
-        onSubmit = viewModel::onSubmit,
-        onRetry = viewModel::load,
-        onBack = onBack,
-    )
+    // The seal's arrow, Back and the system gesture: one stage back to the
+    // form before the press; from the press they close the seal and the
+    // change goes on (ProfileEditSeal.md:65-73).
+    val back = { if (!viewModel.seal.onBack()) onBack() }
+    if (state.stage == ProfileEditStage.Seal) {
+        ProfileEditSealStage(
+            state = state,
+            actions = EditSealActions(
+                onSign = viewModel.seal::onSign,
+                onBack = back,
+                onLeave = {
+                    viewModel.seal.onLeave()
+                    onBack()
+                },
+                onNotNow = viewModel.seal::onNotNow,
+                onRestoreKey = onRestoreKey,
+            ),
+        )
+    } else {
+        ProfileEditScreen(
+            state = state,
+            onDisplayNameChange = viewModel::onDisplayNameChange,
+            onBioChange = viewModel::onBioChange,
+            onWebsiteChange = viewModel::onWebsiteChange,
+            onPickAvatar = {
+                avatarPicker.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                )
+            },
+            onClearAvatar = viewModel::onAvatarCleared,
+            onSubmit = viewModel::onSubmit,
+            onRetry = viewModel::load,
+            onBack = onBack,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -222,23 +244,9 @@ fun ProfileEditScreen(
                         },
                         testTag = "profile_edit_website",
                     )
-                    if (state.refused) {
-                        Text(
-                            text = stringResource(R.string.profile_edit_refused),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.testTag("profile_edit_refused"),
-                        )
-                    }
-                    if (state.signingFailed) {
-                        Text(
-                            text = stringResource(R.string.profile_edit_signing_failed),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.testTag("profile_edit_signing_failed"),
-                        )
-                    }
                     Button(
+                        // Save opens the change's seal; its refusals and faults
+                        // stand there, in the commit's place (ProfileEditSeal.md:47-57).
                         onClick = onSubmit,
                         // A picture still on its way has no id to name, and
                         // an over-cap field disables Save too (the counter

@@ -818,6 +818,13 @@ CREATE TABLE author_seq_counters (
 );
 ```
 
+The allocation holds the author's counter row until the staging
+transaction ends, and an edit's or profile update's in-flight check
+runs on that transaction after it: a second prepare by the author
+reads the first one's staged write, so concurrent prepares never
+stage two edits on one chain head
+([api-spec.md "Content authoring"](api-spec.md#content-authoring)).
+
 ---
 
 ## PostgreSQL Schema
@@ -1136,7 +1143,9 @@ CREATE TABLE user_credentials (
 -- (post_versions below); confirm drops the mark and stamps the
 -- record's landing coordinates (user.md §4), with the envelope
 -- carried in act_payloads, and expiry deletes the pending row so
--- the previous version renders again. `created_at` is the
+-- the previous version renders again. A landed update whose row is
+-- still pending — its promotion failed, or the pass ended before
+-- it — is promoted by the next ingestion pass. `created_at` is the
 -- update's authoring instant, keyed unique while pending for the
 -- pre-sign leg's retry idempotence. Registration seeds the first
 -- row with display_name = handle; genesis seeds the system
