@@ -593,6 +593,7 @@ label.
 | `test:integration:an-unverified-applicant-reads-its-closed-application-row`                                    | an_unverified_applicant_reads_its_closed_application_row                                    |
 | `test:integration:an-unverified-held-copy-leaves-the-asset-live-for-the-retry`                                 | an_unverified_held_copy_leaves_the_asset_live_for_the_retry                                 |
 | `test:integration:an-update-landing-after-expiry-still-lands`                                                  | an_update_landing_after_expiry_still_lands                                                  |
+| `test:integration:an-update-left-pending-by-an-interrupted-pass-lands-on-the-next`                             | an_update_left_pending_by_an_interrupted_pass_lands_on_the_next                             |
 | `test:integration:an-update-reaped-before-its-staging-stages-no-pending-row`                                   | an_update_reaped_before_its_staging_stages_no_pending_row                                   |
 | `test:integration:an-update-signed-before-its-predecessor-promotes-builds-on-it`                               | an_update_signed_before_its_predecessor_promotes_builds_on_it                               |
 | `test:integration:an-update-signs-only-the-fields-it-changes`                                                  | an_update_signs_only_the_fields_it_changes                                                  |

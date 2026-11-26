@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.id, s.actor_id, s.act_id, s.family\n         FROM actor_profile_versions v\n         JOIN staged_writes s\n           ON s.actor_id = v.actor_id AND s.pre_signed_at = v.created_at\n         WHERE v.pending\n           AND s.state = 'landed'\n           AND s.family = $1\n           AND cardinality(s.asserted_parents) > 0\n         ORDER BY s.act_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "act_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "family",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "97b69afbf8af0b490db4c557fa7cfaeb5161e673f5d54adcb92fd032ec6b8bb4"
+}
