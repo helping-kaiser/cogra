@@ -78,7 +78,7 @@ data class AvatarFlowState(
      * the bytes are on their way, its fault reading once they did not arrive,
      * its refused reading once the picture was refused; nothing once landed.
      */
-    val gate: SealGate?
+    internal val gate: SealGate?
         get() = when (upload) {
             AvatarUpload.Idle, AvatarUpload.Running -> SealGate.Uploading
             is AvatarUpload.Failed -> SealGate.Failed
