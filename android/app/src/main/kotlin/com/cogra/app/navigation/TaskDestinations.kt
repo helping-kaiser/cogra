@@ -254,6 +254,7 @@ private fun ShellScope.AvatarFlowDestination(entry: NavBackStackEntry) {
             navController.popBackStack()
         },
         onLeave = { navController.popBackStack() },
+        onRestoreKey = { navController.navigate(Restore) },
         onFramed = if (route.fromEdit) {
             { window ->
                 navController.report(framedPictureWindowKey, window?.toFractions())
