@@ -346,6 +346,16 @@ class ProfileEditViewModel @Inject constructor(
         if (_state.value.signing) changes.close()
     }
 
+    /**
+     * The seal can go without Back or the X — a sign-out or a session's end
+     * clears the whole stack (CograNavGraph.kt, `popUpTo(0)`) — and the change
+     * still goes on, its answer the head's (ProfileEditSeal.md:73-79). A
+     * rotation never reaches here: the entry's ViewModel outlives it.
+     */
+    override fun onCleared() {
+        if (_state.value.signing) changes.close()
+    }
+
     /** A notice's `Not now` back to the seal as it stood before the press (:55, :63). */
     fun onNotNow() = _state.update { it.copy(fault = null) }
 

@@ -1,5 +1,8 @@
 package com.cogra.feature.profile
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.AuthTokens
@@ -670,6 +673,47 @@ class ProfileEditViewModelTest {
         assertThat(profileChangeSummary(listOf("display name", "website"), removed = false))
             .isEqualTo("A new display name and website")
         assertThat(profileChangeSummary(emptyList(), removed = false)).isEqualTo(NOTHING_CHANGED)
+    }
+
+    // -- A SEAL TORN DOWN WITHOUT Back OR THE X (a sign-out clears the stack) --
+
+    /** The ViewModel in a store, cleared the way a popped back-stack entry clears it. */
+    private fun storedViewModel(store: ViewModelStore): ProfileEditViewModel =
+        ViewModelProvider(
+            store,
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T = viewModel() as T
+            },
+        )[ProfileEditViewModel::class.java]
+
+    @Test
+    fun aSealClearedWhileItSignsHandsTheAnswerToTheHead() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
+        val store = ViewModelStore()
+        val vm = storedViewModel(store)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        store.clear()
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        // Never lost silently (ProfileEditSeal.md:77): the head carries it.
+        assertThat(line()).isInstanceOf(ProfileChangeLine.Failed::class.java)
+    }
+
+    @Test
+    fun aSealClearedAtRestClosesNothing() = runTest(dispatcher) {
+        val store = ViewModelStore()
+        val vm = storedViewModel(store)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSubmit()
+        store.clear()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isNull()
+        assertThat(profiles.prepareCalls).isEqualTo(0)
     }
 
     // -- THE ACCOUNT BOUNDARY: an act prepares and signs only for the account that pressed --
