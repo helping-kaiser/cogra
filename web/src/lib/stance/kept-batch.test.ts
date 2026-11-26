@@ -170,6 +170,39 @@ describe("the kept batch belongs to the account that pressed", () => {
     expect(readKeptBatch()).toMatchObject({ kind: "failed" });
   });
 
+  it("keeps the owner's hidden failed line when another account signs a batch of its own", async () => {
+    const a = held();
+    void signKeptBatch(a.commit, BATCH);
+    closeKeptBatchSeal();
+    await a.answer(NO_ANSWER);
+    signInAs("u2");
+    const b = held();
+    const theirs = signKeptBatch(b.commit, [{ target: OTHER, pick: BATCH[0].pick }]);
+    expect(b.commit).toHaveBeenCalledTimes(1);
+    expect(readKeptBatch()).toMatchObject({ kind: "signing" });
+    await b.answer(TAKEN);
+    expect(await theirs).toEqual(TAKEN);
+    signInAs("u1");
+    expect(readKeptBatch()).toMatchObject({ kind: "failed" });
+  });
+
+  it("never hands another account's press the batch still in flight for the owner", async () => {
+    const a = held();
+    void signKeptBatch(a.commit, BATCH);
+    closeKeptBatchSeal();
+    signInAs("u2");
+    const b = held();
+    const theirs = signKeptBatch(b.commit, [{ target: OTHER, pick: BATCH[0].pick }]);
+    // Their own batch is asked, never joined to the owner's.
+    expect(b.commit).toHaveBeenCalledTimes(1);
+    expect(keptBatchSigning(ADA)).toBe(false);
+    await b.answer(NO_ANSWER);
+    expect(await theirs).toEqual(NO_ANSWER);
+    await a.answer(TAKEN);
+    signInAs("u1");
+    expect(readKeptBatch()).toBeNull();
+  });
+
   it("drops the owner's picks when taken under another account, and lands nothing on that account", async () => {
     const { commit, answer } = held();
     void signKeptBatch(commit, BATCH);
