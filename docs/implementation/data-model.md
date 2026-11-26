@@ -818,6 +818,13 @@ CREATE TABLE author_seq_counters (
 );
 ```
 
+The allocation holds the author's counter row until the staging
+transaction ends, and an edit's or profile update's in-flight check
+runs on that transaction after it: a second prepare by the author
+reads the first one's staged write, so concurrent prepares never
+stage two edits on one chain head
+([api-spec.md "Content authoring"](api-spec.md#content-authoring)).
+
 ---
 
 ## PostgreSQL Schema

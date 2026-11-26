@@ -27,8 +27,15 @@ import type { TokenStore } from "@/lib/session/token-store";
 import type { StancePair } from "./model";
 import type { StanceTarget } from "./stance-data";
 
-/** What an attempt is kept under: a target's pick, or its walk-back. */
-export type Slot = StanceTarget | { readonly walkBack: StanceTarget };
+/**
+ * The kept picks' seal: one batch across many targets, signed in one pass
+ * (KeptPicksSeal.md:63: "the whole batch is asked to sign again"), so it
+ * keeps one slot of its own beside the targets'.
+ */
+export const KEPT_BATCH = "keptBatch";
+
+/** What an attempt is kept under: a target's pick, its walk-back, or the kept picks' batch. */
+export type Slot = StanceTarget | { readonly walkBack: StanceTarget } | typeof KEPT_BATCH;
 
 /** A target's attempt, and what its batch was checked against when it was staged. */
 export type StanceAttempt = SigningAttempt & { readonly expected: Expectation };
@@ -56,11 +63,19 @@ export type StanceAttempts = {
 };
 
 const targetKey = (target: StanceTarget) => `${target.kind}:${target.id}`;
-const keyOf = (slot: Slot) => ("walkBack" in slot ? `sever:${targetKey(slot.walkBack)}` : targetKey(slot));
+const keyOf = (slot: Slot) =>
+  slot === KEPT_BATCH ? "kept:batch" : "walkBack" in slot ? `sever:${targetKey(slot.walkBack)}` : targetKey(slot);
 
 /** The gesture a commit toward `target` was prepared from; a changed pick is another signing. */
 export function stanceIntent(target: StanceTarget, pick: StancePair): string {
   return intentOf({ target: keyOf(target), pDirected: pick.pDirected, pInterest: pick.pInterest });
+}
+
+/** The kept picks' batch: every pick, in order; a changed or dropped pick is another signing. */
+export function keptBatchIntent(entries: readonly { target: StanceTarget; pick: StancePair }[]): string {
+  return intentOf({
+    batch: entries.map(({ target, pick }) => [keyOf(target), pick.pDirected, pick.pInterest]),
+  });
 }
 
 /** The walk-back toward `target`: one gesture whatever it nets, so its Retry is always the same. */

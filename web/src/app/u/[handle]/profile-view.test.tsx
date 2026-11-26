@@ -32,6 +32,8 @@ import {
   signProfileChange,
   type ProfileChangeOutcome,
 } from "@/lib/profile/profile-change";
+import { readSignedProfile, resetSignedProfileForTests } from "@/lib/profile/signed-profile";
+import { ChangeHandleView } from "@/app/(app)/settings/handle/change-handle-view";
 import { ProfileScreen } from "./profile-view";
 
 const push = vi.fn();
@@ -1306,6 +1308,88 @@ describe("ProfileScreen", () => {
       await waitFor(() =>
         expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent("What the server holds."),
       );
+    });
+
+    // A CHANGED HANDLE SHOWS ON ARRIVAL TOO (Profile.md:97). It is no signed
+    // act: Settings' handle flow asks the server, and the change is the
+    // profile's the moment the server takes it.
+    async function changeHandleInSettings(
+      store: ReturnType<typeof signedInStore>,
+      cache: InMemoryCache,
+      answer: Record<string, unknown>,
+    ) {
+      server.use(
+        gqlLink.query("SettingsAccount", () =>
+          HttpResponse.json({
+            data: {
+              me: {
+                __typename: "User",
+                id: "u1",
+                handle: "ada",
+                email: "ada@example.com",
+                emailVerified: true,
+                accountState: "MEMBER",
+                actorPubkey: "pk",
+                passwordChangedAt: null,
+                keyBackupCreatedAt: null,
+                pendingEmailChange: null,
+                preferences: null,
+                sessions: [],
+              },
+            },
+          }),
+        ),
+        gqlLink.mutation("ChangeHandle", () =>
+          HttpResponse.json({ data: { changeHandle: { __typename: "ChangeHandlePayload", ...answer } } }),
+        ),
+      );
+      push.mockClear();
+      const settings = renderWithProviders(<ChangeHandleView />, { store, cache });
+      await waitFor(() => expect(screen.getByTestId("changeHandle.body")).toHaveTextContent("@ada is how"));
+      fireEvent.change(screen.getByTestId("changeHandle.handle.input"), { target: { value: "ada_l" } });
+      fireEvent.click(screen.getByTestId("changeHandle.commit.action"));
+      fireEvent.click(screen.getByTestId("changeHandle.dialog.change"));
+      return settings;
+    }
+
+    it("wears a handle Settings changed from the first frame of the return, and the read replaces it", async () => {
+      resetSignedProfileForTests();
+      const cache = new InMemoryCache();
+      const held = await visitThenHold(cache);
+      const settings = await changeHandleInSettings(held.store, cache, {
+        user: { __typename: "User", id: "u1", handle: "ada_l" },
+        userErrors: [],
+      });
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/settings?done=handle"));
+      settings.unmount();
+      held.serve(profile("u1", "ada_l", "Before the edit."));
+      renderWithProviders(<ProfileScreen handle={null} />, { store: held.store, cache });
+      // The first frame: the held page, wearing the new handle.
+      expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada_l");
+      expect(screen.getByTestId(byNode("profile.posts.empty.title"))).toBeInTheDocument();
+      held.open();
+      await waitFor(() => expect(held.asked()).toBe(2));
+      expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada_l");
+      // The read asked after the change answered: the head reads the server alone.
+      expect(readSignedProfile("u1")).toBeNull();
+    });
+
+    it("keeps the held handle for a change the server refused", async () => {
+      resetSignedProfileForTests();
+      const cache = new InMemoryCache();
+      const held = await visitThenHold(cache);
+      const settings = await changeHandleInSettings(held.store, cache, {
+        user: null,
+        userErrors: [{ __typename: "UserError", code: "HANDLE_TAKEN", message: "taken", field: ["handle"] }],
+      });
+      await waitFor(() =>
+        expect(screen.getByTestId("changeHandle.handle.support")).toHaveTextContent("That handle is taken."),
+      );
+      settings.unmount();
+      renderWithProviders(<ProfileScreen handle={null} />, { store: held.store, cache });
+      expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent(/^@ada$/);
+      held.open();
+      await waitFor(() => expect(held.asked()).toBe(2));
     });
 
     it("shows a change taken after its seal closed at once, before the profile's re-read answers", async () => {
