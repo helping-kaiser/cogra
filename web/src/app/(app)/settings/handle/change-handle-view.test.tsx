@@ -3,6 +3,7 @@ import { HttpResponse } from "msw/http";
 import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { readSignedProfile, resetSignedProfileForTests } from "@/lib/profile/signed-profile";
 import { createTokenStore } from "@/lib/session/token-store";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -218,5 +219,54 @@ describe("ChangeHandle", () => {
     press();
     fireEvent.click(screen.getByTestId("changeHandle.dialog.change"));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/settings?done=handle"));
+  });
+});
+
+// A CHANGED HANDLE SHOWS ON THE PROFILE'S RETURN (Profile.md:97): what the
+// server took is laid over the own head, for the account that pressed only.
+describe("the handle laid over the profile's head", () => {
+  beforeEach(() => resetSignedProfileForTests());
+
+  it("lays what the server took, for the account that pressed", async () => {
+    server.use(answer(CHANGED));
+    renderPage();
+    type("solferreira");
+    press();
+    fireEvent.click(screen.getByTestId("changeHandle.dialog.change"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/settings?done=handle"));
+    expect(readSignedProfile("u1")).toEqual({ handle: "solferreira" });
+  });
+
+  it("lays nothing for a refused or unanswered change", async () => {
+    server.use(
+      answer({
+        user: null,
+        userErrors: [{ __typename: "UserError", message: "x", code: "HANDLE_TAKEN", field: ["handle"] }],
+      }),
+    );
+    renderPage();
+    type("taken");
+    press();
+    fireEvent.click(screen.getByTestId("changeHandle.dialog.change"));
+    await waitFor(() => expect(screen.queryByTestId("changeHandle.dialog")).not.toBeInTheDocument());
+    expect(readSignedProfile("u1")).toBeNull();
+
+    server.use(answer("offline"));
+    type("solferreira");
+    press();
+    fireEvent.click(screen.getByTestId("changeHandle.dialog.change"));
+    await screen.findByTestId("changeHandle-dialog-fault");
+    expect(readSignedProfile("u1")).toBeNull();
+  });
+
+  it("never shows under another account", async () => {
+    server.use(answer(CHANGED, 100));
+    const { store } = renderPage();
+    type("solferreira");
+    press();
+    fireEvent.click(screen.getByTestId("changeHandle.dialog.change"));
+    act(() => store.save({ accessToken: "b", refreshToken: "rb", accountId: "acct-2" }));
+    await waitFor(() => expect(screen.getByTestId("changeHandle.dialog.change")).not.toHaveAttribute("aria-busy"));
+    expect(readSignedProfile("u1")).toBeNull();
   });
 });
