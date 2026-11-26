@@ -61,6 +61,9 @@ enum class ProfileChangeOutcome {
     /** CoGra reserves the display name: the edit's own field line, back on the form. */
     NameReserved,
 
+    /** The signing key is not on this device: nothing was signed (ProfileEditSeal.md:61). */
+    KeyAbsent,
+
     /**
      * The active account is no longer the one that pressed: the act stopped
      * before it prepared or signed anything, and it ends silently — nothing

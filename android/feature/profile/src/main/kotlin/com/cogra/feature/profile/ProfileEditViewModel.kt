@@ -21,12 +21,14 @@ import com.cogra.domain.profile.SignedProfileFields
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.KnownMedia
+import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.known
 import com.cogra.domain.signing.profileExpectation
 import com.cogra.domain.signing.profileUpdate
+import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -88,10 +90,10 @@ enum class ProfileEditStage { Form, Seal }
 
 /**
  * What took the commit's place on the seal when a press did not land
- * (ProfileEditSeal.md:47-57): the fault line and Retry, the write rule's
- * notice, or the bug's.
+ * (ProfileEditSeal.md:47-61): the fault line and Retry, the write rule's
+ * notice, the bug's, or the key-absent notice.
  */
-enum class ProfileSealFault { Offline, WriteRule, Bug }
+enum class ProfileSealFault { Offline, WriteRule, Bug, KeyAbsent }
 
 data class ProfileEditUiState(
     /** The account's own id: the node a profile payload binds to. */
@@ -176,6 +178,7 @@ class ProfileEditViewModel @Inject constructor(
     private val signer: WriteSigner,
     private val signedProfile: SignedProfile,
     private val changes: ProfileChanges,
+    private val identity: IdentityStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileEditUiState())
@@ -305,7 +308,7 @@ class ProfileEditViewModel @Inject constructor(
             val s = _state.value
             if (s.stage != ProfileEditStage.Seal || s.signing) return
             _state.update { it.copy(signing = true, fault = null) }
-            val act = signingOf(s, profiles, signer, signedProfile)
+            val act = signingOf(s, profiles, signer, signedProfile, identity)
             viewModelScope.launch {
                 val outcome = changes.sign(act)
                 _state.update { it.answered(outcome) }
@@ -386,6 +389,8 @@ private fun ProfileEditUiState.answered(outcome: ProfileChangeOutcome): ProfileE
     ProfileChangeOutcome.Bug -> copy(signing = false, fault = ProfileSealFault.Bug)
     // Another account is active: nothing was prepared or signed for it.
     ProfileChangeOutcome.Foreign -> copy(signing = false)
+    // The key-absent notice takes the commit's place (ProfileEditSeal.md:61).
+    ProfileChangeOutcome.KeyAbsent -> copy(signing = false, fault = ProfileSealFault.KeyAbsent)
 }
 
 /**
@@ -398,6 +403,7 @@ private fun signingOf(
     repository: ProfileRepository,
     writes: WriteSigner,
     head: SignedProfile,
+    identity: IdentityStore,
 ): suspend (StillPressing) -> ProfileChangeOutcome {
     val sent = SentProfile(
         displayName = s.displayName.trim(),
@@ -408,8 +414,16 @@ private fun signingOf(
     val avatar = s.avatar as? ProfileImageState.Uploaded
     val ledger = avatar?.known?.let { mapOf(avatar.mediaId to it) }.orEmpty()
     val change = ProfileChangeSigning(s.profileId, sent, ledger, sent.signedFields(s.avatar))
-    return { pressing -> change.sign(pressing, repository, writes, head) }
+    return { pressing -> change.sign(pressing, ProfileChangeDeps(repository, writes, head, identity)) }
 }
+
+/** What a profile change signs with: the repositories and the device's key store. */
+private data class ProfileChangeDeps(
+    val repository: ProfileRepository,
+    val writes: WriteSigner,
+    val head: SignedProfile,
+    val identity: IdentityStore,
+)
 
 /** What one profile change signs: the fields it sends, the media it names, and what the head wears once taken. */
 private class ProfileChangeSigning(
@@ -418,13 +432,12 @@ private class ProfileChangeSigning(
     val ledger: Map<String, KnownMedia>,
     val fields: SignedProfileFields,
 ) {
-    suspend fun sign(
-        pressing: StillPressing,
-        repository: ProfileRepository,
-        writes: WriteSigner,
-        head: SignedProfile,
-    ): ProfileChangeOutcome {
+    suspend fun sign(pressing: StillPressing, deps: ProfileChangeDeps): ProfileChangeOutcome {
+        val (repository, writes, head, identity) = deps
         if (!pressing.holds()) return ProfileChangeOutcome.Foreign
+        // Pressed GIVEN the key is not on this device: the notice, and nothing
+        // prepared or signed (ProfileEditSeal.md:61; the post edit's twin check).
+        if (identity.actorSeed() == null) return ProfileChangeOutcome.KeyAbsent
         val prepared = when (
             val outcome = repository.prepareProfileUpdate(
                 displayName = sent.displayName,
@@ -445,7 +458,12 @@ private class ProfileChangeSigning(
         // for another (the device would refuse it anyway, IntentCheck.kt).
         if (!pressing.holds()) return ProfileChangeOutcome.Foreign
         val signing = head.begin()
-        val results = writes.sign(prepared, Expectation(listOf(profileUpdate(profile))))
+        val results = try {
+            writes.sign(prepared, Expectation(listOf(profileUpdate(profile))))
+        } catch (_: NoActorKeyException) {
+            // The key went between the press and the signing: nothing was signed.
+            return ProfileChangeOutcome.KeyAbsent
+        }
         if (!results.all { it is WriteResult.Done }) return outcomeOfUntaken(results)
         // Taken: the profile shows the change from the return's first frame
         // (ProfileEditSeal.md:45) — exactly the fields it set.
