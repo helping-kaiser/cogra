@@ -20,17 +20,18 @@
 // The change is the changing account's: several accounts share a tab
 // (auth.md "Multi-account device custody": material bound "to the account it
 // belongs to, never to a device-global slot"), so the line is kept beside the
-// account the tab was signed in as at the press, stands only under that
-// account's head, and goes the moment the active account changes — its Retry
-// with it. A Retry a rendered head still holds keeps that ORIGINAL owner and
-// does nothing once another account is active; and an answer that arrives
-// after the change draws nothing and lays nothing. The app's twin:
-// ProfileChanges.kt `Owner`.
+// account the tab was signed in as at the press, and stands only under that
+// account's head — hidden under any other, never erased by a switch, since
+// it "stands until Retry or the next change" (Profile.md:101) — read again
+// whenever the active account changes. Its Retry keeps that ORIGINAL owner and
+// does nothing while another account is active; an act whose owner is not
+// the active account when it would sign is not run, and ends as the owner's
+// failed line; an answer arriving after a switch settles the owner's line and
+// lays nothing. Its landing's snackbar confirms it only to that account.
 
 import { useSyncExternalStore } from "react";
 
 import { sealFaultOf, sealFaultOfResults } from "@/lib/compose/seal-fault";
-import { onAccountChange } from "@/lib/session/account-change";
 import { tokenStore } from "@/lib/session/token-store";
 import type { WriteResult } from "@/lib/signing/write-signer";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
@@ -84,15 +85,6 @@ const listeners = new Set<() => void>();
 
 const isOwners = () => tokenStore.activeAccountId() === owner;
 
-// A sign-out or a change of account: the last account's line goes, and any
-// signing still out answers into nothing (`signings` moves on).
-onAccountChange(() => {
-  signings += 1;
-  owner = null;
-  closed = false;
-  if (state !== null) publish(null);
-});
-
 function publish(next: ProfileChangeState | null): void {
   state = next;
   for (const listener of listeners) listener();
@@ -121,6 +113,18 @@ export async function signProfileChange(
   return signFor(tokenStore.activeAccountId(), run, fromHead, signed);
 }
 
+/**
+ * The head's Retry of a change `by` pressed: the same change, for that same
+ * account, whichever account is active when it runs (the owner guard below).
+ */
+export function signProfileChangeFor(
+  by: string | null,
+  run: () => Promise<ProfileChangeOutcome>,
+  { signed }: { signed?: SignedProfileChange } = {},
+): Promise<ProfileChangeOutcome> {
+  return signFor(by, run, true, signed);
+}
+
 async function signFor(
   by: string | null,
   run: () => Promise<ProfileChangeOutcome>,
@@ -132,7 +136,13 @@ async function signFor(
   owner = by;
   const mine = ++signings;
   publish({ kind: "signing" });
-  const outcome = await run().catch((): ProfileChangeOutcome => ({ kind: "offline" }));
+  // THE OWNER GUARD, before the signing: an act whose account is no longer
+  // the active one is not run — it did not sign, and ends as its owner's
+  // failed line, standing under that account's head only.
+  const outcome =
+    tokenStore.activeAccountId() === by
+      ? await run().catch((): ProfileChangeOutcome => ({ kind: "offline" }))
+      : ({ kind: "offline" } as const);
   // A change taken is the profile's from now on (ProfileEditSeal.md:45): the
   // head wears what was signed until a read asked after it answers — laid
   // only while the tab is still the signing account's, whichever seal or
@@ -159,7 +169,7 @@ async function signFor(
       // account is active, it does nothing — nothing signed, laid or drawn.
       retry: () => {
         if (tokenStore.activeAccountId() !== by) return;
-        void signFor(by, run, true, signed);
+        void signProfileChangeFor(by, run, { signed });
       },
     });
   }
