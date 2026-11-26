@@ -10,6 +10,8 @@
 // already took — its answer lost on the way back — sums the pick twice and
 // prices it twice. The seam remembers each target's attempt here, and its
 // next commit toward that target asks it again (`askAgain`, same-signing.ts).
+// A walk-back shares the slot: it is records in the same bundle, and a fresh
+// one beside a first is refused as already netted, or staged twice.
 //
 // Memory only, per target, for the tab's active account: a reload forgets it
 // and Home's Resume continues what was parked, and an account boundary lets
@@ -17,12 +19,13 @@
 
 import { intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
 import { onAccountChange } from "@/lib/session/account-change";
+import type { Expectation } from "@/lib/signing/intent";
 import type { TokenStore } from "@/lib/session/token-store";
 import type { StancePair } from "./model";
 import type { StanceTarget } from "./stance-data";
 
-/** A target's attempt, and the pick it was prepared from — what its expectation names. */
-export type StanceAttempt = SigningAttempt & { readonly pick: StancePair };
+/** A target's attempt, and what its batch was checked against when it was staged. */
+export type StanceAttempt = SigningAttempt & { readonly expected: Expectation };
 
 /**
  * AN ATTEMPT IN FLIGHT IS NOT A FAILED ATTEMPT. Only one whose own signing
@@ -51,6 +54,11 @@ const keyOf = (target: StanceTarget) => `${target.kind}:${target.id}`;
 /** The gesture a commit toward `target` was prepared from; a changed pick is another signing. */
 export function stanceIntent(target: StanceTarget, pick: StancePair): string {
   return intentOf({ target: keyOf(target), pDirected: pick.pDirected, pInterest: pick.pInterest });
+}
+
+/** The walk-back toward `target`: one gesture whatever it nets, so its Retry is always the same. */
+export function severanceIntent(target: StanceTarget): string {
+  return intentOf({ target: keyOf(target), sever: true });
 }
 
 export function createStanceAttempts(
