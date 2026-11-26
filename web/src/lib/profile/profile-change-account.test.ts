@@ -3,7 +3,9 @@
 // to, never to a device-global slot"). A Retry the head handed out under A —
 // a rendered button can hold it past a switch — is pressed after the tab is
 // B's: it must not run A's signing as B's, and nothing of A's change stands
-// for B. The app's twin: ProfileChanges.kt `Owner` / `retry(owner, act)`.
+// for B. The line itself is A's, hidden under any other account and never
+// erased by a switch (Profile.md:101: it "stands until Retry or the next
+// change"; #659's "…stands under A's again").
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -14,6 +16,7 @@ import {
   readProfileChange,
   resetProfileChangeForTests,
   signProfileChange,
+  signProfileChangeFor,
   type ProfileChangeOutcome,
 } from "./profile-change";
 import { readSignedProfile, resetSignedProfileForTests } from "./signed-profile";
@@ -43,7 +46,7 @@ async function failedUnderA(run: () => Promise<ProfileChangeOutcome>) {
 }
 
 describe("a profile change's Retry keeps its account", () => {
-  it("a Retry captured under A and pressed under B runs nothing", async () => {
+  it("a Retry captured under A and pressed under B runs nothing; A's line stands again, and its Retry signs once", async () => {
     const run = vi
       .fn<() => Promise<ProfileChangeOutcome>>()
       .mockResolvedValueOnce({ kind: "offline" })
@@ -53,22 +56,31 @@ describe("a profile change's Retry keeps its account", () => {
     signInAs("acct-b");
     retry();
     await Promise.resolve();
-
     expect(run).toHaveBeenCalledTimes(1);
     expect(readProfileChange()).toBeNull();
     expect(readSignedProfile("profile-a")).toBeNull();
+
+    // Profile.md:101: the line "stands until Retry or the next change" —
+    // an account change is neither, so it is A's again under A.
+    signInAs("acct-a");
+    const line = readProfileChange();
+    expect(line?.kind).toBe("failed");
+    if (line?.kind === "failed") line.retry();
+    await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(readProfileChange()).toBeNull());
+    expect(readSignedProfile("profile-a")).not.toBeNull();
   });
 
-  it("A's line goes at the account change, and is not there when A comes back", async () => {
+  it("A's line is hidden under B and stands again under A", async () => {
     await failedUnderA(async () => ({ kind: "offline" }));
 
     signInAs("acct-b");
     expect(readProfileChange()).toBeNull();
     signInAs("acct-a");
-    expect(readProfileChange()).toBeNull();
+    expect(readProfileChange()?.kind).toBe("failed");
   });
 
-  it("A's change answering after the switch draws nothing, under B or under A again", async () => {
+  it("A's change answering not done after the switch is A's failed line: nothing under B, the line under A", async () => {
     signInAs("acct-a");
     let answer!: (outcome: ProfileChangeOutcome) => void;
     const signing = signProfileChange(() => new Promise((resolve) => (answer = resolve)), { signed: SIGNED });
@@ -79,7 +91,36 @@ describe("a profile change's Retry keeps its account", () => {
     await signing;
     expect(readProfileChange()).toBeNull();
     signInAs("acct-a");
+    expect(readProfileChange()?.kind).toBe("failed");
+  });
+
+  it("A's change taken after the switch lays nothing for B and leaves no line under A", async () => {
+    signInAs("acct-a");
+    let answer!: (outcome: ProfileChangeOutcome) => void;
+    const signing = signProfileChange(() => new Promise((resolve) => (answer = resolve)), { signed: SIGNED });
+    closeProfileChangeSeal();
+
+    signInAs("acct-b");
+    answer({ kind: "taken" });
+    await signing;
     expect(readProfileChange()).toBeNull();
+    expect(readSignedProfile("profile-a")).toBeNull();
+    signInAs("acct-a");
+    expect(readProfileChange()).toBeNull();
+  });
+
+  it("an act the owner guard stops before the signing did not sign: A's failed line, nothing run", async () => {
+    const run = vi.fn<() => Promise<ProfileChangeOutcome>>().mockResolvedValue({ kind: "taken" });
+    signInAs("acct-a");
+    const pressedAs = "acct-a";
+    signInAs("acct-b");
+    const outcome = await signProfileChangeFor(pressedAs, run);
+
+    expect(run).not.toHaveBeenCalled();
+    expect(outcome.kind).toBe("offline");
+    expect(readProfileChange()).toBeNull();
+    signInAs("acct-a");
+    expect(readProfileChange()?.kind).toBe("failed");
   });
 
   it("the Retry under the same account asks the same change again", async () => {
