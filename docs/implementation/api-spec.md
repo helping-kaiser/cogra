@@ -4339,7 +4339,12 @@ input PreparePostInput {
  takes no edit: the edit would become its newest version and put
  words back where its author took them away, so it is refused
  BAD_INPUT at `id` — at prepare, and again at the pre-sign leg
- for an edit prepared while the removal ran."
+ for an edit prepared while the removal ran. One edit per post and
+ author is in flight (substrate.md §9), prepares arriving at the
+ same instant included: an earlier edit the author has not signed
+ is superseded — it expires, and its pre-signature answers
+ STAGED_WRITE_EXPIRED — and a signed one refuses this edit
+ BAD_INPUT at `id`."
 input PreparePostEditInput {
   id: UUID!
   title: String
@@ -4381,9 +4386,9 @@ input PrepareCommentInput {
   actAs: UUID
 }
 
-"Edit a Comment — the same complete-state edit a post's is, and the
- same refusal: a removed comment takes no edit (BAD_INPUT at
- `id`)."
+"Edit a Comment — the same complete-state edit a post's is, with the
+ same refusals: a removed comment takes no edit, and one edit per
+ comment and author is in flight (both BAD_INPUT at `id`)."
 input PrepareCommentEditInput {
   id: UUID!
   content: String!
@@ -4485,7 +4490,10 @@ actually carries. Each is refused field-level at its own path
  displayName included — a profile with no name written is
  presented by its handle. For a Collective's profile, actAs routes
  through its governed edit flow. The handle is L2 account state,
- not profile payload — see changeHandle."
+ not profile payload — see changeHandle. One update per author is
+ in flight, under the post edit's rule: an unsigned earlier update
+ is superseded, and a signed one refuses this update BAD_INPUT at
+ `input`."
 input PrepareProfileUpdateInput {
   displayName: String
   bio: String
