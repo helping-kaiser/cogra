@@ -636,8 +636,50 @@ pub async fn has_signed_targeting(
 /// the backend serializes edits per (node, author)). Unlike
 /// [`has_signed_targeting`], a landed row does not count: its record is in
 /// the mirror and the next edit chains behind it.
+///
+/// On the pool this is the early answer only: a concurrent prepare can
+/// stage its write after this read. The answer that holds is
+/// [`chained_edit_in_flight`], on the staging transaction itself.
 pub async fn has_pending_targeting(
     pool: &PgPool,
+    actor_id: Uuid,
+    family: Family,
+    target: &str,
+) -> Result<bool, StagedError> {
+    let mut conn = pool.acquire().await?;
+    pending_targeting(&mut conn, actor_id, family, target).await
+}
+
+/// The edit-serialization guard on the staging transaction: supersedes
+/// the actor's unsigned chained writes of the family toward the target
+/// (as [`supersede_unsigned_targeting`]), then answers whether one is
+/// still in flight (as [`has_pending_targeting`]) — so a prepare that
+/// meets a predecessor here gets exactly the answer it would have got
+/// arriving after that predecessor committed.
+///
+/// Run it after [`allocate_seq`] on the same transaction. That `UPDATE`
+/// holds the author's counter row until the transaction ends, so a second
+/// prepare by the author waits there until this one commits or rolls back
+/// (PostgreSQL "Explicit Locking", row-level locks), and its own guard
+/// then reads under a fresh snapshot that includes this one's staged row
+/// (Read Committed: each statement sees what committed before it began).
+/// The check and the write it guards are one step per author, and with
+/// them per (node, author): two prepares can no longer both pass and
+/// stage two records declaring the same parent — a branch, which never
+/// advances the head (substrate.md §9).
+pub async fn chained_edit_in_flight(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    actor_id: Uuid,
+    family: Family,
+    target: &str,
+    current_epoch: i64,
+) -> Result<bool, StagedError> {
+    supersede_unsigned_on(tx, actor_id, family, target, current_epoch).await?;
+    pending_targeting(&mut **tx, actor_id, family, target).await
+}
+
+async fn pending_targeting(
+    conn: &mut PgConnection,
     actor_id: Uuid,
     family: Family,
     target: &str,
@@ -652,14 +694,15 @@ pub async fn has_pending_targeting(
         family.as_str(),
         target,
     )
-    .fetch_one(pool)
+    .fetch_one(conn)
     .await?)
 }
 
 /// Expires the actor's unsigned chained writes of the family toward the
 /// target, returning how many — what the edit-serialization guard runs
 /// before it asks [`has_pending_targeting`], so a staging nobody signed
-/// does not hold the next edit until GC.
+/// does not hold the next edit until GC. [`chained_edit_in_flight`] runs
+/// the same step on the staging transaction.
 ///
 /// Unsigned means the pre-commitment never reached the server: the write
 /// carries no signature of the author's, as `stance::has_live_opinion_from` reads
@@ -684,6 +727,18 @@ pub async fn supersede_unsigned_targeting(
     current_epoch: i64,
 ) -> Result<u64, StagedError> {
     let mut tx = pool.begin().await?;
+    let count = supersede_unsigned_on(&mut tx, actor_id, family, target, current_epoch).await?;
+    tx.commit().await?;
+    Ok(count)
+}
+
+async fn supersede_unsigned_on(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    actor_id: Uuid,
+    family: Family,
+    target: &str,
+    current_epoch: i64,
+) -> Result<u64, StagedError> {
     let expired = sqlx::query_as!(
         StagedRows,
         "UPDATE staged_writes
@@ -697,11 +752,10 @@ pub async fn supersede_unsigned_targeting(
         target,
         current_epoch,
     )
-    .fetch_all(&mut *tx)
+    .fetch_all(&mut **tx)
     .await?;
     let count = expired.len() as u64;
-    discard_pending_content(&mut tx, expired.into_iter()).await?;
-    tx.commit().await?;
+    discard_pending_content(tx, expired.into_iter()).await?;
     Ok(count)
 }
 
