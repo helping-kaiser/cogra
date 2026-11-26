@@ -213,7 +213,7 @@ describe("the notice carried to Invites is the vouching account's", () => {
 });
 
 describe("a profile change still signing is the changing account's", () => {
-  it("never stands under B's head, and stands under A's again", async () => {
+  it("never stands under B's head, and is gone with the account change (ProfileChanges.kt's twin)", async () => {
     signInAs("acct-a");
     let answer!: (outcome: { kind: "offline" }) => void;
     const signing = signProfileChange(() => new Promise((resolve) => (answer = resolve)));
@@ -228,7 +228,7 @@ describe("a profile change still signing is the changing account's", () => {
     expect(readProfileChange()).toBeNull();
 
     signInAs("acct-a");
-    expect(readProfileChange()?.kind).toBe("failed");
+    expect(readProfileChange()).toBeNull();
   });
 
   it("never answers A's late outcome into the change B pressed meanwhile", async () => {
