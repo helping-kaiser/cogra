@@ -7,6 +7,9 @@ export interface BorrowedViewBandProps {
   displayName?: string;
   /** The actor's photo avatar, where they set one. */
   avatarSrc?: string;
+  /** The view is a CoGra account wearing the mark: the orange tile clipped
+      round in the disc (`MonogramAvatar`'s `mark`). */
+  avatarMark?: boolean;
   /** Overrides the default guest line ("Browsing from @handle's view — join
       to build your own.") — pass the applicant readings here. */
   line?: string;

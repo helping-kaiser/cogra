@@ -444,7 +444,7 @@ export function CommentCard({
           ownPart
         )}
         {edited && <EditedMarker />}
-        {pending && <PendingMarker />}
+        {pending && <PendingMarker node={node && "pending"} />}
         {/* One affordance row, as on PostCard: the opinion leads, everything else
             the comment grows lands beside it — and it spreads across the card
             the same way, every control on a 48px target (jakob's ruling, the

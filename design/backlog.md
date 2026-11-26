@@ -7036,6 +7036,15 @@ a proof cannot see a picture change. Options: (a) the proof re-renders a differi
 it reports a difference; (b) serve Figtree to the harness locally; (c) both, and the harness's base
 at `img/`. Recommendation (c).
 
+Closed by round 67 as (c), in a repaired copy of the harness: dev-state
+`tmp_dev/design-orchestrator-tools/pixel/` (`pixel.mjs`, `run-node.sh`, `README.md`; round 49's
+files unchanged). A differing combination renders both sides once more and differs only if no
+render of one side matches one of the other, the report naming each that needed it; Figtree comes
+from `design/assets/fonts/figtree.ttf` by request interception, and nothing reaches the network;
+the page's base is the tree's `img/`; an unknown chip or a bad value stops the run before it
+renders (the default state is `geek=off` or `""`). Under eight proofs at once, 3 of 60
+`SeveranceConfirm` comparisons wobbled once and all matched on the second render.
+
 ### 308 · How the CoGra mark sits in a 24–40 px avatar disc · *design* · **filed 2026-11-23**
 
 Round 66, item 3 (jakob 2026-11-23, "logo split ofcourse"). The rule is written (readme §4,
@@ -7051,3 +7060,22 @@ round — the mark inside the circle the Android adaptive icon keeps clear of an
 the mark alone on the monogram's own `secondaryContainer` disc, at the tile's scale (0.84) — low
 contrast in dark; (c) the mark alone on `surface` with the field hairline, at the tile's scale.
 Recommendation (a): the brand's own small-size form, legible at 24 px in both themes.
+
+Closed by round 67 as (a) (jakob 2026-11-24, "(a) orange tile"): the mark as an account's picture
+is `icon.svg` filling the disc, clipped round, at every size and in both themes (readme §4
+*Imagery*; `MonogramAvatar`'s `mark`, the tile copied verbatim). `FeedBare`'s band draws
+`@genesis_mod` so at 24 px in place of the monogram `G`.
+
+### 309 · The references sheet when its read fails · *design* · **filed 2026-11-24**
+
+Round 67, item 5 (impl seam 451.1). Impl builds the failed read of `RefsSheet` and `CommentRefsSheet`
+as "the thread sheet's house line" over an outline `Retry` in the rows' place, but the tree draws no
+failed read of the thread sheet: no `postDetail.threadSheet` fault path, no board, no sidecar line.
+The nearest drawn twin is the tag picker's results fault (`TagPicker` `state` = `fault`): in the rows'
+place, `Can't reach the server — tags can't load right now.` over an outline `Retry` (`fault`,
+`fault.retry`); the search picker's is the same with `results`. Options: (a) that shape with the noun
+form `Can't reach the server — references can't load right now.` (a new string, his); (b) that
+shape over `TransportError`'s default line `Can't reach the server. Check your connection and try
+again.` (existing words, but beside `Retry` it says try again twice); (c) draw the thread sheet's
+own failed read first (`… comments can't load right now.`, an existing line) and the references
+sheet as its twin. Recommendation (a).

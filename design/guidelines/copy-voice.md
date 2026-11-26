@@ -1708,9 +1708,8 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   match.` **Drawn** on `SignInError`.
 - `HANDLE_TAKEN` — on the field: `That handle is taken.` **Drawn** on
   `JoinErrors`. A reserved handle answers the same (*Reserved names*).
-- A reserved display name — on the field: `That name isn't available.`
-  **Drawn** on `ProfileEdit`'s `name-reserved` (*Reserved names*; its
-  code is not named yet).
+- `DISPLAY_NAME_RESERVED` — on the field: `That name isn't available.`
+  **Drawn** on `ProfileEdit`'s `name-reserved` (*Reserved names*).
 - `EMAIL_IN_USE` — on the field: `That email already has an account.`
   *Copy-only.*
 - `WEAK_PASSWORD` — on the field. The length half is `A password is at

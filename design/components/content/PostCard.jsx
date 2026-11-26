@@ -535,7 +535,7 @@ export function PostCard({
           marker takes its tappable form rather than growing a control beside it —
           a history door is a readout. */}
       {edited && <EditedMarker onInspect={onInspectEdit} />}
-      {pending && <PendingMarker />}
+      {pending && <PendingMarker node={node && "pending"} />}
       {/* THE AFFORDANCE ROW. The stance control leads — it is the gesture the
           product lives on — then the Feed score, then comments, then anything
           else a post grows. It is the unified row every feed card wears
