@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { tokenStore } from "@/lib/session/token-store";
 import {
+  layChangedHandle,
   laySignedProfile,
   readSignedProfile,
   resetSignedProfileForTests,
@@ -110,5 +111,40 @@ describe("withSigned", () => {
 
   it("removes the picture where the change removed it", () => {
     expect(withSigned(read, { avatar: null }).avatar).toBeNull();
+  });
+});
+
+// A handle Settings changed is laid like a signed edit (Profile.md:97).
+describe("a changed handle laid over the head", () => {
+  it("stands for the account on its profile until a read asked after it answers", () => {
+    const before = signedProfileAsked();
+    layChangedHandle("a", "pa", "ada_l");
+    expect(readSignedProfile("pa")).toEqual({ handle: "ada_l" });
+    signedProfileRead(before, "pa");
+    expect(readSignedProfile("pa")).toEqual({ handle: "ada_l" });
+    signedProfileRead(signedProfileAsked(), "pa");
+    expect(readSignedProfile("pa")).toBeNull();
+  });
+
+  it("joins a signed change still laid, which keeps its fields and its order", () => {
+    laySignedProfile("a", { profileId: "pa", fields: { bio: "New." } }, 2);
+    layChangedHandle("a", "pa", "ada_l");
+    expect(readSignedProfile("pa")).toEqual({ bio: "New.", handle: "ada_l" });
+    // A change signed before the one laid still never overrides it.
+    laySignedProfile("a", { profileId: "pa", fields: { bio: "Older." } }, 1);
+    expect(readSignedProfile("pa")).toEqual({ bio: "New.", handle: "ada_l" });
+  });
+
+  it("is let go when the tab's account changes", () => {
+    layChangedHandle("a", "pa", "ada_l");
+    signInAs("b");
+    expect(readSignedProfile("pa")).toBeNull();
+    signInAs("a");
+    expect(readSignedProfile("pa")).toBeNull();
+  });
+
+  it("is worn by the head", () => {
+    const read = { handle: "ada", displayName: { value: "Ada" }, bio: { value: null }, websiteUrl: { value: null } };
+    expect(withSigned(read, { handle: "ada_l" }).handle).toBe("ada_l");
   });
 });

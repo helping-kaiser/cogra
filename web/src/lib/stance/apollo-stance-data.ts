@@ -75,7 +75,7 @@ import {
 import { askAgain } from "@/lib/compose/same-signing";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
-import type { TokenStore } from "@/lib/session/token-store";
+import { tokenStore, type TokenStore } from "@/lib/session/token-store";
 import {
   expectation,
   joinExpectations,
@@ -92,7 +92,14 @@ import {
   type KeptTargetPreview,
 } from "./kept-preview";
 import type { StancePair } from "./model";
-import { createStanceAttempts, severanceIntent, stanceIntent, type Slot } from "./stance-attempts";
+import {
+  createStanceAttempts,
+  KEPT_BATCH,
+  keptBatchIntent,
+  severanceIntent,
+  stanceIntent,
+  type Slot,
+} from "./stance-attempts";
 
 /** A gesture's batch as staged: its node, its writes, and what the signer checks them against. */
 type Staged = {
@@ -344,6 +351,7 @@ export function createApolloStanceData(deps: {
   const store = deps.store ?? identityStore;
   /** Each target's pick whose signing has not answered done (stance-attempts.ts). */
   const attempts = createStanceAttempts(deps.accounts);
+  const accounts = deps.accounts ?? tokenStore;
 
   /** The node each target's last read named — what its acts must point at. */
   const graphIds = new Map<string, string>();
@@ -441,6 +449,12 @@ export function createApolloStanceData(deps: {
    * Signs a prepared batch against the gesture's expectation. Every
    * element must complete for the gesture to have happened.
    */
+  /** A gesture with no account to answer to signs nothing. */
+  const always = () => true;
+  /** The tab's account changed under a batch: stopped, answered as a failure. */
+  const accountChanged = (): Outcome<never> =>
+    failed(new Error("the tab's account changed before the batch was signed"));
+
   const signAll = async (
     writes: readonly StagedWriteView[],
     expected: Expectation,
@@ -481,6 +495,7 @@ export function createApolloStanceData(deps: {
     target: Slot,
     stage: () => Promise<Outcome<Staged>>,
     intent: string | null,
+    still: () => boolean = always,
   ): Promise<Outcome<StanceCommit>> => {
     const staged = await stage();
     if (staged.kind !== "success") return staged;
@@ -488,6 +503,8 @@ export function createApolloStanceData(deps: {
     if (intent !== null) {
       attempts.remember(target, { node, writes: writes.map((write) => write.id), intent, expected });
     }
+    // Staged under the account that pressed, signed only under it.
+    if (!still()) return accountChanged();
     const outcome = await signAll(writes, expected);
     if (intent !== null && outcome.kind === "success") attempts.forget(target);
     return outcome;
@@ -511,14 +528,16 @@ export function createApolloStanceData(deps: {
     target: Slot,
     intent: string,
     stage: () => Promise<Outcome<Staged>>,
+    still: () => boolean = always,
   ): Promise<Outcome<StanceCommit>> => {
-    if (attempts.asking(target)) return stageAndSign(target, stage, null);
+    if (attempts.asking(target)) return stageAndSign(target, stage, null, still);
     const remembered = attempts.answered(target);
     // Held from here, before anything is awaited, so a gesture that arrives
     // meanwhile finds this one asking.
     attempts.begin(target);
     try {
       if (remembered !== null) {
+        if (!still()) return accountChanged();
         const asked = await askAgain(
           {
             signer,
@@ -552,7 +571,7 @@ export function createApolloStanceData(deps: {
             attempts.begin(target);
         }
       }
-      return await stageAndSign(target, stage, intent);
+      return await stageAndSign(target, stage, intent, still);
     } finally {
       // Not done: the attempt, if one was staged, waits for a Retry.
       attempts.settle(target);
@@ -653,26 +672,50 @@ export function createApolloStanceData(deps: {
       );
     },
 
-    async commitBatch(entries): Promise<Outcome<StanceCommit>> {
-      // EACH PICK IS ITS OWN PREPARE (there is no prepare that stages
-      // stances toward several targets at once), and NOTHING IS SIGNED
-      // UNTIL EVERY ONE IS STAGED: a refused prepare stops the batch before
-      // its first pre-signature, so no pick signs without the others.
-      const staged: StagedWriteView[] = [];
-      const expected: Expectation[] = [];
-      for (const { target, pick } of entries) {
-        const node = await graphIdOf(target);
-        if (node.kind !== "success") return node;
-        const prepared = await guard.run(() =>
-          prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
-        );
-        if (prepared.kind !== "success") return prepared;
-        staged.push(...prepared.value);
-        expected.push(expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]));
-      }
-      // One pass over the whole set, checked whole against the picks the
-      // seal read back (write-signer.ts `sign`).
-      return signAll(staged, joinExpectations(expected));
+    commitBatch(entries): Promise<Outcome<StanceCommit>> {
+      // THE SEAL'S RETRY IS THE SAME BATCH (KeptPicksSeal.md:33, :63): each
+      // pick is a record of its own in a bundle that sums, so a batch
+      // prepared afresh beside one the server took sums every pick twice.
+      //
+      // THE BATCH IS THE PRESSING ACCOUNT'S (auth.md "Multi-account device
+      // custody"). Its seal closes from the press and the batch goes on
+      // (KeptPicksSeal.md:59), so the tab's account can change mid-batch: a
+      // leg prepared under the next account's session would be that account's
+      // own stance, and its key would sign it. So the account is taken at the
+      // start and checked before every leg, the re-ask and the signing pass;
+      // a change stops the batch there, nothing further prepared or signed.
+      const owner = accounts.activeAccountId();
+      const still = () => accounts.activeAccountId() === owner;
+      return slotted(
+        KEPT_BATCH,
+        keptBatchIntent(entries),
+        async () => {
+          // EACH PICK IS ITS OWN PREPARE (there is no prepare that stages
+          // stances toward several targets at once), and NOTHING IS SIGNED
+          // UNTIL EVERY ONE IS STAGED: a refused prepare stops the batch
+          // before its first pre-signature, so no pick signs without the others.
+          const staged: StagedWriteView[] = [];
+          const expected: Expectation[] = [];
+          const nodes: string[] = [];
+          for (const { target, pick } of entries) {
+            if (!still()) return accountChanged();
+            const node = await graphIdOf(target);
+            if (node.kind !== "success") return node;
+            if (!still()) return accountChanged();
+            const prepared = await guard.run(() =>
+              prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
+            );
+            if (prepared.kind !== "success") return prepared;
+            staged.push(...prepared.value);
+            nodes.push(node.value);
+            expected.push(expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]));
+          }
+          // One pass over the whole set, checked whole against the picks the
+          // seal read back (write-signer.ts `sign`).
+          return success({ node: nodes.join(" "), writes: staged, expected: joinExpectations(expected) });
+        },
+        still,
+      );
     },
 
     async preview(target): Promise<Outcome<KeptTargetPreview>> {

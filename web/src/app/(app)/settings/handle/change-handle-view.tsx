@@ -22,7 +22,9 @@ import { useApolloClient } from "@apollo/client/react";
 import { hasCode } from "@/lib/api/outcome";
 import { changeHandle, fetchSettingsAccount } from "@/lib/api/settings-api";
 import { handleValid } from "@/lib/onboarding/registration-rules";
+import { layChangedHandle } from "@/lib/profile/signed-profile";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { tokenStore } from "@/lib/session/token-store";
 import { buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { DialogSurface } from "@/lib/ui2/dialog-surface";
@@ -88,9 +90,16 @@ export function ChangeHandleView() {
     if (busy || asking === null) return;
     setBusy(true);
     setDialogLine(null);
+    const by = tokenStore.activeAccountId();
     const outcome = await guard.run(() => changeHandle(client, asking));
     setBusy(false);
     if (outcome.kind === "success") {
+      // A changed handle shows on the profile's return (Profile.md:97): the
+      // head wears what the server took until a read asked after it answers —
+      // laid only while the tab is still the account that pressed.
+      if (by !== null && tokenStore.activeAccountId() === by) {
+        layChangedHandle(by, outcome.value.id, outcome.value.handle);
+      }
       router.push("/settings?done=handle");
       return;
     }

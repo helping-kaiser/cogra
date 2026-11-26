@@ -4,7 +4,10 @@ import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
+import type { Outcome } from "@/lib/api/outcome";
+import { closeKeptBatchSeal, resetKeptBatchForTests, signKeptBatch } from "@/lib/stance/kept-batch";
 import { keepPick, listKeptPicks } from "@/lib/stance/kept-picks";
+import type { StanceCommit } from "@/lib/stance/stance-data";
 import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { createTokenStore } from "@/lib/session/token-store";
 import { accountFilterLevel, setAccountFilterLevel } from "@/lib/settings/sensitive-content";
@@ -1277,6 +1280,43 @@ describe("the kept picks in settings", () => {
     await keepPick("acct-1", POST, PICK);
     renderSettings();
     expect(await screen.findByTestId("settings.backup.kept")).toHaveTextContent("1 kept pick waiting");
+  });
+
+  // Settings.md:205-207, KeptPicksSeal.md:61-63: the batch closed on while it
+  // signed and not through stands on this row, with Retry for the whole batch.
+  it("reads That didn't sign. with Retry on the row when the closed seal's batch did not go through", async () => {
+    resetKeptBatchForTests();
+    await keepPick("acct-1", POST, PICK);
+    await keepPick("acct-1", { kind: "post", id: "post-2" }, PICK);
+    renderSettings();
+    await screen.findByTestId("settings.backup.kept");
+    const batch = [
+      { target: POST, pick: PICK },
+      { target: { kind: "post" as const, id: "post-2" }, pick: PICK },
+    ];
+    const answers: ((outcome: Outcome<StanceCommit>) => void)[] = [];
+    const commit = vi.fn(
+      () => new Promise<Outcome<StanceCommit>>((resolve) => answers.push(resolve)),
+    );
+    await act(async () => {
+      void signKeptBatch(commit, batch);
+      closeKeptBatchSeal();
+    });
+    // While it signs the row stands as it was: the wait is on the targets' rows.
+    expect(screen.queryByTestId("settings.backup.kept.status")).toBeNull();
+    await act(async () => answers.shift()?.({ kind: "failed", cause: new Error("offline") }));
+    const status = await screen.findByTestId("settings.backup.kept.status");
+    expect(status).toHaveTextContent("That didn't sign.");
+    expect(status).toHaveAttribute("role", "alert");
+    expect(screen.getByTestId("settings.backup.kept")).toHaveTextContent("2 kept picks waiting");
+    // Inert apart from its Retry.
+    fireEvent.click(screen.getByTestId("settings.backup.kept"));
+    expect(push).not.toHaveBeenCalledWith("/kept-picks?from=%2Fsettings");
+    fireEvent.click(screen.getByTestId("settings-kept-retry"));
+    expect(commit).toHaveBeenCalledTimes(2);
+    expect(screen.queryByTestId("settings.backup.kept.status")).toBeNull();
+    await act(async () => answers.shift()?.({ kind: "failed", cause: new Error("offline") }));
+    expect(await screen.findByTestId("settings.backup.kept.status")).toHaveTextContent("That didn't sign.");
   });
 
   it("stands no kept-picks row while the key is elsewhere, nor when none waits", async () => {

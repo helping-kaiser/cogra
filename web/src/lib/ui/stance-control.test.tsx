@@ -9,13 +9,15 @@ import {
   writeStanceInputMode,
   type StanceInputMode,
 } from "@/lib/stance/input-mode";
+import type { Outcome } from "@/lib/api/outcome";
+import { closeKeptBatchSeal, resetKeptBatchForTests, signKeptBatch } from "@/lib/stance/kept-batch";
 import { keepPick, listKeptPicks } from "@/lib/stance/kept-picks";
 import { KeptPicksNavigation } from "@/lib/stance/kept-picks-route";
 import { markSettling } from "@/lib/stance/settling";
 import { ORIGIN, TAP_DEFAULT } from "@/lib/stance/model";
 import { KNOB_TRAVEL_INSET_PX } from "@/lib/stance/pad-geometry";
 import { writeStanceTaught } from "@/lib/stance/stance-coach";
-import type { StanceTargetRef } from "@/lib/stance/stance-data";
+import type { StanceCommit, StanceTargetRef } from "@/lib/stance/stance-data";
 import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-stance-data";
 import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
 import { declared } from "@/test/css";
@@ -797,6 +799,27 @@ describe("the hold", () => {
     });
     await settle();
     expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent("+0.55 / +0.20");
+  });
+
+  // KeptPicksSeal.md:59: the kept picks' seal closed while its batch signs —
+  // each target's row reads Signing… under its face until the batch answers.
+  it("says Signing… under the face while a kept batch holding this target signs after its seal closed", async () => {
+    resetKeptBatchForTests();
+    mount();
+    await settle();
+    let answer: (outcome: Outcome<StanceCommit>) => void = () => {};
+    const commit = () => new Promise<Outcome<StanceCommit>>((resolve) => (answer = resolve));
+    await act(async () => {
+      void signKeptBatch(commit, [{ target: { kind: "post", id: "post-1" }, pick: TAP_DEFAULT }]);
+    });
+    // The open seal carries its own wait.
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+    act(() => closeKeptBatchSeal());
+    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("Signing…");
+    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveAttribute("role", "status");
+    await act(async () => answer({ kind: "failed", cause: new Error("offline") }));
+    // The failure stands on Settings' row, never on the target's.
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
   });
 
   it("says Signing… under the face past 200ms, and never before", async () => {
