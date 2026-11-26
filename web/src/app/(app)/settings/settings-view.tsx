@@ -48,6 +48,7 @@ import { forgetRecents } from "@/lib/search/recents";
 import { FEED_FILTER_DEFAULT, feedFilterSummary } from "@/lib/feed/feed-filter";
 import { useReaderDefault, writeReaderDefault } from "@/lib/feed/reader-default";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
+import { useKeptBatch } from "@/lib/stance/kept-batch";
 import { forgetKeptPicks, keptOpinions, useKeptPicks } from "@/lib/stance/kept-picks";
 import { keptPicksHref } from "@/lib/stance/kept-picks-route";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
@@ -76,6 +77,7 @@ import {
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useStanceInputMode, type StanceInputMode } from "@/lib/stance/input-mode";
 import { instance, part, type DataNode } from "@/lib/ui/data-node";
+import { DIDNT_SIGN_ROW } from "@/lib/ui/row-line";
 import { PageHeader } from "@/lib/ui/page-header";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { dateline, ladderAge } from "@/lib/ui/timestamp";
@@ -207,6 +209,8 @@ export function SettingsView({
   const notice = settingsNoticeOf(useSearchParams().get("done"));
   const keyOnDevice = useKeyOnDeviceState(store);
   const keptPicks = useKeptPicks(useActiveAccountId());
+  // The kept batch a closed seal left not through, for its owner only (`kept-batch.ts`).
+  const keptBatch = useKeptBatch();
   const deletionStatus = useAccountDeletion();
   const refreshDeletion = deletionStatus.refresh;
 
@@ -730,13 +734,31 @@ export function SettingsView({
           {/* THE KEPT PICKS WAITING FOR THEIR REVIEW, last in the group, only
               while the key is here (Settings.md:73-81): no status line, no
               badge, no colour, and nothing elsewhere reminds of it. */}
-          {keyOnDevice === "present" && keptWaiting > 0 && (
-            <SettingsRow
-              label={`${keptWaiting} kept ${keptWaiting === 1 ? "pick" : "picks"} waiting`}
-              onOpen={() => router.push(keptPicksHref("/settings"))}
-              node={node("backup.kept")}
-            />
-          )}
+          {keyOnDevice === "present" && keptWaiting > 0 &&
+            (keptBatch?.kind === "failed" ? (
+              // The kept picks' batch was closed on while it signed and did
+              // not go through (Settings.md:205-207): the failure voice in the
+              // second line, Retry in the trailing slot, the row inert apart
+              // from its Retry, which asks the whole batch again.
+              <SettingsRow
+                label={`${keptWaiting} kept ${keptWaiting === 1 ? "pick" : "picks"} waiting`}
+                status={DIDNT_SIGN_ROW}
+                statusTone="error"
+                inert
+                trailing={
+                  <InlineAction onClick={keptBatch.retry} testId="settings-kept-retry">
+                    Retry
+                  </InlineAction>
+                }
+                node={node("backup.kept")}
+              />
+            ) : (
+              <SettingsRow
+                label={`${keptWaiting} kept ${keptWaiting === 1 ? "pick" : "picks"} waiting`}
+                onOpen={() => router.push(keptPicksHref("/settings"))}
+                node={node("backup.kept")}
+              />
+            ))}
         </SettingsGroup>
 
         {/* After Key backup, because the loss it warns of is the key's
