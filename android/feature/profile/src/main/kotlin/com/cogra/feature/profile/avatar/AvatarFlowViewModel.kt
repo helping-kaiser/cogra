@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
+import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.di.ApplicationScope
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
@@ -286,13 +287,23 @@ private class AvatarChangeSigning(
             is Outcome.Refused -> return refusalOf(outcome.errors)
             is Outcome.Failed -> return ProfileChangeOutcome.Offline
         }
+        // The account may have changed while the upload or the prepare ran.
+        if (!pressing.holds()) return ProfileChangeOutcome.Foreign
+        signPrepared(prepared, sent, picture, profile.id)
+    }
+
+    /** The prepared change, signed and — taken — laid over the head. */
+    private suspend fun signPrepared(
+        prepared: List<PreparedWriteView>,
+        sent: SentProfile,
+        picture: AvatarUpload.Done,
+        profileId: String,
+    ): ProfileChangeOutcome = with(deps) {
         // One profile update on this device's own profile, its payload held to
         // the fields it re-states and the avatar this device uploaded
         // (PayloadExpectation.kt).
         val ledger = picture.known?.let { mapOf(picture.mediaId to it) }.orEmpty()
-        val expected = profileExpectation(profile.id, sent, ledger)
-        // The account may have changed while the upload or the prepare ran.
-        if (!pressing.holds()) return ProfileChangeOutcome.Foreign
+        val expected = profileExpectation(profileId, sent, ledger)
         val signing = head.begin()
         val results = try {
             signer.sign(prepared, Expectation(listOf(profileUpdate(expected))))
@@ -304,7 +315,7 @@ private class AvatarChangeSigning(
         // Taken: the fields re-stated beside it are not the change's, so only
         // the picture is laid.
         picture.url?.let {
-            head.lay(signing, profile.id, SignedProfileFields(avatar = Setting(SignedPicture(picture.mediaId, it))))
+            head.lay(signing, profileId, SignedProfileFields(avatar = Setting(SignedPicture(picture.mediaId, it))))
         }
         ProfileChangeOutcome.Taken
     }
