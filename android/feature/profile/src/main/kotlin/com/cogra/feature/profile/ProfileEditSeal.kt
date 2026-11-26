@@ -116,8 +116,8 @@ internal class EditSealActions(
     val onBack: () -> Unit,
     /** The header X. */
     val onLeave: () -> Unit,
+    /** A notice's `Not now`: back to the seal at rest, or from the bug to the edit. */
     val onNotNow: () -> Unit,
-    val onBugNotNow: () -> Unit,
     val onReport: () -> Unit = {},
 )
 
@@ -150,55 +150,67 @@ internal fun ProfileEditSealStage(state: ProfileEditUiState, actions: EditSealAc
                 .verticalScroll(rememberScrollState())
                 .padding(start = Space.x6, end = Space.x6, top = Space.x2, bottom = Space.x6),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Space.x3),
-            ) {
-                // The picture the change leaves; the monogram where it removes it (:11).
-                CograAvatar(
-                    name = state.displayName,
-                    size = SEAL_PICTURE,
-                    url = state.avatar.previewUrl,
-                    testTag = "profile_edit_seal_picture",
-                )
-                Text(
-                    text = SEAL_HEAD,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            ActsCard(
-                rows = listOf(
-                    ActsCardRow(label = SEAL_ROW_LABEL, count = 1, noun = SEAL_ROW_NOUN) {
-                        // Runs on to a second line, never cut off (:13).
-                        Text(
-                            text = state.changeSummary,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(vertical = Space.x2),
-                        )
-                    },
-                ),
-                slow = slow,
-                node = EDIT_SEAL / "acts",
-            )
-            QuietNote(text = PUBLIC_RECORD_LINE, modifier = Modifier.dataNode(EDIT_SEAL / "note"))
+            SealReadBack(state, slow)
             Spacer(Modifier.weight(1f))
             SealFoot(state, participle, actions, onHelp = { help = SealHelp.WriteRule })
         }
     }
+    SealHelpDialog(help, onClose = { help = null })
+}
+
+/** What the seal reads back: the head row, the acts card and the public-record line (:3-:19). */
+@Composable
+private fun SealReadBack(state: ProfileEditUiState, slow: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x3),
+    ) {
+        // The picture the change leaves; the monogram where it removes it (:11).
+        CograAvatar(
+            name = state.displayName,
+            size = SEAL_PICTURE,
+            url = state.avatar.previewUrl,
+            testTag = "profile_edit_seal_picture",
+        )
+        Text(
+            text = SEAL_HEAD,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+    }
+    ActsCard(
+        rows = listOf(
+            ActsCardRow(label = SEAL_ROW_LABEL, count = 1, noun = SEAL_ROW_NOUN) {
+                // Runs on to a second line, never cut off (:13).
+                Text(
+                    text = state.changeSummary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(vertical = Space.x2),
+                )
+            },
+        ),
+        slow = slow,
+        node = EDIT_SEAL / "acts",
+    )
+    QuietNote(text = PUBLIC_RECORD_LINE, modifier = Modifier.dataNode(EDIT_SEAL / "note"))
+}
+
+/** The header's "?" and the write rule's own "?" (:31, :53). */
+@Composable
+private fun SealHelpDialog(help: SealHelp?, onClose: () -> Unit) {
     when (help) {
         SealHelp.Change -> HelpDialog(
             title = CHANGING_YOUR_PROFILE,
             paragraphs = CHANGING_YOUR_PROFILE_TEXT,
-            onClose = { help = null },
+            onClose = onClose,
             testTag = "profile_edit_seal_help_dialog",
         )
         SealHelp.WriteRule -> HelpDialog(
             title = HelpTopic.WhySigningWaits.title,
             paragraphs = WHY_SIGNING_WAITS_TEXT,
-            onClose = { help = null },
+            onClose = onClose,
             testTag = "profile_edit_seal_write_rule_dialog",
         )
         null -> Unit
@@ -220,58 +232,72 @@ private fun SealFoot(state: ProfileEditUiState, participle: Boolean, actions: Ed
             ) { NoticeLine(WRITE_RULE_FACT) }
             FootText(SEAL_NOT_NOW, actions.onNotNow, "profile_edit_seal_not_now")
         }
-        ProfileSealFault.Bug -> {
-            NoticePanel(title = BUG_TITLE, testTag = "profile_edit_seal_bug") {
-                NoticeLine(BUG_FACT)
-                CograButton(
-                    text = SEAL_TRY_AGAIN,
-                    onClick = actions.onSign,
-                    kind = ButtonKind.Inverse,
-                    modifier = Modifier.fillMaxWidth(),
-                    testTag = "profile_edit_seal_try_again",
-                )
-            }
-            Column(Modifier.fillMaxWidth()) {
-                // No report surface exists on the app yet; the word stands as drawn.
-                FootText(SEAL_REPORT, actions.onReport, "profile_edit_seal_report")
-                FootText(SEAL_NOT_NOW, actions.onBugNotNow, "profile_edit_seal_not_now")
-            }
-        }
-        ProfileSealFault.Offline -> Column(
-            verticalArrangement = Arrangement.spacedBy(Space.x2),
+        ProfileSealFault.Bug -> BugFoot(actions)
+        ProfileSealFault.Offline -> OfflineFoot(actions)
+        null -> RestingFoot(state, participle, actions)
+    }
+}
+
+/** `SealFaultBug`: `This shouldn't have happened` with `Try again`, `Report a problem` and `Not now` (:57). */
+@Composable
+private fun BugFoot(actions: EditSealActions) {
+    NoticePanel(title = BUG_TITLE, testTag = "profile_edit_seal_bug") {
+        NoticeLine(BUG_FACT)
+        CograButton(
+            text = SEAL_TRY_AGAIN,
+            onClick = actions.onSign,
+            kind = ButtonKind.Inverse,
             modifier = Modifier.fillMaxWidth(),
-        ) {
-            ErrorLine(SEAL_OFFLINE_LINE, testTag = "profile_edit_seal_offline")
-            CograButton(
-                text = SEAL_RETRY,
-                onClick = actions.onSign,
-                kind = ButtonKind.Outlined,
-                modifier = Modifier.fillMaxWidth(),
-                testTag = "profile_edit_seal_retry",
-            )
-            FootText(SEAL_BACK, actions.onBack, "profile_edit_seal_back")
-        }
-        null -> {
-            val foot = (EDIT_SEAL / "foot").keyed(if (state.signing) "signing" else "rest")
-            Column(
-                verticalArrangement = Arrangement.spacedBy(Space.x2),
-                modifier = Modifier.fillMaxWidth().dataNode(foot),
-            ) {
-                CograButton(
-                    text = if (participle) SIGNING_THE_CHANGE else SIGN_THE_CHANGE,
-                    // Inert from the press, never dimmed (:33).
-                    onClick = { if (!state.signing) actions.onSign() },
-                    modifier = Modifier.fillMaxWidth(),
-                    testTag = (EDIT_SEAL / "foot" / "sign").tag,
-                )
-                // `Close` from the press itself, never dimmed (:71).
-                FootText(
-                    if (state.signing) SEAL_CLOSE else SEAL_BACK,
-                    actions.onBack,
-                    (EDIT_SEAL / "foot" / "back").tag,
-                )
-            }
-        }
+            testTag = "profile_edit_seal_try_again",
+        )
+    }
+    Column(Modifier.fillMaxWidth()) {
+        // No report surface exists on the app yet; the word stands as drawn.
+        FootText(SEAL_REPORT, actions.onReport, "profile_edit_seal_report")
+        FootText(SEAL_NOT_NOW, actions.onNotNow, "profile_edit_seal_not_now")
+    }
+}
+
+/** No answer reached the seal: the fault line and Retry in the commit's place, and Back (:47). */
+@Composable
+private fun OfflineFoot(actions: EditSealActions) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(Space.x2),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        ErrorLine(SEAL_OFFLINE_LINE, testTag = "profile_edit_seal_offline")
+        CograButton(
+            text = SEAL_RETRY,
+            onClick = actions.onSign,
+            kind = ButtonKind.Outlined,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "profile_edit_seal_retry",
+        )
+        FootText(SEAL_BACK, actions.onBack, "profile_edit_seal_back")
+    }
+}
+
+/** At rest or signing: `Sign the change` over Back, `Close` from the press (:33-:41, :71). */
+@Composable
+private fun RestingFoot(state: ProfileEditUiState, participle: Boolean, actions: EditSealActions) {
+    val foot = (EDIT_SEAL / "foot").keyed(if (state.signing) "signing" else "rest")
+    Column(
+        verticalArrangement = Arrangement.spacedBy(Space.x2),
+        modifier = Modifier.fillMaxWidth().dataNode(foot),
+    ) {
+        CograButton(
+            text = if (participle) SIGNING_THE_CHANGE else SIGN_THE_CHANGE,
+            // Inert from the press, never dimmed (:33).
+            onClick = { if (!state.signing) actions.onSign() },
+            modifier = Modifier.fillMaxWidth(),
+            testTag = (EDIT_SEAL / "foot" / "sign").tag,
+        )
+        // `Close` from the press itself, never dimmed (:71).
+        FootText(
+            if (state.signing) SEAL_CLOSE else SEAL_BACK,
+            actions.onBack,
+            (EDIT_SEAL / "foot" / "back").tag,
+        )
     }
 }
 

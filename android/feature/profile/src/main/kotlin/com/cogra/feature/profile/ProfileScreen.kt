@@ -185,10 +185,13 @@ fun ProfileRoute(
     ProfileScreen(
         state = state.copy(changeLine = changeLine),
         reselectSignal = reselectSignal,
-        profileSavedResult = profileSavedResult,
-        onProfileSavedResultConsumed = onProfileSavedResultConsumed,
-        changeLanded = changeLanded,
-        onChangeLandedConsumed = changeModel::onLandedConsumed,
+        // ONE CONFIRMATION FOR A CHANGE TAKEN, whichever way it came: back from
+        // the edit, or landing after its seal closed — on one's own profile only.
+        profileSavedResult = profileSavedResult || (changeLanded && state.own),
+        onProfileSavedResultConsumed = {
+            onProfileSavedResultConsumed()
+            changeModel.onLandedConsumed()
+        },
         onTabChange = viewModel::onTabChange,
         onLoadMore = viewModel::onLoadMore,
         onRetryPage = viewModel::onRetryPage,
@@ -314,9 +317,6 @@ fun ProfileScreen(
     reselectSignal: Int = 0,
     profileSavedResult: Boolean,
     onProfileSavedResultConsumed: () -> Unit,
-    /** A change taken after its seal closed (ProfileEditSeal.md:45): the same confirmation. */
-    changeLanded: Boolean = false,
-    onChangeLandedConsumed: () -> Unit = {},
     onTabChange: (ProfileTab) -> Unit,
     onLoadMore: () -> Unit,
     /** The tail's Retry: the page that did not arrive (ProfileMoreFailed.md). */
@@ -371,8 +371,6 @@ fun ProfileScreen(
     // `Saved.`, `Removed from Saved.` and a hide's words, each with `Undo`.
     val savedHost = rememberSavedHost(saved, snackbarHostState, PROFILE / "snackbar", onRequireAccount, hidden)
     ProfileSavedConfirm(profileSavedResult, snackbarHostState, onProfileSavedResultConsumed)
-    // One's own profile only: a drill-in to another person never confirms one's change.
-    ProfileSavedConfirm(changeLanded && state.own, snackbarHostState, onChangeLandedConsumed)
     // The list is the screen's, not the body's: the bar's re-tap scrolls it
     // whatever the body is showing when the tap lands.
     val list = rememberLazyListState()

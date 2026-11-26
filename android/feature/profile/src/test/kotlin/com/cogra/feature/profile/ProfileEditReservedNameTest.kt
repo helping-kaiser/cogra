@@ -90,7 +90,7 @@ class ProfileEditReservedNameTest {
     /** Save opens the seal; its commit signs. */
     private fun ProfileEditViewModel.save() {
         onSubmit()
-        onSign()
+        seal.onSign()
     }
 
     @Before

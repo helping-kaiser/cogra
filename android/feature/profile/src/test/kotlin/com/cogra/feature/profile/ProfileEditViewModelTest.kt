@@ -134,7 +134,7 @@ class ProfileEditViewModelTest {
     /** Save opens the seal; its commit signs. */
     private fun ProfileEditViewModel.save() {
         onSubmit()
-        onSign()
+        seal.onSign()
     }
 
     @Before
@@ -480,7 +480,7 @@ class ProfileEditViewModelTest {
         vm.onDisplayNameChange(" ")
         vm.onSubmit()
         assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Form)
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.prepareCalls).isEqualTo(0)
     }
@@ -491,11 +491,11 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onBioChange("Hello")
         vm.onSubmit()
-        assertThat(vm.onBack()).isTrue()
+        assertThat(vm.seal.onBack()).isTrue()
         assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Form)
         assertThat(vm.state.value.bio).isEqualTo("Hello")
         // From the form, back leaves.
-        assertThat(vm.onBack()).isFalse()
+        assertThat(vm.seal.onBack()).isFalse()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.prepareCalls).isEqualTo(0)
     }
@@ -507,7 +507,7 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.prepareCalls).isEqualTo(1)
         assertThat(vm.state.value.signing).isTrue()
@@ -541,7 +541,7 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         // The route leaves on false: the seal closes, and nothing is cancelled.
-        assertThat(vm.onBack()).isFalse()
+        assertThat(vm.seal.onBack()).isFalse()
         vm.viewModelScope.cancel()
         assertThat(line()).isEqualTo(ProfileChangeLine.Signing)
         assertThat(signedProfile.laid.value).isNull()
@@ -561,7 +561,7 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onLeave()
+        vm.seal.onLeave()
         vm.viewModelScope.cancel()
         profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
         profiles.prepareGate?.complete(Unit)
@@ -587,7 +587,7 @@ class ProfileEditViewModelTest {
 
         // Retry is the commit pressed again.
         profiles.prepareOutcome = null
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.saved).isTrue()
         assertThat(laid()?.bio).isEqualTo(Setting("Hello"))
@@ -603,7 +603,7 @@ class ProfileEditViewModelTest {
         vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onBack()
+        vm.seal.onBack()
         vm.viewModelScope.cancel()
         profiles.prepareGate?.complete(Unit)
         dispatcher.scheduler.advanceUntilIdle()
@@ -631,7 +631,7 @@ class ProfileEditViewModelTest {
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.WriteRule)
-        vm.onNotNow()
+        vm.seal.onNotNow()
         assertThat(vm.state.value.fault).isNull()
         assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Seal)
         assertThat(signedProfile.laid.value).isNull()
@@ -646,7 +646,7 @@ class ProfileEditViewModelTest {
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Bug)
-        vm.onBugNotNow()
+        vm.seal.onNotNow()
         assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Form)
         assertThat(vm.state.value.bio).isEqualTo("Hello")
     }
@@ -730,7 +730,7 @@ class ProfileEditViewModelTest {
         vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onBack()
+        vm.seal.onBack()
 
         switchTo("account-b")
         profiles.prepareGate?.complete(Unit)
@@ -752,7 +752,7 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onSubmit()
         switchTo(null)
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.prepareCalls).isEqualTo(0)
         assertThat(vm.state.value.signing).isFalse()
@@ -766,7 +766,7 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onBack()
+        vm.seal.onBack()
         profiles.prepareGate?.complete(Unit)
         dispatcher.scheduler.advanceUntilIdle()
         val failed = line() as ProfileChangeLine.Failed

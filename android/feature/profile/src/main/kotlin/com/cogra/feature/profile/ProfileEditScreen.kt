@@ -91,19 +91,18 @@ fun ProfileEditRoute(
     // The seal's arrow, Back and the system gesture: one stage back to the
     // form before the press; from the press they close the seal and the
     // change goes on (ProfileEditSeal.md:65-73).
-    val back = { if (!viewModel.onBack()) onBack() }
+    val back = { if (!viewModel.seal.onBack()) onBack() }
     if (state.stage == ProfileEditStage.Seal) {
         ProfileEditSealStage(
             state = state,
             actions = EditSealActions(
-                onSign = viewModel::onSign,
+                onSign = viewModel.seal::onSign,
                 onBack = back,
                 onLeave = {
-                    viewModel.onLeave()
+                    viewModel.seal.onLeave()
                     onBack()
                 },
-                onNotNow = viewModel::onNotNow,
-                onBugNotNow = viewModel::onBugNotNow,
+                onNotNow = viewModel.seal::onNotNow,
             ),
         )
     } else {

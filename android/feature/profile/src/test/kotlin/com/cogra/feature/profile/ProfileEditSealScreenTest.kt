@@ -32,7 +32,6 @@ class ProfileEditSealScreenTest {
     private var backs = 0
     private var leaves = 0
     private var notNows = 0
-    private var bugNotNows = 0
 
     private val atRest = ProfileEditUiState(
         loading = false,
@@ -52,7 +51,6 @@ class ProfileEditSealScreenTest {
                     onBack = { backs += 1 },
                     onLeave = { leaves += 1 },
                     onNotNow = { notNows += 1 },
-                    onBugNotNow = { bugNotNows += 1 },
                 ),
             )
         }
@@ -165,7 +163,7 @@ class ProfileEditSealScreenTest {
         compose.onNodeWithTag("profile_edit_seal_report").assert(hasText("Report a problem"))
         compose.onNodeWithTag("profile_edit_seal_not_now").performScrollTo().performClick()
         assertThat(signs).isEqualTo(1)
-        assertThat(bugNotNows).isEqualTo(1)
+        assertThat(notNows).isEqualTo(1)
     }
 
     @Test
