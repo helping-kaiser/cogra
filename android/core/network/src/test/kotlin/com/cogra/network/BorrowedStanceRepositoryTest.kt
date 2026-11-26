@@ -24,6 +24,7 @@ import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.BorrowedStanceRepositoryImpl
 import com.cogra.network.repo.StanceRepositoryImpl
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -68,7 +69,8 @@ class BorrowedStanceRepositoryTest {
     }
 
     /** The member's own seam, on the same client. */
-    private fun member() = StanceRepositoryImpl(client, AuthGuard(tokens, refresher), ThrowingWriteRepository())
+    private fun TestScope.member() =
+        StanceRepositoryImpl(client, AuthGuard(tokens, refresher), ThrowingWriteRepository(), tokens, backgroundScope)
 
     private fun enqueue(json: String) {
         server.enqueue(MockResponse().setBody(json).addHeader("Content-Type", "application/json"))
@@ -211,9 +213,10 @@ class BorrowedStanceRepositoryTest {
         val repo = repo()
         enqueue(lentJson("post", "p1", faceJson()))
         enqueue(
-            """{"data":{"post":{"viewerStance":{"__typename":"StanceBundle","targetGraphId":"$GRAPH_ID",
+            """{"data":{"nodes":[{"__typename":"Post","id":"p1",
+               "viewerStance":{"__typename":"StanceBundle","targetGraphId":"$GRAPH_ID",
                "pDirected":0.0,"pInterest":0.0,"rawPDirected":0.0,"rawPInterest":0.0,"recordCount":0,
-               "inert":true,"severed":false,"severanceCost":0,"projected":null}}}}""",
+               "inert":true,"severed":false,"severanceCost":0,"projected":null}}]}}""",
         )
 
         repo.borrowedStance(StanceTarget.Node("p1"))
@@ -222,7 +225,7 @@ class BorrowedStanceRepositoryTest {
         assertThat(graphId).isEqualTo(Outcome.Success(GRAPH_ID))
         server.takeRequest()
         val signingRead = server.takeRequest()
-        assertThat(signingRead.operation()).isEqualTo("PostStance")
+        assertThat(signingRead.operation()).isEqualTo("PageStances")
         // The member's own read still rides the session's token.
         assertThat(signingRead.getHeader("Authorization")).startsWith("Bearer ")
     }
