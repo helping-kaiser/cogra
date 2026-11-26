@@ -19,7 +19,11 @@
 //
 // THE CHANGE IS THE CHANGING ACCOUNT'S (auth.md "Multi-account device
 // custody"): the line is kept beside the account active at the press and stands
-// only under that account's head.
+// only under that account's head, dropped the moment the active account changes.
+// The act outlives the screen, so it also never prepares or signs for another
+// account: it asks [StillPressing] before the prepare and before the signing,
+// and a Retry pressed after a switch does nothing (web's "while the tab is
+// still the signing account").
 
 package com.cogra.feature.profile
 
@@ -55,6 +59,22 @@ enum class ProfileChangeOutcome {
 
     /** CoGra reserves the display name: the edit's own field line, back on the form. */
     NameReserved,
+
+    /**
+     * The active account is no longer the one that pressed: the act stopped
+     * before it prepared or signed anything, and it ends silently — nothing
+     * laid, nothing drawn under the other account's head (auth.md
+     * "Multi-account device custody").
+     */
+    Foreign,
+}
+
+/**
+ * What an act asks before it prepares and again before it signs: whether the
+ * account that pressed is still the active one.
+ */
+fun interface StillPressing {
+    suspend fun holds(): Boolean
 }
 
 /** What the profile's head reads under itself; null where nothing stands. */
@@ -72,11 +92,28 @@ class ProfileChanges @Inject constructor(
 ) {
     private class Held(val owner: String?, val line: ProfileChangeLine)
 
+    /** An act signs only for [owner], the account that pressed. */
+    private inner class Owner(val owner: String?) : StillPressing {
+        override suspend fun holds(): Boolean = owner != null && tokens.current()?.accountId == owner
+    }
+
     private val lock = Any()
     private var signings = 0L
     private var closed = false
     private val held = MutableStateFlow<Held?>(null)
     private val _landed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    init {
+        scope.launch {
+            // A sign-out or a change of account: the last account's line goes,
+            // and its Retry with it — never pressed under another account.
+            tokens.tokens.map { it?.accountId }.collect { account ->
+                synchronized(lock) {
+                    if (held.value?.owner != account) held.value = null
+                }
+            }
+        }
+    }
 
     /** The line under the active account's head, or null. */
     val line: Flow<ProfileChangeLine?> =
@@ -90,16 +127,18 @@ class ProfileChanges @Inject constructor(
     /**
      * Runs one signing of a profile change on the application scope and answers
      * what it came to. The caller may stop waiting — its seal closed — and the
-     * signing goes on: its answer is then the head's.
+     * signing goes on: its answer is then the head's. [act] is handed the
+     * pressing account's guard and asks it before it prepares and before it
+     * signs.
      */
-    suspend fun sign(act: suspend () -> ProfileChangeOutcome): ProfileChangeOutcome =
-        start(fromHead = false, act).await()
+    suspend fun sign(act: suspend (StillPressing) -> ProfileChangeOutcome): ProfileChangeOutcome =
+        start(fromHead = false, owner = tokens.current()?.accountId, act).await()
 
-    private suspend fun start(
+    private fun start(
         fromHead: Boolean,
-        act: suspend () -> ProfileChangeOutcome,
+        owner: String?,
+        act: suspend (StillPressing) -> ProfileChangeOutcome,
     ): Deferred<ProfileChangeOutcome> {
-        val owner = tokens.current()?.accountId
         val mine = synchronized(lock) {
             // A Retry under the head has no seal to answer to.
             closed = fromHead
@@ -107,7 +146,7 @@ class ProfileChanges @Inject constructor(
             ++signings
         }
         return scope.async {
-            val outcome = act()
+            val outcome = act(Owner(owner))
             settle(mine, owner, outcome, act)
             outcome
         }
@@ -117,13 +156,18 @@ class ProfileChanges @Inject constructor(
         mine: Long,
         owner: String?,
         outcome: ProfileChangeOutcome,
-        act: suspend () -> ProfileChangeOutcome,
+        act: suspend (StillPressing) -> ProfileChangeOutcome,
     ) {
-        val stillOwners = tokens.current()?.accountId == owner
+        val stillOwners = owner != null && tokens.current()?.accountId == owner
         val land = synchronized(lock) {
             when {
                 // A later change was pressed meanwhile: the slot is that change's.
                 mine != signings -> false
+                // Another account is active: nothing of this change stands for it.
+                outcome == ProfileChangeOutcome.Foreign || !stillOwners -> {
+                    if (held.value?.owner == owner) held.value = null
+                    false
+                }
                 // The seal is still there: its own states say what happened.
                 !closed -> {
                     held.value = null
@@ -131,10 +175,10 @@ class ProfileChanges @Inject constructor(
                 }
                 outcome == ProfileChangeOutcome.Taken -> {
                     held.value = null
-                    stillOwners
+                    true
                 }
                 else -> {
-                    held.value = Held(owner, ProfileChangeLine.Failed { retry(act) })
+                    held.value = Held(owner, ProfileChangeLine.Failed { retry(owner, act) })
                     false
                 }
             }
@@ -142,8 +186,15 @@ class ProfileChanges @Inject constructor(
         if (land) _landed.tryEmit(Unit)
     }
 
-    private fun retry(act: suspend () -> ProfileChangeOutcome) {
-        scope.launch { start(fromHead = true, act).await() }
+    /**
+     * The head's Retry: the same change, for the same account. A Retry pressed
+     * once another account is active — a composition can hold the lambda past
+     * the switch — does nothing at all.
+     */
+    private fun retry(owner: String?, act: suspend (StillPressing) -> ProfileChangeOutcome) {
+        scope.launch {
+            if (Owner(owner).holds()) start(fromHead = true, owner, act).await()
+        }
     }
 
     /** The seal closed while its change signs: the head takes the answer. */

@@ -313,6 +313,8 @@ class ProfileEditViewModel @Inject constructor(
                     ProfileChangeOutcome.Offline -> it.copy(signing = false, fault = ProfileSealFault.Offline)
                     ProfileChangeOutcome.WriteRule -> it.copy(signing = false, fault = ProfileSealFault.WriteRule)
                     ProfileChangeOutcome.Bug -> it.copy(signing = false, fault = ProfileSealFault.Bug)
+                    // Another account is active: nothing was prepared or signed for it.
+                    ProfileChangeOutcome.Foreign -> it.copy(signing = false)
                 }
             }
         }
@@ -356,7 +358,7 @@ class ProfileEditViewModel @Inject constructor(
      * this ViewModel, because it may outlive it and is what the head's Retry
      * signs again.
      */
-    private fun signingOf(s: ProfileEditUiState): suspend () -> ProfileChangeOutcome {
+    private fun signingOf(s: ProfileEditUiState): suspend (StillPressing) -> ProfileChangeOutcome {
         val sent = SentProfile(
             displayName = s.displayName.trim(),
             bio = s.bio.ifBlank { null },
@@ -370,7 +372,8 @@ class ProfileEditViewModel @Inject constructor(
         val repository = profiles
         val writes = signer
         val head = signedProfile
-        return act@{
+        return act@{ pressing ->
+            if (!pressing.holds()) return@act ProfileChangeOutcome.Foreign
             val prepared = when (
                 val outcome = repository.prepareProfileUpdate(
                     displayName = sent.displayName,
@@ -387,6 +390,9 @@ class ProfileEditViewModel @Inject constructor(
             // to the fields this form sent and the avatar this device uploaded
             // (PayloadExpectation.kt).
             val profile = profileExpectation(profileId, sent, ledger)
+            // The account may have changed while the prepare ran: never sign it
+            // for another (the device would refuse it anyway, IntentCheck.kt).
+            if (!pressing.holds()) return@act ProfileChangeOutcome.Foreign
             val signing = head.begin()
             val results = writes.sign(prepared, Expectation(listOf(profileUpdate(profile))))
             if (results.all { it is WriteResult.Done }) {

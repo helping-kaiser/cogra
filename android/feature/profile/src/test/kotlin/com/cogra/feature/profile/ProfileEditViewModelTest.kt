@@ -671,4 +671,77 @@ class ProfileEditViewModelTest {
             .isEqualTo("A new display name and website")
         assertThat(profileChangeSummary(emptyList(), removed = false)).isEqualTo(NOTHING_CHANGED)
     }
+
+    // -- THE ACCOUNT BOUNDARY: an act prepares and signs only for the account that pressed --
+
+    private fun switchTo(account: String?) {
+        session.tokens.value = account?.let { AuthTokens("a2", "r2", it) }
+    }
+
+    @Test
+    fun aSwitchBeforeThePrepareAnswersSignsNothingForTheOtherAccount() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBack()
+
+        switchTo("account-b")
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The prepare answered, the signing never ran: nothing relays.
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+        assertThat(sealer.staged.values.map { it.state.name }).doesNotContain("RELAYING")
+        assertThat(signedProfile.laid.value).isNull()
+        // Nothing is drawn under B's head, and nothing comes back for A.
+        assertThat(line()).isNull()
+        switchTo(TEST_PROFILE_ID)
+        assertThat(line()).isNull()
+    }
+
+    @Test
+    fun aPressWithAnotherAccountActiveNeverPrepares() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSubmit()
+        switchTo(null)
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+        assertThat(vm.state.value.signing).isFalse()
+    }
+
+    @Test
+    fun aRetryHeldPastASwitchDoesNothing() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBack()
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        val failed = line() as ProfileChangeLine.Failed
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+
+        // The line goes at the switch; its Retry, held by a composition, is pressed under B.
+        switchTo("account-b")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isNull()
+        profiles.prepareGate = null
+        profiles.prepareOutcome = null
+        failed.retry()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+        assertThat(signedProfile.laid.value).isNull()
+
+        // Back on A, the dropped line stays dropped.
+        switchTo(TEST_PROFILE_ID)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isNull()
+    }
 }
