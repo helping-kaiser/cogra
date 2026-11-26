@@ -390,9 +390,8 @@ private fun ProfileEditUiState.answered(outcome: ProfileChangeOutcome): ProfileE
 
 /**
  * One signing of the change [s] holds: prepare, sign, and — taken — lay it over
- * the head (ProfileEditSeal.md:45). Top-level, so it closes over values only,
- * never the ViewModel: it may outlive it, and it is what the head's Retry signs
- * again.
+ * the head (ProfileEditSeal.md:45). It holds values only, never the ViewModel:
+ * it may outlive it, and it is what the head's Retry signs again.
  */
 private fun signingOf(
     s: ProfileEditUiState,
@@ -408,10 +407,24 @@ private fun signingOf(
     )
     val avatar = s.avatar as? ProfileImageState.Uploaded
     val ledger = avatar?.known?.let { mapOf(avatar.mediaId to it) }.orEmpty()
-    val fields = sent.signedFields(s.avatar)
-    val profileId = s.profileId
-    return act@{ pressing ->
-        if (!pressing.holds()) return@act ProfileChangeOutcome.Foreign
+    val change = ProfileChangeSigning(s.profileId, sent, ledger, sent.signedFields(s.avatar))
+    return { pressing -> change.sign(pressing, repository, writes, head) }
+}
+
+/** What one profile change signs: the fields it sends, the media it names, and what the head wears once taken. */
+private class ProfileChangeSigning(
+    val profileId: String,
+    val sent: SentProfile,
+    val ledger: Map<String, KnownMedia>,
+    val fields: SignedProfileFields,
+) {
+    suspend fun sign(
+        pressing: StillPressing,
+        repository: ProfileRepository,
+        writes: WriteSigner,
+        head: SignedProfile,
+    ): ProfileChangeOutcome {
+        if (!pressing.holds()) return ProfileChangeOutcome.Foreign
         val prepared = when (
             val outcome = repository.prepareProfileUpdate(
                 displayName = sent.displayName,
@@ -421,8 +434,8 @@ private fun signingOf(
             )
         ) {
             is Outcome.Success -> outcome.value
-            is Outcome.Refused -> return@act refusalOf(outcome.errors)
-            is Outcome.Failed -> return@act ProfileChangeOutcome.Offline
+            is Outcome.Refused -> return refusalOf(outcome.errors)
+            is Outcome.Failed -> return ProfileChangeOutcome.Offline
         }
         // One profile update on this device's own profile, its payload held
         // to the fields this form sent and the avatar this device uploaded
@@ -430,17 +443,14 @@ private fun signingOf(
         val profile = profileExpectation(profileId, sent, ledger)
         // The account may have changed while the prepare ran: never sign it
         // for another (the device would refuse it anyway, IntentCheck.kt).
-        if (!pressing.holds()) return@act ProfileChangeOutcome.Foreign
+        if (!pressing.holds()) return ProfileChangeOutcome.Foreign
         val signing = head.begin()
         val results = writes.sign(prepared, Expectation(listOf(profileUpdate(profile))))
-        if (results.all { it is WriteResult.Done }) {
-            // Taken: the profile shows the change from the return's first
-            // frame (ProfileEditSeal.md:45) — exactly the fields it set.
-            head.lay(signing, profileId, fields)
-            ProfileChangeOutcome.Taken
-        } else {
-            outcomeOfUntaken(results)
-        }
+        if (!results.all { it is WriteResult.Done }) return outcomeOfUntaken(results)
+        // Taken: the profile shows the change from the return's first frame
+        // (ProfileEditSeal.md:45) — exactly the fields it set.
+        head.lay(signing, profileId, fields)
+        return ProfileChangeOutcome.Taken
     }
 }
 
