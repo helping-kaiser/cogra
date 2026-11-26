@@ -63,6 +63,8 @@ fun StatusBannersRoute(
     snackbarHostState: SnackbarHostState,
     /** The screen the banners ride: the application card says it in that screen's words. */
     surface: ApplicationSurface = ApplicationSurface.FEED,
+    /** The security notice's `Change password`: the credential screen (FeedSecurityNotice.md). */
+    onChangePassword: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -101,6 +103,7 @@ fun StatusBannersRoute(
             },
             onPutAway = viewModel::onPutCardAway,
         ),
+        securityNotice = { SecurityNoticeCardRoute(onChangePassword = onChangePassword) },
     )
 }
 
@@ -197,9 +200,9 @@ fun KeyRestoreBanner(state: HomeUiState, onRestoreActor: () -> Unit, node: DataN
 }
 
 /**
- * The banner stack. Ambient by design: nothing renders while the
- * account state loads, and a settled member with nothing pending
- * contributes no UI at all.
+ * The banner stack. Ambient by design: nothing but the security notice
+ * renders while the account state loads, and a settled member with
+ * nothing pending contributes no UI at all.
  */
 @Composable
 fun StatusBanners(
@@ -211,13 +214,20 @@ fun StatusBanners(
     application: ApplicationCardActions = ApplicationCardActions(),
     /** `Retry` on the key that did not attach (ApplicantFeed.md:39). */
     onRetryAttach: () -> Unit = {},
+    /**
+     * The security notice, the stack's first row: the top of the column,
+     * above an applicant's cards too (FeedSecurityNotice.md:3, :5). It owes
+     * nothing to the account state, so it stands while that loads.
+     */
+    securityNotice: @Composable () -> Unit = {},
 ) {
-    if (state.loading) return
     val layout = StackLayout.of(application.surface)
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(layout.gap),
     ) {
+        securityNotice()
+        if (state.loading) return@Column
         if (state.applicant) {
             ApplicantStatus(
                 state = state,
@@ -475,7 +485,7 @@ private fun RestoreCard(onRestoreActor: () -> Unit, node: DataNode?) {
  * stand). [fallbackTag] names the card where no registered [node] does.
  */
 @Composable
-private fun TaskCard(
+internal fun TaskCard(
     title: String,
     body: String?,
     node: DataNode?,
