@@ -3167,25 +3167,15 @@ async fn a_comment_edit_left_pending_by_an_interrupted_pass_lands_on_the_next(po
         attachments: vec![],
         sensitive: Default::default(),
     };
-    let first = content::prepare_comment_edit(
-        &rig.pool,
-        &rig.boundary,
-        STAGING,
-        alice,
-        edit("Stranded"),
-    )
-    .await
-    .expect("prepares the first edit");
+    let first =
+        content::prepare_comment_edit(&rig.pool, &rig.boundary, STAGING, alice, edit("Stranded"))
+            .await
+            .expect("prepares the first edit");
     rig.land_interrupted(&first, &alice_key).await;
-    let later = content::prepare_comment_edit(
-        &rig.pool,
-        &rig.boundary,
-        STAGING,
-        alice,
-        edit("Later"),
-    )
-    .await
-    .expect("the landed edit no longer holds the chain");
+    let later =
+        content::prepare_comment_edit(&rig.pool, &rig.boundary, STAGING, alice, edit("Later"))
+            .await
+            .expect("the landed edit no longer holds the chain");
     rig.land(&later, &alice_key).await;
 
     let row = content_store::comment(&rig.pool, comment.node)
