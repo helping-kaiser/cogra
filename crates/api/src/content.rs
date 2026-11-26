@@ -19,7 +19,7 @@ use postgres_store::content::LandingOrder;
 use postgres_store::{PgPool, content as content_store, mirror, staged};
 use uuid::Uuid;
 
-use crate::ingest::PromotionFailure;
+use crate::ingest::{Landing, PromotionFailure, to_retry};
 use crate::l1::L1Boundary;
 use crate::media::{
     self, AttachmentDraft, GalleryError, GalleryKind, GalleryPlanError, PlannedGallery,
@@ -1494,30 +1494,61 @@ async fn comment_parent(
 /// Confirm-side promotion (architecture.md "The write path" step 5):
 /// for every landed content record, move the payload into permanent
 /// carriage and drop the display rows' pending mark. A failure leaves
-/// the record un-promoted — the mirror governs, and a later rebuild can
-/// re-run promotion — and is returned rather than swallowed, so the
-/// ingestion pass reports what did not follow.
+/// the record un-promoted — the mirror governs, and the next pass re-runs
+/// the promotion ([`land_stranded`]) — and is returned rather than
+/// swallowed, so the ingestion pass reports what did not follow.
 pub async fn land_promoted(
     pool: &PgPool,
     promoted: &[staged::PromotedWrite],
 ) -> Vec<PromotionFailure> {
     let mut failures = Vec::new();
     for write in promoted {
-        let family = match common::l1::census::Family::parse(&write.family) {
-            Some(Family::Publish) => ContentFamily::Post,
-            Some(Family::Review) => ContentFamily::Comment,
-            _ => continue,
+        let Some(family) = content_family(write) else {
+            continue;
         };
-        if let Err(e) = land_one(pool, write, family).await {
-            failures.push(PromotionFailure {
-                stage: "content",
-                staged: write.id,
-                act_id: write.act_id.clone(),
-                error: e.to_string(),
-            });
+        if let Err(e) = land_one(pool, write, family, Landing::Confirm).await {
+            failures.push(PromotionFailure::of("content", write, e));
         }
     }
     failures
+}
+
+/// Re-runs the promotion of every landed content write whose display row
+/// is still pending — a new post or comment, or an edit, that an earlier
+/// pass marked landed and never promoted, because the promotion failed or
+/// the pass ended first (`staged::landed_with_pending_content`). Promotion
+/// on confirm drops the pending mark (data-model.md "Staged writes"); a
+/// row left pending would instead sit in the pending band of every
+/// listing, or, for an edit, outrank every later landed version, since the
+/// reads put pending first — and nothing else ever selects it again.
+///
+/// `promoted` is this pass's own confirmations, left out
+/// (`ingest::to_retry`). A failure here rides the outcome like any
+/// promotion's and is retried by the next pass.
+pub async fn land_stranded(
+    pool: &PgPool,
+    promoted: &[staged::PromotedWrite],
+) -> Result<Vec<PromotionFailure>, ContentError> {
+    let stranded = staged::landed_with_pending_content(pool).await?;
+    let mut failures = Vec::new();
+    for write in to_retry(&stranded, promoted) {
+        let Some(family) = content_family(write) else {
+            continue;
+        };
+        if let Err(e) = land_one(pool, write, family, Landing::Retry).await {
+            failures.push(PromotionFailure::of("content", write, e));
+        }
+    }
+    Ok(failures)
+}
+
+/// The content family a landed write promotes as, if it is content.
+fn content_family(write: &staged::PromotedWrite) -> Option<ContentFamily> {
+    match Family::parse(&write.family) {
+        Some(Family::Publish) => Some(ContentFamily::Post),
+        Some(Family::Review) => Some(ContentFamily::Comment),
+        _ => None,
+    }
 }
 
 /// Promotes one landed content record into carriage and display rows.
@@ -1535,7 +1566,9 @@ pub async fn land_promoted(
 /// writes the causal key onto them, and the `land_*` guard below is what
 /// tries that first. An insert means a record landed without a pending
 /// row of its own — a mirror rebuild, or a write staged before pending
-/// rows existed.
+/// rows existed. A retry ([`Landing::Retry`]) never takes one: it was
+/// chosen for a pending row it still owned, so finding none means another
+/// pass promoted it, and appending would only duplicate that.
 ///
 /// The authoring instant, like `sealed`, is set by the pre-sign leg, so a
 /// landed write missing it is the same internal fault its sibling is:
@@ -1557,6 +1590,7 @@ async fn land_one(
     pool: &PgPool,
     write: &staged::PromotedWrite,
     family: ContentFamily,
+    landing_by: Landing,
 ) -> Result<(), ContentError> {
     let staged_row = match staged::load_promotable(pool, write.id).await? {
         staged::Promotable::Full(row) => row
@@ -1641,7 +1675,7 @@ async fn land_one(
             }
         }
     };
-    if let Some(shape) = shape {
+    if let Some(shape) = shape.filter(|_| landing_by == Landing::Confirm) {
         write_display_rows(
             &mut tx,
             pool,
