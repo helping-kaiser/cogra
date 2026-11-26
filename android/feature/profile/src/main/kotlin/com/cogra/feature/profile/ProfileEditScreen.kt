@@ -97,7 +97,7 @@ fun ProfileEditRoute(
     if (state.stage == ProfileEditStage.Seal) {
         ProfileEditSealStage(
             state = state,
-            actions = EditSealActions(
+            actions = ProfileSealActions(
                 onSign = viewModel.seal::onSign,
                 onBack = back,
                 onLeave = {
