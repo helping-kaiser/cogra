@@ -12,7 +12,10 @@ this document keeps: **closure** binds every epoch, **oracle** binds
 only under a case the epoch package declares, **courtesy** binds only
 a realization that claims that standard. An item marked *open* is
 either an [open-questions.md](../open-questions.md) entry or a
-question asked of the L1 team (2026-11-23); §5 lists them all.
+decision the network's deployment has not made. The L1 team answered
+CoGra's questions on 2026-11-23; where an answer is the L1 author's
+reading rather than the specification's text, this document says so.
+§5 lists every open item.
 
 ---
 
@@ -144,9 +147,14 @@ identifier (``itm:graph:act-authentication-requirements-signature-verification``
 [§8.2](../primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)).
 No closure check relates a key to the Actor: with no author-authority
 case bound, an act is eligible whichever keys signed it, and its debit,
-standing, title and settlement follow the recorded author. Deciding
-which keys may speak for an Actor is the deployment's concern
-(``post:graph:act-authentication-requirements``, closure). A
+standing, title and settlement follow the recorded author
+(``post:graph:act-authentication-requirements``, closure). Deciding
+which keys may speak for an Actor is the deployment's concern and
+imposes no closure condition
+(``rem:graph:authentication-realization-out-of-scope``): a host may
+refuse to seal a proposal under the deployment's own key rule without
+declaring a case, but without a case no recorded act is rejected on
+key-authority grounds. A
 deployment may instead declare an author-authority case naming a
 second party, its rules edition and a projection, with proof objects
 per act (``def:deployment:declared-author-authority-case``, oracle,
@@ -180,9 +188,10 @@ author component of every act identifier CoGra stores.
 **At the swap.**
 
 - *Server.* Where the key ↔ address rule lives becomes explicit: kept
-  as CoGra's admission rule at the relay, declared as a case, or
-  dropped (*open*). If the network's address is not a function of the
-  Ed25519 key — an address on the realization, for instance — then
+  as an admission rule at the relay or the host, which needs no case,
+  declared as a case, or dropped (*open*). If the network's address
+  is not a function of the Ed25519 key — an address on the
+  realization, for instance — then
   `address_of`, the ceremony's check, the uniqueness pair and every
   identifier carrying an address change together, and the accounts
   and device keys CoGra holds need a migration (*open*).
@@ -194,11 +203,16 @@ author component of every act identifier CoGra stores.
 
 **Open.** Where the key ↔ address rule lives, what the network's
 address is, and how existing accounts move: [Q68](../open-questions.md#q68--key-authority-and-the-actor-address-at-the-swap).
-Asked of the L1 team (2026-11-23): whether the closure alone accepts
-an act signed by any well-formed key; whether a host may keep refusing
-at sealing under the deployment's own rule without declaring a case;
-whether a deployment can be its own second party; and which case and
-address format the network will declare. Signature scheme and key
+The L1 team confirmed (2026-11-23) that the closure alone accepts an
+act signed by any well-formed key and that a host may refuse at
+sealing without a case ("Layer 1 requires" above). The L1
+author reads that a deployment may be its own second party, its
+key-derivation rule needing no outside data; any declared case still
+pins a proof object for every act
+(``post:deployment:pinned-author-authority-proof-objects``). The
+network has no deployment of record yet: which case it declares is
+undecided, and what an Actor's address is on it is unanswered.
+Signature scheme and key
 rotation: [Q30](../open-questions.md#q30--l1-key-model-signature-scheme-and-actor-key-rotation).
 
 ### 3.2 The handshake the clients speak
@@ -231,7 +245,12 @@ standard's structure and CoGra's own bytes:
   arrive with the real substrate" (`crypto.rs:22-23`).
 
 CoGra claims no courtesy handshake edition and encodes no publication
-intent.
+intent. Under a courtesy edition, a body without its vocabulary
+establishes no intent until its controller sends an explicit
+authenticated intent message, or a vendor adapter interprets it under
+an explicit edition-specific interpretation and controller
+authorization, without rewriting the historical signature
+(``def:graph:requested-publication-intent``).
 
 **At the swap.** A new body edition — an extension slot, other tags,
 another encoding or scheme — touches, in one change:
@@ -253,13 +272,21 @@ the new one; writes in flight at the swap are re-prepared (§3.9).
 
 **Open.** Whether CoGra claims the courtesy handshake standard and its
 intent vocabulary: [Q70](../open-questions.md#q70--the-courtesy-handshake-standard-and-its-request-intent).
-Asked of the L1 team (2026-11-23): whether the network's host claims
-the courtesy standard and accepts a body with no extension; whether
-absence is a missing extension or an empty one; whether, with CoGra's
-API carrying the content pair, the intent is addressed to the API
-alone; and what a declaration of not adopting the handshake is.
-Second-device approval and envelope verification may change with the
-edition: [Q33](../open-questions.md#q33--cross-device-handshake-continuation),
+Whether the network's host claims the courtesy standard is undecided
+(2026-11-23). A body with no extension is a valid act: the body
+includes any opaque signed extension bytes, and absence of a value
+asks nothing (``def:graph:proposal-pre-commitment``,
+``def:graph:requested-publication-intent``). The text gives no byte
+form for absence; the L1 team places it in the courtesy edition's
+serialization. Under the standard the initial intent addresses each
+party that receives a projection's opening with the proposal: CoGra's
+API for the content projection, the host for the dependency
+projection (``def:graph:requested-publication-intent``); which value
+an author signs for the dependency projection is unanswered. The text
+prescribes no form or place for a statement that a realization claims
+no handshake edition. Second-device approval and envelope
+verification may change with the edition:
+[Q33](../open-questions.md#q33--cross-device-handshake-continuation),
 [Q54](../open-questions.md#q54--semantic-verification-of-the-payload-envelope-on-clients).
 
 ### 3.3 The published record and the epoch package
@@ -294,6 +321,7 @@ The host publishes the seven parts of ``post:network:host-contract``
   fields beyond the legs, no pre-commitment, no signature, no key, no
   seal, no dependency commitment and no edition. The stand-in stores
   all of them in `l1_acts` (`seal.rs:172-201`) and publishes none.
+  The replay floor asks for them ("Layer 1 requires" above).
 - `EpochClosure` carries the closure cause, the boundary triple, the
   dependent-set partition, the final ledger, θ charged, the wall step
   and the marker policy (`handshake.rs:486-501`). It binds no
@@ -325,13 +353,22 @@ The host publishes the seven parts of ``post:network:host-contract``
 [Q64](../open-questions.md#q64--whether-ingestion-checks-that-the-carried-pair-opens-the-witness)).
 Whether the record must carry the two pre-digests so the
 pre-signature's covered bytes recompute from it:
-[Q69](../open-questions.md#q69--what-the-published-record-carries-for-the-proposal-signature),
-also asked of the L1 team (2026-11-23) together with whether one key
-for both signatures is a valid map. Asked of the L1 team
-(2026-11-23): four edges of the declaration-end rule — whether a
-withdrawal recurs, whether a successor keeps the case identity,
-whether a withdrawal is authenticated and fixed before the epoch, and
-whether it is itself a declaration in force.
+[Q69](../open-questions.md#q69--what-the-published-record-carries-for-the-proposal-signature).
+The envelope's field list does not name them
+(``def:graph:act-envelope``). The L1 author reads (2026-11-23) that
+the pre-commitment alone is the public input the proposal signature's
+check needs, and that the seal and the approval witness carry the
+binding the floor asks for. The floor asks that each signature verify
+"over bytes that name the stated author and act identifier"
+(``def:deployment:published-epoch-replay-floor``); for the proposal
+signature a reader cannot check that without the two pre-digests. One
+key for both signatures is a valid map: no text requires the two keys
+to differ. The four edges of the declaration-end rule, as the L1
+author reads them (2026-11-23): a withdrawal appears once; a successor
+keeps the case identity and advances the edition, the edge the L1
+author holds least firmly; a withdrawal is bound package content under
+the package's authentication; and a withdrawal is not itself a
+declaration in force (``post:epoch:final-edge-set``).
 
 ### 3.4 Content custody and removal
 
@@ -358,7 +395,9 @@ host never receives the pair
 Ingestion promotes the pair and salt into `act_payloads`. The staged
 write GC keeps custody of a sealed, approved write's pair, because
 the host can still order it later
-([data-model.md "Staged writes"](data-model.md#staged-writes)).
+([data-model.md "Staged writes"](data-model.md#staged-writes)); no
+moment bounds that ordering
+([Q67](../open-questions.md#q67--how-long-the-gc-keeps-the-row-of-an-act-that-may-still-be-ordered)).
 Removal is a request in the author's authenticated session or an
 engine's decision (account deletion, moderation), carried out as a
 reduction of CoGra's carriage, with an archive unit and a visible mark
@@ -373,26 +412,46 @@ rule.
   the redaction's last step with it. Whatever the network host keeps
   of its own blinding values and of the dependency opening is the
   host's holding, not CoGra's.
-- *Web and Android.* No change, unless removal becomes a signed forget
-  request (Q70), which both clients would sign.
+- *Web and Android.* No change while a forget request is made in the
+  author's session: the courtesy standard accepts a signature or
+  equivalent attributable authentication (Q70), and that CoGra's
+  session check is enough is the L1 author's reading ("Open" below).
+  The receipt the standard asks for is the server's.
 
 **Open.** Whether removal is expressed in the courtesy vocabulary, and
 whether CoGra adopts the courtesy rendering default (absent, authored
 emptiness, unavailable, unknown) or documents its own: both under
 [Q70](../open-questions.md#q70--the-courtesy-handshake-standard-and-its-request-intent).
-Asked of the L1 team (2026-11-23): whether an approval can lapse, so
-that content kept for an approved, never-ordered act can end; how long
-dependency material may be held; whether a later request must be
-checkable by a third party; and whether a removal on a legal order is
-a holder ceasing to hold with its own stated reason. A receipt for
+The L1 team confirmed (2026-11-23) that an approval does not lapse and
+no moment bounds the ordering of an approved act; an act ordered after
+its content pair is gone is valid (``def:graph:verified-act``). How
+long CoGra keeps that content:
+[Q67](../open-questions.md#q67--how-long-the-gc-keeps-the-row-of-an-act-that-may-still-be-ordered).
+No text lets an author withdraw an approval; a forget ends carriage,
+not the approval. Holding is a fact, not an undertaking
+(``def:graph:holder``), but a recipient that cannot complete
+validation while honoring immediate deletion declines rather than
+issue a false deletion receipt
+(``def:graph:requested-publication-intent``): a host that keeps the
+dependency opening for the act's life declines a forget for it. A
+later request is signed or uses equivalent attributable
+authentication, and the recipient verifies controller authority
+(``def:graph:requested-publication-intent``); that the recipient's
+own check of an authenticated session is enough is the L1 author's
+reading. A removal on a legal order is a holder ceasing to hold, which
+wrongs no one (``def:graph:holder``); no text governs a custodian's
+stated reason. A receipt for
 carriage: [Q62](../open-questions.md#q62--an-authenticated-carriage-receipt).
 An act CoGra does not carry:
 [Q63](../open-questions.md#q63--the-payload-mark-of-an-act-cogra-does-not-carry).
 
 ### 3.5 Issuance
 
-**Layer 1 requires.** Presenting a rejected set's verdict to the party
-it measures is the courtesy issuance standard
+**Layer 1 requires.** Issuance is a courtesy standard: where a
+realization claims it, issuance presents existing
+computed-and-included comparison data whole to its rightful holder
+and promises neither a computation nor a delivery hop; an adopter may
+present a rejected set's comparison privately to the party measured
 (``post:deployment:verdict-issuance``,
 [§13.2](../primitive/layer1-interface.md#132-replay-verification-and-verdict-certificates)).
 Under the closure a host owes no one the verdict behind a rejection or
@@ -409,10 +468,12 @@ a read for them and the clients a surface; if it does not, a deferral
 is visible to CoGra only as an act that does not land, and the
 staged-write GC is what ends the wait.
 
-**Open.** [Q66](../open-questions.md#q66--issuing-a-deferrals-verdict-to-its-author);
-asked of the L1 team (2026-11-23): whether the network's host claims
-the issuance standard and by which channel an author's application
-would receive a verdict. Whether a stamp-wall refusal reads apart from
+**Open.** [Q66](../open-questions.md#q66--issuing-a-deferrals-verdict-to-its-author).
+A wait on an unsatisfied dependency is not a computed comparison, so
+the standard presents nothing for it. Through which channel an
+application would receive a verdict is unanswered, and whether the
+network's host claims the standard is undecided (2026-11-23). Whether
+a stamp-wall refusal reads apart from
 solvency: [Q58](../open-questions.md#q58--the-write-rules-second-gate-on-the-surface).
 
 ### 3.6 Money
@@ -597,6 +658,8 @@ response it publishes:
 [Q61](../open-questions.md#q61--the-deployments-marker-policy-and-finality-breach-response);
 whether it declares an author-authority case:
 [Q68](../open-questions.md#q68--key-authority-and-the-actor-address-at-the-swap).
+The network has no deployment of record yet; the L1 team will write
+when its case has a text (2026-11-23).
 
 ### 3.11 Batches
 
@@ -625,9 +688,14 @@ Nothing here builds Layer 1 into the stand-in.
 
 - [ ] Answer the CoGra-side questions: Q68, Q69, Q70, Q71, Q72 and the
       swap-time Q56, Q58, Q61.
-- [ ] Collect the L1 team's answers (2026-11-23) and fold them into
-      [layer1-interface.md](../primitive/layer1-interface.md) and this
-      document.
+- [x] Collect the L1 team's answers (2026-11-23) and fold them into
+      this document and [open-questions.md](../open-questions.md).
+- [ ] Register the interface document's anchor set and hash with the
+      L1 team.
+- [ ] The L1 team announced v0.37.0, a release that moves and remints
+      labels on a published map; re-derive
+      [layer1-interface.md](../primitive/layer1-interface.md) against
+      it when the tag arrives.
 - [ ] Make the GraphQL schema and the bootstrap generic over
       `L1Boundary`, so the swap replaces one type at the composition
       root (§2.2).
@@ -677,16 +745,17 @@ Nothing here builds Layer 1 into the stand-in.
 
 | Item | Blocks | Tracked |
 |---|---|---|
-| Where the key ↔ address rule lives; the network's address; how accounts and device keys move | §3.1, §3.9, §3.10 | [Q68](../open-questions.md#q68--key-authority-and-the-actor-address-at-the-swap); asked of the L1 team (2026-11-23) |
+| Where the key ↔ address rule lives; the network's address; how accounts and device keys move | §3.1, §3.9, §3.10 | [Q68](../open-questions.md#q68--key-authority-and-the-actor-address-at-the-swap); the network's case and address undecided (2026-11-23) |
 | Signature scheme and key rotation | §3.1 | [Q30](../open-questions.md#q30--l1-key-model-signature-scheme-and-actor-key-rotation) |
-| Whether the record carries the two pre-digests; one key for both signatures | §3.3 | [Q69](../open-questions.md#q69--what-the-published-record-carries-for-the-proposal-signature); asked of the L1 team (2026-11-23) |
+| Whether the record carries the two pre-digests; one key for both signatures | §3.3 | [Q69](../open-questions.md#q69--what-the-published-record-carries-for-the-proposal-signature); answered by the L1 author's reading (2026-11-23) |
 | Whether CoGra claims the courtesy handshake, its request intent, forget-based removal and the rendering default | §3.2, §3.4 | [Q70](../open-questions.md#q70--the-courtesy-handshake-standard-and-its-request-intent) |
-| Whether the network's host claims the courtesy handshake and accepts a body with no extension; absence; addressing; non-adoption | §3.2 | asked of the L1 team (2026-11-23) |
+| Whether the network's host claims the courtesy handshake; which value an author signs for the dependency projection | §3.2 | the network's deployment decision; unanswered (2026-11-23) |
 | What ingestion verifies of a host CoGra does not run | §3.3 | [Q71](../open-questions.md#q71--what-ingestion-verifies-of-a-host-it-does-not-run), [Q64](../open-questions.md#q64--whether-ingestion-checks-that-the-carried-pair-opens-the-witness) |
-| The declaration-end rule's four edges | §3.3 | asked of the L1 team (2026-11-23) |
-| Whether an approval can lapse; how long dependency material may be held; who checks a later request; a removal that is not the author's | §3.4 | asked of the L1 team (2026-11-23) |
+| The declaration-end rule's four edges | §3.3 | the L1 author's reading (2026-11-23) |
+| How long the GC keeps an approved, never-ordered act's row and content | §3.4 | [Q67](../open-questions.md#q67--how-long-the-gc-keeps-the-row-of-an-act-that-may-still-be-ordered) |
+| Whether the recipient's check of an authenticated session is enough for a later request | §3.4 | the L1 author's reading (2026-11-23); [Q70](../open-questions.md#q70--the-courtesy-handshake-standard-and-its-request-intent) |
 | A carriage receipt; an act CoGra does not carry | §3.4 | [Q62](../open-questions.md#q62--an-authenticated-carriage-receipt), [Q63](../open-questions.md#q63--the-payload-mark-of-an-act-cogra-does-not-carry) |
-| A deferral's verdict; whether the network's host claims issuance | §3.5 | [Q66](../open-questions.md#q66--issuing-a-deferrals-verdict-to-its-author); asked of the L1 team (2026-11-23) |
+| A deferral's verdict; whether the network's host claims issuance | §3.5 | [Q66](../open-questions.md#q66--issuing-a-deferrals-verdict-to-its-author); the network's claim undecided, the channel unanswered (2026-11-23) |
 | W2a on the surface | §3.5, §3.7 | [Q58](../open-questions.md#q58--the-write-rules-second-gate-on-the-surface) |
 | What the seam exposes of the realization | §3.6 | [Q56](../open-questions.md#q56--swap-time-seam-exposure-of-the-published-interface-quantities) |
 | Who the deployment is; marker policy; breach response | §3.6, §3.8, §3.10 | [Q61](../open-questions.md#q61--the-deployments-marker-policy-and-finality-breach-response) |

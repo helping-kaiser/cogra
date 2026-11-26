@@ -36,7 +36,7 @@ within a phase, order is flexible.
 | 7. At the L1 swap | 8 | **Q56, Q58, Q61, Q68, Q69, Q70, Q71, Q72** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Where the key ↔ address rule lives and what an address is; whether the record carries the pre-digests; whether CoGra claims the courtesy handshake; what ingestion verifies; and what of a stand-in world moves to the network ([l1-swap.md](implementation/l1-swap.md)). Deferred to the swap. |
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 | 9. When a second party writes to Layer 1 | 1 | **Q63** | The payload mark of an act CoGra does not carry — a CoGra actor writing through a third-party Layer 2. It reads unmarked until then. |
-| 10. At the next specification read | 1 | **Q67** | How long the GC keeps the row of an act that may still be ordered — for good, until Layer 1 names when the act can no longer be ordered, or a window of CoGra's own. It stays for good until the read. |
+| 10. At the next specification read | 1 | **Q67** | How long the GC keeps the row of an act that may still be ordered — for good, until Layer 1 names when the act can no longer be ordered, a window of CoGra's own, or until its author ends it. The L1 team confirmed that no such moment exists (2026-11-23). It stays for good until decided. |
 | 11. When the budget, not the reader, sizes a page | 1 | **Q73** | Pricing a mixed row at its dearest kind — CoGra's own complexity calculator in place of the library's, so a mixed list can carry whole cards and the pages of ten return to twenty. Deferred: a mixed list carries its rows light and cards are read by id. |
 | — Parked | 4 | **Q62, Q64, Q65, Q66** | An authenticated carriage receipt beside the seal — none is issued now; whether ingestion checks that the carried pair opens the witness — it checks nothing until a second carrier exists; four races in the seal leg, accepted as known gaps; and how a deferral's verdict reaches its author — asked of the L1 team, nothing built until the specification settles the duty's scope. |
 
@@ -753,6 +753,10 @@ marker production is a liveness dependency of the epoch sequence
 deployment takes is its published policy, not a Layer 1 rule. The
 stand-in has no burn realization behind it
 ([roadmap.md "The stand-in and the swap"](implementation/roadmap.md#the-stand-in-and-the-swap)).
+The network has no deployment of record yet (the L1 team,
+2026-11-23): which author-authority case it declares and whether its
+host claims the courtesy handshake and issuance standards are
+undecided.
 
 ### The question
 
@@ -975,8 +979,8 @@ Q58 (the write rule's second gate on the surface).
 (the reap),
 [architecture.md "The write path"](implementation/architecture.md#the-write-path)
 (step 5)
-**Status:** open (deferred — waits for the read of the next
-specification release; jakob, 2026-11-20)
+**Status:** open (deferred — jakob, 2026-11-20; the L1 team answered
+the specification side 2026-11-23)
 
 ### Context
 
@@ -997,11 +1001,14 @@ documents that only an approved verified act is eligible for host
 ordering
 ([layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake),
 "Approval witness"); it names no moment after which an approved act
-can no longer be ordered.
+can no longer be ordered. The L1 team confirmed that no such moment
+exists (2026-11-23), and the specification treats an act ordered
+after its content pair is gone as valid: a host can seal and order an
+act while declining its carriage (``def:graph:verified-act``).
 
 ### The question
 
-How long does the GC keep such a row? Three options are on the
+How long does the GC keep such a row? Four options are on the
 table:
 
 - **(a)** Keep it for good, as now.
@@ -1010,6 +1017,8 @@ table:
 - **(c)** Remove them after a further window of CoGra's own. An act
   ordered after that window is a published record whose content
   nobody holds, the case the kept row exists to prevent.
+- **(d)** The author ends it, through a kept write shown to its author
+  and a removal or forget.
 
 ### Related
 
@@ -1024,7 +1033,7 @@ key and address 1:1),
 [auth.md "Application"](implementation/auth.md#application-the-applicant-state)
 (the key ceremony)
 **Status:** open (deferred — to the preparation of the real Layer 1
-swap; asked of the L1 team 2026-11-23)
+swap; answered in part by the L1 team 2026-11-23)
 
 ### Context
 
@@ -1048,6 +1057,10 @@ Actor's address is the frame binding into the burn map, permanent for
 the life of the graph and not a signing key
 (``def:comparator:frame-binding``).
 
+The network has no deployment of record yet (the L1 team,
+2026-11-23): which case it declares is undecided, and what an Actor's
+address is on it is unanswered.
+
 ### The question
 
 Where does CoGra's key ↔ address rule live, what is an actor's
@@ -1056,10 +1069,15 @@ address on the network, and what happens to existing accounts?
 - **The rule.**
   - **Deployment convention, no case.** The host or CoGra's relay
     keeps refusing a key that does not give the author; replay does
-    not check it; the package binds the empty case set.
+    not check it; the package binds the empty case set. The text
+    permits a refusal at sealing without a case
+    (``rem:graph:authentication-realization-out-of-scope``).
   - **A declared author-authority case.** The rule becomes replayable
     by third parties, at the cost of a case declaration, proof objects
-    per act and a withdrawal path when the rule changes.
+    per act (``post:deployment:pinned-author-authority-proof-objects``)
+    and a withdrawal path when the rule changes. The L1 author reads
+    that the deployment may be its own second party, its
+    key-derivation rule needing no outside data.
   - **No rule.** The closure alone decides; any well-formed key could
     act for any author, and that author pays.
 - **The address.** A function of the signing key as today, or the
@@ -1086,7 +1104,7 @@ world moves to the network).
 [layer1-interface.md §13.3](primitive/layer1-interface.md#133-the-replay-floor-and-the-declared-cases)
 (the replay floor)
 **Status:** open (deferred — to the preparation of the real Layer 1
-swap; asked of the L1 team 2026-11-23)
+swap; answered by the L1 author's reading 2026-11-23)
 
 ### Context
 
@@ -1108,6 +1126,17 @@ together, bind the two. A reader cannot recompute the pre-commitment
 from the body: the pre-digests are not on the record, and the content
 pre-digest sits one layer under the host's blinding value. The
 stand-in keeps no content pre-digest after sealing.
+
+The envelope's field list does not name the pre-digests
+(``def:graph:act-envelope``). The L1 author reads (2026-11-23) that
+the pre-commitment alone is the public input the proposal signature's
+check needs, and that the seal and the approval witness carry the
+binding the replay floor asks for. The floor's own words ask that each
+signature verify "over bytes that name the stated author and act
+identifier" (``def:deployment:published-epoch-replay-floor``); for the
+proposal signature a reader cannot check that without the two
+pre-digests. One key for both signatures is a valid map: no text
+requires the two keys to differ.
 
 ### The question
 
@@ -1133,7 +1162,8 @@ Q71 (what ingestion verifies).
 ("Courtesy Handshake", "Requested Publication Intent"),
 [data-model.md "Redacting an act"](implementation/data-model.md#redacting-an-act)
 **Status:** open (deferred — to the preparation of the real Layer 1
-swap; asked of the L1 team 2026-11-23)
+swap; whether the network's host claims the standard is undecided,
+the L1 team 2026-11-23)
 
 ### Context
 
@@ -1160,14 +1190,20 @@ Does CoGra claim the courtesy handshake standard at the swap?
 
 - **No.** CoGra realizes the closure properties with its own
   transcript, claims no courtesy edition, and documents its removal
-  and its rendering as its own rules.
+  and its rendering as its own rules. The text prescribes no form or
+  place for the statement that a realization claims no edition.
 - **Yes, with the API as the addressed carrier.** A new body edition
-  with the extension on the server and both clients, receipts, and
-  removal as signed forget requests from the clients; the rendering
+  with the extension on the server and both clients; removal as
+  forget requests, signed or under equivalent attributable
+  authentication, received at a declared authenticated carriage
+  endpoint and each accepted value answered with an authenticated
+  receipt (``def:graph:requested-publication-intent``); the rendering
   default follows.
 - **The transcript, not the intent.** The network's transcript and
-  tags, with no intent vocabulary — if the network's host accepts a
-  body with no extension.
+  tags, with no intent vocabulary. A body with no extension is a valid
+  act; under an intent edition such a body establishes no intent until
+  its controller sends an explicit authenticated intent message
+  (``def:graph:requested-publication-intent``).
 
 ### Related
 
@@ -1203,7 +1239,10 @@ package enters the mirror, and what does it do on a failure?
   anyone can audit it from the public record.
 - **The record checks.** Signatures under their recorded keys, seals,
   commitment formation, the case set — refusing or flagging a package
-  that fails.
+  that fails. Without a declared case, these checks relate no key to
+  the stated Actor (``def:deployment:published-epoch-replay-floor``),
+  so none refuses an act whose key does not give its author's
+  address.
 - **A full replay.** CoGra replays the package, standing included,
   before mirroring it.
 
@@ -1234,6 +1273,13 @@ bound and the governed recency half-life
 ([feed-ranking.md §5.3](primitive/feed-ranking.md#53-recency)). Layer 1
 records are permanent and the network's genesis is its own first
 package. The tests run against the stand-in.
+
+A body the network takes over without an intent vocabulary
+establishes no intent under a courtesy edition until its controller
+sends an explicit authenticated intent message, or a vendor adapter
+interprets it under an explicit edition-specific interpretation and
+controller authorization; an adapter cannot rewrite the historical
+signature (``def:graph:requested-publication-intent``).
 
 ### The question
 
