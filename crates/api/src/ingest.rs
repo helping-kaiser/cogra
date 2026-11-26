@@ -79,7 +79,10 @@ pub struct IngestOutcome {
 /// the same L2 state the live path produced. The entry ceremony's
 /// landing is decided here for every account whose recorded vouch newly
 /// confirmed (`onboarding::land_ready_accounts`), and after the GC its
-/// collected vouches lapse (`onboarding::lapse_dead_vouches`).
+/// collected vouches lapse (`onboarding::lapse_dead_vouches`). A landed
+/// profile update an earlier pass never promoted is promoted here too
+/// (`profile::land_stranded`): its write is already landed, so no epoch
+/// returns it again.
 ///
 /// The admission settlement pass rides last, on every pass whether or
 /// not an epoch arrived (`onboarding::settle_admission_fundings`): a
@@ -111,6 +114,13 @@ pub async fn ingest_pending<B: L1Boundary>(
     let mut failures = crate::onboarding::land_ready_accounts(pool).await;
     failures.extend(crate::content::land_promoted(pool, &outcome.promoted).await);
     failures.extend(crate::profile::land_promoted(pool, &outcome.promoted).await);
+    match crate::profile::land_stranded(pool, &outcome.promoted).await {
+        Ok(stranded) => failures.extend(stranded),
+        Err(e) => tracing::error!(
+            error = %e,
+            "could not read the landed profile updates still pending; the next pass retries"
+        ),
+    }
     for failure in &failures {
         tracing::error!(
             stage = failure.stage,

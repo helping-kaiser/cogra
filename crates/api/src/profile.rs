@@ -226,10 +226,7 @@ pub async fn prepare_profile_update<B: L1Boundary>(
     )
     .await?;
     if staged::has_pending_targeting(pool, viewer, Family::Registration, &prof_string).await? {
-        return Err(ProfileError::BadInput {
-            field: "input",
-            message: "a profile update is already in flight".into(),
-        });
+        return Err(update_in_flight());
     }
     let head = mirror::chain_head(pool, &address, Family::Registration, &prof_string)
         .await?
@@ -259,7 +256,7 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         &[(SigningClass::Edit, 1)],
     )
     .await?;
-    let prepared = prepare::prepare(
+    let prepared = prepare::prepare_chained(
         boundary,
         pool,
         staging.gc_after_epochs,
@@ -279,8 +276,22 @@ pub async fn prepare_profile_update<B: L1Boundary>(
             node: Some(viewer),
         },
     )
-    .await?;
+    .await
+    .map_err(|e| match e {
+        PrepareError::EditInFlight => update_in_flight(),
+        e => e.into(),
+    })?;
     Ok(prepared)
+}
+
+/// The refusal a second profile update meets while the first is in
+/// flight — the same answer from the early guard and from the one on the
+/// staging transaction (`prepare::prepare_chained`).
+fn update_in_flight() -> ProfileError {
+    ProfileError::BadInput {
+        field: "input",
+        message: "a profile update is already in flight".into(),
+    }
 }
 
 /// Pre-commitment materialization of a profile update (substrate.md §6;
@@ -371,7 +382,7 @@ pub async fn land_promoted(
         if write.family != Family::Registration.as_str() {
             continue;
         }
-        if let Err(e) = land_one(pool, write).await {
+        if let Err(e) = land_one(pool, write, Landing::Confirm).await {
             failures.push(PromotionFailure {
                 stage: "profile",
                 staged: write.id,
@@ -381,6 +392,52 @@ pub async fn land_promoted(
         }
     }
     failures
+}
+
+/// Re-runs the promotion of every landed profile update whose version row
+/// is still pending — one an earlier pass marked landed and never
+/// promoted, because the promotion failed or the pass ended first
+/// (`staged::landed_with_pending_profile`). Confirm drops the mark and
+/// stamps the record's coordinates (data-model.md "Actor profiles"); a row
+/// left pending would instead outrank every later landed version, since
+/// the current-profile read puts pending first, and nothing else ever
+/// selects it again.
+///
+/// `promoted` is this pass's own confirmations: [`land_promoted`] has just
+/// run them, and one of them that failed there is reported once, not
+/// twice. A failure here rides the outcome like any promotion's and is
+/// retried by the next pass.
+pub async fn land_stranded(
+    pool: &PgPool,
+    promoted: &[staged::PromotedWrite],
+) -> Result<Vec<PromotionFailure>, ProfileError> {
+    let stranded = staged::landed_with_pending_profile(pool).await?;
+    let mut failures = Vec::new();
+    for write in stranded
+        .iter()
+        .filter(|w| !promoted.iter().any(|p| p.id == w.id))
+    {
+        if let Err(e) = land_one(pool, write, Landing::Retry).await {
+            failures.push(PromotionFailure {
+                stage: "profile",
+                staged: write.id,
+                act_id: write.act_id.clone(),
+                error: e.to_string(),
+            });
+        }
+    }
+    Ok(failures)
+}
+
+/// Which promotion runs a profile landing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Landing {
+    /// The pass that marked the write landed.
+    Confirm,
+    /// A later pass re-running a promotion that never completed
+    /// ([`land_stranded`]). It was chosen for its pending row, so a row
+    /// gone by now was promoted by another pass, and nothing is appended.
+    Retry,
 }
 
 /// Promotes one landed profile update.
@@ -428,7 +485,11 @@ pub async fn land_promoted(
 ///
 /// The update is read under the read/ingest admission
 /// ([`CograProfile::read_payload`]), as content's landing reads its payload.
-async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
+async fn land_one(
+    pool: &PgPool,
+    write: &staged::PromotedWrite,
+    landing_by: Landing,
+) -> Result<(), ProfileError> {
     let staged_row = match staged::load_promotable(pool, write.id).await? {
         staged::Promotable::Full(row) => row
             .into_landing()
@@ -499,7 +560,9 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
             .map_err(|e| ProfileError::Internal(e.to_string()))?;
         return Ok(());
     }
-    if !profile::land_profile_version(&mut tx, write.actor_id, created_at, landing).await? {
+    if !profile::land_profile_version(&mut tx, write.actor_id, created_at, landing).await?
+        && landing_by == Landing::Confirm
+    {
         profile::insert_profile_version(
             &mut tx,
             write.actor_id,

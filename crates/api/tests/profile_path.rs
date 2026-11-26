@@ -328,6 +328,53 @@ async fn a_failed_promotion_rides_the_ingestion_outcome(pool: PgPool) {
     assert_eq!(rig.version_count(actor).await, 0);
 }
 
+/// A pass that marks an update's write `landed` and then stops before its
+/// promotion runs (`ingest::ingest_pending` returning on a later epoch's
+/// error, or the process ending between the two halves) leaves the
+/// version row pending under a write no later pass marks landed again.
+/// Confirm drops the mark and stamps the record's coordinates
+/// (data-model.md "Actor profiles"), so the next pass promotes it — and a
+/// later update that lands then stands above it, instead of the stranded
+/// row outranking every landed version for ever.
+///
+/// A landed update whose promotion an interrupted pass never ran is promoted by the next pass, so a later landed update is not outranked by it.
+/// ´claim:profile:a-stranded-update-is-promoted-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_update_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    let stranded = rig
+        .update(actor, draft(Some("Ada L"), Some("First bio"), None))
+        .await
+        .expect("prepares the first update");
+    rig.sign_and_relay(stranded.id, &key).await;
+    let landed = rig.close_and_mirror_unpromoted().await;
+    assert!(
+        landed.iter().any(|w| w.id == stranded.id),
+        "the interrupted pass marked the write landed"
+    );
+    assert!(current(&rig.pool, actor).await.pending);
+
+    rig.land_update(actor, &key, draft(None, Some("Second bio"), None))
+        .await;
+
+    let shown = current(&rig.pool, actor).await;
+    assert!(
+        !shown.pending,
+        "no version stays pending once every write has landed: {shown:?}"
+    );
+    assert_eq!(shown.bio.as_deref(), Some("Second bio"));
+    assert_eq!(shown.display_name, "Ada L");
+    let still_pending: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM actor_profile_versions WHERE actor_id = $1 AND pending",
+    )
+    .bind(actor)
+    .fetch_one(&rig.pool)
+    .await
+    .expect("counts");
+    assert_eq!(still_pending, 0);
+}
+
 /// The current profile, read the way every viewer's profile read takes it.
 async fn current(pool: &PgPool, actor: Uuid) -> profile_store::ProfileVersion {
     profile_store::current_profile(pool, actor)
@@ -695,6 +742,107 @@ async fn refuses_an_update_without_the_anchoring_registration(pool: PgPool) {
         }
         other => panic!("expected Internal, got {other:?}"),
     }
+}
+
+/// Holds the author's sequence-counter row in a transaction of the
+/// test's own: every prepare's transaction updates that row before it
+/// stages anything, so two prepares started while it is held both stop
+/// after everything they check outside it and before anything they check
+/// inside it — "A checks, B checks, A writes, B writes", stepped by a
+/// lock instead of by timing (the twin of `content_path.rs`'s gate).
+async fn hold_author_counter(
+    pool: &PgPool,
+    address: &str,
+) -> sqlx::Transaction<'static, sqlx::Postgres> {
+    let mut gate = pool.begin().await.expect("gate");
+    sqlx::query("SELECT 1 FROM author_seq_counters WHERE author = $1 FOR UPDATE")
+        .bind(address)
+        .fetch_one(&mut *gate)
+        .await
+        .expect("the author has prepared before, so the row exists");
+    gate
+}
+
+/// Releases the gate once both prepares wait on a lock, read from
+/// PostgreSQL's own view, and fails when the two never meet.
+async fn release_when_both_wait(pool: &PgPool, gate: sqlx::Transaction<'static, sqlx::Postgres>) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    loop {
+        let waiting: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pg_stat_activity
+             WHERE datname = current_database() AND wait_event_type = 'Lock'",
+        )
+        .fetch_one(pool)
+        .await
+        .expect("reads pg_stat_activity");
+        if waiting >= 2 {
+            break;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "the two prepares never both waited at the gate; the race ran serially"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+    gate.rollback().await.expect("releases the gate");
+}
+
+/// Two profile updates prepared at the same moment meet the
+/// serialization one after the other (substrate.md §9; user.md §3): the
+/// second to write supersedes the first, unsigned, exactly as an update
+/// arriving after an unsigned one does, so the two can never both be
+/// signed against the same parent.
+///
+/// Two profile updates prepared at once leave one live and the other superseded, as if the second arrived after the first, so the chain never branches.
+/// ´claim:profile:concurrent-updates-serialize´
+#[sqlx::test(migrations = "../../migrations")]
+async fn two_profile_updates_prepared_at_once_leave_one_live(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("alice").await;
+    let named = |name: &'static str| ProfileUpdateDraft {
+        display_name: Some(name.into()),
+        bio: None,
+        website_url: None,
+        avatar_media_id: None,
+    };
+
+    let gate = hold_author_counter(&rig.pool, &key.address()).await;
+    let (one, two, ()) = tokio::join!(
+        rig.update(actor, named("One")),
+        rig.update(actor, named("Two")),
+        release_when_both_wait(&rig.pool, gate),
+    );
+    let one = one.expect("the first update prepares");
+    let two = two.expect("the second update prepares");
+    let first = staged::load(&rig.pool, one.id).await.expect("loads").state;
+    let second = staged::load(&rig.pool, two.id).await.expect("loads").state;
+    let (live, superseded, name) = match (first, second) {
+        (staged::StagedState::AwaitingPreSign, staged::StagedState::Expired) => {
+            (one.id, two.id, "One")
+        }
+        (staged::StagedState::Expired, staged::StagedState::AwaitingPreSign) => {
+            (two.id, one.id, "Two")
+        }
+        other => panic!("one prepare live and the other superseded, got {other:?}"),
+    };
+    let write = staged::load(&rig.pool, superseded).await.expect("loads");
+    let pre = common::l1::proposal::PreSigned::sign(&key, write.proposal);
+    assert!(
+        matches!(
+            staged::record_pre_signed(&rig.pool, superseded, &PreSignedParts::from(&pre)).await,
+            Err(staged::StagedError::WrongState { actual, .. }) if actual == "expired"
+        ),
+        "a superseded update can no longer be signed"
+    );
+
+    rig.sign_and_relay(live, &key).await;
+    rig.close_and_ingest().await;
+    let current = profile_store::current_profile(&rig.pool, actor)
+        .await
+        .expect("reads")
+        .expect("profile");
+    assert_eq!(current.display_name, name);
+    assert!(!current.pending);
 }
 
 mod pictures {

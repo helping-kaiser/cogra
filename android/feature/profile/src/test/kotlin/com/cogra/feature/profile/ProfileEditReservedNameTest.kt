@@ -84,7 +84,15 @@ class ProfileEditReservedNameTest {
         ThrowingMediaProcessor(),
         WriteSigner(sealer, identity),
         SignedProfile(session, TestScope(dispatcher)),
+        ProfileChanges(session, TestScope(dispatcher)),
+        identity,
     )
+
+    /** Save opens the seal; its commit signs. */
+    private fun ProfileEditViewModel.save() {
+        onSubmit()
+        seal.onSign()
+    }
 
     @Before
     fun setDispatcher() = Dispatchers.setMain(dispatcher)
@@ -98,14 +106,16 @@ class ProfileEditReservedNameTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onDisplayNameChange("CoGra")
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
 
         val s = vm.state.value
         assertThat(s.nameReserved).isTrue()
-        assertThat(s.refused).isFalse()
+        assertThat(s.fault).isNull()
+        // The name's line stands under its field: the edit comes back from the seal.
+        assertThat(s.stage).isEqualTo(ProfileEditStage.Form)
         assertThat(s.displayName).isEqualTo("CoGra")
-        assertThat(s.submitting).isFalse()
+        assertThat(s.signing).isFalse()
         assertThat(s.saved).isFalse()
         assertThat(sealer.staged).isEmpty()
     }
@@ -115,7 +125,7 @@ class ProfileEditReservedNameTest {
         profiles.prepareOutcome = reserved()
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onDisplayNameChange("CoGra Two")
         assertThat(vm.state.value.nameReserved).isTrue()
@@ -127,7 +137,7 @@ class ProfileEditReservedNameTest {
         profiles.prepareOutcome = reserved()
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         profiles.prepareOutcome = Outcome.Success(emptyList())
         vm.onDisplayNameChange("Someone")
@@ -142,7 +152,7 @@ class ProfileEditReservedNameTest {
         profiles.prepareOutcome = reserved()
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.nameReserved).isTrue()
 
@@ -157,25 +167,25 @@ class ProfileEditReservedNameTest {
     }
 
     @Test
-    fun anotherCodeStillShowsTheGenericRefusal() = runTest(dispatcher) {
+    fun anotherCodeReadsAsTheSealsBugNotice() = runTest(dispatcher) {
         profiles.prepareOutcome =
             Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "no fields", listOf("displayName"))))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.refused).isTrue()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Bug)
         assertThat(vm.state.value.nameReserved).isFalse()
     }
 
     @Test
-    fun theReservedCodeOnAnotherFieldStaysGeneric() = runTest(dispatcher) {
+    fun theReservedCodeOnAnotherFieldReadsAsTheBugNotice() = runTest(dispatcher) {
         profiles.prepareOutcome = reserved(field = listOf("bio"))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.refused).isTrue()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Bug)
         assertThat(vm.state.value.nameReserved).isFalse()
     }
 

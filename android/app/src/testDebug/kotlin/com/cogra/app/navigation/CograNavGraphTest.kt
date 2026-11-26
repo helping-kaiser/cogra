@@ -810,8 +810,11 @@ class CograNavGraphTest {
 
         compose.onNodeWithTag("profile_edit_bio").performTextInput("Hello from the hand test.")
         compose.onNodeWithTag("profile_edit_save").performScrollTo().performClick()
+        // Save opens the change's seal; its commit signs (ProfileEditSeal.md).
+        waitForTag("profileEditSeal.foot.sign")
+        compose.onNodeWithTag("profileEditSeal.foot.sign").performScrollTo().performClick()
 
-        // The save pops back to the profile, which re-reads.
+        // The signing pops back to the profile, which re-reads.
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Profile>() == true
         }
@@ -826,6 +829,31 @@ class CograNavGraphTest {
         // surface and would follow the reader onto another tab (HT-8).
         compose.waitUntilAtLeastOneExists(hasTestTag("profile.snackbar"), timeoutMillis = 30_000)
         assertThat(compose.onAllNodesWithTag("shell_snackbar").fetchSemanticsNodes()).isEmpty()
+    }
+
+    // ProfileEditSeal.md:61: without the key on this device the seal's notice
+    // stands in the commit's place, and `Restore the key` opens the restore route.
+    @Test
+    fun theProfileSealWithoutTheKeyOpensRestore() {
+        signIn()
+        identity.seed = null
+        account.profile = member()
+        render()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
+        waitForTag("profile.identity.actionRow.edit")
+        compose.onNodeWithTag("profile.identity.actionRow.edit").performScrollTo().performClick()
+        waitForTag("profile_edit_bio")
+        compose.onNodeWithTag("profile_edit_bio").performTextInput("Hello.")
+        compose.onNodeWithTag("profile_edit_save").performScrollTo().performClick()
+        waitForTag("profileEditSeal.foot.sign")
+        compose.onNodeWithTag("profileEditSeal.foot.sign").performScrollTo().performClick()
+
+        waitForTag("profile_edit_seal_restore")
+        assertThat(profiles.updates).isEmpty()
+        compose.onNodeWithTag("profile_edit_seal_restore").performScrollTo().performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Restore>()).isTrue()
     }
 
     @Test
