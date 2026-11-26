@@ -31,9 +31,10 @@ pub enum IngestError {
 }
 
 /// A confirm-side promotion that did not follow its record. The record
-/// landed and the mirror governs, so ingestion carries on and a later
-/// rebuild can re-run the promotion — but the failure rides the outcome
-/// instead of living only in the log, so callers and tests can see it.
+/// landed and the mirror governs, so ingestion carries on and the next
+/// pass re-runs the promotion of a content write or profile update — but
+/// the failure rides the outcome instead of living only in the log, so
+/// callers and tests can see it.
 #[derive(Debug)]
 pub struct PromotionFailure {
     /// Which promotion flow failed: `onboarding`, `content`, `profile`.
@@ -41,6 +42,46 @@ pub struct PromotionFailure {
     pub staged: uuid::Uuid,
     pub act_id: String,
     pub error: String,
+}
+
+impl PromotionFailure {
+    /// The failure of `stage`'s promotion of `write`.
+    pub(crate) fn of(
+        stage: &'static str,
+        write: &staged::PromotedWrite,
+        error: impl std::fmt::Display,
+    ) -> Self {
+        Self {
+            stage,
+            staged: write.id,
+            act_id: write.act_id.clone(),
+            error: error.to_string(),
+        }
+    }
+}
+
+/// Which promotion runs a landing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Landing {
+    /// The pass that marked the write landed.
+    Confirm,
+    /// A later pass re-running a promotion that never completed — the
+    /// write was chosen for a pending row it still owns, so a row gone by
+    /// now was promoted by another pass, and nothing is appended.
+    Retry,
+}
+
+/// The stranded writes a pass retries: those an earlier pass marked
+/// landed and never promoted, less this pass's own confirmations, which
+/// its promotions have just run — a failure there is reported once, not
+/// twice.
+pub(crate) fn to_retry<'a>(
+    stranded: &'a [staged::PromotedWrite],
+    promoted: &'a [staged::PromotedWrite],
+) -> impl Iterator<Item = &'a staged::PromotedWrite> {
+    stranded
+        .iter()
+        .filter(|w| !promoted.iter().any(|p| p.id == w.id))
 }
 
 impl std::fmt::Display for PromotionFailure {
@@ -80,9 +121,9 @@ pub struct IngestOutcome {
 /// landing is decided here for every account whose recorded vouch newly
 /// confirmed (`onboarding::land_ready_accounts`), and after the GC its
 /// collected vouches lapse (`onboarding::lapse_dead_vouches`). A landed
-/// profile update an earlier pass never promoted is promoted here too
-/// (`profile::land_stranded`): its write is already landed, so no epoch
-/// returns it again.
+/// content write or profile update an earlier pass never promoted is
+/// promoted here too (`content::land_stranded`, `profile::land_stranded`):
+/// its write is already landed, so no epoch returns it again.
 ///
 /// The admission settlement pass rides last, on every pass whether or
 /// not an epoch arrived (`onboarding::settle_admission_fundings`): a
@@ -114,11 +155,20 @@ pub async fn ingest_pending<B: L1Boundary>(
     let mut failures = crate::onboarding::land_ready_accounts(pool).await;
     failures.extend(crate::content::land_promoted(pool, &outcome.promoted).await);
     failures.extend(crate::profile::land_promoted(pool, &outcome.promoted).await);
+    match crate::content::land_stranded(pool, &outcome.promoted).await {
+        Ok(stranded) => failures.extend(stranded),
+        Err(e) => tracing::error!(
+            stage = "content",
+            error = %e,
+            "could not read the landed writes still pending; the next pass retries"
+        ),
+    }
     match crate::profile::land_stranded(pool, &outcome.promoted).await {
         Ok(stranded) => failures.extend(stranded),
         Err(e) => tracing::error!(
+            stage = "profile",
             error = %e,
-            "could not read the landed profile updates still pending; the next pass retries"
+            "could not read the landed writes still pending; the next pass retries"
         ),
     }
     for failure in &failures {

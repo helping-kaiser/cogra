@@ -21,7 +21,7 @@ use common::l1::identifier::{ActId, NodeId};
 use postgres_store::{PgPool, content as content_store, mirror, profile, staged};
 use uuid::Uuid;
 
-use crate::ingest::PromotionFailure;
+use crate::ingest::{Landing, PromotionFailure, to_retry};
 use crate::l1::L1Boundary;
 use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
 use crate::ratelimit::SigningClass;
@@ -370,9 +370,10 @@ pub async fn stage_pending(
 /// payload into permanent carriage and land its version row. The
 /// admission Registration (and the genesis casts) are unchained and
 /// handled by onboarding; their payloads still move into carriage here.
-/// A failure leaves the record un-promoted — the mirror governs, and a
-/// later rebuild can re-run promotion — and is returned rather than
-/// swallowed, so the ingestion pass reports what did not follow.
+/// A failure leaves the record un-promoted — the mirror governs, and the
+/// next pass re-runs the promotion ([`land_stranded`]) — and is returned
+/// rather than swallowed, so the ingestion pass reports what did not
+/// follow.
 pub async fn land_promoted(
     pool: &PgPool,
     promoted: &[staged::PromotedWrite],
@@ -383,12 +384,7 @@ pub async fn land_promoted(
             continue;
         }
         if let Err(e) = land_one(pool, write, Landing::Confirm).await {
-            failures.push(PromotionFailure {
-                stage: "profile",
-                staged: write.id,
-                act_id: write.act_id.clone(),
-                error: e.to_string(),
-            });
+            failures.push(PromotionFailure::of("profile", write, e));
         }
     }
     failures
@@ -403,41 +399,21 @@ pub async fn land_promoted(
 /// the current-profile read puts pending first, and nothing else ever
 /// selects it again.
 ///
-/// `promoted` is this pass's own confirmations: [`land_promoted`] has just
-/// run them, and one of them that failed there is reported once, not
-/// twice. A failure here rides the outcome like any promotion's and is
-/// retried by the next pass.
+/// `promoted` is this pass's own confirmations, left out
+/// (`ingest::to_retry`). A failure here rides the outcome like any
+/// promotion's and is retried by the next pass.
 pub async fn land_stranded(
     pool: &PgPool,
     promoted: &[staged::PromotedWrite],
 ) -> Result<Vec<PromotionFailure>, ProfileError> {
     let stranded = staged::landed_with_pending_profile(pool).await?;
     let mut failures = Vec::new();
-    for write in stranded
-        .iter()
-        .filter(|w| !promoted.iter().any(|p| p.id == w.id))
-    {
+    for write in to_retry(&stranded, promoted) {
         if let Err(e) = land_one(pool, write, Landing::Retry).await {
-            failures.push(PromotionFailure {
-                stage: "profile",
-                staged: write.id,
-                act_id: write.act_id.clone(),
-                error: e.to_string(),
-            });
+            failures.push(PromotionFailure::of("profile", write, e));
         }
     }
     Ok(failures)
-}
-
-/// Which promotion runs a profile landing.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Landing {
-    /// The pass that marked the write landed.
-    Confirm,
-    /// A later pass re-running a promotion that never completed
-    /// ([`land_stranded`]). It was chosen for its pending row, so a row
-    /// gone by now was promoted by another pass, and nothing is appended.
-    Retry,
 }
 
 /// Promotes one landed profile update.
