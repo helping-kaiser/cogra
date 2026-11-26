@@ -81,6 +81,7 @@ import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
 import { STANCE_RANGES } from "@/lib/stance/pad-geometry";
 import { useStanceData } from "@/lib/stance/provider";
 import { announceStanceSigned } from "@/lib/stance/signed-events";
+import { useKeptBatchSigning } from "@/lib/stance/kept-batch";
 import { clearSettling, useSettling } from "@/lib/stance/settling";
 import { useStanceTaught } from "@/lib/stance/stance-coach";
 import type {
@@ -601,6 +602,10 @@ export function StanceControl({
   // `Still settling` until a read that leaves pending records out counts them
   // all — the record is ordered.
   const settling = useSettling(seamTarget);
+  // THE KEPT PICKS' SEAL CLOSED WHILE ITS BATCH SIGNS (KeptPicksSeal.md:59,
+  // :63): each target's row reads `Signing…` under its face until the batch
+  // answers; its failure stands on Settings' row, never here.
+  const keptBatchSigning = useKeptBatchSigning(seamTarget);
 
   const readBundle = useCallback(
     (options: { fresh?: boolean } = {}) => {
@@ -1236,7 +1241,7 @@ export function StanceControl({
   // second hold — and it ends there as a hold's would.
   const rowSigning = inFlight === "row" || (inFlight === "pad" && !considered);
   const rowState: RowLineState | null =
-    rowSigning && slow && confirming === null ? { kind: "signing" } : rowLine;
+    (rowSigning && slow && confirming === null) || keptBatchSigning ? { kind: "signing" } : rowLine;
 
   const inset = variant?.padInset ?? (barBeneath ? PAD_ABOVE_BAR_INSET_PX : PAD_PARK_INSET_PX);
 

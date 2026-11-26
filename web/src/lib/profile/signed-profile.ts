@@ -23,6 +23,7 @@
 //
 // ONLY A CHANGE TAKEN is laid: one still signing, or one that did not go
 // through, leaves the head as it was (ProfileEditSeal.md:75-79, Profile.md:99).
+// A handle Settings changed is laid the same way, once the server took it.
 //
 // THE CHANGE IS THE SIGNING ACCOUNT'S: several accounts share a tab (auth.md
 // "Multi-account device custody"), so it is laid beside the account and the
@@ -41,6 +42,8 @@ export type SignedProfileFields = {
   readonly websiteUrl?: string | null;
   /** The new picture as uploaded, or null where the change removed it. */
   readonly avatar?: { readonly id: string; readonly url: string } | null;
+  /** The handle Settings changed (`layChangedHandle`) — no signed act, laid the same way. */
+  readonly handle?: string;
 };
 
 /** One change as signed: the profile it is for and what it set. */
@@ -98,6 +101,24 @@ export function laySignedProfile(owner: string, change: SignedProfileChange, sig
   });
 }
 
+/**
+ * Settings changed the handle and the server took it: "a changed handle shows
+ * on arrival" (Profile.md:97) like a signed edit, worn from now until a read
+ * asked after it answers. No signing orders it — the handle is a field no
+ * signed change sets — so a change laid earlier keeps its fields and its order.
+ */
+export function layChangedHandle(owner: string, profileId: string, handle: string): void {
+  const earlier = laid !== null && laid.owner === owner && laid.profileId === profileId ? laid : null;
+  generation += 1;
+  publish({
+    owner,
+    profileId,
+    fields: { ...earlier?.fields, handle },
+    signing: earlier?.signing ?? 0,
+    generation,
+  });
+}
+
 /** Marks a read of a profile being asked; hand the answer back to `signedProfileRead`. */
 export function signedProfileAsked(): number {
   return generation;
@@ -146,11 +167,13 @@ export function withSigned<
     readonly bio: { readonly value?: string | null };
     readonly websiteUrl: { readonly value?: string | null };
     readonly avatar?: { readonly id: string; readonly url: string } | null;
+    readonly handle?: string;
   },
 >(profile: P, fields: SignedProfileFields | null): P {
   if (fields === null) return profile;
   return {
     ...profile,
+    ...(fields.handle !== undefined && { handle: fields.handle }),
     ...(fields.displayName !== undefined && {
       displayName: { ...profile.displayName, value: fields.displayName },
     }),

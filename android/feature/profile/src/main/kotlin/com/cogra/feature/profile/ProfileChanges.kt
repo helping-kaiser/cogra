@@ -18,12 +18,13 @@
 // the slot; an earlier one answering late says nothing.
 //
 // THE CHANGE IS THE CHANGING ACCOUNT'S (auth.md "Multi-account device
-// custody"): the line is kept beside the account active at the press and stands
-// only under that account's head, dropped the moment the active account changes.
+// custody"): the line is bound to the account active at the press and stands
+// only under that account's head — hidden while another account is active,
+// standing again under its own, until Retry or the next change (Profile.md:101).
 // The act outlives the screen, so it also never prepares or signs for another
-// account: it asks [StillPressing] before the prepare and before the signing,
-// and a Retry pressed after a switch does nothing (web's "while the tab is
-// still the signing account").
+// account: it asks [StillPressing] before the prepare and before the signing;
+// stopped there, it is the owner's failed line. A Retry pressed under another
+// account does nothing.
 
 package com.cogra.feature.profile
 
@@ -60,6 +61,15 @@ enum class ProfileChangeOutcome {
 
     /** CoGra reserves the display name: the edit's own field line, back on the form. */
     NameReserved,
+
+    /** The signing key is not on this device: nothing was signed (ProfileEditSeal.md:61). */
+    KeyAbsent,
+
+    /**
+     * The new picture never reached CoGra while the press waited on it: the
+     * held press drops and nothing is signed (AvatarSeal.md:21).
+     */
+    UploadFailed,
 
     /**
      * The active account is no longer the one that pressed: the act stopped
@@ -104,19 +114,12 @@ class ProfileChanges @Inject constructor(
     private val held = MutableStateFlow<Held?>(null)
     private val _landed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    init {
-        scope.launch {
-            // A sign-out or a change of account: the last account's line goes,
-            // and its Retry with it — never pressed under another account.
-            tokens.tokens.map { it?.accountId }.collect { account ->
-                synchronized(lock) {
-                    if (held.value?.owner != account) held.value = null
-                }
-            }
-        }
-    }
-
-    /** The line under the active account's head, or null. */
+    /**
+     * The line under the active account's head, or null. The line is BOUND to
+     * the account that pressed, never dropped at a switch: hidden while another
+     * account is active, it stands again under its own head, until Retry or the
+     * next change (Profile.md:101; auth.md "Multi-account device custody").
+     */
     val line: Flow<ProfileChangeLine?> =
         combine(held, tokens.tokens.map { it?.accountId }) { now, account ->
             now?.takeIf { it.owner == account }?.line
@@ -168,9 +171,9 @@ class ProfileChanges @Inject constructor(
             when {
                 // A later change was pressed meanwhile: the slot is that change's.
                 mine != signings -> false
-                // Another account is active: nothing of this change stands for it.
-                outcome == ProfileChangeOutcome.Foreign || !stillOwners -> {
-                    if (held.value?.owner == owner) held.value = null
+                // Pressed with no account: there is no head for it to stand under.
+                owner == null -> {
+                    held.value = null
                     false
                 }
                 // The seal is still there: its own states say what happened.
@@ -178,10 +181,14 @@ class ProfileChanges @Inject constructor(
                     held.value = null
                     false
                 }
+                // Taken: the line goes; the snackbar confirms only to the owner.
                 outcome == ProfileChangeOutcome.Taken -> {
                     held.value = null
-                    true
+                    stillOwners
                 }
+                // Not taken — a fault, or an act the owner guard stopped at a switch
+                // (it signed nothing): the owner's failed line, under the owner's
+                // head only, never the other account's.
                 else -> {
                     held.value = Held(owner, ProfileChangeLine.Failed { retry(owner, act) })
                     false

@@ -47,6 +47,8 @@ fun ProfileEditRoute(
     /** A picked profile picture, handed to the crop. */
     onPicturePicked: (String) -> Unit,
     onBack: () -> Unit,
+    /** The seal's key-absent notice opens the app's restore route (ProfileEditSeal.md:61). */
+    onRestoreKey: () -> Unit = {},
     /** The crop's result on return, or null while there is none. */
     framedPicture: FramedPicture? = null,
     onFramedPictureConsumed: () -> Unit = {},
@@ -95,7 +97,7 @@ fun ProfileEditRoute(
     if (state.stage == ProfileEditStage.Seal) {
         ProfileEditSealStage(
             state = state,
-            actions = EditSealActions(
+            actions = ProfileSealActions(
                 onSign = viewModel.seal::onSign,
                 onBack = back,
                 onLeave = {
@@ -103,6 +105,7 @@ fun ProfileEditRoute(
                     onBack()
                 },
                 onNotNow = viewModel.seal::onNotNow,
+                onRestoreKey = onRestoreKey,
             ),
         )
     } else {

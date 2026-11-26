@@ -85,15 +85,18 @@ export function changePassword(
   );
 }
 
-/** The renamed account's new handle. */
-export async function changeHandle(client: ApolloClient, handle: string): Promise<Outcome<string>> {
+/** The renamed account: its id and its new handle. */
+export async function changeHandle(
+  client: ApolloClient,
+  handle: string,
+): Promise<Outcome<{ readonly id: string; readonly handle: string }>> {
   const outcome = await payloadOutcome(
     () => client.mutate({ mutation: ChangeHandleDocument, variables: { input: { handle } } }),
     (data) => data.changeHandle.userErrors,
     (data) => data.changeHandle.user,
   );
   if (outcome.kind !== "success") return outcome;
-  return success(outcome.value.handle);
+  return success({ id: outcome.value.id, handle: outcome.value.handle });
 }
 
 /**

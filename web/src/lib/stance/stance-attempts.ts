@@ -10,6 +10,11 @@
 // already took — its answer lost on the way back — sums the pick twice and
 // prices it twice. The seam remembers each target's attempt here, and its
 // next commit toward that target asks it again (`askAgain`, same-signing.ts).
+// A walk-back keeps a slot of its OWN beside the target's pick slot: a fresh
+// one beside a first is refused as already netted, or staged twice, so its
+// Retry asks the first again — but a pick and a walk-back are different
+// gestures, and one never retires or "lands on" the other's attempt. Across
+// kinds each goes main's road, and the server nets what it holds.
 //
 // Memory only, per target, for the tab's active account: a reload forgets it
 // and Home's Resume continues what was parked, and an account boundary lets
@@ -17,12 +22,23 @@
 
 import { intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
 import { onAccountChange } from "@/lib/session/account-change";
+import type { Expectation } from "@/lib/signing/intent";
 import type { TokenStore } from "@/lib/session/token-store";
 import type { StancePair } from "./model";
 import type { StanceTarget } from "./stance-data";
 
-/** A target's attempt, and the pick it was prepared from — what its expectation names. */
-export type StanceAttempt = SigningAttempt & { readonly pick: StancePair };
+/**
+ * The kept picks' seal: one batch across many targets, signed in one pass
+ * (KeptPicksSeal.md:63: "the whole batch is asked to sign again"), so it
+ * keeps one slot of its own beside the targets'.
+ */
+export const KEPT_BATCH = "keptBatch";
+
+/** What an attempt is kept under: a target's pick, its walk-back, or the kept picks' batch. */
+export type Slot = StanceTarget | { readonly walkBack: StanceTarget } | typeof KEPT_BATCH;
+
+/** A target's attempt, and what its batch was checked against when it was staged. */
+export type StanceAttempt = SigningAttempt & { readonly expected: Expectation };
 
 /**
  * AN ATTEMPT IN FLIGHT IS NOT A FAILED ATTEMPT. Only one whose own signing
@@ -34,23 +50,37 @@ export type StanceAttempt = SigningAttempt & { readonly pick: StancePair };
  */
 export type StanceAttempts = {
   /** Whether a commit toward the target is signing or asking again right now. */
-  asking(target: StanceTarget): boolean;
+  asking(slot: Slot): boolean;
   /** The attempt whose signing answered not done, for a Retry to ask again. */
-  answered(target: StanceTarget): StanceAttempt | null;
+  answered(slot: Slot): StanceAttempt | null;
   /** Holds the target from the commit's first step, before anything is staged. */
-  begin(target: StanceTarget): void;
+  begin(slot: Slot): void;
   /** The asking commit's batch, staged and about to be signed. */
-  remember(target: StanceTarget, attempt: StanceAttempt): void;
+  remember(slot: Slot, attempt: StanceAttempt): void;
   /** The asking commit answered not done: its attempt, if any, waits for a Retry. */
-  settle(target: StanceTarget): void;
-  forget(target: StanceTarget): void;
+  settle(slot: Slot): void;
+  forget(slot: Slot): void;
 };
 
-const keyOf = (target: StanceTarget) => `${target.kind}:${target.id}`;
+const targetKey = (target: StanceTarget) => `${target.kind}:${target.id}`;
+const keyOf = (slot: Slot) =>
+  slot === KEPT_BATCH ? "kept:batch" : "walkBack" in slot ? `sever:${targetKey(slot.walkBack)}` : targetKey(slot);
 
 /** The gesture a commit toward `target` was prepared from; a changed pick is another signing. */
 export function stanceIntent(target: StanceTarget, pick: StancePair): string {
   return intentOf({ target: keyOf(target), pDirected: pick.pDirected, pInterest: pick.pInterest });
+}
+
+/** The kept picks' batch: every pick, in order; a changed or dropped pick is another signing. */
+export function keptBatchIntent(entries: readonly { target: StanceTarget; pick: StancePair }[]): string {
+  return intentOf({
+    batch: entries.map(({ target, pick }) => [keyOf(target), pick.pDirected, pick.pInterest]),
+  });
+}
+
+/** The walk-back toward `target`: one gesture whatever it nets, so its Retry is always the same. */
+export function severanceIntent(target: StanceTarget): string {
+  return intentOf({ target: keyOf(target), sever: true });
 }
 
 export function createStanceAttempts(
@@ -58,7 +88,7 @@ export function createStanceAttempts(
 ): StanceAttempts {
   const attempts = new Map<string, { attempt: StanceAttempt | null; asking: boolean }>();
   onAccountChange(() => attempts.clear(), accounts);
-  const held = (target: StanceTarget) => attempts.get(keyOf(target));
+  const held = (slot: Slot) => attempts.get(keyOf(slot));
   return {
     asking: (target) => held(target)?.asking === true,
     answered: (target) => {

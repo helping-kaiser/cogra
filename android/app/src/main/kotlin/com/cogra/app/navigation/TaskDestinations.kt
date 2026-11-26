@@ -235,6 +235,7 @@ private fun ShellScope.ProfileEditDestination(entry: NavBackStackEntry) {
         },
         onPicturePicked = { uri -> navController.navigate(AvatarFlow(uri, fromEdit = true)) },
         onBack = { navController.navigateUp() },
+        onRestoreKey = { navController.navigate(Restore) },
         framedPicture = framedUri?.let { FramedPicture(it, framedWindow?.toCropWindow()) },
         onFramedPictureConsumed = {
             consumeFramedUri()
@@ -253,6 +254,7 @@ private fun ShellScope.AvatarFlowDestination(entry: NavBackStackEntry) {
             navController.popBackStack()
         },
         onLeave = { navController.popBackStack() },
+        onRestoreKey = { navController.navigate(Restore) },
         onFramed = if (route.fromEdit) {
             { window ->
                 navController.report(framedPictureWindowKey, window?.toFractions())

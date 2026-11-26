@@ -75,7 +75,7 @@ import {
 import { askAgain } from "@/lib/compose/same-signing";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
-import type { TokenStore } from "@/lib/session/token-store";
+import { tokenStore, type TokenStore } from "@/lib/session/token-store";
 import {
   expectation,
   joinExpectations,
@@ -92,7 +92,21 @@ import {
   type KeptTargetPreview,
 } from "./kept-preview";
 import type { StancePair } from "./model";
-import { createStanceAttempts, stanceIntent } from "./stance-attempts";
+import {
+  createStanceAttempts,
+  KEPT_BATCH,
+  keptBatchIntent,
+  severanceIntent,
+  stanceIntent,
+  type Slot,
+} from "./stance-attempts";
+
+/** A gesture's batch as staged: its node, its writes, and what the signer checks them against. */
+type Staged = {
+  readonly node: string;
+  readonly writes: readonly StagedWriteView[];
+  readonly expected: Expectation;
+};
 import {
   INCLUDE_PENDING_DEFAULT,
   type BorrowedStance,
@@ -337,6 +351,7 @@ export function createApolloStanceData(deps: {
   const store = deps.store ?? identityStore;
   /** Each target's pick whose signing has not answered done (stance-attempts.ts). */
   const attempts = createStanceAttempts(deps.accounts);
+  const accounts = deps.accounts ?? tokenStore;
 
   /** The node each target's last read named — what its acts must point at. */
   const graphIds = new Map<string, string>();
@@ -434,6 +449,23 @@ export function createApolloStanceData(deps: {
    * Signs a prepared batch against the gesture's expectation. Every
    * element must complete for the gesture to have happened.
    */
+  /**
+   * EVERY SIGNED GESTURE IS THE PRESSING ACCOUNT'S (auth.md "Multi-account
+   * device custody"). A pad, a row or the kept picks' seal closes mid-signing
+   * and the act goes on, so the tab's account can change before a prepare or
+   * between it and the signing: a prepare under the next account's session
+   * is that account's own stance, and its key would sign it. Each gesture
+   * takes the account as it starts and asks `still` before each prepare and
+   * before the signing pass; a change stops it there.
+   */
+  const pressedAs = (): (() => boolean) => {
+    const owner = accounts.activeAccountId();
+    return () => accounts.activeAccountId() === owner;
+  };
+  /** The tab's account changed under a gesture: stopped, answered as a failure. */
+  const accountChanged = (): Outcome<never> =>
+    failed(new Error("the tab's account changed before the gesture was signed"));
+
   const signAll = async (
     writes: readonly StagedWriteView[],
     expected: Expectation,
@@ -464,33 +496,116 @@ export function createApolloStanceData(deps: {
   };
 
   /**
-   * One pick, prepared and signed. With an `intent` the commit holds the
-   * target's slot, and its batch is remembered before the first
+   * One gesture's batch, staged and signed. With an `intent` the gesture
+   * holds the target's slot, and its batch is remembered before the first
    * pre-signature — so a Retry after any answer, or none, finds it — and
    * forgotten once it signs. Without one it is an act beside another still
    * asking, and touches no memory.
    */
-  const prepareAndSign = async (
-    target: StanceTarget,
-    pick: StancePair,
+  const stageAndSign = async (
+    target: Slot,
+    stage: () => Promise<Outcome<Staged>>,
     intent: string | null,
+    still: () => boolean,
   ): Promise<Outcome<StanceCommit>> => {
+    const staged = await stage();
+    if (staged.kind !== "success") return staged;
+    const { node, writes, expected } = staged.value;
+    if (intent !== null) {
+      attempts.remember(target, { node, writes: writes.map((write) => write.id), intent, expected });
+    }
+    // Staged under the account that pressed, signed only under it.
+    if (!still()) return accountChanged();
+    const outcome = await signAll(writes, expected);
+    if (intent !== null && outcome.kind === "success") attempts.forget(target);
+    return outcome;
+  };
+
+  /**
+   * EVERY SIGNED GESTURE GOES THROUGH ITS KIND'S SLOT — a target's pick
+   * slot, or its walk-back slot (stance-attempts.ts `Slot`). A gesture is
+   * only ever compared with an earlier attempt of its own kind; one of the
+   * other kind toward the same target goes main's road beside it.
+   *
+   * - A GESTURE WHOSE SIGNING HAS NOT ANSWERED DONE IS ASKED AGAIN, never
+   *   staged beside (stance-attempts.ts): the same gesture re-signs the first
+   *   attempt from where it stands; a changed one finds it landing, or
+   *   retires it before the new one is staged.
+   * - A GESTURE WHILE ANOTHER TOWARD THE TARGET IS STILL ASKING IS NOT A
+   *   RETRY: it is an act of its own, staged and signed as any is, and the
+   *   first attempt's memory and material are left alone.
+   */
+  const slotted = async (
+    target: Slot,
+    intent: string,
+    stage: () => Promise<Outcome<Staged>>,
+    still: () => boolean,
+  ): Promise<Outcome<StanceCommit>> => {
+    if (attempts.asking(target)) return stageAndSign(target, stage, null, still);
+    const remembered = attempts.answered(target);
+    // Held from here, before anything is awaited, so a gesture that arrives
+    // meanwhile finds this one asking.
+    attempts.begin(target);
+    try {
+      if (remembered !== null) {
+        if (!still()) return accountChanged();
+        const asked = await askAgain(
+          {
+            signer,
+            read: (id) => guard.run(() => fetchStagedWrite(client, id)),
+            retire: (id) => store.clearHandshake(id),
+          },
+          remembered,
+          intent,
+          remembered.expected,
+        );
+        switch (asked.kind) {
+          case "unread":
+            // Nothing decided, nothing signed: the read's own fault
+            // stands, and the next Retry asks again.
+            return asked.outcome.kind === "refused"
+              ? refused(asked.outcome.errors)
+              : failed(asked.outcome.kind === "failed" ? asked.outcome.cause : undefined);
+          case "landing":
+            // The first gesture is relaying: it is what lands, and nothing
+            // else is signed (SigningAfterClose.md:27).
+            attempts.forget(target);
+            return success({ records: remembered.writes.length });
+          case "signed": {
+            const outcome = outcomeOf(asked.results);
+            if (outcome.kind === "success") attempts.forget(target);
+            return outcome;
+          }
+          case "fresh":
+            // Retired: the slot stays held for the fresh prepare.
+            attempts.forget(target);
+            attempts.begin(target);
+        }
+      }
+      return await stageAndSign(target, stage, intent, still);
+    } finally {
+      // Not done: the attempt, if one was staged, waits for a Retry.
+      attempts.settle(target);
+    }
+  };
+
+  /** A pick's one record toward `target`, exactly the pick. */
+  const stagePick = (target: StanceTarget, pick: StancePair, still: () => boolean) => async (): Promise<
+    Outcome<Staged>
+  > => {
     const node = await graphIdOf(target);
     if (node.kind !== "success") return node;
+    if (!still()) return accountChanged();
     // Exactly the pick, verbatim — the bundle is the fold's business.
     const prepared = await guard.run(() =>
       prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
     );
     if (prepared.kind !== "success") return prepared;
-    if (intent !== null) {
-      attempts.remember(target, { node: node.value, writes: prepared.value.map((write) => write.id), intent, pick });
-    }
-    const outcome = await signAll(
-      prepared.value,
-      expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]),
-    );
-    if (intent !== null && outcome.kind === "success") attempts.forget(target);
-    return outcome;
+    return success({
+      node: node.value,
+      writes: prepared.value,
+      expected: expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]),
+    });
   };
 
   return {
@@ -521,60 +636,9 @@ export function createApolloStanceData(deps: {
       });
     },
 
-    async commit(target, pick): Promise<Outcome<StanceCommit>> {
-      // A PICK WHOSE SIGNING HAS NOT ANSWERED DONE IS ASKED AGAIN, never
-      // prepared beside (stance-attempts.ts): the same pick re-signs the
-      // first attempt from where it stands; a changed one finds it landing,
-      // or retires it before the new pick is prepared.
-      // A COMMIT WHILE ANOTHER TOWARD THE TARGET IS STILL ASKING IS NOT A
-      // RETRY (stance-attempts.ts): it is an act of its own, prepared and
-      // signed as any pick is, and the first attempt's memory and material
-      // are left alone.
-      if (attempts.asking(target)) return prepareAndSign(target, pick, null);
-      const remembered = attempts.answered(target);
-      // Held from here, before anything is awaited, so a commit that arrives
-      // meanwhile finds this one asking.
-      attempts.begin(target);
-      try {
-        if (remembered !== null) {
-          const asked = await askAgain(
-            {
-              signer,
-              read: (id) => guard.run(() => fetchStagedWrite(client, id)),
-              retire: (id) => store.clearHandshake(id),
-            },
-            remembered,
-            stanceIntent(target, pick),
-            expectation([stanceRecord(remembered.node, remembered.pick.pDirected, remembered.pick.pInterest)]),
-          );
-          switch (asked.kind) {
-            case "unread":
-              // Nothing decided, nothing signed: the read's own fault
-              // stands, and the next Retry asks again.
-              return asked.outcome.kind === "refused"
-                ? refused(asked.outcome.errors)
-                : failed(asked.outcome.kind === "failed" ? asked.outcome.cause : undefined);
-            case "landing":
-              // The first pick is relaying: it is what lands, and nothing
-              // else is signed (SigningAfterClose.md:27).
-              attempts.forget(target);
-              return success({ records: remembered.writes.length });
-            case "signed": {
-              const outcome = outcomeOf(asked.results);
-              if (outcome.kind === "success") attempts.forget(target);
-              return outcome;
-            }
-            case "fresh":
-              // Retired: the slot stays held for the fresh prepare.
-              attempts.forget(target);
-              attempts.begin(target);
-          }
-        }
-        return await prepareAndSign(target, pick, stanceIntent(target, pick));
-      } finally {
-        // Not done: the attempt, if one was staged, waits for a Retry.
-        attempts.settle(target);
-      }
+    commit(target, pick): Promise<Outcome<StanceCommit>> {
+      const still = pressedAs();
+      return slotted(target, stanceIntent(target, pick), stagePick(target, pick, still), still);
     },
 
     keyOnDevice(): Promise<boolean> {
@@ -623,26 +687,45 @@ export function createApolloStanceData(deps: {
       );
     },
 
-    async commitBatch(entries): Promise<Outcome<StanceCommit>> {
-      // EACH PICK IS ITS OWN PREPARE (there is no prepare that stages
-      // stances toward several targets at once), and NOTHING IS SIGNED
-      // UNTIL EVERY ONE IS STAGED: a refused prepare stops the batch before
-      // its first pre-signature, so no pick signs without the others.
-      const staged: StagedWriteView[] = [];
-      const expected: Expectation[] = [];
-      for (const { target, pick } of entries) {
-        const node = await graphIdOf(target);
-        if (node.kind !== "success") return node;
-        const prepared = await guard.run(() =>
-          prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
-        );
-        if (prepared.kind !== "success") return prepared;
-        staged.push(...prepared.value);
-        expected.push(expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]));
-      }
-      // One pass over the whole set, checked whole against the picks the
-      // seal read back (write-signer.ts `sign`).
-      return signAll(staged, joinExpectations(expected));
+    commitBatch(entries): Promise<Outcome<StanceCommit>> {
+      // THE SEAL'S RETRY IS THE SAME BATCH (KeptPicksSeal.md:33, :63): each
+      // pick is a record of its own in a bundle that sums, so a batch
+      // prepared afresh beside one the server took sums every pick twice.
+      //
+      // THE BATCH IS THE PRESSING ACCOUNT'S (`pressedAs`): its seal closes
+      // from the press and the batch goes on (KeptPicksSeal.md:59), so the
+      // account is checked before every leg too, not only before the signing.
+      const still = pressedAs();
+      return slotted(
+        KEPT_BATCH,
+        keptBatchIntent(entries),
+        async () => {
+          // EACH PICK IS ITS OWN PREPARE (there is no prepare that stages
+          // stances toward several targets at once), and NOTHING IS SIGNED
+          // UNTIL EVERY ONE IS STAGED: a refused prepare stops the batch
+          // before its first pre-signature, so no pick signs without the others.
+          const staged: StagedWriteView[] = [];
+          const expected: Expectation[] = [];
+          const nodes: string[] = [];
+          for (const { target, pick } of entries) {
+            if (!still()) return accountChanged();
+            const node = await graphIdOf(target);
+            if (node.kind !== "success") return node;
+            if (!still()) return accountChanged();
+            const prepared = await guard.run(() =>
+              prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
+            );
+            if (prepared.kind !== "success") return prepared;
+            staged.push(...prepared.value);
+            nodes.push(node.value);
+            expected.push(expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]));
+          }
+          // One pass over the whole set, checked whole against the picks the
+          // seal read back (write-signer.ts `sign`).
+          return success({ node: nodes.join(" "), writes: staged, expected: joinExpectations(expected) });
+        },
+        still,
+      );
     },
 
     async preview(target): Promise<Outcome<KeptTargetPreview>> {
@@ -684,24 +767,35 @@ export function createApolloStanceData(deps: {
       }
     },
 
-    async sever(target, shown): Promise<Outcome<StanceCommit>> {
-      const node = await graphIdOf(target);
-      if (node.kind !== "success") return node;
-      const prepared = await guard.run(() => prepareSeverance(client, selectorOf(target)));
-      if (prepared.kind !== "success") return prepared;
-      return signAll(
-        prepared.value,
-        expectation(
-          [],
-          [
-            severance(node.value, {
-              rawPDirected: shown.rawSum.pDirected,
-              rawPInterest: shown.rawSum.pInterest,
-              cost: shown.severance.records,
-            }),
-          ],
-        ),
-      );
+    sever(target, shown): Promise<Outcome<StanceCommit>> {
+      // THE WALK-BACK'S RETRY IS THE SAME BATCH (SeveranceConfirm.md:33-35).
+      // The server stages a walk-back against the pending-inclusive standing
+      // (crates/api stance.rs `prepare_severance`): one it holds nets the
+      // bundle to (0, 0), so a fresh prepare beside it is refused as already
+      // netted, and one it never saw is staged a second time — two walk-backs
+      // that Home's Resume would both land.
+      const still = pressedAs();
+      return slotted({ walkBack: target }, severanceIntent(target), async () => {
+        const node = await graphIdOf(target);
+        if (node.kind !== "success") return node;
+        if (!still()) return accountChanged();
+        const prepared = await guard.run(() => prepareSeverance(client, selectorOf(target)));
+        if (prepared.kind !== "success") return prepared;
+        return success({
+          node: node.value,
+          writes: prepared.value,
+          expected: expectation(
+            [],
+            [
+              severance(node.value, {
+                rawPDirected: shown.rawSum.pDirected,
+                rawPInterest: shown.rawSum.pInterest,
+                cost: shown.severance.records,
+              }),
+            ],
+          ),
+        });
+      }, still);
     },
   };
 }

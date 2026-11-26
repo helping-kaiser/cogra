@@ -79,6 +79,19 @@ describe("what the seal reads back", () => {
     fireEvent.click(screen.getByTestId("profile-edit-seal-help"));
     expect(screen.getByTestId("profile-edit-seal-help-dialog")).toHaveAttribute("aria-label", "Changing your profile");
   });
+
+  it("says copy-voice's blessed Changing your profile, both paragraphs (jakob 2026-11-17)", () => {
+    draw();
+    fireEvent.click(screen.getByTestId("profile-edit-seal-help"));
+    const dialog = screen.getByTestId("profile-edit-seal-help-dialog");
+    expect(dialog).toHaveTextContent(
+      "Your profile is a public record, and changes to it are signed actions in your name.",
+    );
+    expect(dialog).toHaveTextContent(
+      "Everything you change here signs together, as one change, paid for like your posts. The record that you changed it stays, like every signed action.",
+    );
+    expect(dialog).not.toHaveTextContent("The signing is paid for");
+  });
 });
 
 describe("the commit", () => {
