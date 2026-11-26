@@ -432,8 +432,7 @@ private class ProfileChangeSigning(
     val ledger: Map<String, KnownMedia>,
     val fields: SignedProfileFields,
 ) {
-    suspend fun sign(pressing: StillPressing, deps: ProfileChangeDeps): ProfileChangeOutcome {
-        val (repository, writes, head, identity) = deps
+    suspend fun sign(pressing: StillPressing, deps: ProfileChangeDeps): ProfileChangeOutcome = with(deps) {
         if (!pressing.holds()) return ProfileChangeOutcome.Foreign
         // Pressed GIVEN the key is not on this device: the notice, and nothing
         // prepared or signed (ProfileEditSeal.md:61; the post edit's twin check).
@@ -468,7 +467,7 @@ private class ProfileChangeSigning(
         // Taken: the profile shows the change from the return's first frame
         // (ProfileEditSeal.md:45) — exactly the fields it set.
         head.lay(signing, profileId, fields)
-        return ProfileChangeOutcome.Taken
+        ProfileChangeOutcome.Taken
     }
 }
 
