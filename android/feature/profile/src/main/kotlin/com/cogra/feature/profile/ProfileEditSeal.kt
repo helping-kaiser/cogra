@@ -86,6 +86,8 @@ internal const val SEAL_OFFLINE_LINE = "That didn't send. Try again."
 internal const val WRITE_RULE_TITLE = "You can't sign right now"
 internal const val WRITE_RULE_FACT =
     "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent."
+internal const val KEY_ABSENT_TITLE = "Your key isn't in this app"
+internal const val RESTORE_THE_KEY = "Restore the key"
 internal const val BUG_TITLE = "This shouldn't have happened"
 internal const val BUG_FACT =
     "That's a fault on our side, not yours. Nothing was signed or spent, and telling us helps us fix it."
@@ -107,7 +109,7 @@ private val WHY_SIGNING_WAITS_TEXT = listOf(
 /** The seal's own picture, read off `ProfileEditSeal` (`MonogramAvatar size={64}`). */
 private val SEAL_PICTURE = 64.dp
 
-private enum class SealHelp { Change, WriteRule }
+private enum class SealHelp { Change, WriteRule, Key }
 
 /** What the seal's controls do; the route wires them to the ViewModel. */
 internal class EditSealActions(
@@ -119,6 +121,8 @@ internal class EditSealActions(
     /** A notice's `Not now`: back to the seal at rest, or from the bug to the edit. */
     val onNotNow: () -> Unit,
     val onReport: () -> Unit = {},
+    /** The key-absent notice's `Restore the key`: the app's own restore route (:61). */
+    val onRestoreKey: () -> Unit = {},
 )
 
 @Composable
@@ -152,7 +156,7 @@ internal fun ProfileEditSealStage(state: ProfileEditUiState, actions: EditSealAc
         ) {
             SealReadBack(state, slow)
             Spacer(Modifier.weight(1f))
-            SealFoot(state, participle, actions, onHelp = { help = SealHelp.WriteRule })
+            SealFoot(state, participle, actions, onHelp = { help = it })
         }
     }
     SealHelpDialog(help, onClose = { help = null })
@@ -207,6 +211,12 @@ private fun SealHelpDialog(help: SealHelp?, onClose: () -> Unit) {
             onClose = onClose,
             testTag = "profile_edit_seal_help_dialog",
         )
+        SealHelp.Key -> HelpDialog(
+            title = HelpTopic.Key.title,
+            paragraphs = HelpTopic.Key.paragraphs,
+            onClose = onClose,
+            testTag = "profile_edit_seal_key_dialog",
+        )
         SealHelp.WriteRule -> HelpDialog(
             title = HelpTopic.WhySigningWaits.title,
             paragraphs = WHY_SIGNING_WAITS_TEXT,
@@ -219,14 +229,19 @@ private fun SealHelpDialog(help: SealHelp?, onClose: () -> Unit) {
 
 /** The foot by what became of the commit (`ProfileEditSeal.jsx`'s `state` chip, the failure pack). */
 @Composable
-private fun SealFoot(state: ProfileEditUiState, participle: Boolean, actions: EditSealActions, onHelp: () -> Unit) {
+private fun SealFoot(
+    state: ProfileEditUiState,
+    participle: Boolean,
+    actions: EditSealActions,
+    onHelp: (SealHelp) -> Unit,
+) {
     when (state.fault) {
         ProfileSealFault.WriteRule -> {
             // A rule working as meant: the tertiary panel, never the error colour, never Retry (:49).
             NoticePanel(
                 title = WRITE_RULE_TITLE,
                 helpLabel = HelpTopic.WhySigningWaits.title,
-                onHelp = onHelp,
+                onHelp = { onHelp(SealHelp.WriteRule) },
                 helpTestTag = "profile_edit_seal_write_rule_help",
                 testTag = "profile_edit_seal_write_rule",
             ) { NoticeLine(WRITE_RULE_FACT) }
@@ -234,6 +249,7 @@ private fun SealFoot(state: ProfileEditUiState, participle: Boolean, actions: Ed
         }
         ProfileSealFault.Bug -> BugFoot(actions)
         ProfileSealFault.Offline -> OfflineFoot(actions)
+        ProfileSealFault.KeyAbsent -> KeyAbsentFoot(actions, onHelp = { onHelp(SealHelp.Key) })
         null -> RestingFoot(state, participle, actions)
     }
 }
@@ -256,6 +272,32 @@ private fun BugFoot(actions: EditSealActions) {
         FootText(SEAL_REPORT, actions.onReport, "profile_edit_seal_report")
         FootText(SEAL_NOT_NOW, actions.onNotNow, "profile_edit_seal_not_now")
     }
+}
+
+/**
+ * The key is not on this device (:61-:63; the post seal's `ComposeKeyAbsent` foot):
+ * the notice with its own "?" and `Restore the key` in the panel's inverse, then
+ * `Not now` back to the seal at rest. Never the error colour, and never `Keep the
+ * draft, restore later` — this seal keeps no draft.
+ */
+@Composable
+private fun KeyAbsentFoot(actions: EditSealActions, onHelp: () -> Unit) {
+    NoticePanel(
+        title = KEY_ABSENT_TITLE,
+        helpLabel = HelpTopic.Key.title,
+        onHelp = onHelp,
+        helpTestTag = "profile_edit_seal_key_help",
+        testTag = "profile_edit_seal_key_absent",
+    ) {
+        CograButton(
+            text = RESTORE_THE_KEY,
+            onClick = actions.onRestoreKey,
+            kind = ButtonKind.Inverse,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "profile_edit_seal_restore",
+        )
+    }
+    FootText(SEAL_NOT_NOW, actions.onNotNow, "profile_edit_seal_not_now")
 }
 
 /** No answer reached the seal: the fault line and Retry in the commit's place, and Back (:47). */
