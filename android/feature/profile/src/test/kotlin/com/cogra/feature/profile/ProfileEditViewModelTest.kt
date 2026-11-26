@@ -128,8 +128,15 @@ class ProfileEditViewModelTest {
     private val signedProfile = SignedProfile(session, TestScope(dispatcher))
     private val changes = ProfileChanges(session, TestScope(dispatcher))
 
-    private fun viewModel() =
-        ProfileEditViewModel(profiles, media, processor, WriteSigner(sealer, identity), signedProfile, changes)
+    private fun viewModel() = ProfileEditViewModel(
+        profiles,
+        media,
+        processor,
+        WriteSigner(sealer, identity),
+        signedProfile,
+        changes,
+        identity,
+    )
 
     /** Save opens the seal; its commit signs. */
     private fun ProfileEditViewModel.save() {
@@ -838,5 +845,43 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(landed).isEmpty()
         assertThat(line()).isNull()
+    }
+
+    // -- THE KEY NOT ON THIS DEVICE (ProfileEditSeal.md:61-:63) --
+
+    @Test
+    fun aPressWithoutTheKeyIsTheKeyNoticeAndPreparesNothing() = runTest(dispatcher) {
+        identity.seed = null
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.KeyAbsent)
+        assertThat(vm.state.value.signing).isFalse()
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+        assertThat(signedProfile.laid.value).isNull()
+
+        // Not now: the seal as it stood before the press, nothing kept or signed.
+        vm.seal.onNotNow()
+        assertThat(vm.state.value.fault).isNull()
+        assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Seal)
+        assertThat(vm.state.value.bio).isEqualTo("Hello")
+    }
+
+    /** The key goes while the prepare runs: the signer finds none, and nothing is signed. */
+    @Test
+    fun aKeyGoneBeforeTheSigningIsTheKeyNoticeNotACrash() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        identity.seed = null
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.KeyAbsent)
+        assertThat(sealer.staged.values.map { it.state.name }).doesNotContain("RELAYING")
+        assertThat(signedProfile.laid.value).isNull()
     }
 }
