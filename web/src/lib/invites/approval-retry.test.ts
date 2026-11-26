@@ -234,3 +234,62 @@ describe("the approval pad's Retry after a landed approval", () => {
     expect(approvals).toEqual([PICK, PICK]);
   });
 });
+
+// THE APPROVAL BELONGS TO THE ACCOUNT THAT PRESSED (auth.md "Multi-account
+// device custody"): the pad closes mid-signing and the act goes on, so the
+// tab's account can change before the approval or before its vouch signs.
+// An approval asked under the next account's session would vouch the
+// applicant in as that account, which never chose to.
+describe("an approval whose tab changes account", () => {
+  it("approves nothing and signs nothing when the account changed before the approval", async () => {
+    const tab = accounts("acct-a");
+    const { approvals } = host(() => application());
+    server.use(
+      gqlLink.mutation("StageApplicant", () => {
+        tab.switchTo("acct-b");
+        return HttpResponse.json({
+          data: { stageApplicant: { __typename: "StageApplicantPayload", application: application(), userErrors: [] } },
+        });
+      }),
+    );
+    const { writes, signed } = signer([]);
+    const data = createAskStanceData({ client: client(), guard, signer: writes, base, accounts: tab }, "ask-1");
+
+    const outcome = await data.commit(TARGET, PICK);
+
+    expect(approvals).toEqual([]);
+    expect(signed).toEqual([]);
+    expect(outcome.kind).toBe("failed");
+  });
+
+  it("signs nothing when the account changed after the approval, and the owner's Retry signs its vouch", async () => {
+    const tab = accounts("acct-a");
+    const { approvals } = host();
+    server.use(
+      gqlLink.mutation("ApproveApplicants", () => {
+        approvals.push(PICK);
+        tab.switchTo("acct-b");
+        return HttpResponse.json({
+          data: {
+            approveApplicants: {
+              __typename: "PreparePayload",
+              writes: [{ __typename: "PreparedWrite", id: "v-1", family: "OPINION", canonicalProposal: "cHJvcG9zYWw=" }],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const { writes, signed, signedAgain } = signer([]);
+    const data = createApprovalStanceData({ client: client(), guard, signer: writes, base, accounts: tab }, application());
+
+    expect((await data.commit(TARGET, PICK)).kind).toBe("failed");
+    expect(signed).toEqual([]);
+
+    // Back under the owner: the approval landed, so Retry signs its vouch, never it again.
+    tab.switchTo("acct-a");
+    expect((await data.commit(TARGET, PICK)).kind).toBe("success");
+    expect(approvals).toHaveLength(1);
+    expect(signedAgain.map((ask) => ask.ids)).toEqual([["v-1"]]);
+  });
+});
