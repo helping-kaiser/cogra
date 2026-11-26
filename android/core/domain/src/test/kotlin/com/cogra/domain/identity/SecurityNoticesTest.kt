@@ -31,6 +31,7 @@ class SecurityNoticesTest {
     fun theReuseNoticeIsKeptForTheSignInsAccountUntilGotIt() = runTest {
         notices.post(detectedAt, "u1")
         assertThat(identity.securityNoticeAccount).isEqualTo("u1")
+        activate("u1")
         assertThat(notices.reuseDetectedAt.first()).isEqualTo(detectedAt)
 
         notices.dismiss()

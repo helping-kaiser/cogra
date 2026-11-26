@@ -25,9 +25,12 @@ package com.cogra.domain.identity
 
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.TokenStore
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -38,34 +41,54 @@ class SecurityNotices @Inject constructor(
     private val tokens: TokenStore,
 ) {
 
-    /** The active account's pending notice; null once dismissed, when none arrived, or signed out. */
-    val reuseDetectedAt: Flow<Instant?> = identity.securityNotice
+    // A STORE THAT CANNOT WRITE BLOCKS NOTHING (the web's memory fallback,
+    // `safe-storage.ts`): a notice the store could not keep is held here for
+    // the process's life, by account, and a `Got it` the store could not
+    // record hides the kept one for the process's life — the sign-in goes on
+    // either way, and the notice is never lost to a write fault.
+    private val unkept = MutableStateFlow<Map<String, Instant>>(emptyMap())
+    private val dismissedHere = MutableStateFlow<Set<String>>(emptySet())
 
-    /** The account whose dead lock waits to be said. */
-    private val lockLostFor = MutableStateFlow<String?>(null)
+    /** The active account's pending notice; null once dismissed, when none arrived, or signed out. */
+    val reuseDetectedAt: Flow<Instant?> =
+        combine(identity.securityNotice.catch { emit(null) }, unkept, dismissedHere, tokens.tokens) {
+                kept, held, dismissed, pair ->
+            pair?.accountId?.takeUnless { it in dismissed }?.let { account -> kept ?: held[account] }
+        }
+
+    /** Every account whose dead lock waits to be said — each is told once (auth.md "Device lock"). */
+    private val lockLostFor = MutableStateFlow<Set<String>>(emptySet())
 
     /** Whether a dead device lock's notice waits to be said to the active account. */
     val lockLost: Flow<Boolean> =
-        combine(lockLostFor, tokens.tokens) { owner, pair -> owner != null && owner == pair?.accountId }
+        combine(lockLostFor, tokens.tokens) { owners, pair -> pair?.accountId?.let { it in owners } == true }
 
-    /** Keeps [detectedAt] for [account], the account the sign-in belongs to. */
+    /** Keeps [detectedAt] for [account], the account the sign-in belongs to. Never throws. */
     suspend fun post(detectedAt: Instant, account: String) {
-        identity.keepSecurityNotice(account, detectedAt)
+        dismissedHere.update { it - account }
+        attempt { identity.keepSecurityNotice(account, detectedAt) }
+            ?: unkept.update { it + (account to detectedAt) }
     }
 
-    /** `Got it`: the active account's notice goes for good. */
+    /** `Got it`: the active account's notice goes for good. Never throws. */
     suspend fun dismiss() {
-        identity.dropSecurityNotice()
+        val account = tokens.current()?.accountId ?: return
+        unkept.update { it - account }
+        attempt { identity.dropSecurityNotice() } ?: dismissedHere.update { it + account }
     }
 
     /** Holds the dead lock's notice for [account], the account whose lock it was. */
     fun postLockLost(account: String) {
-        lockLostFor.value = account
+        lockLostFor.update { it + account }
     }
 
     /** `Got it`: the active account's dead-lock notice goes; another account's stays held. */
     suspend fun dismissLockLost() {
-        val active = tokens.current()?.accountId
-        lockLostFor.compareAndSet(active, null)
+        val active = tokens.current()?.accountId ?: return
+        lockLostFor.update { it - active }
     }
+
+    /** [write]'s Unit, or null where the store failed it; a cancellation still cancels. */
+    private suspend fun attempt(write: suspend () -> Unit): Unit? =
+        runCatching { write() }.onFailure { if (it is CancellationException) throw it }.getOrNull()
 }
