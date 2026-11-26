@@ -667,6 +667,25 @@ fn removed_takes_no_edit() -> ContentError {
     }
 }
 
+/// The refusal a second edit of one node meets while the first is in
+/// flight — the same answer from the early guard and from the one on the
+/// staging transaction (`prepare::prepare_chained`).
+fn edit_in_flight() -> ContentError {
+    ContentError::BadInput {
+        field: "id",
+        message: "an edit of this content is already in flight".into(),
+    }
+}
+
+/// Maps a chained edit's prepare refusal, giving the in-flight one its
+/// field-level answer.
+fn edit_prepare_refusal(e: PrepareError) -> ContentError {
+    match e {
+        PrepareError::EditInFlight => edit_in_flight(),
+        e => e.into(),
+    }
+}
+
 async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentError> {
     nodes::required_address(pool, viewer)
         .await
@@ -913,7 +932,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     }
     .encode_for_prepare()
     .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
-    let prepared = prepare::prepare(
+    let prepared = prepare::prepare_chained(
         boundary,
         pool,
         staging.gc_after_epochs,
@@ -933,7 +952,8 @@ pub async fn prepare_post_edit<B: L1Boundary>(
             node: Some(post.id),
         },
     )
-    .await?;
+    .await
+    .map_err(edit_prepare_refusal)?;
     Ok(PreparedContent::single(post.id, prepared))
 }
 
@@ -1085,7 +1105,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     }
     .encode_for_prepare()
     .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
-    let prepared = prepare::prepare(
+    let prepared = prepare::prepare_chained(
         boundary,
         pool,
         staging.gc_after_epochs,
@@ -1105,7 +1125,8 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
             node: Some(comment.id),
         },
     )
-    .await?;
+    .await
+    .map_err(edit_prepare_refusal)?;
     Ok(PreparedContent::single(comment.id, prepared))
 }
 
@@ -1136,10 +1157,7 @@ async fn chained_edit_target(
     let current_epoch = mirror::last_ingested_epoch(pool).await?;
     staged::supersede_unsigned_targeting(pool, viewer, family, l1_node_id, current_epoch).await?;
     if staged::has_pending_targeting(pool, viewer, family, l1_node_id).await? {
-        return Err(ContentError::BadInput {
-            field: "id",
-            message: "an edit of this content is already in flight".into(),
-        });
+        return Err(edit_in_flight());
     }
     let head = mirror::chain_head(pool, author, family, l1_node_id)
         .await?
