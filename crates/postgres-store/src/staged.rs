@@ -1257,6 +1257,41 @@ pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWri
         .collect())
 }
 
+/// Landed profile updates whose version row is still pending: writes
+/// [`promote_landed`] marked `landed` whose confirm-side promotion never
+/// completed — it failed, or the pass that marked them ended before it
+/// ran. No later [`promote_landed`] returns them again, since they are
+/// already landed, so this is how the landing pass finds them.
+///
+/// Driven from the pending side, which holds only in-flight updates: the
+/// row is named by the write's actor and authoring instant, as
+/// `profile::land_profile_version` names it.
+pub async fn landed_with_pending_profile(pool: &PgPool) -> Result<Vec<PromotedWrite>, StagedError> {
+    let rows = sqlx::query!(
+        "SELECT s.id, s.actor_id, s.act_id, s.family
+         FROM actor_profile_versions v
+         JOIN staged_writes s
+           ON s.actor_id = v.actor_id AND s.pre_signed_at = v.created_at
+         WHERE v.pending
+           AND s.state = 'landed'
+           AND s.family = $1
+           AND cardinality(s.asserted_parents) > 0
+         ORDER BY s.act_id",
+        Family::Registration.as_str(),
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| PromotedWrite {
+            id: r.id,
+            actor_id: r.actor_id,
+            act_id: r.act_id,
+            family: r.family,
+        })
+        .collect())
+}
+
 /// Expires one staged write immediately — the terminal path for a
 /// handshake that can never complete (a seal lost before it was stored).
 ///
