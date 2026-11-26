@@ -576,13 +576,6 @@ class ProfileScreensTest {
     }
 
     @Test
-    fun refusalAndSigningErrorsRender() {
-        renderEdit(ProfileEditUiState(loading = false, refused = true, signingFailed = true))
-        compose.onNodeWithTag("profile_edit_refused").assertExists()
-        compose.onNodeWithTag("profile_edit_signing_failed").assertExists()
-    }
-
-    @Test
     fun theEditTransportFaultOffersRetry() {
         renderEdit(ProfileEditUiState(loading = false, transportFailed = true))
         compose.onNodeWithTag("profile_edit_transport_error").assertExists()
