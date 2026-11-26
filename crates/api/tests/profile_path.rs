@@ -328,6 +328,53 @@ async fn a_failed_promotion_rides_the_ingestion_outcome(pool: PgPool) {
     assert_eq!(rig.version_count(actor).await, 0);
 }
 
+/// A pass that marks an update's write `landed` and then stops before its
+/// promotion runs (`ingest::ingest_pending` returning on a later epoch's
+/// error, or the process ending between the two halves) leaves the
+/// version row pending under a write no later pass marks landed again.
+/// Confirm drops the mark and stamps the record's coordinates
+/// (data-model.md "Actor profiles"), so the next pass promotes it — and a
+/// later update that lands then stands above it, instead of the stranded
+/// row outranking every landed version for ever.
+///
+/// A landed update whose promotion an interrupted pass never ran is promoted by the next pass, so a later landed update is not outranked by it.
+/// ´claim:profile:a-stranded-update-is-promoted-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_update_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    let stranded = rig
+        .update(actor, draft(Some("Ada L"), Some("First bio"), None))
+        .await
+        .expect("prepares the first update");
+    rig.sign_and_relay(stranded.id, &key).await;
+    let landed = rig.close_and_mirror_unpromoted().await;
+    assert!(
+        landed.iter().any(|w| w.id == stranded.id),
+        "the interrupted pass marked the write landed"
+    );
+    assert!(current(&rig.pool, actor).await.pending);
+
+    rig.land_update(actor, &key, draft(None, Some("Second bio"), None))
+        .await;
+
+    let shown = current(&rig.pool, actor).await;
+    assert!(
+        !shown.pending,
+        "no version stays pending once every write has landed: {shown:?}"
+    );
+    assert_eq!(shown.bio.as_deref(), Some("Second bio"));
+    assert_eq!(shown.display_name, "Ada L");
+    let still_pending: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM actor_profile_versions WHERE actor_id = $1 AND pending",
+    )
+    .bind(actor)
+    .fetch_one(&rig.pool)
+    .await
+    .expect("counts");
+    assert_eq!(still_pending, 0);
+}
+
 /// The current profile, read the way every viewer's profile read takes it.
 async fn current(pool: &PgPool, actor: Uuid) -> profile_store::ProfileVersion {
     profile_store::current_profile(pool, actor)

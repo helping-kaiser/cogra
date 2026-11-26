@@ -1,18 +1,10 @@
 package com.cogra.feature.profile
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
-import com.cogra.crypto.ActorKey
-import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.FieldStatus
-import com.cogra.domain.MediaAssetView
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
-import com.cogra.domain.PreparedWriteView
-import com.cogra.domain.ProfileView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.CropWindow
@@ -20,135 +12,22 @@ import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.profile.Setting
 import com.cogra.domain.profile.SignedPicture
-import com.cogra.domain.profile.SignedProfile
 import com.cogra.domain.profile.SignedProfileFields
-import com.cogra.domain.profile.over
-import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.SentProfile
-import com.cogra.domain.signing.WriteSigner
-import com.cogra.domain.testing.FakeIdentityStore
-import com.cogra.domain.testing.FakeTokenStore
-import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.TEST_PROFILE_ID
-import com.cogra.domain.testing.ThrowingMediaProcessor
-import com.cogra.domain.testing.ThrowingMediaRepository
-import com.cogra.domain.testing.ThrowingProfileRepository
 import com.cogra.domain.testing.faithfulProfileUpdate
-import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testProfile
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ProfileEditViewModelTest {
-
-    private val dispatcher = StandardTestDispatcher()
-    private val actor = ActorKey.generate()
-    private val identity = FakeIdentityStore().apply { seed = actor.seed() }
-    private val sealer = SealingWriteRepository(actor)
-
-    private class ScriptedProfiles(private val sealer: SealingWriteRepository) :
-        ThrowingProfileRepository() {
-        var mine: Outcome<ProfileView?> = Outcome.Success(
-            testProfile(id = TEST_PROFILE_ID, handle = "jakob", displayName = "Jakob", bio = "Old bio"),
-        )
-        var prepareOutcome: Outcome<List<PreparedWriteView>>? = null
-        var lastUpdate: Triple<String, String?, String?>? = null
-        var prepareCalls = 0
-
-        override suspend fun myProfile(): Outcome<ProfileView?> = mine
-
-        var lastAvatar: MediaFieldUpdate? = null
-
-        /** The prepare hangs until the test lets it through: a change still signing. */
-        var prepareGate: CompletableDeferred<Unit>? = null
-
-        override suspend fun prepareProfileUpdate(
-            displayName: String,
-            bio: String?,
-            websiteUrl: String?,
-            avatar: MediaFieldUpdate,
-        ): Outcome<List<PreparedWriteView>> {
-            prepareCalls += 1
-            prepareGate?.await()
-            lastUpdate = Triple(displayName, bio, websiteUrl)
-            lastAvatar = avatar
-            return prepareOutcome ?: Outcome.Success(
-                sealer.stageFaithful(
-                    faithfulProfileUpdate(TEST_PROFILE_ID, SentProfile(displayName, bio, websiteUrl, avatar)),
-                ),
-            )
-        }
-    }
-
-    /** The upload half of the avatar path, scripted per test. */
-    private class ScriptedMedia : ThrowingMediaRepository() {
-        var outcome: Outcome<MediaAssetView> = Outcome.Success(
-            fakeUpload("m1"),
-        )
-        var calls = 0
-
-        override suspend fun uploadMedia(
-            picture: ProcessedPicture,
-        ): Outcome<MediaAssetView> {
-            calls += 1
-            return outcome
-        }
-    }
-
-    /** The pipeline, scripted: null is "these bytes are not a picture". */
-    private class ScriptedProcessor : ThrowingMediaProcessor() {
-        var processed: ProcessedPicture? = ProcessedPicture(ByteArray(4), 100, 100)
-        var lastCrop: CropSpec? = null
-
-        override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? {
-            lastCrop = crop
-            return processed
-        }
-    }
-
-    private val profiles = ScriptedProfiles(sealer)
-    private val media = ScriptedMedia()
-    private val processor = ScriptedProcessor()
-    private val session = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", TEST_PROFILE_ID) }
-    private val signedProfile = SignedProfile(session, TestScope(dispatcher))
-    private val changes = ProfileChanges(session, TestScope(dispatcher))
-
-    private fun viewModel() = ProfileEditViewModel(
-        profiles,
-        media,
-        processor,
-        WriteSigner(sealer, identity),
-        signedProfile,
-        changes,
-        identity,
-    )
-
-    /** Save opens the seal; its commit signs. */
-    private fun ProfileEditViewModel.save() {
-        onSubmit()
-        seal.onSign()
-    }
-
-    @Before
-    fun setDispatcher() = Dispatchers.setMain(dispatcher)
-
-    @After
-    fun resetDispatcher() = Dispatchers.resetMain()
+class ProfileEditViewModelTest : ProfileEditHarness() {
 
     @Test
     fun theFormPrefillsFromTheCurrentVersion() = runTest(dispatcher) {
@@ -381,8 +260,6 @@ class ProfileEditViewModelTest {
     // one still signing or one that did not go through lays nothing
     // (ProfileEditSeal.md:75-79, Profile.md:99) --
 
-    private fun laid() = signedProfile.laid.value.over(TEST_PROFILE_ID)
-
     @Test
     fun aTakenEditLaysTheFieldsItSet() = runTest(dispatcher) {
         val vm = viewModel()
@@ -465,8 +342,6 @@ class ProfileEditViewModelTest {
     }
 
     // -- THE SEAL (ProfileEditSeal.md): Save opens it, only its commit signs --
-
-    private suspend fun line() = changes.line.first()
 
     @Test
     fun saveOpensTheSealAndSignsNothing() = runTest(dispatcher) {
@@ -684,16 +559,6 @@ class ProfileEditViewModelTest {
 
     // -- A SEAL TORN DOWN WITHOUT Back OR THE X (a sign-out clears the stack) --
 
-    /** The ViewModel in a store, cleared the way a popped back-stack entry clears it. */
-    private fun storedViewModel(store: ViewModelStore): ProfileEditViewModel =
-        ViewModelProvider(
-            store,
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T = viewModel() as T
-            },
-        )[ProfileEditViewModel::class.java]
-
     @Test
     fun aSealClearedWhileItSignsHandsTheAnswerToTheHead() = runTest(dispatcher) {
         profiles.prepareGate = CompletableDeferred()
@@ -721,116 +586,5 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(line()).isNull()
         assertThat(profiles.prepareCalls).isEqualTo(0)
-    }
-
-    // -- THE ACCOUNT BOUNDARY: an act prepares and signs only for the account that pressed --
-
-    private fun switchTo(account: String?) {
-        session.tokens.value = account?.let { AuthTokens("a2", "r2", it) }
-    }
-
-    @Test
-    fun aSwitchBeforeThePrepareAnswersSignsNothingForTheOtherAccount() = runTest(dispatcher) {
-        profiles.prepareGate = CompletableDeferred()
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onBioChange("Hello")
-        vm.save()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.seal.onBack()
-
-        switchTo("account-b")
-        profiles.prepareGate?.complete(Unit)
-        dispatcher.scheduler.advanceUntilIdle()
-
-        // The prepare answered, the signing never ran: nothing relays.
-        assertThat(profiles.prepareCalls).isEqualTo(1)
-        assertThat(sealer.staged.values.map { it.state.name }).doesNotContain("RELAYING")
-        assertThat(signedProfile.laid.value).isNull()
-        // Nothing is drawn under B's head, and nothing comes back for A.
-        assertThat(line()).isNull()
-        switchTo(TEST_PROFILE_ID)
-        assertThat(line()).isNull()
-    }
-
-    @Test
-    fun aPressWithAnotherAccountActiveNeverPrepares() = runTest(dispatcher) {
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
-        switchTo(null)
-        vm.seal.onSign()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(profiles.prepareCalls).isEqualTo(0)
-        assertThat(vm.state.value.signing).isFalse()
-    }
-
-    @Test
-    fun aRetryHeldPastASwitchDoesNothing() = runTest(dispatcher) {
-        profiles.prepareGate = CompletableDeferred()
-        profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.save()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.seal.onBack()
-        profiles.prepareGate?.complete(Unit)
-        dispatcher.scheduler.advanceUntilIdle()
-        val failed = line() as ProfileChangeLine.Failed
-        assertThat(profiles.prepareCalls).isEqualTo(1)
-
-        // The line goes at the switch; its Retry, held by a composition, is pressed under B.
-        switchTo("account-b")
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(line()).isNull()
-        profiles.prepareGate = null
-        profiles.prepareOutcome = null
-        failed.retry()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(profiles.prepareCalls).isEqualTo(1)
-        assertThat(signedProfile.laid.value).isNull()
-
-        // Back on A, the dropped line stays dropped.
-        switchTo(TEST_PROFILE_ID)
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(line()).isNull()
-    }
-
-    // -- THE KEY NOT ON THIS DEVICE (ProfileEditSeal.md:61-:63) --
-
-    @Test
-    fun aPressWithoutTheKeyIsTheKeyNoticeAndPreparesNothing() = runTest(dispatcher) {
-        identity.seed = null
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onBioChange("Hello")
-        vm.save()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.KeyAbsent)
-        assertThat(vm.state.value.signing).isFalse()
-        assertThat(profiles.prepareCalls).isEqualTo(0)
-        assertThat(signedProfile.laid.value).isNull()
-
-        // Not now: the seal as it stood before the press, nothing kept or signed.
-        vm.seal.onNotNow()
-        assertThat(vm.state.value.fault).isNull()
-        assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Seal)
-        assertThat(vm.state.value.bio).isEqualTo("Hello")
-    }
-
-    /** The key goes while the prepare runs: the signer finds none, and nothing is signed. */
-    @Test
-    fun aKeyGoneBeforeTheSigningIsTheKeyNoticeNotACrash() = runTest(dispatcher) {
-        profiles.prepareGate = CompletableDeferred()
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.save()
-        dispatcher.scheduler.advanceUntilIdle()
-        identity.seed = null
-        profiles.prepareGate?.complete(Unit)
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.KeyAbsent)
-        assertThat(sealer.staged.values.map { it.state.name }).doesNotContain("RELAYING")
-        assertThat(signedProfile.laid.value).isNull()
     }
 }
