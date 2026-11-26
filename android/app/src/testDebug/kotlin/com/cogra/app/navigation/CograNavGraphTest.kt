@@ -831,6 +831,31 @@ class CograNavGraphTest {
         assertThat(compose.onAllNodesWithTag("shell_snackbar").fetchSemanticsNodes()).isEmpty()
     }
 
+    // ProfileEditSeal.md:61: without the key on this device the seal's notice
+    // stands in the commit's place, and `Restore the key` opens the restore route.
+    @Test
+    fun theProfileSealWithoutTheKeyOpensRestore() {
+        signIn()
+        identity.seed = null
+        account.profile = member()
+        render()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
+        waitForTag("profile.identity.actionRow.edit")
+        compose.onNodeWithTag("profile.identity.actionRow.edit").performScrollTo().performClick()
+        waitForTag("profile_edit_bio")
+        compose.onNodeWithTag("profile_edit_bio").performTextInput("Hello.")
+        compose.onNodeWithTag("profile_edit_save").performScrollTo().performClick()
+        waitForTag("profileEditSeal.foot.sign")
+        compose.onNodeWithTag("profileEditSeal.foot.sign").performScrollTo().performClick()
+
+        waitForTag("profile_edit_seal_restore")
+        assertThat(profiles.updates).isEmpty()
+        compose.onNodeWithTag("profile_edit_seal_restore").performScrollTo().performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Restore>()).isTrue()
+    }
+
     @Test
     fun aPictureTheCropBringsBackIsHeldByTheEditAndNothingIsSigned() {
         // AvatarCrop.md: opened from Change picture on the profile edit,

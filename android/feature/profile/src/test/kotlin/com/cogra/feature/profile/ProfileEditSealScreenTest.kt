@@ -173,6 +173,36 @@ class ProfileEditSealScreenTest {
         compose.onNodeWithTag("profile_edit_seal_picture").assertExists()
     }
 
+    @Test
+    fun withoutTheKeyTheNoticeRestoresOrStepsBackAndNeverKeepsADraft() {
+        var restores = 0
+        compose.setContent {
+            ProfileEditSealStage(
+                state = atRest.copy(fault = ProfileSealFault.KeyAbsent),
+                actions = EditSealActions(
+                    onSign = { signs += 1 },
+                    onBack = { backs += 1 },
+                    onLeave = { leaves += 1 },
+                    onNotNow = { notNows += 1 },
+                    onRestoreKey = { restores += 1 },
+                ),
+            )
+        }
+        compose.onNodeWithText("Your key isn't in this app").assertExists()
+        compose.onNodeWithTag("profileEditSeal.foot.sign").assertDoesNotExist()
+        compose.onNodeWithText("Keep the draft, restore later").assertDoesNotExist()
+        compose.onNodeWithTag("profile_edit_seal_restore").assert(hasText("Restore the key"))
+            .performScrollTo().performClick()
+        compose.onNodeWithTag("profile_edit_seal_not_now").assert(hasText("Not now"))
+            .performScrollTo().performClick()
+        assertThat(restores).isEqualTo(1)
+        assertThat(notNows).isEqualTo(1)
+        assertThat(signs).isEqualTo(0)
+
+        compose.onNodeWithTag("profile_edit_seal_key_help").performClick()
+        compose.onNodeWithTag("profile_edit_seal_key_dialog").assertExists()
+    }
+
     // -- The line under the profile's head (Profile.md:99-101) --
 
     @Test
