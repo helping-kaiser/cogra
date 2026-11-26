@@ -1238,6 +1238,49 @@ pub async fn landed_with_pending_profile(pool: &PgPool) -> Result<Vec<PromotedWr
         .collect())
 }
 
+/// Landed content writes whose display row is still pending: a new post
+/// or comment, or an edit of one, that [`promote_landed`] marked `landed`
+/// and whose confirm-side promotion never completed — the twin of
+/// [`landed_with_pending_profile`]. Every such write owns a pending
+/// version row: a new node's genesis version and an edit's version are
+/// both named by the node and the write's authoring instant, as
+/// `content::land_post_version` / `land_comment_version` name them, and a
+/// new node's entity row lands in the same transaction as that version.
+///
+/// Driven from the pending versions, joined to the write on its node
+/// (`staged_writes_node_idx`), each version table paired with the family
+/// that writes it.
+pub async fn landed_with_pending_content(pool: &PgPool) -> Result<Vec<PromotedWrite>, StagedError> {
+    let rows = sqlx::query!(
+        r#"SELECT s.id AS "id!", s.actor_id AS "actor_id!",
+                  s.act_id AS "act_id!", s.family AS "family!"
+           FROM (SELECT post_id AS node_id, created_at, $1::text AS family
+                 FROM post_versions WHERE pending
+                 UNION ALL
+                 SELECT comment_id, created_at, $2::text
+                 FROM comment_versions WHERE pending) v
+           JOIN staged_writes s
+             ON s.node_id = v.node_id
+            AND s.pre_signed_at = v.created_at
+            AND s.family = v.family
+           WHERE s.state = 'landed'
+           ORDER BY s.act_id"#,
+        Family::Publish.as_str(),
+        Family::Review.as_str(),
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| PromotedWrite {
+            id: r.id,
+            actor_id: r.actor_id,
+            act_id: r.act_id,
+            family: r.family,
+        })
+        .collect())
+}
+
 /// Expires one staged write immediately — the terminal path for a
 /// handshake that can never complete (a seal lost before it was stored).
 ///
