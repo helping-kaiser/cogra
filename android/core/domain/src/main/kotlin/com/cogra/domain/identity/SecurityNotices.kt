@@ -51,8 +51,12 @@ class SecurityNotices @Inject constructor(
 
     /** The active account's pending notice; null once dismissed, when none arrived, or signed out. */
     val reuseDetectedAt: Flow<Instant?> =
-        combine(identity.securityNotice.catch { emit(null) }, unkept, dismissedHere, tokens.tokens) {
-                kept, held, dismissed, pair ->
+        combine(
+            identity.securityNotice.catch { emit(null) },
+            unkept,
+            dismissedHere,
+            tokens.tokens,
+        ) { kept, held, dismissed, pair ->
             pair?.accountId?.takeUnless { it in dismissed }?.let { account -> kept ?: held[account] }
         }
 
