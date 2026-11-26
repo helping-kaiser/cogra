@@ -16,9 +16,11 @@ import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -206,15 +208,31 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun theSecurityNoticeShowsAboveTheGraphAndDismissesOnce() {
-        // The shell renders the notice wherever navigation stands
-        // (auth.md "Reuse detection"); dismissal consumes it for good.
-        render()
-        notices.post(Instant.parse("2026-08-10T09:30:00Z"))
-        waitForTag("security_notice")
+    fun theSecurityNoticeIsTheFeedsFirstCardAndGotItPutsItAwayForGood() {
+        // Kept before the shell composed — as after a process death between the
+        // sign-in and the first frame (FeedSecurityNotice.md:17).
+        runBlocking { notices.post(Instant.parse("2026-08-10T09:30:00Z"), "u1") }
+        feedWithAPost()
+        waitFor(hasTestTag("security_notice") and hasAnyAncestor(hasTestTag("feed_list")))
+        // A card of the list, not a dialog over the graph.
+        assertThat(compose.onAllNodes(isDialog()).fetchSemanticsNodes()).isEmpty()
         compose.onNodeWithTag("security_notice_dismiss").performClick()
         compose.waitForIdle()
         assertThat(compose.onAllNodesWithTag("security_notice").fetchSemanticsNodes()).isEmpty()
+        assertThat(identity.securityNoticeAt.value).isNull()
+    }
+
+    @Test
+    fun changePasswordOpensTheCredentialScreenAndTheNoticeStillStands() {
+        runBlocking { notices.post(Instant.parse("2026-08-10T09:30:00Z"), "u1") }
+        feedWithAPost()
+        waitForTag("security_notice")
+        compose.onNodeWithTag("security_notice_change_password").performClick()
+        onRoute { it.hasRoute<ChangePassword>() }
+        // Nothing about the notice depends on what the reader does there.
+        assertThat(identity.securityNoticeAt.value).isNotNull()
+        compose.runOnUiThread { navController.popBackStack() }
+        waitForTag("security_notice")
     }
 
     @Test

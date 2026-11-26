@@ -297,6 +297,26 @@ class IdentityStoreImpl @Inject constructor(
         key(APPLICATION_CARD_PUT_AWAY)?.let { store.put(it, byteArrayOf(1)) }
     }
 
+    // Under the account's own slot, so it shows only while that account is
+    // active and goes with the slot in a forgetting sign-out's purge. At rest
+    // it is the detection time the server gave, and nothing else; a value
+    // that does not read as one is no notice.
+    override val securityNotice: Flow<java.time.Instant?> =
+        tokens.tokens.flatMapLatest { pair ->
+            val account = pair?.accountId ?: return@flatMapLatest flowOf(null)
+            store.watch(scoped(account, SECURITY_NOTICE)).map { bytes ->
+                bytes?.decodeToString()?.let { runCatching { java.time.Instant.parse(it) }.getOrNull() }
+            }
+        }
+
+    override suspend fun keepSecurityNotice(account: String, detectedAt: java.time.Instant) {
+        store.put(scoped(account, SECURITY_NOTICE), detectedAt.toString().encodeToByteArray())
+    }
+
+    override suspend fun dropSecurityNotice() {
+        account()?.let { store.remove(scoped(it, SECURITY_NOTICE)) }
+    }
+
     // Follows the active account: a Settings change has to reach controls
     // already composed on another destination, and a sign-in has to bring
     // that account's own choice with it. An unreadable or unknown value
@@ -374,6 +394,7 @@ class IdentityStoreImpl @Inject constructor(
         const val PENDING_BLOB = "pending_backup_blob"
         const val STANCE_PAD_TAUGHT = "stance_pad_taught"
         const val APPLICATION_CARD_PUT_AWAY = "application_card_put_away"
+        const val SECURITY_NOTICE = "security_notice"
         const val STANCE_INPUT_MODE = "stance_input_mode"
         const val CONFIRM_MULTI_ACTION = "confirm_multi_action_submits"
         const val FORGET = "forget_on_sign_out"
