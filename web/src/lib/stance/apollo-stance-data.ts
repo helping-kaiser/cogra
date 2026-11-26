@@ -92,7 +92,7 @@ import {
   type KeptTargetPreview,
 } from "./kept-preview";
 import type { StancePair } from "./model";
-import { createStanceAttempts, severanceIntent, stanceIntent } from "./stance-attempts";
+import { createStanceAttempts, severanceIntent, stanceIntent, type Slot } from "./stance-attempts";
 
 /** A gesture's batch as staged: its node, its writes, and what the signer checks them against. */
 type Staged = {
@@ -478,7 +478,7 @@ export function createApolloStanceData(deps: {
    * asking, and touches no memory.
    */
   const stageAndSign = async (
-    target: StanceTarget,
+    target: Slot,
     stage: () => Promise<Outcome<Staged>>,
     intent: string | null,
   ): Promise<Outcome<StanceCommit>> => {
@@ -494,8 +494,10 @@ export function createApolloStanceData(deps: {
   };
 
   /**
-   * EVERY SIGNED GESTURE TOWARD ONE TARGET GOES THROUGH ITS SLOT — a pick and
-   * a walk-back alike, since both are records in the one bundle.
+   * EVERY SIGNED GESTURE GOES THROUGH ITS KIND'S SLOT — a target's pick
+   * slot, or its walk-back slot (stance-attempts.ts `Slot`). A gesture is
+   * only ever compared with an earlier attempt of its own kind; one of the
+   * other kind toward the same target goes main's road beside it.
    *
    * - A GESTURE WHOSE SIGNING HAS NOT ANSWERED DONE IS ASKED AGAIN, never
    *   staged beside (stance-attempts.ts): the same gesture re-signs the first
@@ -506,7 +508,7 @@ export function createApolloStanceData(deps: {
    *   first attempt's memory and material are left alone.
    */
   const slotted = async (
-    target: StanceTarget,
+    target: Slot,
     intent: string,
     stage: () => Promise<Outcome<Staged>>,
   ): Promise<Outcome<StanceCommit>> => {
@@ -719,7 +721,7 @@ export function createApolloStanceData(deps: {
       // bundle to (0, 0), so a fresh prepare beside it is refused as already
       // netted, and one it never saw is staged a second time — two walk-backs
       // that Home's Resume would both land.
-      return slotted(target, severanceIntent(target), async () => {
+      return slotted({ walkBack: target }, severanceIntent(target), async () => {
         const node = await graphIdOf(target);
         if (node.kind !== "success") return node;
         const prepared = await guard.run(() => prepareSeverance(client, selectorOf(target)));
