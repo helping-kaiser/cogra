@@ -21,8 +21,11 @@
 //   (`kept-picks-route.tsx`). The seal's arrow and its Back step back to the
 //   review; its X leaves the flow.
 // - THE SEAL WAITS LIKE EVERY SEAL: inert from the press, `Signing the
-//   picks…` past 200ms with the ways out refusing a press (never dimmed),
-//   the slow line past 5s, never a spinner. No answer: the fault line and
+//   picks…` past 200ms, the slow line past 5s, never a spinner. From the
+//   press Back reads `Close` and the X is named `Close`; every way out only
+//   closes the seal and the batch goes on (`kept-batch.ts`: each target's row
+//   then reads `Signing…`, and a batch not through stands on Settings'
+//   kept-picks row with Retry). Open, no answer: the fault line and
 //   Retry; a FORBIDDEN answer, the same foot with `That didn't go through.
 //   Try again.` (NetworkError.md:13). The write rule: the notice, `Not now`
 //   back to the review. Any other
@@ -39,12 +42,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { hasCode, type Outcome } from "@/lib/api/outcome";
 import { useActiveAccountId } from "@/lib/session/provider";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
+import { closeKeptBatchSeal, signKeptBatch } from "@/lib/stance/kept-batch";
 import { dropKeptPicks, keptOpinions, useKeptPicks, type KeptPick } from "@/lib/stance/kept-picks";
 import { keptPicksOrigin } from "@/lib/stance/kept-picks-route";
 import { fallbackPreview, type KeptTargetPreview } from "@/lib/stance/kept-preview";
 import { useStanceData } from "@/lib/stance/provider";
-import { markSettling } from "@/lib/stance/settling";
-import { announceStanceSigned } from "@/lib/stance/signed-events";
 import type { StanceCommit, StanceTarget } from "@/lib/stance/stance-data";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
@@ -96,11 +98,6 @@ const OFFLINE_LINE = "That didn't send. Try again.";
 /** `Removed — 2 picks left.` (`Removed — 1 pick left.` in the singular). */
 export function removedAnnouncement(left: number): string {
   return `Removed — ${left} ${left === 1 ? "pick" : "picks"} left.`;
-}
-
-/** The settled snackbar in its batch form: `Signed 3 things, still settling.` */
-export function signedBatchLine(count: number): string {
-  return `Signed ${count} ${count === 1 ? "thing" : "things"}, still settling.`;
 }
 
 const keyOf = (target: StanceTarget) => `${target.kind}:${target.id}`;
@@ -158,6 +155,17 @@ export function KeptPicksView() {
 
   const swapped = useWaitedPast(signing, SLOW_ANSWER_MS);
   const slow = useWaitedPast(signing, SLOW_NETWORK_MS);
+  /** The seal was closed while its batch signs: the answer is the runner's readers'. */
+  const closedRef = useRef(false);
+  // The system's Back leaves the route mid-signing: the seal is closed, the
+  // batch goes on (KeptPicksSeal.md:59). A seal not signing closes nothing.
+  useEffect(() => {
+    closedRef.current = false;
+    return () => {
+      closedRef.current = true;
+      closeKeptBatchSeal();
+    };
+  }, []);
 
   const leave = () => {
     leaving.current = true;
@@ -250,21 +258,28 @@ export function KeptPicksView() {
     setFault(null);
     setSigning(true);
     const batch = opinions.map((kept) => ({ target: kept.target, pick: kept.pick }));
-    const outcome = await data.commitBatch(batch);
+    // The batch runner owns the signing (`kept-batch.ts`): closing the seal
+    // never cancels it. TAKEN, the runner lands it — the picks kept no longer,
+    // each target settling, the batch snackbar — and the open seal leaves.
+    const outcome = await signKeptBatch((entries) => data.commitBatch(entries), batch);
+    if (closedRef.current) return;
     if (outcome.kind !== "success") {
       setSigning(false);
       setFault(faultOf(outcome));
       return;
     }
-    // TAKEN: the picks are signed, so they are kept no longer; each target
-    // settles under its face until its record is ordered.
     leaving.current = true;
-    const targets = batch.map((entry) => entry.target);
-    markSettling(targets);
-    announceStanceSigned();
-    await dropKeptPicks(account, targets);
-    carrySnackbar(signedBatchLine(batch.length));
     router.replace(from);
+  };
+
+  /**
+   * From the press, every way out only closes the seal (KeptPicksSeal.md:57,
+   * :59): it leaves for where the review was opened from, and the batch goes on.
+   */
+  const close = () => {
+    closedRef.current = true;
+    closeKeptBatchSeal();
+    leave();
   };
 
   /** Back to the review, every pick still kept — the seal's arrow, Back, and `Not now`. */
@@ -372,21 +387,18 @@ export function KeptPicksView() {
     };
   });
   const note = slow ? SLOW_SIGNING_LINE : null;
-  // Past 200ms the ways out refuse a press, never dimmed (KeptPicksSeal.md:23).
-  const locked = signing && swapped;
+  // From the press, Back reads Close and the X is named Close, never dimmed;
+  // every way out only closes the seal (KeptPicksSeal.md:57, :59).
+  const back = signing ? close : backToReview;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
       <HeaderBar
         title="What you sign"
-        onBack={() => {
-          if (!locked) backToReview();
-        }}
-        backLabel="Back a step"
-        onLeave={() => {
-          if (!locked) leave();
-        }}
-        leaveLabel="Leave — your picks are kept"
+        onBack={back}
+        backLabel={signing ? "Close" : "Back a step"}
+        onLeave={signing ? close : leave}
+        leaveLabel={signing ? "Close" : "Leave — your picks are kept"}
         help={
           <HelpDot
             ariaLabel="How signing works"
@@ -467,11 +479,9 @@ export function KeptPicksView() {
               node={part(SEAL, "foot.back")}
               variant="text"
               full
-              onClick={() => {
-                if (!locked) backToReview();
-              }}
+              onClick={back}
             >
-              Back
+              {signing ? "Close" : "Back"}
             </PillButton>
           </div>
         )}
