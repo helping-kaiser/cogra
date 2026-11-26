@@ -15,12 +15,14 @@ import com.cogra.domain.profile.SignedProfile
 import com.cogra.domain.profile.SignedProfileFields
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.known
 import com.cogra.domain.signing.profileExpectation
 import com.cogra.domain.signing.profileUpdate
+import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +51,7 @@ class AvatarFlowViewModel @Inject constructor(
     private val processor: MediaProcessor,
     private val signer: WriteSigner,
     private val signedProfile: SignedProfile,
+    private val identity: IdentityStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AvatarFlowState())
@@ -174,6 +177,11 @@ class AvatarFlowViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
+            // The key is not on this device: nothing is prepared or signed (AvatarSeal.md:53).
+            if (identity.actorSeed() == null) {
+                _state.update { it.copy(submitting = false, keyAbsent = true) }
+                return@launch
+            }
             val sent = SentProfile(
                 displayName = profile.displayName.value.orEmpty(),
                 bio = profile.bio.value,
@@ -209,7 +217,13 @@ class AvatarFlowViewModel @Inject constructor(
             val ledger = known?.let { mapOf(mediaId to it) }.orEmpty()
             val expected = profileExpectation(profile.id, sent, ledger)
             val signing = signedProfile.begin()
-            val results = signer.sign(prepared, Expectation(listOf(profileUpdate(expected))))
+            val results = try {
+                signer.sign(prepared, Expectation(listOf(profileUpdate(expected))))
+            } catch (_: NoActorKeyException) {
+                // The key went between the press and the signing: nothing was signed.
+                _state.update { it.copy(submitting = false, keyAbsent = true) }
+                return@launch
+            }
             if (results.all { it is WriteResult.Done }) {
                 layPicture(signing, profile.id, flow.upload as? AvatarUpload.Done)
                 _state.update { it.copy(submitting = false, saved = true) }

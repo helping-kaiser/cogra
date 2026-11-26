@@ -125,7 +125,7 @@ class AvatarFlowViewModelTest {
     private val signedProfile = SignedProfile(session, TestScope(dispatcher))
 
     private fun viewModel() =
-        AvatarFlowViewModel(profiles, media, processor, WriteSigner(sealer, identity), signedProfile)
+        AvatarFlowViewModel(profiles, media, processor, WriteSigner(sealer, identity), signedProfile, identity)
 
     /** Picked, cropped, and stepped on to the seal — the happy path's setup. */
     private fun startedAtSeal(crop: CropSpec? = null): AvatarFlowViewModel {
@@ -438,6 +438,19 @@ class AvatarFlowViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.signingFailed).isTrue()
+        assertThat(signedProfile.laid.value).isNull()
+    }
+
+    // -- THE KEY NOT ON THIS DEVICE (AvatarSeal.md:53): never a crash --
+
+    @Test
+    fun aPressWithoutTheKeyIsTheKeyNoticeAndPreparesNothing() = runTest(dispatcher) {
+        val vm = startedAtSeal()
+        identity.seed = null
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.keyAbsent).isTrue()
+        assertThat(profiles.prepareCalls).isEqualTo(0)
         assertThat(signedProfile.laid.value).isNull()
     }
 }
