@@ -25,10 +25,14 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.TimeUnit
 import javax.inject.Provider
+
+private const val REQUEST_WAIT_SECONDS = 5L
 
 private const val TARGET_GRAPH_ID = "mint:act:b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0:3:publish"
 
@@ -158,9 +162,16 @@ class StanceRepositoryTest {
         enqueue(answer)
     }
 
+    /**
+     * The next recorded request, or a failure: an untimed `takeRequest()`
+     * blocks forever when the code sent fewer requests than a test expects.
+     */
+    private fun MockWebServer.next(): RecordedRequest =
+        checkNotNull(takeRequest(REQUEST_WAIT_SECONDS, TimeUnit.SECONDS)) { "no request arrived" }
+
     /** Which document a recorded request carried. */
     private fun MockWebServer.nextOperation(): String {
-        val body = takeRequest().body.readUtf8()
+        val body = next().body.readUtf8()
         return listOf("PageStances", "PostStance", "CommentStance", "ProfileStance", "PrepareSeverance")
             .firstOrNull { body.contains("\"operationName\":\"$it\"") || body.contains("query $it(") }
             ?: body
@@ -279,7 +290,7 @@ class StanceRepositoryTest {
 
         // The page read named the class; the pick rides the root's own read.
         assertThat(server.nextOperation()).isEqualTo("PageStances")
-        val body = server.takeRequest().body.readUtf8()
+        val body = server.next().body.readUtf8()
         assertThat(body).contains("PostStance")
         assertThat(body).contains("\"pDirected\":0.1")
         assertThat(body).contains("\"pInterest\":-0.5")
@@ -441,7 +452,7 @@ class StanceRepositoryTest {
         val standing = (repo().standing(node("t1"), includePending = false) as Outcome.Success).value
 
         assertThat(standing.includePending).isFalse()
-        assertThat(server.takeRequest().body.readUtf8()).contains("\"includePending\":false")
+        assertThat(server.next().body.readUtf8()).contains("\"includePending\":false")
     }
 
     @Test
@@ -463,7 +474,7 @@ class StanceRepositoryTest {
 
         assertThat(staged.map { it.id }).containsExactly("w1", "w2", "w3").inOrder()
         assertThat(staged.map { it.family }).containsExactly(Family.OPINION, Family.OPINION, Family.OPINION)
-        assertThat(server.takeRequest().body.readUtf8()).contains("\"target\":\"t1\"")
+        assertThat(server.next().body.readUtf8()).contains("\"target\":\"t1\"")
     }
 
     @Test
@@ -512,7 +523,7 @@ class StanceRepositoryTest {
         assertThat(standing.target).isEqualTo(StanceTarget.Topic("saltmaps"))
         assertThat(standing.net).isEqualTo(StancePair(0.6, 0.35))
         assertThat(standing.records).isEqualTo(4)
-        val body = server.takeRequest().body.readUtf8()
+        val body = server.next().body.readUtf8()
         assertThat(body).contains("HashtagStance")
         assertThat(body).contains("\"name\":\"saltmaps\"")
         // Nothing else was asked: a probe would have left requests behind.
@@ -546,7 +557,7 @@ class StanceRepositoryTest {
 
         repo().prepareSeverance(StanceTarget.Topic("saltmaps"))
 
-        val body = server.takeRequest().body.readUtf8()
+        val body = server.next().body.readUtf8()
         assertThat(body).contains("\"topicName\":\"saltmaps\"")
         assertThat(body).doesNotContain("\"target\"")
     }
