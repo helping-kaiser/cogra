@@ -226,10 +226,7 @@ pub async fn prepare_profile_update<B: L1Boundary>(
     )
     .await?;
     if staged::has_pending_targeting(pool, viewer, Family::Registration, &prof_string).await? {
-        return Err(ProfileError::BadInput {
-            field: "input",
-            message: "a profile update is already in flight".into(),
-        });
+        return Err(update_in_flight());
     }
     let head = mirror::chain_head(pool, &address, Family::Registration, &prof_string)
         .await?
@@ -259,7 +256,7 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         &[(SigningClass::Edit, 1)],
     )
     .await?;
-    let prepared = prepare::prepare(
+    let prepared = prepare::prepare_chained(
         boundary,
         pool,
         staging.gc_after_epochs,
@@ -279,8 +276,22 @@ pub async fn prepare_profile_update<B: L1Boundary>(
             node: Some(viewer),
         },
     )
-    .await?;
+    .await
+    .map_err(|e| match e {
+        PrepareError::EditInFlight => update_in_flight(),
+        e => e.into(),
+    })?;
     Ok(prepared)
+}
+
+/// The refusal a second profile update meets while the first is in
+/// flight — the same answer from the early guard and from the one on the
+/// staging transaction (`prepare::prepare_chained`).
+fn update_in_flight() -> ProfileError {
+    ProfileError::BadInput {
+        field: "input",
+        message: "a profile update is already in flight".into(),
+    }
 }
 
 /// Pre-commitment materialization of a profile update (substrate.md §6;

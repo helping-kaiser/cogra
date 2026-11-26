@@ -45,6 +45,11 @@ pub enum PrepareError {
     /// waiting.
     #[error("write rule: the signing budget cannot carry this batch right now")]
     SigningBudget,
+    /// A chained edit met another of its author's toward the same node
+    /// still in flight on the staging transaction ([`prepare_chained`]).
+    /// Each caller answers it with the refusal its own early guard gives.
+    #[error("an edit of this node is already in flight")]
+    EditInFlight,
     #[error(transparent)]
     Boundary(#[from] BoundaryError),
     #[error(transparent)]
@@ -331,8 +336,51 @@ pub async fn prepare<B: L1Boundary>(
         actor_id,
         gesture,
         Solvency::PublishedBalance,
+        Chain::Unguarded,
     )
     .await
+}
+
+/// Prepares a chained edit — a Post or Comment edit, a profile update —
+/// with the edit-serialization guard inside the staging transaction
+/// (substrate.md §9: CoGra serializes edits per (node, author), so its
+/// own clients never author a branch). The guard runs after the sequence
+/// allocation has taken the author's counter row, so a second prepare by
+/// the author meets it only once this one has committed or rolled back
+/// (`staged::chained_edit_in_flight`): an unsigned predecessor is
+/// superseded, a signed one refuses as [`PrepareError::EditInFlight`].
+///
+/// The callers keep their early guard on the pool as well. It answers a
+/// sequential second edit before the gallery, write-rule and payload
+/// work, in the order the prepare surface always has; this one closes
+/// the window between that read and the write.
+pub async fn prepare_chained<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    gc_after_epochs: i64,
+    actor_id: Uuid,
+    gesture: Gesture,
+) -> Result<Prepared, PrepareError> {
+    prepare_under(
+        boundary,
+        pool,
+        gc_after_epochs,
+        actor_id,
+        gesture,
+        Solvency::PublishedBalance,
+        Chain::Serialized,
+    )
+    .await
+}
+
+/// Whether a prepare runs the edit-serialization guard on its staging
+/// transaction.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Chain {
+    /// Every act but a chained edit.
+    Unguarded,
+    /// A chained edit: one in flight per (node, author).
+    Serialized,
 }
 
 /// Where a prepare's W1 estimate comes from.
@@ -373,6 +421,7 @@ pub(crate) async fn prepare_funded_admission<B: L1Boundary>(
         actor_id,
         gesture,
         Solvency::AdmissionFunded,
+        Chain::Unguarded,
     )
     .await
 }
@@ -384,6 +433,7 @@ async fn prepare_under<B: L1Boundary>(
     actor_id: Uuid,
     gesture: Gesture,
     solvency: Solvency,
+    chain: Chain,
 ) -> Result<Prepared, PrepareError> {
     gesture
         .family
@@ -434,6 +484,18 @@ async fn prepare_under<B: L1Boundary>(
         return Err(PrepareError::Formation(format!(
             "{act_id} names itself as a dependency"
         )));
+    }
+    if chain == Chain::Serialized
+        && staged::chained_edit_in_flight(
+            &mut tx,
+            actor_id,
+            gesture.family,
+            &target.to_string(),
+            prepared_epoch,
+        )
+        .await?
+    {
+        return Err(PrepareError::EditInFlight);
     }
     if let NodeId::Name(name) = &target {
         hashtag_store::upsert(&mut tx, name).await?;
