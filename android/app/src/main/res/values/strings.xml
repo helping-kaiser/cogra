@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="security_notice_title">Security notice</string>
-    <string name="security_notice_reuse">A signed-out session token for your account was re-used on %1$s — likely token theft. All sessions were signed out as a precaution. If this wasn\'t you, consider changing your password.</string>
     <string name="security_notice_confirm">Got it</string>
     <!-- PR-62's one-time notice (sign-out-custody SC-G2). PLACEHOLDER WORDS:
          ruled "words are design's" (seam 179 item 3; vehicle ruled at seam

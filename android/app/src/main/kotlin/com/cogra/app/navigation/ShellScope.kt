@@ -252,6 +252,7 @@ internal class Shell(
                     onStartKeyCeremony = { navController.navigate(KeyCeremony) },
                     snackbarHostState = snackbar,
                     surface = surface,
+                    onChangePassword = { navController.navigate(ChangePassword) },
                 )
             }
         }

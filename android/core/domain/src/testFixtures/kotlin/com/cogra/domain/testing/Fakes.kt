@@ -200,6 +200,23 @@ class FakeIdentityStore : IdentityStore {
         applicationCardPutAway = true
     }
 
+    /** The kept security notice — one slot, as every value of this fake (the real store keys it per account). */
+    val securityNoticeAt = MutableStateFlow<Instant?>(null)
+
+    /** The account the last notice was kept for. */
+    var securityNoticeAccount: String? = null
+
+    override val securityNotice: Flow<Instant?> = securityNoticeAt
+
+    override suspend fun keepSecurityNotice(account: String, detectedAt: Instant) {
+        securityNoticeAccount = account
+        securityNoticeAt.value = detectedAt
+    }
+
+    override suspend fun dropSecurityNotice() {
+        securityNoticeAt.value = null
+    }
+
     private val inputMode = MutableStateFlow(StanceInputMode.Default)
 
     override val stanceInputMode: Flow<StanceInputMode> = inputMode

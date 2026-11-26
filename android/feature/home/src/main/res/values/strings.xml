@@ -80,4 +80,9 @@
     <!-- The once-per-release snackbar (FeedNewerVersion.md; copy-voice, the settings page). -->
     <string name="newer_version_snackbar">A newer version of CoGra is out.</string>
     <string name="newer_version_update_now">Update now</string>
+    <!-- The security notice (FeedSecurityNotice.jsx:35-44), word for word. -->
+    <string name="feed_security_notice_title">We signed out every device</string>
+    <string name="feed_security_notice_body">A sign-in this account had already replaced was used again, which can mean someone else had a copy. If your password might be known to anyone, change it.</string>
+    <string name="feed_security_notice_change_password">Change password</string>
+    <string name="feed_security_notice_got_it">Got it</string>
 </resources>

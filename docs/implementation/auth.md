@@ -987,8 +987,8 @@ pattern; rationale for this project below.
   read-and-cleared atomically behind the verified password —
   delivered exactly once, and never on a refusal, so the field
   leaks nothing to an unauthenticated caller. Clients surface it
-  as a dismissible alert on the signed-in shell. The web keeps
-  the stamp it received on the device, for the account it
+  as a dismissible alert on the signed-in shell. Both clients
+  keep the stamp they received on the device, for the account it
   belongs to, until the reader dismisses it — across reloads and
   restarts; a forgetting account's sign-out purges it with its
   other device-local flags. If more security-event kinds ever arise, the

@@ -20,6 +20,7 @@ import java.io.IOException
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -54,7 +55,7 @@ class LoginViewModelTest {
     private val sessions = ScriptedSessions()
     private val tokens = FakeTokenStore()
     private val identity = FakeIdentityStore()
-    private val notices = SecurityNotices()
+    private val notices = SecurityNotices(identity, tokens)
     private val custody = FakeLockCustodyStore()
     private val locks = FakeDeviceLockRepository().apply { passwords["u1"] = PASSWORD }
 
@@ -156,7 +157,7 @@ class LoginViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(tokens.current()).isEqualTo(u1Grant.tokens)
         assertThat(custody.isLocked("u1")).isFalse()
-        assertThat(notices.lockLost.value).isTrue()
+        assertThat(notices.lockLost.first()).isTrue()
     }
 
     @Test
@@ -183,7 +184,7 @@ class LoginViewModelTest {
         assertThat(vm.state.value.inProgress).isFalse()
         assertThat(vm.state.value.error).isNull()
         // A clean grant posts no security notice.
-        assertThat(notices.reuseDetectedAt.value).isNull()
+        assertThat(notices.reuseDetectedAt.first()).isNull()
     }
 
     @Test
@@ -198,7 +199,9 @@ class LoginViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         // The shell dialog reads the holder after auth-driven navigation;
         // the login succeeded normally alongside it.
-        assertThat(notices.reuseDetectedAt.value).isEqualTo(detectedAt)
+        assertThat(notices.reuseDetectedAt.first()).isEqualTo(detectedAt)
+        // Kept for the account the sign-in belongs to (auth.md "Multi-account device custody").
+        assertThat(identity.securityNoticeAccount).isEqualTo("u1")
         assertThat(tokens.current()).isEqualTo(AuthTokens("a", "r", "u1"))
     }
 
