@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** Which root holds an opaque id, in probe order — `StanceRepositoryImpl`'s own order. */
+/** Which root holds an opaque id, in probe order: a post first, since a feed is made of posts. */
 private enum class LentRoot { POST, COMMENT, USER }
 
 /**

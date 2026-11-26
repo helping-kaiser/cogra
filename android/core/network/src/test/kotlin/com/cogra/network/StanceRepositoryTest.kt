@@ -1,6 +1,6 @@
 // The stance repository against a MockWebServer through the real
-// generated Apollo client: the root-by-root probe and the class it
-// remembers, the bundle → domain mapping for all three reads, the tier
+// generated Apollo client: the page read that names a node's class and the
+// root a later lone read asks, the bundle → domain mapping for all three reads, the tier
 // split on a missing target and a missing bundle, and the severance
 // batch.
 
@@ -21,6 +21,7 @@ import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.StanceRepositoryImpl
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -87,18 +88,20 @@ class StanceRepositoryTest {
         server.enqueue(MockResponse().setBody(json).addHeader("Content-Type", "application/json"))
     }
 
-    private fun repo() = StanceRepositoryImpl(
+    private fun TestScope.repo() = StanceRepositoryImpl(
         client,
         AuthGuard(
             tokenStore,
             SessionRefresher(tokenStore, EndLocalSession(FakeLockCustodyStore(), tokenStore), Provider { client }),
         ),
         writes,
+        tokenStore,
+        backgroundScope,
     )
 
     @Test
     fun theNodeABundleReadNamedIsWhatAGestureTowardItMustName() = runTest {
-        enqueue(answerJson("post", bundleJson()))
+        enqueue(pageJson(slot("p1")))
         val repo = repo()
         repo.standing(node("p1"))
         // Remembered from the read that rendered the control: no second
@@ -136,20 +139,36 @@ class StanceRepositoryTest {
     private fun answerJson(root: String, bundle: String?) =
         """{"data":{"$root":{"viewerStance":${bundle ?: "null"}}}}"""
 
-    /** The same root saying it does not hold that id — the probe moves on. */
+    /** The same root saying it does not hold that id. */
     private fun missJson(root: String) = """{"data":{"$root":null}}"""
+
+    /** One `PageStances` slot: a node of [typename] with (or without) a bundle. */
+    private fun slot(id: String, typename: String = "Post", bundle: String? = bundleJson()) =
+        """{"__typename":"$typename","id":"$id","viewerStance":${bundle ?: "null"}}"""
+
+    /** A `PageStances` answer, slot by slot ("null" for an unknown id). */
+    private fun pageJson(vararg slots: String) = """{"data":{"nodes":[${slots.joinToString(",")}]}}"""
+
+    /** The first read of `t1`, a post: a page of one carrying [bundle]. */
+    private fun firstJson(bundle: String?) = pageJson(slot("t1", bundle = bundle))
+
+    /** A target's first read names its class; [answer] is then its own root's answer. */
+    private fun enqueueFirstThen(id: String, answer: String) {
+        enqueue(pageJson(slot(id)))
+        enqueue(answer)
+    }
 
     /** Which document a recorded request carried. */
     private fun MockWebServer.nextOperation(): String {
         val body = takeRequest().body.readUtf8()
-        return listOf("PostStance", "CommentStance", "ProfileStance", "PrepareSeverance")
+        return listOf("PageStances", "PostStance", "CommentStance", "ProfileStance", "PrepareSeverance")
             .firstOrNull { body.contains("\"operationName\":\"$it\"") || body.contains("query $it(") }
             ?: body
     }
 
     @Test
     fun `standing folds the bundle the backend reports`() = runTest {
-        enqueue(answerJson("post", bundleJson(pDirected = 0.4, pInterest = -0.2, recordCount = 5)))
+        enqueue(pageJson(slot("t1", bundle = bundleJson(pDirected = 0.4, pInterest = -0.2, recordCount = 5))))
 
         val outcome = repo().standing(node("t1"))
 
@@ -168,14 +187,16 @@ class StanceRepositoryTest {
         // client apart so the pad can fold locally and the severance
         // confirm can quote a price that adds up.
         enqueue(
-            answerJson(
-                "post",
-                bundleJson(
-                    pDirected = 1.0,
-                    pInterest = -1.0,
-                    rawPDirected = 6.0,
-                    rawPInterest = -4.5,
-                    recordCount = 9,
+            pageJson(
+                slot(
+                    "t1",
+                    bundle = bundleJson(
+                        pDirected = 1.0,
+                        pInterest = -1.0,
+                        rawPDirected = 6.0,
+                        rawPInterest = -4.5,
+                        recordCount = 9,
+                    ),
                 ),
             ),
         )
@@ -189,14 +210,16 @@ class StanceRepositoryTest {
     @Test
     fun `the severance quote carries the raw sums the batch has to walk back`() = runTest {
         enqueue(
-            answerJson(
-                "post",
-                bundleJson(
-                    pDirected = 1.0,
-                    pInterest = 1.0,
-                    rawPDirected = 6.0,
-                    rawPInterest = 4.5,
-                    severanceCost = 6,
+            pageJson(
+                slot(
+                    "t1",
+                    bundle = bundleJson(
+                        pDirected = 1.0,
+                        pInterest = 1.0,
+                        rawPDirected = 6.0,
+                        rawPInterest = 4.5,
+                        severanceCost = 6,
+                    ),
                 ),
             ),
         )
@@ -208,42 +231,37 @@ class StanceRepositoryTest {
     }
 
     @Test
-    fun `the first read probes root by root and later reads ask only the one that answered`() = runTest {
+    fun `the first read pages the node and a later lone read asks only the root it named`() = runTest {
         val repo = repo()
-        enqueue(missJson("post"))
-        enqueue(missJson("comment"))
-        enqueue(answerJson("user", bundleJson()))
+        enqueue(pageJson(slot("u1", typename = "User")))
         enqueue(answerJson("user", bundleJson()))
 
         repo.standing(node("u1"))
         repo.standing(node("u1"))
 
-        assertThat(server.nextOperation()).isEqualTo("PostStance")
-        assertThat(server.nextOperation()).isEqualTo("CommentStance")
+        // No probe: the page slot's class names the root, once.
+        assertThat(server.nextOperation()).isEqualTo("PageStances")
         assertThat(server.nextOperation()).isEqualTo("ProfileStance")
-        // The class is remembered, so the second read is one document.
-        assertThat(server.nextOperation()).isEqualTo("ProfileStance")
-        assertThat(server.requestCount).isEqualTo(4)
+        assertThat(server.requestCount).isEqualTo(2)
     }
 
     @Test
     fun `a comment target is remembered as a comment`() = runTest {
         val repo = repo()
-        enqueue(missJson("post"))
-        enqueue(answerJson("comment", bundleJson()))
+        enqueue(pageJson(slot("c1", typename = "Comment")))
         enqueue(answerJson("comment", bundleJson()))
 
         repo.standing(node("c1"))
         repo.standing(node("c1"))
 
-        assertThat(server.nextOperation()).isEqualTo("PostStance")
-        assertThat(server.nextOperation()).isEqualTo("CommentStance")
+        assertThat(server.nextOperation()).isEqualTo("PageStances")
         assertThat(server.nextOperation()).isEqualTo("CommentStance")
     }
 
     @Test
     fun `the pick rides the read and the landing comes back off the projection`() = runTest {
-        enqueue(
+        enqueueFirstThen(
+            "t1",
             answerJson(
                 "post",
                 bundleJson(projected = projectedJson(0.5, -0.3, severed = false)),
@@ -259,14 +277,18 @@ class StanceRepositoryTest {
         assertThat(landing.inertInterest).isFalse()
         assertThat(landing.severance).isFalse()
 
+        // The page read named the class; the pick rides the root's own read.
+        assertThat(server.nextOperation()).isEqualTo("PageStances")
         val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("PostStance")
         assertThat(body).contains("\"pDirected\":0.1")
         assertThat(body).contains("\"pInterest\":-0.5")
     }
 
     @Test
     fun `inertness is named per axis`() = runTest {
-        enqueue(
+        enqueueFirstThen(
+            "t1",
             answerJson("post", bundleJson(projected = projectedJson(0.0, 0.6, severed = false))),
         )
 
@@ -279,7 +301,8 @@ class StanceRepositoryTest {
 
     @Test
     fun `a landing on both zeros is severance`() = runTest {
-        enqueue(
+        enqueueFirstThen(
+            "t1",
             answerJson("post", bundleJson(projected = projectedJson(0.0, 0.0, severed = true))),
         )
 
@@ -292,7 +315,7 @@ class StanceRepositoryTest {
 
     @Test
     fun `a bundle that answers a pick without a projection is a server fault`() = runTest {
-        enqueue(answerJson("post", bundleJson(projected = null)))
+        enqueueFirstThen("t1", answerJson("post", bundleJson(projected = null)))
 
         val outcome = repo().projection(node("t1"), StancePair(0.1, 0.1))
 
@@ -302,8 +325,7 @@ class StanceRepositoryTest {
     @Test
     fun `the severance quote carries the batch cost, not the record count`() = runTest {
         enqueue(
-            answerJson(
-                "post",
+            firstJson(
                 bundleJson(pDirected = 0.7, pInterest = 0.3, recordCount = 9, severanceCost = 4),
             ),
         )
@@ -319,8 +341,7 @@ class StanceRepositoryTest {
     @Test
     fun `an already severed bundle says so`() = runTest {
         enqueue(
-            answerJson(
-                "post",
+            firstJson(
                 bundleJson(pDirected = 0.0, pInterest = 0.0, severed = true, severanceCost = 0),
             ),
         )
@@ -336,8 +357,7 @@ class StanceRepositoryTest {
     @Test
     fun `an empty bundle has nothing to walk back though the API says not severed`() = runTest {
         enqueue(
-            answerJson(
-                "post",
+            firstJson(
                 bundleJson(pDirected = 0.0, pInterest = 0.0, recordCount = 0, severed = false, severanceCost = 0),
             ),
         )
@@ -351,8 +371,7 @@ class StanceRepositoryTest {
     @Test
     fun `an empty signs standing walks back at its cost of one`() = runTest {
         enqueue(
-            answerJson(
-                "post",
+            firstJson(
                 bundleJson(pDirected = 0.0, pInterest = 0.0, recordCount = 1, severed = false, severanceCost = 1),
             ),
         )
@@ -366,46 +385,47 @@ class StanceRepositoryTest {
 
     @Test
     fun `the standing carries which zero it is`() = runTest {
-        enqueue(answerJson("post", bundleJson(pDirected = 0.0, pInterest = 0.0, recordCount = 3, severed = true)))
+        enqueue(firstJson(bundleJson(pDirected = 0.0, pInterest = 0.0, recordCount = 3, severed = true)))
         assertThat((repo().standing(node("t1")) as Outcome.Success).value.severed).isTrue()
-        enqueue(answerJson("post", bundleJson(pDirected = 0.0, pInterest = 0.0, recordCount = 1, severed = false)))
+        enqueue(firstJson(bundleJson(pDirected = 0.0, pInterest = 0.0, recordCount = 1, severed = false)))
         assertThat((repo().standing(node("t1")) as Outcome.Success).value.severed).isFalse()
     }
 
     @Test
-    fun `an id no root answers is refused as not found`() = runTest {
-        enqueue(missJson("post"))
-        enqueue(missJson("comment"))
-        enqueue(missJson("user"))
+    fun `an id no node answers is refused as not found`() = runTest {
+        enqueue(pageJson("null"))
 
         val outcome = repo().standing(node("ghost"))
 
         assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)
         assertThat((outcome as Outcome.Refused).errors.single().code).isEqualTo(ErrorCode.NOT_FOUND)
+        assertThat(server.requestCount).isEqualTo(1)
     }
 
     @Test
-    fun `a target that stops answering is probed again`() = runTest {
+    fun `a target its root stops holding is paged again`() = runTest {
         val repo = repo()
-        enqueue(answerJson("post", bundleJson()))
+        enqueue(pageJson(slot("t1")))
         // The remembered root has gone quiet: the memo is dropped…
         enqueue(missJson("post"))
-        // …so the next read starts the probe over rather than staying
-        // on a class that no longer holds the id.
-        enqueue(missJson("post"))
+        // …so the next read asks the page again rather than staying on a
+        // class that no longer holds the id.
+        enqueue(pageJson(slot("t1", typename = "Comment")))
         enqueue(answerJson("comment", bundleJson()))
 
         repo.standing(node("t1"))
+        val gone = repo.standing(node("t1"))
         repo.standing(node("t1"))
         repo.standing(node("t1"))
 
-        repeat(3) { server.nextOperation() }
-        assertThat(server.nextOperation()).isEqualTo("CommentStance")
+        assertThat((gone as Outcome.Refused).errors.single().code).isEqualTo(ErrorCode.NOT_FOUND)
+        assertThat(List(4) { server.nextOperation() })
+            .containsExactly("PageStances", "PostStance", "PageStances", "CommentStance").inOrder()
     }
 
     @Test
     fun `a node with no bundle behind it is an unauthenticated refusal`() = runTest {
-        enqueue(answerJson("post", null))
+        enqueue(pageJson(slot("t1", bundle = null)))
 
         val outcome = repo().standing(node("t1"))
 
@@ -416,7 +436,7 @@ class StanceRepositoryTest {
 
     @Test
     fun `the L1 view rides the wire when the reader asks for it`() = runTest {
-        enqueue(answerJson("post", bundleJson()))
+        enqueue(firstJson(bundleJson()))
 
         val standing = (repo().standing(node("t1"), includePending = false) as Outcome.Success).value
 
@@ -466,7 +486,7 @@ class StanceRepositoryTest {
     fun `the prepare hands the picked pair through untouched`() = runTest {
         // The raw-edge rule: what is staged is what was picked, never a
         // delta against the standing the reads just reported.
-        enqueue(answerJson("post", bundleJson(pDirected = 0.8, pInterest = 0.8)))
+        enqueue(firstJson(bundleJson(pDirected = 0.8, pInterest = 0.8)))
         val repo = repo()
         repo.standing(node("t1"))
 
