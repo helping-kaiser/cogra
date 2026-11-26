@@ -449,11 +449,22 @@ export function createApolloStanceData(deps: {
    * Signs a prepared batch against the gesture's expectation. Every
    * element must complete for the gesture to have happened.
    */
-  /** A gesture with no account to answer to signs nothing. */
-  const always = () => true;
-  /** The tab's account changed under a batch: stopped, answered as a failure. */
+  /**
+   * EVERY SIGNED GESTURE IS THE PRESSING ACCOUNT'S (auth.md "Multi-account
+   * device custody"). A pad, a row or the kept picks' seal closes mid-signing
+   * and the act goes on, so the tab's account can change before a prepare or
+   * between it and the signing: a prepare under the next account's session
+   * is that account's own stance, and its key would sign it. Each gesture
+   * takes the account as it starts and asks `still` before each prepare and
+   * before the signing pass; a change stops it there.
+   */
+  const pressedAs = (): (() => boolean) => {
+    const owner = accounts.activeAccountId();
+    return () => accounts.activeAccountId() === owner;
+  };
+  /** The tab's account changed under a gesture: stopped, answered as a failure. */
   const accountChanged = (): Outcome<never> =>
-    failed(new Error("the tab's account changed before the batch was signed"));
+    failed(new Error("the tab's account changed before the gesture was signed"));
 
   const signAll = async (
     writes: readonly StagedWriteView[],
@@ -495,7 +506,7 @@ export function createApolloStanceData(deps: {
     target: Slot,
     stage: () => Promise<Outcome<Staged>>,
     intent: string | null,
-    still: () => boolean = always,
+    still: () => boolean,
   ): Promise<Outcome<StanceCommit>> => {
     const staged = await stage();
     if (staged.kind !== "success") return staged;
@@ -528,7 +539,7 @@ export function createApolloStanceData(deps: {
     target: Slot,
     intent: string,
     stage: () => Promise<Outcome<Staged>>,
-    still: () => boolean = always,
+    still: () => boolean,
   ): Promise<Outcome<StanceCommit>> => {
     if (attempts.asking(target)) return stageAndSign(target, stage, null, still);
     const remembered = attempts.answered(target);
@@ -579,9 +590,12 @@ export function createApolloStanceData(deps: {
   };
 
   /** A pick's one record toward `target`, exactly the pick. */
-  const stagePick = (target: StanceTarget, pick: StancePair) => async (): Promise<Outcome<Staged>> => {
+  const stagePick = (target: StanceTarget, pick: StancePair, still: () => boolean) => async (): Promise<
+    Outcome<Staged>
+  > => {
     const node = await graphIdOf(target);
     if (node.kind !== "success") return node;
+    if (!still()) return accountChanged();
     // Exactly the pick, verbatim — the bundle is the fold's business.
     const prepared = await guard.run(() =>
       prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
@@ -623,7 +637,8 @@ export function createApolloStanceData(deps: {
     },
 
     commit(target, pick): Promise<Outcome<StanceCommit>> {
-      return slotted(target, stanceIntent(target, pick), stagePick(target, pick));
+      const still = pressedAs();
+      return slotted(target, stanceIntent(target, pick), stagePick(target, pick, still), still);
     },
 
     keyOnDevice(): Promise<boolean> {
@@ -677,15 +692,10 @@ export function createApolloStanceData(deps: {
       // pick is a record of its own in a bundle that sums, so a batch
       // prepared afresh beside one the server took sums every pick twice.
       //
-      // THE BATCH IS THE PRESSING ACCOUNT'S (auth.md "Multi-account device
-      // custody"). Its seal closes from the press and the batch goes on
-      // (KeptPicksSeal.md:59), so the tab's account can change mid-batch: a
-      // leg prepared under the next account's session would be that account's
-      // own stance, and its key would sign it. So the account is taken at the
-      // start and checked before every leg, the re-ask and the signing pass;
-      // a change stops the batch there, nothing further prepared or signed.
-      const owner = accounts.activeAccountId();
-      const still = () => accounts.activeAccountId() === owner;
+      // THE BATCH IS THE PRESSING ACCOUNT'S (`pressedAs`): its seal closes
+      // from the press and the batch goes on (KeptPicksSeal.md:59), so the
+      // account is checked before every leg too, not only before the signing.
+      const still = pressedAs();
       return slotted(
         KEPT_BATCH,
         keptBatchIntent(entries),
@@ -764,9 +774,11 @@ export function createApolloStanceData(deps: {
       // bundle to (0, 0), so a fresh prepare beside it is refused as already
       // netted, and one it never saw is staged a second time — two walk-backs
       // that Home's Resume would both land.
+      const still = pressedAs();
       return slotted({ walkBack: target }, severanceIntent(target), async () => {
         const node = await graphIdOf(target);
         if (node.kind !== "success") return node;
+        if (!still()) return accountChanged();
         const prepared = await guard.run(() => prepareSeverance(client, selectorOf(target)));
         if (prepared.kind !== "success") return prepared;
         return success({
@@ -783,7 +795,7 @@ export function createApolloStanceData(deps: {
             ],
           ),
         });
-      });
+      }, still);
     },
   };
 }

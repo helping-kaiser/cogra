@@ -189,3 +189,95 @@ describe("a kept batch whose tab changes account while it prepares", () => {
     expect(signedAs).toEqual(["acct-a"]);
   });
 });
+
+// THE SAME HOLE IN THE SINGLE GESTURES. A pad or a row closes mid-signing and
+// the act goes on (PadFailed.md: "CANCEL MID-SIGNING CLOSES THE SURFACE, NEVER
+// THE SIGNING"), so the tab's account can change before the gesture's prepare
+// or between its prepare and its signing. A prepare under the next account's
+// session is that account's own stance and would pass the signer's author
+// check (intent.ts `checkIntent`); a write prepared as the owner and signed
+// after the switch is refused there whole. Either way the gesture stops.
+
+/** Prepares of each kind, with the account active when each reached the server. */
+function gestureHost(account: ReturnType<typeof tab>, onPrepare: () => void = () => {}) {
+  const prepares = host(account, onPrepare);
+  server.use(
+    gqlLink.mutation("PrepareSeverance", ({ variables }) => {
+      const input = variables.input as { target: string };
+      prepares.push({ target: input.target, as: account.active() });
+      onPrepare();
+      return HttpResponse.json({
+        data: {
+          prepareSeverance: {
+            __typename: "PreparePayload",
+            writes: [{ __typename: "PreparedWrite", id: "s-1", family: "SEVERANCE", canonicalProposal: "cHJvcG9zYWw=" }],
+            userErrors: [],
+          },
+        },
+      });
+    }),
+  );
+  return prepares;
+}
+
+/** Switches the tab the moment the target's read answers — before any prepare. */
+function switchOnRead(account: ReturnType<typeof tab>) {
+  server.use(
+    gqlLink.query("PostStance", ({ variables }) => {
+      account.switchTo("acct-b");
+      return HttpResponse.json({
+        data: { post: variables.id === "post-1" ? bundle("post-1", NODE_1) : bundle("post-2", NODE_2) },
+      });
+    }),
+  );
+}
+
+const SHOWN = {
+  current: { pDirected: 0.4, pInterest: 0.2 },
+  rawSum: { pDirected: 0.4, pInterest: 0.2 },
+  records: 1,
+  inert: false,
+  severed: false,
+  severance: { records: 1 },
+} as unknown as Parameters<ReturnType<typeof createApolloStanceData>["sever"]>[1];
+
+const gestures = {
+  commit: (data: ReturnType<typeof createApolloStanceData>) => data.commit(POST, BATCH[0].pick),
+  sever: (data: ReturnType<typeof createApolloStanceData>) => data.sever(POST, SHOWN),
+};
+
+describe.each(Object.entries(gestures))("a %s whose tab changes account", (_name, gesture) => {
+  it("prepares nothing and signs nothing when the account changed before its prepare", async () => {
+    const account = tab("acct-a");
+    const prepares = gestureHost(account);
+    switchOnRead(account);
+    const { data, signedAs } = seam(account);
+
+    const outcome = await gesture(data);
+
+    expect(prepares).toEqual([]);
+    expect(signedAs).toEqual([]);
+    expect(outcome.kind).toBe("failed");
+  });
+
+  it("signs nothing when the account changed between its prepare and its signing", async () => {
+    const account = tab("acct-a");
+    const prepares = gestureHost(account, () => account.switchTo("acct-b"));
+    const { data, signedAs } = seam(account);
+
+    const outcome = await gesture(data);
+
+    expect(prepares.map((p) => p.as)).toEqual(["acct-a"]);
+    expect(signedAs).toEqual([]);
+    expect(outcome.kind).toBe("failed");
+  });
+
+  it("prepares and signs while the account stays", async () => {
+    const account = tab("acct-a");
+    gestureHost(account);
+    const { data, signedAs } = seam(account);
+
+    expect((await gesture(data)).kind).toBe("success");
+    expect(signedAs).toEqual(["acct-a"]);
+  });
+});
