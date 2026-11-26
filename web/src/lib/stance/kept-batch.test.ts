@@ -35,12 +35,12 @@ const NO_ANSWER: Outcome<StanceCommit> = { kind: "failed", cause: new Error("off
 /** A commit the test answers when it chooses. */
 function held() {
   const answers: ((outcome: Outcome<StanceCommit>) => void)[] = [];
-  const commit = vi.fn(
-    (_entries: readonly KeptEntry[]) =>
-      new Promise<Outcome<StanceCommit>>((resolve) => {
-        answers.push(resolve);
-      }),
-  );
+  const commit = vi.fn((entries: readonly KeptEntry[]) => {
+    void entries;
+    return new Promise<Outcome<StanceCommit>>((resolve) => {
+      answers.push(resolve);
+    });
+  });
   const answer = async (outcome: Outcome<StanceCommit>) => {
     await act(async () => {
       answers.shift()?.(outcome);
