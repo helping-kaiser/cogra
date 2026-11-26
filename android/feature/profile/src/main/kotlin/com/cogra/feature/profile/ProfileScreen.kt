@@ -150,8 +150,16 @@ fun ProfileRoute(
     onMention: (profileId: String) -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
     shareModel: ProfileShareViewModel = hiltViewModel(),
+    changeModel: ProfileChangeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val changeLine by changeModel.line.collectAsStateWithLifecycle()
+    val changeLanded by changeModel.landed.collectAsStateWithLifecycle()
+    // A closed seal's change was taken: the head re-reads, quietly, as a
+    // return from the edit does (ProfileEditSeal.md:45, Profile.md:97).
+    LaunchedEffect(changeLanded, state.own) {
+        if (changeLanded && state.own) viewModel.onReturn()
+    }
     val context = LocalContext.current
     LaunchedEffect(handle) { viewModel.start(handle) }
     // Settings confirmed the handle change; the edit screen confirmed
@@ -175,10 +183,15 @@ fun ProfileRoute(
         if (profileSavedResult) viewModel.onReturn()
     }
     ProfileScreen(
-        state = state,
+        state = state.copy(changeLine = changeLine),
         reselectSignal = reselectSignal,
-        profileSavedResult = profileSavedResult,
-        onProfileSavedResultConsumed = onProfileSavedResultConsumed,
+        // ONE CONFIRMATION FOR A CHANGE TAKEN, whichever way it came: back from
+        // the edit, or landing after its seal closed — on one's own profile only.
+        profileSavedResult = profileSavedResult || (changeLanded && state.own),
+        onProfileSavedResultConsumed = {
+            onProfileSavedResultConsumed()
+            changeModel.onLandedConsumed()
+        },
         onTabChange = viewModel::onTabChange,
         onLoadMore = viewModel::onLoadMore,
         onRetryPage = viewModel::onRetryPage,
@@ -642,7 +655,10 @@ private fun ProfileColumn(
                         OtherActions(state, profile, savedHost, snackbarHostState, actions, identity, stanceControl)
                     }
                 },
-                under = { savedHost?.comfortLine(profile.id)?.let { RowLine(it, "profile_row_line") } },
+                under = {
+                    if (state.own) ProfileChangeHeadLine(state.changeLine)
+                    savedHost?.comfortLine(profile.id)?.let { RowLine(it, "profile_row_line") }
+                },
                 figures = state.figures,
                 own = state.own,
                 onFigures = actions.onOpenOpinions,

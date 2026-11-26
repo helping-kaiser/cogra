@@ -1425,6 +1425,191 @@ async fn an_unsigned_edit_is_superseded_by_the_next(pool: PgPool) {
     assert_eq!(post.title.as_deref(), Some("Two"));
 }
 
+/// Holds the author's sequence-counter row in a transaction of the
+/// test's own. Every prepare's transaction updates that row before it
+/// stages anything, so two prepares started while it is held both stop at
+/// the start of their write: after everything they check outside it,
+/// before anything they check inside it. Releasing it lets them write one
+/// after the other — the interleaving "A checks, B checks, A writes, B
+/// writes", stepped by a lock instead of by timing.
+async fn hold_author_counter(
+    pool: &PgPool,
+    address: &str,
+) -> sqlx::Transaction<'static, sqlx::Postgres> {
+    let mut gate = pool.begin().await.expect("gate");
+    sqlx::query("SELECT 1 FROM author_seq_counters WHERE author = $1 FOR UPDATE")
+        .bind(address)
+        .fetch_one(&mut *gate)
+        .await
+        .expect("the author has prepared before, so the row exists");
+    gate
+}
+
+/// Releases the gate once both prepares wait on a lock, read from
+/// PostgreSQL's own view. A race that only slept could fall into the
+/// serial order and pass whatever the code does; this fails instead when
+/// the two never meet.
+async fn release_when_both_wait(pool: &PgPool, gate: sqlx::Transaction<'static, sqlx::Postgres>) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    loop {
+        let waiting: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pg_stat_activity
+             WHERE datname = current_database() AND wait_event_type = 'Lock'",
+        )
+        .fetch_one(pool)
+        .await
+        .expect("reads pg_stat_activity");
+        if waiting >= 2 {
+            break;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "the two prepares never both waited at the gate; the race ran serially"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+    gate.rollback().await.expect("releases the gate");
+}
+
+/// Of two staged writes prepared at once toward one chain head, the one
+/// left live and the one superseded. Both live is two signable records
+/// declaring the same parent: a branch, which neither advances the head
+/// (substrate.md §9).
+async fn live_and_superseded(rig: &Rig, ids: [Uuid; 2]) -> (Uuid, Uuid) {
+    let first = staged::load(&rig.pool, ids[0]).await.expect("loads").state;
+    let second = staged::load(&rig.pool, ids[1]).await.expect("loads").state;
+    match (first, second) {
+        (staged::StagedState::AwaitingPreSign, staged::StagedState::Expired) => (ids[0], ids[1]),
+        (staged::StagedState::Expired, staged::StagedState::AwaitingPreSign) => (ids[1], ids[0]),
+        other => panic!("one prepare live and the other superseded, got {other:?}"),
+    }
+}
+
+/// The superseded staging can no longer be signed — the answer an edit
+/// prepared and then overtaken by a later one meets today.
+async fn assert_unsignable(rig: &Rig, id: Uuid, key: &ActorKey) {
+    let write = staged::load(&rig.pool, id).await.expect("loads");
+    let pre = common::l1::proposal::PreSigned::sign(key, write.proposal);
+    assert!(
+        matches!(
+            staged::record_pre_signed(&rig.pool, id, &PreSignedParts::from(&pre)).await,
+            Err(staged::StagedError::WrongState { actual, .. }) if actual == "expired"
+        ),
+        "a superseded staging can no longer be signed"
+    );
+}
+
+/// Two edits of one post prepared at the same moment meet the
+/// serialization one after the other (substrate.md §9; post.md §4): the
+/// second to write supersedes the first, unsigned, exactly as an edit
+/// arriving after an unsigned one does, so the two can never both be
+/// signed against the same parent.
+///
+/// Two edits of one post prepared at once leave one live and the other superseded, as if the second arrived after the first, so the chain never branches.
+/// ´claim:content:concurrent-post-edits-serialize´
+#[sqlx::test(migrations = "../../migrations")]
+async fn two_post_edits_prepared_at_once_leave_one_live(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let edit = |title: &'static str| PostEditDraft {
+        id: post_id,
+        title: Some(title.into()),
+        description: None,
+        content: Some("Body".into()),
+        attachments: vec![],
+        sensitive: Default::default(),
+        p_directed: 0.0,
+    };
+
+    let gate = hold_author_counter(&rig.pool, &alice_key.address()).await;
+    let (one, two, ()) = tokio::join!(
+        content::prepare_post_edit(&rig.pool, &rig.boundary, STAGING, alice, edit("One")),
+        content::prepare_post_edit(&rig.pool, &rig.boundary, STAGING, alice, edit("Two")),
+        release_when_both_wait(&rig.pool, gate),
+    );
+    let one = one.expect("the first edit prepares");
+    let two = two.expect("the second edit prepares");
+    let (live, superseded) = live_and_superseded(&rig, [one.writes[0].id, two.writes[0].id]).await;
+    assert_unsignable(&rig, superseded, &alice_key).await;
+
+    let landing = if live == one.writes[0].id { &one } else { &two };
+    rig.land(landing, &alice_key).await;
+    let title = if live == one.writes[0].id {
+        "One"
+    } else {
+        "Two"
+    };
+    let post = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert_eq!(post.title.as_deref(), Some(title));
+}
+
+/// The same serialization holds for a comment's edit chain: two edits of
+/// one comment prepared at once leave one live and the other superseded.
+///
+/// Two edits of one comment prepared at once leave one live and the other superseded, so the comment's chain never branches.
+/// ´claim:content:concurrent-comment-edits-serialize´
+#[sqlx::test(migrations = "../../migrations")]
+async fn two_comment_edits_prepared_at_once_leave_one_live(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let (bob, bob_key) = rig.funded_actor("bob").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let comment = content::prepare_comment(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        bob,
+        CommentDraft {
+            target: post_id,
+            content: "First!".into(),
+            license: license(),
+            p_directed: 0.3,
+            tags: vec![],
+            references: vec![],
+            p_interest: 0.6,
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("prepares comment");
+    rig.land(&comment, &bob_key).await;
+    let edit = |content: &'static str| CommentEditDraft {
+        id: comment.node,
+        content: content.into(),
+        attachments: vec![],
+        sensitive: Default::default(),
+    };
+
+    let gate = hold_author_counter(&rig.pool, &bob_key.address()).await;
+    let (one, two, ()) = tokio::join!(
+        content::prepare_comment_edit(&rig.pool, &rig.boundary, STAGING, bob, edit("One")),
+        content::prepare_comment_edit(&rig.pool, &rig.boundary, STAGING, bob, edit("Two")),
+        release_when_both_wait(&rig.pool, gate),
+    );
+    let one = one.expect("the first edit prepares");
+    let two = two.expect("the second edit prepares");
+    let (live, superseded) = live_and_superseded(&rig, [one.writes[0].id, two.writes[0].id]).await;
+    assert_unsignable(&rig, superseded, &bob_key).await;
+
+    let landing = if live == one.writes[0].id { &one } else { &two };
+    rig.land(landing, &bob_key).await;
+    let content = if live == one.writes[0].id {
+        "One"
+    } else {
+        "Two"
+    };
+    let row = content_store::comment(&rig.pool, comment.node)
+        .await
+        .expect("reads")
+        .expect("comment");
+    assert_eq!(row.content, content);
+}
+
 /// Bob comments on Alice's post — a genesis Review minting the Comment on
 /// its terminal leg — and Alice replies to Bob's comment, so
 /// comment-on-comment threading holds. The thread read gives the post's
