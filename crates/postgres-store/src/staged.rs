@@ -675,7 +675,7 @@ pub async fn chained_edit_in_flight(
     current_epoch: i64,
 ) -> Result<bool, StagedError> {
     supersede_unsigned_on(tx, actor_id, family, target, current_epoch).await?;
-    pending_targeting(&mut **tx, actor_id, family, target).await
+    pending_targeting(tx, actor_id, family, target).await
 }
 
 async fn pending_targeting(
