@@ -812,7 +812,7 @@ class CograNavGraphTest {
         compose.onNodeWithTag("profile_edit_save").performScrollTo().performClick()
         // Save opens the change's seal; its commit signs (ProfileEditSeal.md).
         waitForTag("profileEditSeal.foot.sign")
-        compose.onNodeWithTag("profileEditSeal.foot.sign").performClick()
+        compose.onNodeWithTag("profileEditSeal.foot.sign").performScrollTo().performClick()
 
         // The signing pops back to the profile, which re-reads.
         compose.waitUntil(timeoutMillis = 30_000) {
