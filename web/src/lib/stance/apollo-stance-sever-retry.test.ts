@@ -225,18 +225,82 @@ describe("the walk-back's Retry asks the same signing again", () => {
     expect(retried.kind).toBe("success");
   });
 
-  it("a pick after a walk-back that did not answer retires the unapproved walk-back first", async () => {
-    const { batches, stances } = host({ held: false });
-    const { writes, signedAgain } = signer([lost]);
-    const { data, retired } = seam(writes);
+  describe("a pick and a walk-back are different gestures: across kinds, main's road", () => {
+    // This fixes the same-kind Retry only. A gesture of the other kind toward
+    // the same target neither retires nor lands on the other's attempt: it
+    // is prepared and signed as on main, and the server nets what it holds.
+    const PICK = { pDirected: 0.2, pInterest: 0.1 };
 
-    await data.sever(POST, SHOWN);
-    await data.commit(POST, { pDirected: 0.2, pInterest: 0.1 });
+    it("A1: a pick after a walk-back the server is relaying IS signed, the walk-back untouched", async () => {
+      const { batches, stances } = host({ held: true, states: { "s-1": "RELAYING", "s-2": "RELAYING" } });
+      const { writes, signedAgain } = signer([lost]);
+      const { data, retired } = seam(writes);
 
-    expect(signedAgain).toEqual([]);
-    expect(retired).toEqual(["s-1", "s-2"]);
-    expect(batches).toHaveLength(1);
-    expect(stances).toEqual([{ pDirected: 0.2, pInterest: 0.1 }]);
+      await data.sever(POST, SHOWN);
+      const picked = await data.commit(POST, PICK);
+
+      expect(stances).toEqual([PICK]);
+      expect(picked).toEqual({ kind: "success", value: { records: 1 } });
+      expect(batches).toHaveLength(1);
+      expect(retired).toEqual([]);
+      expect(signedAgain).toEqual([]);
+    });
+
+    it("A: a pick after an unapproved walk-back is prepared, and the walk-back stays parked", async () => {
+      const { batches, stances } = host({ held: false });
+      const { writes, signedAgain } = signer([lost]);
+      const { data, retired } = seam(writes);
+
+      await data.sever(POST, SHOWN);
+      await data.commit(POST, PICK);
+
+      expect(signedAgain).toEqual([]);
+      expect(retired).toEqual([]);
+      expect(batches).toHaveLength(1);
+      expect(stances).toEqual([PICK]);
+    });
+
+    it("B1: a walk-back after a pick the server is relaying IS prepared and signed", async () => {
+      const { batches } = host({ held: false, states: { "p-1": "RELAYING" } });
+      const { writes, signedAgain } = signer([lost]);
+      const { data, retired } = seam(writes);
+
+      await data.commit(POST, PICK);
+      const walked = await data.sever(POST, SHOWN);
+
+      expect(batches).toHaveLength(1);
+      expect(walked).toEqual({ kind: "success", value: { records: 2 } });
+      expect(retired).toEqual([]);
+      expect(signedAgain).toEqual([]);
+    });
+
+    it("B2: a walk-back after a pick the server never saw is signed; the pick is neither retired nor asked", async () => {
+      const { batches } = host({ held: false, states: { "p-1": "AWAITING_PRE_SIGN" } });
+      const { writes, signedAgain } = signer([lost]);
+      const { data, retired } = seam(writes);
+
+      await data.commit(POST, PICK);
+      const walked = await data.sever(POST, SHOWN);
+
+      expect(retired).toEqual([]);
+      expect(signedAgain).toEqual([]);
+      expect(batches).toHaveLength(1);
+      expect(walked.kind).toBe("success");
+    });
+
+    it("a walk-back's own Retry still asks its own batch after a pick in between", async () => {
+      const { batches, stances } = host({ held: false });
+      const { writes, signedAgain } = signer([lost]);
+      const { data } = seam(writes);
+
+      await data.sever(POST, SHOWN);
+      await data.commit(POST, PICK);
+      await data.sever(POST, SHOWN);
+
+      expect(stances).toEqual([PICK]);
+      expect(batches).toHaveLength(1);
+      expect(signedAgain.map((call) => call.ids)).toEqual([["s-1", "s-2"]]);
+    });
   });
 
   it("a walk-back while another toward the target still signs is an act of its own", async () => {
