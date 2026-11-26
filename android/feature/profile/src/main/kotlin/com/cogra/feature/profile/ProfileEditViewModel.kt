@@ -391,6 +391,8 @@ private fun ProfileEditUiState.answered(outcome: ProfileChangeOutcome): ProfileE
     ProfileChangeOutcome.Foreign -> copy(signing = false)
     // The key-absent notice takes the commit's place (ProfileEditSeal.md:61).
     ProfileChangeOutcome.KeyAbsent -> copy(signing = false, fault = ProfileSealFault.KeyAbsent)
+    // The edit signs a picture already uploaded; it never waits on one.
+    ProfileChangeOutcome.UploadFailed -> copy(signing = false)
 }
 
 /**
@@ -492,7 +494,7 @@ private fun SentProfile.signedFields(picture: ProfileImageState) = SignedProfile
  * `sealFaultOf`): the reserved name goes back to its field; the write rule is
  * its notice; anything else is a bug.
  */
-private fun refusalOf(errors: List<UserError>): ProfileChangeOutcome = when {
+internal fun refusalOf(errors: List<UserError>): ProfileChangeOutcome = when {
     errors.any { it.code == ErrorCode.DISPLAY_NAME_RESERVED && it.field?.firstOrNull() == "displayName" } ->
         ProfileChangeOutcome.NameReserved
     errors.any { it.code == ErrorCode.WRITE_RULE_FAILED } -> ProfileChangeOutcome.WriteRule
@@ -504,7 +506,7 @@ private fun refusalOf(errors: List<UserError>): ProfileChangeOutcome = when {
  * refusal of bytes that were not what the form sent is a bug — nothing was
  * signed, and it is no fault of the network's; anything else never answered.
  */
-private fun outcomeOfUntaken(results: List<WriteResult>): ProfileChangeOutcome {
+internal fun outcomeOfUntaken(results: List<WriteResult>): ProfileChangeOutcome {
     val refused = results.filterIsInstance<WriteResult.Refused>().firstOrNull()
     return when {
         refused != null -> refusalOf(refused.errors)

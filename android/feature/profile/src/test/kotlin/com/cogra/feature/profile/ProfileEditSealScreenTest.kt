@@ -46,7 +46,7 @@ class ProfileEditSealScreenTest {
         compose.setContent {
             ProfileEditSealStage(
                 state = state,
-                actions = EditSealActions(
+                actions = ProfileSealActions(
                     onSign = { signs += 1 },
                     onBack = { backs += 1 },
                     onLeave = { leaves += 1 },
@@ -179,7 +179,7 @@ class ProfileEditSealScreenTest {
         compose.setContent {
             ProfileEditSealStage(
                 state = atRest.copy(fault = ProfileSealFault.KeyAbsent),
-                actions = EditSealActions(
+                actions = ProfileSealActions(
                     onSign = { signs += 1 },
                     onBack = { backs += 1 },
                     onLeave = { leaves += 1 },

@@ -66,6 +66,12 @@ enum class ProfileChangeOutcome {
     KeyAbsent,
 
     /**
+     * The new picture never reached CoGra while the press waited on it: the
+     * held press drops and nothing is signed (AvatarSeal.md:21).
+     */
+    UploadFailed,
+
+    /**
      * The active account is no longer the one that pressed: the act stopped
      * before it prepared or signed anything, and it ends silently — nothing
      * laid, nothing drawn under the other account's head (auth.md
