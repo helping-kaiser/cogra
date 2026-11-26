@@ -1490,13 +1490,16 @@ async fn two_post_edits_prepared_at_once_leave_one_live(pool: PgPool) {
     );
     let one = one.expect("the first edit prepares");
     let two = two.expect("the second edit prepares");
-    let (live, superseded) =
-        live_and_superseded(&rig, [one.writes[0].id, two.writes[0].id]).await;
+    let (live, superseded) = live_and_superseded(&rig, [one.writes[0].id, two.writes[0].id]).await;
     assert_unsignable(&rig, superseded, &alice_key).await;
 
     let landing = if live == one.writes[0].id { &one } else { &two };
     rig.land(landing, &alice_key).await;
-    let title = if live == one.writes[0].id { "One" } else { "Two" };
+    let title = if live == one.writes[0].id {
+        "One"
+    } else {
+        "Two"
+    };
     let post = content_store::post(&rig.pool, post_id)
         .await
         .expect("reads")
@@ -1550,13 +1553,16 @@ async fn two_comment_edits_prepared_at_once_leave_one_live(pool: PgPool) {
     );
     let one = one.expect("the first edit prepares");
     let two = two.expect("the second edit prepares");
-    let (live, superseded) =
-        live_and_superseded(&rig, [one.writes[0].id, two.writes[0].id]).await;
+    let (live, superseded) = live_and_superseded(&rig, [one.writes[0].id, two.writes[0].id]).await;
     assert_unsignable(&rig, superseded, &bob_key).await;
 
     let landing = if live == one.writes[0].id { &one } else { &two };
     rig.land(landing, &bob_key).await;
-    let content = if live == one.writes[0].id { "One" } else { "Two" };
+    let content = if live == one.writes[0].id {
+        "One"
+    } else {
+        "Two"
+    };
     let row = content_store::comment(&rig.pool, comment.node)
         .await
         .expect("reads")

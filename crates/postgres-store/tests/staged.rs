@@ -1077,7 +1077,10 @@ async fn the_staging_guard_answers_as_the_pool_steps_do(pool: PgPool) {
     };
 
     let abandoned = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
-    assert!(!guard(pool.clone()).await, "an unsigned staging holds nothing");
+    assert!(
+        !guard(pool.clone()).await,
+        "an unsigned staging holds nothing"
+    );
     assert_eq!(
         staged::load(&pool, abandoned).await.expect("loads").state,
         StagedState::Expired
@@ -1106,7 +1109,9 @@ async fn the_staging_guard_answers_as_the_pool_steps_do(pool: PgPool) {
 async fn a_second_staging_guard_waits_for_the_first_write(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
     let mut first = pool.begin().await.expect("tx");
-    let seq = staged::allocate_seq(&mut first, "alice").await.expect("seq");
+    let seq = staged::allocate_seq(&mut first, "alice")
+        .await
+        .expect("seq");
     assert!(
         !staged::chained_edit_in_flight(&mut first, actor_id, Family::Opinion, "prof:bob", 7)
             .await
