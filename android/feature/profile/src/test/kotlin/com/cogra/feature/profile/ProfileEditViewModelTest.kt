@@ -740,10 +740,12 @@ class ProfileEditViewModelTest {
         assertThat(profiles.prepareCalls).isEqualTo(1)
         assertThat(sealer.staged.values.map { it.state.name }).doesNotContain("RELAYING")
         assertThat(signedProfile.laid.value).isNull()
-        // Nothing is drawn under B's head, and nothing comes back for A.
+        // Nothing is drawn under B's head. Stopped by the owner guard, the act
+        // signed nothing: it is A's failed line, standing under A's head again
+        // (Profile.md:101, "until Retry or the next change" — a switch is neither).
         assertThat(line()).isNull()
         switchTo(TEST_PROFILE_ID)
-        assertThat(line()).isNull()
+        assertThat(line()).isInstanceOf(ProfileChangeLine.Failed::class.java)
     }
 
     @Test
@@ -783,9 +785,58 @@ class ProfileEditViewModelTest {
         assertThat(profiles.prepareCalls).isEqualTo(1)
         assertThat(signedProfile.laid.value).isNull()
 
-        // Back on A, the dropped line stays dropped.
+        // Back on A the line stands again (Profile.md:101: a switch is neither Retry
+        // nor the next change), and its Retry signs once, under A.
         switchTo(TEST_PROFILE_ID)
         dispatcher.scheduler.advanceUntilIdle()
+        val again = line() as ProfileChangeLine.Failed
+        again.retry()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(2)
+        assertThat(line()).isNull()
+        assertThat(signedProfile.laid.value).isNotNull()
+    }
+
+    @Test
+    fun aFailedLineIsHiddenUnderAnotherAccountAndStandsAgainUnderItsOwn() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.seal.onBack()
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isInstanceOf(ProfileChangeLine.Failed::class.java)
+
+        switchTo("account-b")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isNull()
+        switchTo(null)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isNull()
+        switchTo(TEST_PROFILE_ID)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isInstanceOf(ProfileChangeLine.Failed::class.java)
+    }
+
+    @Test
+    fun aSwitchAfterThePrepareConfirmsNothingToTheOtherAccount() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        val landed = mutableListOf<Unit>()
+        backgroundScope.launch { changes.landed.collect { landed += it } }
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.seal.onBack()
+        // The prepare already answered for A when B arrives: the act was stopped
+        // before signing, so it is A's failed line, never B's snackbar.
+        profiles.prepareGate?.complete(Unit)
+        switchTo("account-b")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(landed).isEmpty()
         assertThat(line()).isNull()
     }
 }
