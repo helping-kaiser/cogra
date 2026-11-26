@@ -66,12 +66,16 @@ import {
 } from "@/lib/api/outcome";
 import { DeviceRefusalError } from "@/lib/signing/device-refusal";
 import {
+  fetchStagedWrite,
   prepareSeverance,
   prepareStance,
   type StagedWriteView,
   type StanceSelector,
 } from "@/lib/api/writes-api";
+import { askAgain } from "@/lib/compose/same-signing";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
+import type { TokenStore } from "@/lib/session/token-store";
 import {
   expectation,
   joinExpectations,
@@ -79,7 +83,7 @@ import {
   stanceRecord,
   type Expectation,
 } from "@/lib/signing/intent";
-import type { WriteSigner } from "@/lib/signing/write-signer";
+import type { WriteResult, WriteSigner } from "@/lib/signing/write-signer";
 import {
   commentPreview,
   postPreview,
@@ -88,6 +92,7 @@ import {
   type KeptTargetPreview,
 } from "./kept-preview";
 import type { StancePair } from "./model";
+import { createStanceAttempts, stanceIntent } from "./stance-attempts";
 import {
   INCLUDE_PENDING_DEFAULT,
   type BorrowedStance,
@@ -323,8 +328,15 @@ export function createApolloStanceData(deps: {
   client: ApolloClient;
   guard: AuthGuard;
   signer: WriteSigner;
+  /** Where a retired attempt's device material is forgotten; tests inject a double. */
+  store?: Pick<IdentityStore, "clearHandshake">;
+  /** The tab's account boundary the remembered attempts end at; tests inject a double. */
+  accounts?: Pick<TokenStore, "activeAccountId" | "subscribe">;
 }): StanceData {
   const { client, guard, signer } = deps;
+  const store = deps.store ?? identityStore;
+  /** Each target's pick whose signing has not answered done (stance-attempts.ts). */
+  const attempts = createStanceAttempts(deps.accounts);
 
   /** The node each target's last read named — what its acts must point at. */
   const graphIds = new Map<string, string>();
@@ -425,8 +437,10 @@ export function createApolloStanceData(deps: {
   const signAll = async (
     writes: readonly StagedWriteView[],
     expected: Expectation,
-  ): Promise<Outcome<StanceCommit>> => {
-    const results = await signer.sign(writes, expected);
+  ): Promise<Outcome<StanceCommit>> => outcomeOf(await signer.sign(writes, expected));
+
+  /** What a batch's results say the gesture did. */
+  const outcomeOf = (results: readonly WriteResult[]): Outcome<StanceCommit> => {
     const incomplete = results.find((result) => result.kind !== "done");
     // A REFUSAL KEEPS ITS CODES. The write rule's is a notice and not a
     // fault (PadWriteRule.md, RowWriteRule.md): the control says `You can't
@@ -446,7 +460,7 @@ export function createApolloStanceData(deps: {
         new Error(`staged write ${incomplete.id} did not complete: ${incomplete.kind}`),
       );
     }
-    return success({ records: writes.length });
+    return success({ records: results.length });
   };
 
   return {
@@ -478,6 +492,44 @@ export function createApolloStanceData(deps: {
     },
 
     async commit(target, pick): Promise<Outcome<StanceCommit>> {
+      // A PICK WHOSE SIGNING HAS NOT ANSWERED DONE IS ASKED AGAIN, never
+      // prepared beside (stance-attempts.ts): the same pick re-signs the
+      // first attempt from where it stands; a changed one finds it landing,
+      // or retires it before the new pick is prepared.
+      const intent = stanceIntent(target, pick);
+      const remembered = attempts.toward(target);
+      if (remembered !== null) {
+        const asked = await askAgain(
+          {
+            signer,
+            read: (id) => guard.run(() => fetchStagedWrite(client, id)),
+            retire: (id) => store.clearHandshake(id),
+          },
+          remembered,
+          intent,
+          expectation([stanceRecord(remembered.node, remembered.pick.pDirected, remembered.pick.pInterest)]),
+        );
+        switch (asked.kind) {
+          case "unread":
+            // Nothing decided, nothing signed: the read's own fault stands,
+            // and the next Retry asks again.
+            return asked.outcome.kind === "refused"
+              ? refused(asked.outcome.errors)
+              : failed(asked.outcome.kind === "failed" ? asked.outcome.cause : undefined);
+          case "landing":
+            // The first pick is relaying: it is what lands, and nothing
+            // else is signed (SigningAfterClose.md:27).
+            attempts.forget(target);
+            return success({ records: remembered.writes.length });
+          case "signed": {
+            const outcome = outcomeOf(asked.results);
+            if (outcome.kind === "success") attempts.forget(target);
+            return outcome;
+          }
+          case "fresh":
+            attempts.forget(target);
+        }
+      }
       const node = await graphIdOf(target);
       if (node.kind !== "success") return node;
       // Exactly the pick, verbatim — the bundle is the fold's business.
@@ -485,10 +537,20 @@ export function createApolloStanceData(deps: {
         prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
       );
       if (prepared.kind !== "success") return prepared;
-      return signAll(
+      // Remembered before the first pre-signature, so a Retry after any
+      // answer — or none — finds this attempt.
+      attempts.remember(target, {
+        node: node.value,
+        writes: prepared.value.map((write) => write.id),
+        intent,
+        pick,
+      });
+      const outcome = await signAll(
         prepared.value,
         expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]),
       );
+      if (outcome.kind === "success") attempts.forget(target);
+      return outcome;
     },
 
     keyOnDevice(): Promise<boolean> {
