@@ -19,39 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.token.Space
-import com.cogra.domain.identity.SecurityNotices
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-/** Whether the active account's notice waits for `Got it`, and its dismissal. */
-@HiltViewModel
-class SecurityNoticeCardViewModel @Inject constructor(
-    private val notices: SecurityNotices,
-) : ViewModel() {
-    val pending: StateFlow<Boolean> = notices.reuseDetectedAt
-        .map { it != null }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), false)
-
-    fun onGotIt() {
-        viewModelScope.launch { notices.dismiss() }
-    }
-
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
-    }
-}
 
 @Composable
 fun SecurityNoticeCardRoute(
