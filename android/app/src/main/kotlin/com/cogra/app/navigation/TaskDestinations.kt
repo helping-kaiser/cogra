@@ -235,6 +235,7 @@ private fun ShellScope.ProfileEditDestination(entry: NavBackStackEntry) {
         },
         onPicturePicked = { uri -> navController.navigate(AvatarFlow(uri, fromEdit = true)) },
         onBack = { navController.navigateUp() },
+        onRestoreKey = { navController.navigate(Restore) },
         framedPicture = framedUri?.let { FramedPicture(it, framedWindow?.toCropWindow()) },
         onFramedPictureConsumed = {
             consumeFramedUri()

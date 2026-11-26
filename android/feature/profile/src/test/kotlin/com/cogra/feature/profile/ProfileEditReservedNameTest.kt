@@ -85,6 +85,7 @@ class ProfileEditReservedNameTest {
         WriteSigner(sealer, identity),
         SignedProfile(session, TestScope(dispatcher)),
         ProfileChanges(session, TestScope(dispatcher)),
+        identity,
     )
 
     /** Save opens the seal; its commit signs. */
