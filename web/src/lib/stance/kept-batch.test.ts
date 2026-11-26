@@ -170,6 +170,16 @@ describe("the kept batch belongs to the account that pressed", () => {
     expect(readKeptBatch()).toMatchObject({ kind: "failed" });
   });
 
+  it("closes the batch the seal pressed as, even once the tab has switched", async () => {
+    const { commit, answer } = held();
+    void signKeptBatch(commit, BATCH);
+    signInAs("u2");
+    closeKeptBatchSeal("u1");
+    await answer(NO_ANSWER);
+    signInAs("u1");
+    expect(readKeptBatch()).toMatchObject({ kind: "failed" });
+  });
+
   it("keeps the owner's hidden failed line when another account signs a batch of its own", async () => {
     const a = held();
     void signKeptBatch(a.commit, BATCH);

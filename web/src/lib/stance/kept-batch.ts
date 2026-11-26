@@ -19,15 +19,16 @@
 // they are kept no longer, each target settles, and the snackbar counts the
 // batch — the open seal then leaves on its own.
 //
-// One batch at a time: the seal's commit refuses a second press until the
-// signing answers (KeptPicksSeal.md:25), so a batch pressed while one still
-// signs joins the one in flight rather than preparing a second.
-//
-// The batch is the pressing account's (auth.md "Multi-account device
-// custody"): its picks are that account's, dropped from that account's slot
-// whoever is signed in when it lands; its lines stand only under that account
-// — hidden under another, standing again under its own, never erased by a
-// switch — and its Retry does nothing under another account.
+// ONE BATCH PER ACCOUNT. Several accounts share a tab (auth.md "Multi-account
+// device custody"), and Close lets the reader switch while a batch signs, so
+// each account's batch is kept apart, keyed by the account that pressed: its
+// picks are that account's, dropped from that account's slot whoever is signed
+// in when it lands; its lines stand only under that account — hidden under
+// another, standing again under its own, never erased by a switch nor by
+// another account's batch — and its Retry does nothing under another account.
+// Within an account the seal's commit refuses a second press until the
+// signing answers (KeptPicksSeal.md:25), so a batch that account presses while
+// one still signs joins the one in flight rather than preparing a second.
 
 import { useSyncExternalStore } from "react";
 
@@ -53,20 +54,27 @@ export function signedBatchLine(count: number): string {
 
 const keyOf = (target: StanceTarget) => `${target.kind}:${target.id}`;
 
-let state: KeptBatchState | null = null;
-/** The targets of the batch the state is about. */
-let targets: ReadonlySet<string> = new Set();
-/** The account the tab was signed in as when the batch was pressed. */
-let owner: string | null = null;
-let closed = false;
-let inFlight: Promise<Outcome<StanceCommit>> | null = null;
+/** One account's batch. */
+type Batch = {
+  state: KeptBatchState | null;
+  /** The targets the state is about. */
+  targets: ReadonlySet<string>;
+  closed: boolean;
+  inFlight: Promise<Outcome<StanceCommit>> | null;
+};
+
+/** Each account's batch, by the account that pressed. */
+const batches = new Map<string, Batch>();
 const listeners = new Set<() => void>();
 
-const isOwners = () => owner !== null && tokenStore.activeAccountId() === owner;
-
-function publish(next: KeptBatchState | null): void {
-  state = next;
+function notify(): void {
   for (const listener of listeners) listener();
+}
+
+function publish(owner: string, batch: Batch, next: KeptBatchState | null): void {
+  batch.state = next;
+  if (next === null && batch.inFlight === null) batches.delete(owner);
+  notify();
 }
 
 function subscribe(listener: () => void): () => void {
@@ -76,6 +84,12 @@ function subscribe(listener: () => void): () => void {
     listeners.delete(listener);
     unsubscribeAccounts();
   };
+}
+
+/** The active account's batch, if it has one. */
+function active(): Batch | null {
+  const account = tokenStore.activeAccountId();
+  return account === null ? null : (batches.get(account) ?? null);
 }
 
 /** The batch landed: its picks are kept no longer, and the owner sees it settle. */
@@ -90,73 +104,83 @@ async function land(by: string, entries: readonly KeptEntry[]): Promise<void> {
 }
 
 /**
- * Signs the kept batch and answers what it came to. Closed before the answer
- * (`closeKeptBatchSeal`), the answer is the batch's readers' instead: taken,
- * it lands; anything else stands as Settings' failed line with a Retry that
- * asks the same batch again.
+ * Signs the kept batch for the active account and answers what it came to.
+ * Closed before the answer (`closeKeptBatchSeal`), the answer is the batch's
+ * readers' instead: taken, it lands; anything else stands as Settings' failed
+ * line with a Retry that asks the same batch again.
  */
 export function signKeptBatch(
   commit: Commit,
   entries: readonly KeptEntry[],
   { fromRow = false }: { fromRow?: boolean } = {},
 ): Promise<Outcome<StanceCommit>> {
-  if (inFlight !== null) return inFlight;
   const by = tokenStore.activeAccountId();
-  owner = by;
+  // No account, no batch to keep: nothing outlives the screen.
+  if (by === null) return commit(entries);
+  const existing = batches.get(by);
+  if (existing?.inFlight) return existing.inFlight;
+  const batch: Batch = existing ?? { state: null, targets: new Set(), closed: false, inFlight: null };
+  batches.set(by, batch);
   // A Retry on Settings' row has no seal to answer to.
-  closed = fromRow;
-  targets = new Set(entries.map((entry) => keyOf(entry.target)));
-  publish({ kind: "signing", closed });
+  batch.closed = fromRow;
+  batch.targets = new Set(entries.map((entry) => keyOf(entry.target)));
   const run = (async () => {
     const outcome = await commit(entries).catch(
       (cause: unknown): Outcome<StanceCommit> => ({ kind: "failed", cause }),
     );
     if (outcome.kind === "success") {
       // Taken: the rows' wait goes at once, and the picks leave their slot.
-      publish(null);
-      if (by !== null) await land(by, entries);
-      inFlight = null;
+      batch.state = null;
+      notify();
+      await land(by, entries);
+      batch.inFlight = null;
+      publish(by, batch, null);
       return outcome;
     }
-    inFlight = null;
-    if (!closed) {
-      publish(null);
+    batch.inFlight = null;
+    if (!batch.closed) {
+      publish(by, batch, null);
     } else {
-      publish({
+      publish(by, batch, {
         kind: "failed",
         retry: () => {
-          if (!isOwners() || inFlight !== null) return;
+          if (tokenStore.activeAccountId() !== by || batch.inFlight !== null) return;
           void signKeptBatch(commit, entries, { fromRow: true });
         },
       });
     }
     return outcome;
   })();
-  inFlight = run;
+  batch.inFlight = run;
+  publish(by, batch, { kind: "signing", closed: batch.closed });
   return run;
 }
 
-/** The seal closed while its batch signs: the batch's readers take the answer. */
-export function closeKeptBatchSeal(): void {
-  if (state?.kind !== "signing" || closed) return;
-  closed = true;
-  publish({ kind: "signing", closed: true });
+/**
+ * The seal closed while its batch signs: the batch's readers take the answer.
+ * `owner` is the account the seal pressed as; the active one by default.
+ */
+export function closeKeptBatchSeal(owner: string | null = tokenStore.activeAccountId()): void {
+  const batch = owner === null ? undefined : batches.get(owner);
+  if (owner === null || batch === undefined || batch.state?.kind !== "signing" || batch.closed) return;
+  batch.closed = true;
+  publish(owner, batch, { kind: "signing", closed: true });
 }
 
-/** The batch as its owner's readers see it, outside React; null where nothing stands. */
+/** The active account's batch, outside React; null where nothing stands. */
 export function readKeptBatch(): KeptBatchState | null {
-  return isOwners() ? state : null;
+  return active()?.state ?? null;
 }
 
-/** The batch as its owner's readers see it; null where nothing stands. */
+/** The active account's batch; null where nothing stands. */
 export function useKeptBatch(): KeptBatchState | null {
   return useSyncExternalStore(subscribe, readKeptBatch, () => null);
 }
 
 /** Whether `target`'s row reads `Signing…` for the closed seal's batch (KeptPicksSeal.md:59, :63). */
 export function keptBatchSigning(target: StanceTarget): boolean {
-  const now = readKeptBatch();
-  return now?.kind === "signing" && now.closed && targets.has(keyOf(target));
+  const batch = active();
+  return batch?.state?.kind === "signing" && batch.closed && batch.targets.has(keyOf(target));
 }
 
 export function useKeptBatchSigning(target: StanceTarget): boolean {
@@ -164,9 +188,5 @@ export function useKeptBatchSigning(target: StanceTarget): boolean {
 }
 
 export function resetKeptBatchForTests(): void {
-  state = null;
-  targets = new Set();
-  owner = null;
-  closed = false;
-  inFlight = null;
+  batches.clear();
 }

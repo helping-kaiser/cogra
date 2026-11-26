@@ -157,13 +157,15 @@ export function KeptPicksView() {
   const slow = useWaitedPast(signing, SLOW_NETWORK_MS);
   /** The seal was closed while its batch signs: the answer is the runner's readers'. */
   const closedRef = useRef(false);
+  /** The account the batch was pressed as: the one whose batch a Close closes. */
+  const pressedAs = useRef<string | null>(null);
   // The system's Back leaves the route mid-signing: the seal is closed, the
   // batch goes on (KeptPicksSeal.md:59). A seal not signing closes nothing.
   useEffect(() => {
     closedRef.current = false;
     return () => {
       closedRef.current = true;
-      closeKeptBatchSeal();
+      closeKeptBatchSeal(pressedAs.current);
     };
   }, []);
 
@@ -257,6 +259,7 @@ export function KeptPicksView() {
     if (signing || account === null) return;
     setFault(null);
     setSigning(true);
+    pressedAs.current = account;
     const batch = opinions.map((kept) => ({ target: kept.target, pick: kept.pick }));
     // The batch runner owns the signing (`kept-batch.ts`): closing the seal
     // never cancels it. TAKEN, the runner lands it — the picks kept no longer,
@@ -278,7 +281,7 @@ export function KeptPicksView() {
    */
   const close = () => {
     closedRef.current = true;
-    closeKeptBatchSeal();
+    closeKeptBatchSeal(pressedAs.current);
     leave();
   };
 
