@@ -30,6 +30,7 @@ package com.cogra.feature.profile
 import com.cogra.domain.di.ApplicationScope
 import com.cogra.domain.store.TokenStore
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -145,7 +146,11 @@ class ProfileChanges @Inject constructor(
             held.value = Held(owner, ProfileChangeLine.Signing)
             ++signings
         }
-        return scope.async {
+        // UNDISPATCHED (kotlinx.coroutines `CoroutineStart`): the act starts at the
+        // press itself, so its owner check sees the account that pressed with no
+        // dispatch between; it continues on the application scope from its first
+        // suspension and outlives the seal.
+        return scope.async(start = CoroutineStart.UNDISPATCHED) {
             val outcome = act(Owner(owner))
             settle(mine, owner, outcome, act)
             outcome
