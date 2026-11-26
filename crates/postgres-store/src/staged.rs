@@ -1212,9 +1212,7 @@ pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWri
 /// Driven from the pending side, which holds only in-flight updates: the
 /// row is named by the write's actor and authoring instant, as
 /// `profile::land_profile_version` names it.
-pub async fn landed_with_pending_profile(
-    pool: &PgPool,
-) -> Result<Vec<PromotedWrite>, StagedError> {
+pub async fn landed_with_pending_profile(pool: &PgPool) -> Result<Vec<PromotedWrite>, StagedError> {
     let rows = sqlx::query!(
         "SELECT s.id, s.actor_id, s.act_id, s.family
          FROM actor_profile_versions v
