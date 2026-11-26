@@ -40,6 +40,19 @@ describe("what the picture's seal reads back", () => {
     expect(screen.getByTestId("avatar-seal-help-dialog")).toHaveAttribute("aria-label", "Changing your picture");
   });
 
+  it("says copy-voice's blessed Changing your picture, both paragraphs (jakob 2026-10-20)", () => {
+    draw();
+    fireEvent.click(screen.getByTestId("avatar-seal-help"));
+    const dialog = screen.getByTestId("avatar-seal-help-dialog");
+    expect(dialog).toHaveTextContent(
+      "Your profile is a public record, and changes to it are signed actions in your name.",
+    );
+    expect(dialog).toHaveTextContent(
+      "The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
+    );
+    expect(dialog).not.toHaveTextContent("Everything you change here");
+  });
+
   it("reads Close from the press, and closing never cancels (AvatarSeal.md:47-49)", async () => {
     let answer!: (outcome: ProfileChangeOutcome) => void;
     const handlers = draw(() => new Promise((resolve) => (answer = resolve)));

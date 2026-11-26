@@ -206,7 +206,7 @@ describe("changeHandle", () => {
         }),
       ),
     );
-    expect(await changeHandle(client(), "ada2")).toEqual({ kind: "success", value: "ada2" });
+    expect(await changeHandle(client(), "ada2")).toEqual({ kind: "success", value: { id: "u1", handle: "ada2" } });
   });
 
   it("surfaces a taken handle", async () => {
