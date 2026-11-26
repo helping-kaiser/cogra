@@ -130,10 +130,12 @@ class ProfileScreensTest {
         assertThat(opened).isEqualTo(1)
     }
 
+    // A change taken reads the seal's line (ProfileEditSeal.md:45, AvatarSeal.md:37).
     @Test
     fun aSavedEditConfirmsOnTheProfilesOwnSnackbar() {
         render(loaded(own = true), profileSavedResult = true)
-        compose.onNodeWithTag("profile.snackbar.message").assertTextEquals("Profile saved")
+        compose.onNodeWithTag("profile.snackbar.message")
+            .assertTextEquals("Signed — your profile shows it now, still settling.")
     }
 
     @Test
