@@ -2,6 +2,8 @@ package com.cogra.feature.profile.avatar
 
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.signing.KnownMedia
+import com.cogra.feature.profile.ProfileSealFault
+import com.cogra.feature.profile.SealGate
 
 /**
  * The profile-picture flow's two stages (`AvatarCrop`, `AvatarSeal`).
@@ -27,7 +29,15 @@ sealed interface AvatarUpload {
      */
     data class Done(val mediaId: String, val known: KnownMedia? = null, val url: String? = null) : AvatarUpload
 
+    /** The upload did not reach CoGra: asking again may (AvatarSeal.md:15, `upload-failed`). */
     data class Failed(val message: String) : AvatarUpload
+
+    /**
+     * The picture was refused — by the server, or before it left (too big, not
+     * a picture): asking again cannot change the answer (AvatarSeal.md:17,
+     * `upload-refused`).
+     */
+    data class Refused(val message: String) : AvatarUpload
 }
 
 /**
@@ -54,40 +64,35 @@ data class AvatarFlowState(
      */
     val crop: CropSpec? = null,
     val upload: AvatarUpload = AvatarUpload.Idle,
-    val submitting: Boolean = false,
-    /** The device holds no actor key, so nothing can be signed. */
-    val keyAbsent: Boolean = false,
-    val refusal: String? = null,
-    val signingFailed: Boolean = false,
-    val transportFailed: Boolean = false,
+    /** `Sign the change` was pressed and has not answered — a press waiting on the upload included. */
+    val signing: Boolean = false,
+    /** What took the commit's place when a press did not land (AvatarSeal.md:39-55). */
+    val fault: ProfileSealFault? = null,
+    /** One-shot: the change was taken while the seal stood; the route leaves and confirms. */
     val saved: Boolean = false,
 ) {
     val mediaId: String? get() = (upload as? AvatarUpload.Done)?.mediaId
 
     /**
-     * A profile update is **one** signed act, so the seal's total is
-     * singular and carries no all-or-nothing subline — there is nothing
-     * for it to be true of (design/readme.md §13, `AvatarSeal` omits
-     * `ActsCard`'s `note`).
+     * The upload gate over the seal's foot (AvatarSeal.md:13-23): running while
+     * the bytes are on their way, its fault reading once they did not arrive,
+     * its refused reading once the picture was refused; nothing once landed.
      */
-    val signedActionCount: Int get() = 1
+    val gate: SealGate?
+        get() = when (upload) {
+            AvatarUpload.Idle, AvatarUpload.Running -> SealGate.Uploading
+            is AvatarUpload.Failed -> SealGate.Failed
+            is AvatarUpload.Refused -> SealGate.Refused
+            is AvatarUpload.Done -> null
+        }
 
     /**
-     * Whether the change may be signed. The picture must have landed an
-     * id first: signing a profile update that names an asset still
-     * uploading would point the profile at nothing.
+     * Whether `Sign the change` takes a press: on the seal, not already
+     * signing, and not over a failed or refused upload. A press while the
+     * upload runs is taken and waits for it (AvatarSeal.md:13).
      */
     val canSign: Boolean
-        get() = !submitting && !keyAbsent && mediaId != null
-
-    val problem: String?
-        get() = when {
-            refusal != null -> refusal
-            (upload as? AvatarUpload.Failed) != null -> (upload as AvatarUpload.Failed).message
-            transportFailed -> "That could not reach the server. Try again."
-            signingFailed -> "The signature did not go through. Nothing was changed."
-            else -> null
-        }
+        get() = step == AvatarStep.Seal && !signing && gate != SealGate.Failed && gate != SealGate.Refused
 }
 
 /**
@@ -97,7 +102,7 @@ data class AvatarFlowState(
  */
 fun AvatarFlowState.retreated(): AvatarFlowState? = when (step) {
     AvatarStep.Crop -> null
-    AvatarStep.Seal -> copy(step = AvatarStep.Crop)
+    AvatarStep.Seal -> copy(step = AvatarStep.Crop, fault = null)
 }
 
 /** `Next` on the crop stage; null while there is nothing to frame. */
