@@ -586,6 +586,8 @@ class AvatarFlowViewModelTest {
         val store = ViewModelStore()
         val vm = startedAtSeal(vm = stored(store))
         vm.seal.onSign()
+        // viewModelScope runs on Main.immediate on a device: the act starts at the press.
+        dispatcher.scheduler.advanceUntilIdle()
         vm.seal.onLeave()
         store.clear()
         media.gate?.complete(Unit)
