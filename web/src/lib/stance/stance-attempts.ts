@@ -24,9 +24,25 @@ import type { StanceTarget } from "./stance-data";
 /** A target's attempt, and the pick it was prepared from — what its expectation names. */
 export type StanceAttempt = SigningAttempt & { readonly pick: StancePair };
 
+/**
+ * AN ATTEMPT IN FLIGHT IS NOT A FAILED ATTEMPT. Only one whose own signing
+ * call has returned not done is one a later commit asks again (`answered`);
+ * while a commit toward the target is still asking (`asking`), another
+ * commit there is an act of its own — the anchor refuses a second act while
+ * it signs (PadFailed.md:17, :37, :41), but that guard is per control, and
+ * the seam is shared by every surface showing the target.
+ */
 export type StanceAttempts = {
-  toward(target: StanceTarget): StanceAttempt | null;
+  /** Whether a commit toward the target is signing or asking again right now. */
+  asking(target: StanceTarget): boolean;
+  /** The attempt whose signing answered not done, for a Retry to ask again. */
+  answered(target: StanceTarget): StanceAttempt | null;
+  /** Holds the target from the commit's first step, before anything is staged. */
+  begin(target: StanceTarget): void;
+  /** The asking commit's batch, staged and about to be signed. */
   remember(target: StanceTarget, attempt: StanceAttempt): void;
+  /** The asking commit answered not done: its attempt, if any, waits for a Retry. */
+  settle(target: StanceTarget): void;
   forget(target: StanceTarget): void;
 };
 
@@ -40,11 +56,31 @@ export function stanceIntent(target: StanceTarget, pick: StancePair): string {
 export function createStanceAttempts(
   accounts?: Pick<TokenStore, "activeAccountId" | "subscribe">,
 ): StanceAttempts {
-  const attempts = new Map<string, StanceAttempt>();
+  const attempts = new Map<string, { attempt: StanceAttempt | null; asking: boolean }>();
   onAccountChange(() => attempts.clear(), accounts);
+  const held = (target: StanceTarget) => attempts.get(keyOf(target));
   return {
-    toward: (target) => attempts.get(keyOf(target)) ?? null,
-    remember: (target, attempt) => void attempts.set(keyOf(target), attempt),
+    asking: (target) => held(target)?.asking === true,
+    answered: (target) => {
+      const entry = held(target);
+      return entry !== undefined && !entry.asking ? entry.attempt : null;
+    },
+    begin: (target) => {
+      const entry = held(target);
+      if (entry !== undefined) entry.asking = true;
+      else attempts.set(keyOf(target), { attempt: null, asking: true });
+    },
+    remember: (target, attempt) => {
+      const entry = held(target);
+      // An account boundary while it asked let the slot go: nothing is kept.
+      if (entry !== undefined) entry.attempt = attempt;
+    },
+    settle: (target) => {
+      const entry = held(target);
+      if (entry === undefined) return;
+      if (entry.attempt === null) attempts.delete(keyOf(target));
+      else entry.asking = false;
+    },
     forget: (target) => void attempts.delete(keyOf(target)),
   };
 }

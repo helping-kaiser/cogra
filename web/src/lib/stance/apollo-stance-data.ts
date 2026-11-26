@@ -463,6 +463,36 @@ export function createApolloStanceData(deps: {
     return success({ records: results.length });
   };
 
+  /**
+   * One pick, prepared and signed. With an `intent` the commit holds the
+   * target's slot, and its batch is remembered before the first
+   * pre-signature — so a Retry after any answer, or none, finds it — and
+   * forgotten once it signs. Without one it is an act beside another still
+   * asking, and touches no memory.
+   */
+  const prepareAndSign = async (
+    target: StanceTarget,
+    pick: StancePair,
+    intent: string | null,
+  ): Promise<Outcome<StanceCommit>> => {
+    const node = await graphIdOf(target);
+    if (node.kind !== "success") return node;
+    // Exactly the pick, verbatim — the bundle is the fold's business.
+    const prepared = await guard.run(() =>
+      prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
+    );
+    if (prepared.kind !== "success") return prepared;
+    if (intent !== null) {
+      attempts.remember(target, { node: node.value, writes: prepared.value.map((write) => write.id), intent, pick });
+    }
+    const outcome = await signAll(
+      prepared.value,
+      expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]),
+    );
+    if (intent !== null && outcome.kind === "success") attempts.forget(target);
+    return outcome;
+  };
+
   return {
     async bundle(target, options): Promise<Outcome<StanceBundle>> {
       // A topic is not a `Node`: its face keeps its own `HashtagStance`.
@@ -496,61 +526,55 @@ export function createApolloStanceData(deps: {
       // prepared beside (stance-attempts.ts): the same pick re-signs the
       // first attempt from where it stands; a changed one finds it landing,
       // or retires it before the new pick is prepared.
-      const intent = stanceIntent(target, pick);
-      const remembered = attempts.toward(target);
-      if (remembered !== null) {
-        const asked = await askAgain(
-          {
-            signer,
-            read: (id) => guard.run(() => fetchStagedWrite(client, id)),
-            retire: (id) => store.clearHandshake(id),
-          },
-          remembered,
-          intent,
-          expectation([stanceRecord(remembered.node, remembered.pick.pDirected, remembered.pick.pInterest)]),
-        );
-        switch (asked.kind) {
-          case "unread":
-            // Nothing decided, nothing signed: the read's own fault stands,
-            // and the next Retry asks again.
-            return asked.outcome.kind === "refused"
-              ? refused(asked.outcome.errors)
-              : failed(asked.outcome.kind === "failed" ? asked.outcome.cause : undefined);
-          case "landing":
-            // The first pick is relaying: it is what lands, and nothing
-            // else is signed (SigningAfterClose.md:27).
-            attempts.forget(target);
-            return success({ records: remembered.writes.length });
-          case "signed": {
-            const outcome = outcomeOf(asked.results);
-            if (outcome.kind === "success") attempts.forget(target);
-            return outcome;
+      // A COMMIT WHILE ANOTHER TOWARD THE TARGET IS STILL ASKING IS NOT A
+      // RETRY (stance-attempts.ts): it is an act of its own, prepared and
+      // signed as any pick is, and the first attempt's memory and material
+      // are left alone.
+      if (attempts.asking(target)) return prepareAndSign(target, pick, null);
+      const remembered = attempts.answered(target);
+      // Held from here, before anything is awaited, so a commit that arrives
+      // meanwhile finds this one asking.
+      attempts.begin(target);
+      try {
+        if (remembered !== null) {
+          const asked = await askAgain(
+            {
+              signer,
+              read: (id) => guard.run(() => fetchStagedWrite(client, id)),
+              retire: (id) => store.clearHandshake(id),
+            },
+            remembered,
+            stanceIntent(target, pick),
+            expectation([stanceRecord(remembered.node, remembered.pick.pDirected, remembered.pick.pInterest)]),
+          );
+          switch (asked.kind) {
+            case "unread":
+              // Nothing decided, nothing signed: the read's own fault
+              // stands, and the next Retry asks again.
+              return asked.outcome.kind === "refused"
+                ? refused(asked.outcome.errors)
+                : failed(asked.outcome.kind === "failed" ? asked.outcome.cause : undefined);
+            case "landing":
+              // The first pick is relaying: it is what lands, and nothing
+              // else is signed (SigningAfterClose.md:27).
+              attempts.forget(target);
+              return success({ records: remembered.writes.length });
+            case "signed": {
+              const outcome = outcomeOf(asked.results);
+              if (outcome.kind === "success") attempts.forget(target);
+              return outcome;
+            }
+            case "fresh":
+              // Retired: the slot stays held for the fresh prepare.
+              attempts.forget(target);
+              attempts.begin(target);
           }
-          case "fresh":
-            attempts.forget(target);
         }
+        return await prepareAndSign(target, pick, stanceIntent(target, pick));
+      } finally {
+        // Not done: the attempt, if one was staged, waits for a Retry.
+        attempts.settle(target);
       }
-      const node = await graphIdOf(target);
-      if (node.kind !== "success") return node;
-      // Exactly the pick, verbatim — the bundle is the fold's business.
-      const prepared = await guard.run(() =>
-        prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
-      );
-      if (prepared.kind !== "success") return prepared;
-      // Remembered before the first pre-signature, so a Retry after any
-      // answer — or none — finds this attempt.
-      attempts.remember(target, {
-        node: node.value,
-        writes: prepared.value.map((write) => write.id),
-        intent,
-        pick,
-      });
-      const outcome = await signAll(
-        prepared.value,
-        expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]),
-      );
-      if (outcome.kind === "success") attempts.forget(target);
-      return outcome;
     },
 
     keyOnDevice(): Promise<boolean> {
