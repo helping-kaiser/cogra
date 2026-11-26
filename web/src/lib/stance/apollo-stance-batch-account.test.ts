@@ -9,6 +9,7 @@ import { HttpResponse } from "msw/http";
 import { describe, expect, it, vi } from "vitest";
 
 import type { AuthGuard } from "@/lib/session/guard";
+import type { StagedWriteView } from "@/lib/api/writes-api";
 import type { WriteSigner } from "@/lib/signing/write-signer";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { createApolloStanceData } from "./apollo-stance-data";
@@ -104,13 +105,13 @@ function seam(account: ReturnType<typeof tab>) {
   const signedAs: string[] = [];
   const signer: WriteSigner = {
     signStaged: vi.fn(),
-    sign: vi.fn(async (staged) => {
+    sign: vi.fn(async (staged: readonly StagedWriteView[]) => {
       signedAs.push(account.active());
-      return staged.map((write) => ({ kind: "done" as const, id: write.id, state: "RELAYING" }));
+      return staged.map((write) => ({ kind: "done" as const, id: write.id, state: "RELAYING" as const }));
     }),
-    signAgain: vi.fn(async (ids) => {
+    signAgain: vi.fn(async (ids: readonly string[]) => {
       signedAs.push(account.active());
-      return ids.map((id) => ({ kind: "done" as const, id, state: "RELAYING" }));
+      return ids.map((id) => ({ kind: "done" as const, id, state: "RELAYING" as const }));
     }),
     signCarriedAtLanding: vi.fn(async () => []),
     resume: vi.fn(async () => []),
@@ -136,7 +137,7 @@ describe("a kept batch whose tab changes account while it prepares", () => {
 
     const outcome = await data.commitBatch(BATCH);
 
-    expect(prepares).toEqual([{ target: NODE_1, as: "acct-a" }]);
+    expect(prepares).toEqual([{ target: "post-1", as: "acct-a" }]);
     expect(signedAs).toEqual([]);
     expect(outcome.kind).toBe("failed");
   });
@@ -151,6 +152,29 @@ describe("a kept batch whose tab changes account while it prepares", () => {
     const outcome = await data.commitBatch(BATCH);
 
     expect(prepares.map((p) => p.as)).toEqual(["acct-a", "acct-a"]);
+    expect(signedAs).toEqual([]);
+    expect(outcome.kind).toBe("failed");
+  });
+
+  // The case the signer's own author check cannot catch (intent.ts: a write
+  // authored by another key is a mismatch): every leg prepared under the next
+  // account is that account's own, and its key would sign the owner's picks.
+  it("prepares nothing when the account changed before its first prepare", async () => {
+    const account = tab("acct-a");
+    const prepares = host(account);
+    server.use(
+      gqlLink.query("PostStance", ({ variables }) => {
+        account.switchTo("acct-b");
+        return HttpResponse.json({
+          data: { post: variables.id === "post-1" ? bundle("post-1", NODE_1) : bundle("post-2", NODE_2) },
+        });
+      }),
+    );
+    const { data, signedAs } = seam(account);
+
+    const outcome = await data.commitBatch(BATCH);
+
+    expect(prepares).toEqual([]);
     expect(signedAs).toEqual([]);
     expect(outcome.kind).toBe("failed");
   });
