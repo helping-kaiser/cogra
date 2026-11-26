@@ -59,6 +59,11 @@ export const NO_STANDING: StanceBundle = {
 };
 
 /** Where a pick lands over nothing standing: the pick itself, as the fold reports it. */
+/** The tab's account changed under the approval: stopped, answered as a failure. */
+function accountChanged(): Outcome<never> {
+  return failed(new Error("the tab's account changed before the approval was signed"));
+}
+
 export function landingOver(pick: StancePair): StanceProjection {
   return {
     landing: pick,
@@ -104,6 +109,13 @@ function approvalData(
     bundle: async () => success(NO_STANDING),
     project: async (_target, pick) => success(landingOver(pick)),
     async commit(_target, pick): Promise<Outcome<StanceCommit>> {
+      // THE APPROVAL IS THE PRESSING ACCOUNT'S (auth.md "Multi-account device
+      // custody"): the pad closes mid-signing and the act goes on, so the
+      // tab's account can change before the approval or before its vouch
+      // signs. An approval asked under the next account's session vouches the
+      // applicant in as that account, so a change stops the act there.
+      const account = accounts.activeAccountId();
+      const still = () => accounts.activeAccountId() === account;
       const resolved = await resolve();
       // A detour was taken: nothing to sign, and the host routes on.
       if (resolved === "detoured") return success({ records: 0 });
@@ -114,7 +126,7 @@ function approvalData(
       if (application.graphId === null || application.graphId === undefined) {
         return failed(new Error("the application names no node to vouch for"));
       }
-      const account = accounts.activeAccountId();
+      if (!still()) return accountChanged();
       const intent = intentOf(pick);
       // AN APPROVAL THAT LANDED IS NEVER SENT AGAIN (landed-approvals.ts):
       // the same pick asks the vouch it staged to sign again. A changed pick
@@ -158,6 +170,8 @@ function approvalData(
         intent,
         pick,
       });
+      // Taken for the owner, and remembered for the owner's Retry: signed only under it.
+      if (!still()) return accountChanged();
       const outcome = outcomeOf(
         await signer.sign(
           prepared.value,
