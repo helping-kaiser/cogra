@@ -78,6 +78,12 @@ data class ProfileUiState(
      * through a failed re-read.
      */
     val figures: ProfileFigures? = null,
+    /**
+     * A profile change closed on while it signs, and what became of it: the
+     * line under one's own head (Profile.md:99-101). Folded in by the route
+     * from [ProfileChanges], which outlives the edit that began it.
+     */
+    val changeLine: ProfileChangeLine? = null,
 ) {
     /** How many cards or acts the standing tab lists. */
     val listed: Int
