@@ -1,9 +1,11 @@
 package com.cogra.feature.profile.avatar
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
@@ -19,9 +21,9 @@ import com.cogra.domain.profile.SignedPicture
 import com.cogra.domain.profile.SignedProfile
 import com.cogra.domain.profile.SignedProfileFields
 import com.cogra.domain.profile.over
-import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.known
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.SealingWriteRepository
@@ -32,10 +34,16 @@ import com.cogra.domain.testing.ThrowingProfileRepository
 import com.cogra.domain.testing.faithfulProfileUpdate
 import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testProfile
-import com.cogra.domain.signing.known
+import com.cogra.feature.profile.ProfileChangeLine
+import com.cogra.feature.profile.ProfileChanges
+import com.cogra.feature.profile.ProfileSealFault
+import com.cogra.feature.profile.SealGate
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
@@ -49,9 +57,10 @@ import java.io.IOException
 /**
  * The profile-picture flow, end to end on the JVM.
  *
- * The rule worth pinning hardest is [AvatarFlowViewModel]'s own reason
- * for holding the profile: `prepareProfileUpdate` is complete-state, so
- * an avatar-only change that forgot the bio would silently clear it.
+ * The rule worth pinning hardest is the signing's own reason for reading the
+ * profile: `prepareProfileUpdate` is complete-state, so an avatar-only change
+ * that forgot the bio would silently clear it. The seal's states follow
+ * AvatarSeal.md line by line.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AvatarFlowViewModelTest {
@@ -97,13 +106,15 @@ class AvatarFlowViewModelTest {
     }
 
     private class ScriptedMedia : ThrowingMediaRepository() {
-        var outcome: Outcome<MediaAssetView> = Outcome.Success(
-            fakeUpload("m1"),
-        )
+        var outcome: Outcome<MediaAssetView> = Outcome.Success(fakeUpload("m1"))
         var calls = 0
+
+        /** The upload hangs until the test lets it through: a picture still on its way. */
+        var gate: CompletableDeferred<Unit>? = null
 
         override suspend fun uploadMedia(picture: ProcessedPicture): Outcome<MediaAssetView> {
             calls += 1
+            gate?.await()
             return outcome
         }
     }
@@ -123,21 +134,31 @@ class AvatarFlowViewModelTest {
     private val processor = ScriptedProcessor()
     private val session = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", TEST_PROFILE_ID) }
     private val signedProfile = SignedProfile(session, TestScope(dispatcher))
+    private val changes = ProfileChanges(session, TestScope(dispatcher))
 
-    private fun viewModel() =
-        AvatarFlowViewModel(profiles, media, processor, WriteSigner(sealer, identity), signedProfile, identity)
+    private fun viewModel() = AvatarFlowViewModel(
+        profiles,
+        media,
+        processor,
+        WriteSigner(sealer, identity),
+        signedProfile,
+        identity,
+        changes,
+        TestScope(dispatcher),
+    )
 
     /** Picked, cropped, and stepped on to the seal — the happy path's setup. */
-    private fun startedAtSeal(crop: CropSpec? = null): AvatarFlowViewModel {
-        val vm = viewModel()
-        vm.start()
-        dispatcher.scheduler.advanceUntilIdle()
+    private fun startedAtSeal(crop: CropSpec? = null, vm: AvatarFlowViewModel = viewModel()): AvatarFlowViewModel {
         vm.onPicked("content://pick/1")
         crop?.let { vm.onCropCommitted(it) }
         vm.onNext()
         dispatcher.scheduler.advanceUntilIdle()
         return vm
     }
+
+    private suspend fun line() = changes.line.first()
+
+    private fun laid() = signedProfile.laid.value.over(TEST_PROFILE_ID)
 
     @Before
     fun setDispatcher() = Dispatchers.setMain(dispatcher)
@@ -191,7 +212,7 @@ class AvatarFlowViewModelTest {
         assertThat(media.calls).isEqualTo(0)
     }
 
-    // -- The upload --
+    // -- The upload and its gate (AvatarSeal.md:13-23) --
 
     @Test
     fun leavingTheCropStageUploadsTheFramedPicture() = runTest(dispatcher) {
@@ -202,6 +223,7 @@ class AvatarFlowViewModelTest {
         assertThat(processor.lastCrop?.window).isEqualTo(window)
         val m1 = fakeUpload("m1")
         assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m1", m1.known(), m1.url))
+        assertThat(vm.state.value.gate).isNull()
         assertThat(vm.state.value.canSign).isTrue()
     }
 
@@ -215,55 +237,73 @@ class AvatarFlowViewModelTest {
     }
 
     @Test
-    fun bytesThatDoNotDecodeNeverReachTheWire() = runTest(dispatcher) {
+    fun theSealOpensOnTheRunningGateWithTheCommitEnabled() = runTest(dispatcher) {
+        media.gate = CompletableDeferred()
+        val vm = startedAtSeal()
+
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Running)
+        assertThat(vm.state.value.gate).isEqualTo(SealGate.Uploading)
+        assertThat(vm.state.value.canSign).isTrue()
+    }
+
+    /** Bytes that are no picture can never be taken: the refused reading, no Retry. */
+    @Test
+    fun bytesThatDoNotDecodeAreRefusedAndNeverReachTheWire() = runTest(dispatcher) {
         processor.processed = null
         val vm = startedAtSeal()
 
         assertThat(media.calls).isEqualTo(0)
-        assertThat(vm.state.value.upload).isInstanceOf(AvatarUpload.Failed::class.java)
+        assertThat(vm.state.value.gate).isEqualTo(SealGate.Refused)
         assertThat(vm.state.value.canSign).isFalse()
     }
 
     /**
-     * HT-19, jakob's ruling: the profile picture takes the same
-     * ten-megabyte cap a post's media does. The same file was refused for
-     * a post and taken here, which made the limit a hole rather than a
-     * difference. Weighed on the encode's output, like every other still.
+     * HT-19, jakob's ruling: the profile picture takes the same ten-megabyte
+     * cap a post's media does — refused before it leaves, as asking again
+     * cannot make it smaller.
      */
     @Test
-    fun aPictureOverTheStillCapNeverReachesTheWire() = runTest(dispatcher) {
+    fun aPictureOverTheStillCapIsRefusedAndNeverReachesTheWire() = runTest(dispatcher) {
         val overCap = (PICTURE_MAX_BYTES + 1).toInt()
         processor.processed = ProcessedPicture(ByteArray(overCap), 4000, 4000)
         val vm = startedAtSeal()
 
         assertThat(media.calls).isEqualTo(0)
-        assertThat(vm.state.value.upload).isInstanceOf(AvatarUpload.Failed::class.java)
+        assertThat(vm.state.value.gate).isEqualTo(SealGate.Refused)
         assertThat(vm.state.value.canSign).isFalse()
     }
 
+    /** The server refused the picture: the refused reading (:17), its words kept in the state only. */
     @Test
-    fun aRefusedUploadCarriesTheServersOwnWords() = runTest(dispatcher) {
+    fun aRefusedUploadIsTheRefusedReading() = runTest(dispatcher) {
         media.outcome = Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "too large")))
         val vm = startedAtSeal()
 
-        assertThat((vm.state.value.upload as AvatarUpload.Failed).message).isEqualTo("too large")
-        assertThat(vm.state.value.problem).isEqualTo("too large")
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Refused("too large"))
+        assertThat(vm.state.value.gate).isEqualTo(SealGate.Refused)
+        assertThat(vm.state.value.canSign).isFalse()
     }
 
+    /** No answer from the upload: the failed reading with Retry; Retry re-gates and signs nothing (:15, :23). */
     @Test
-    fun aFailedUploadCanBeRetriedOnItsOwn() = runTest(dispatcher) {
+    fun aFailedUploadIsRetriedOnItsOwnAndSignsNothing() = runTest(dispatcher) {
         media.outcome = Outcome.Failed(IOException("down"))
         val vm = startedAtSeal()
-        assertThat(vm.state.value.upload).isInstanceOf(AvatarUpload.Failed::class.java)
+        assertThat(vm.state.value.gate).isEqualTo(SealGate.Failed)
+        assertThat(vm.state.value.canSign).isFalse()
 
-        media.outcome = Outcome.Success(
-            fakeUpload("m2"),
-        )
-        vm.onRetryUpload()
+        media.gate = CompletableDeferred()
+        media.outcome = Outcome.Success(fakeUpload("m2"))
+        vm.seal.onRetryUpload()
         dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.gate).isEqualTo(SealGate.Uploading)
+        assertThat(vm.state.value.canSign).isTrue()
 
+        media.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
         val m2 = fakeUpload("m2")
         assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m2", m2.known(), m2.url))
+        assertThat(profiles.prepareCalls).isEqualTo(0)
     }
 
     /** The seal opens on the upload already running, not on a copy taken before it started. */
@@ -299,107 +339,170 @@ class AvatarFlowViewModelTest {
         val vm = startedAtSeal()
         assertThat(media.calls).isEqualTo(1)
 
-        vm.onRetryUpload()
+        vm.seal.onRetryUpload()
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(media.calls).isEqualTo(1)
     }
 
-    // -- The seal --
+    // -- The seal's commit --
 
-    /** The reason the profile is held at all. */
+    /** The reason the profile is read at all. */
     @Test
     fun theSignedUpdateResendsEveryFieldBesideTheNewPicture() = runTest(dispatcher) {
         val vm = startedAtSeal()
 
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(profiles.lastUpdate)
-            .isEqualTo(Triple("Jakob", "Old bio", "https://example.test"))
+        assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", "Old bio", "https://example.test"))
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Set("m1"))
         assertThat(vm.state.value.saved).isTrue()
+        assertThat(vm.state.value.signing).isFalse()
     }
 
     /**
      * A profile with no bio or website re-states them as cleared, which the
      * server stages as the empty string; the device must sign that rather
-     * than refuse its own gesture (jakob's hand test: the refusal left the
-     * update staged and every later one "already in flight").
+     * than refuse its own gesture.
      */
     @Test
     fun aProfileWithoutBioOrWebsiteStillSigns() = runTest(dispatcher) {
         profiles.mine = Outcome.Success(testProfile(id = TEST_PROFILE_ID, handle = "jakob", displayName = "Jakob"))
         val vm = startedAtSeal()
 
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", null, null))
-        assertThat(vm.state.value.signingFailed).isFalse()
+        assertThat(vm.state.value.fault).isNull()
         assertThat(vm.state.value.saved).isTrue()
     }
 
     /**
-     * Without the held profile there is nothing safe to send: a bare
-     * picture would clear the bio the author never touched.
+     * Without the profile as it stands there is nothing safe to send: a bare
+     * picture would clear the bio the author never touched. No answer is the
+     * fault line (:39).
      */
     @Test
     fun aProfileThatCouldNotBeReadStopsTheSignRatherThanClearingFields() = runTest(dispatcher) {
         profiles.mine = Outcome.Failed(IOException("down"))
         val vm = startedAtSeal()
 
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(profiles.prepareCalls).isEqualTo(0)
-        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Offline)
         assertThat(vm.state.value.saved).isFalse()
     }
 
     @Test
-    fun signingWaitsForThePicturesId() = runTest(dispatcher) {
+    fun aRefusedUploadTakesNoPress() = runTest(dispatcher) {
         processor.processed = null
         val vm = startedAtSeal()
 
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(profiles.prepareCalls).isEqualTo(0)
-        assertThat(vm.state.value.submitting).isFalse()
+        assertThat(vm.state.value.signing).isFalse()
     }
 
+    /** A press while the upload runs is taken and signs once the picture is up (:13). */
     @Test
-    fun aRefusedChangeSurfacesTheServersWordsAndSignsNothing() = runTest(dispatcher) {
-        profiles.prepareOutcome =
-            Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "handle is moderated")))
+    fun aPressWhileTheUploadRunsWaitsForItThenSigns() = runTest(dispatcher) {
+        media.gate = CompletableDeferred()
         val vm = startedAtSeal()
 
-        vm.onSign()
+        vm.seal.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.signing).isTrue()
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+
+        media.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    /** The upload fails under a held press: the press drops and nothing is signed (:21). */
+    @Test
+    fun anUploadFailingUnderAHeldPressDropsThePress() = runTest(dispatcher) {
+        media.gate = CompletableDeferred()
+        media.outcome = Outcome.Failed(IOException("down"))
+        val vm = startedAtSeal()
+
+        vm.seal.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        media.gate?.complete(Unit)
         dispatcher.scheduler.advanceUntilIdle()
 
         val s = vm.state.value
-        assertThat(s.refusal).isEqualTo("handle is moderated")
-        assertThat(s.submitting).isFalse()
+        assertThat(s.signing).isFalse()
         assertThat(s.saved).isFalse()
+        assertThat(s.fault).isNull()
+        assertThat(s.gate).isEqualTo(SealGate.Failed)
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+        assertThat(sealer.staged).isEmpty()
     }
 
     @Test
-    fun aFailedPrepareIsATransportFaultRatherThanARefusal() = runTest(dispatcher) {
+    fun theCommitRefusesASecondPressUntilItAnswers() = runTest(dispatcher) {
+        media.gate = CompletableDeferred()
+        val vm = startedAtSeal()
+        vm.seal.onSign()
+        vm.seal.onSign()
+        media.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+    }
+
+    @Test
+    fun theWriteRuleIsItsNoticeAndNotNowRestsTheSeal() = runTest(dispatcher) {
+        profiles.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.WRITE_RULE_FAILED, "write rule")))
+        val vm = startedAtSeal()
+        vm.seal.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.WriteRule)
+
+        vm.seal.onNotNow()
+        assertThat(vm.state.value.fault).isNull()
+        assertThat(vm.state.value.step).isEqualTo(AvatarStep.Seal)
+    }
+
+    /** Any other refusal is a bug (:49); its Not now returns the crop with the picture as it was (:51). */
+    @Test
+    fun aRefusedChangeIsTheBugAndNotNowReturnsTheCrop() = runTest(dispatcher) {
+        profiles.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "handle is moderated")))
+        val window = CropWindow(0.2f, 0.2f, 0.8f, 0.8f)
+        val vm = startedAtSeal(CropSpec(targetRatio = 1f, window = window))
+        vm.seal.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Bug)
+        assertThat(vm.state.value.saved).isFalse()
+
+        vm.seal.onNotNow()
+        assertThat(vm.state.value.step).isEqualTo(AvatarStep.Crop)
+        assertThat(vm.state.value.crop?.window).isEqualTo(window)
+    }
+
+    @Test
+    fun aFailedPrepareIsTheFaultLine() = runTest(dispatcher) {
         profiles.prepareOutcome = Outcome.Failed(IOException("down"))
         val vm = startedAtSeal()
 
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.transportFailed).isTrue()
-        assertThat(vm.state.value.refusal).isNull()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Offline)
+        assertThat(laid()).isNull()
     }
 
     @Test
     fun theSavedFlagIsAOneShot() = runTest(dispatcher) {
         val vm = startedAtSeal()
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.saved).isTrue()
 
@@ -413,13 +516,12 @@ class AvatarFlowViewModelTest {
     @Test
     fun aTakenPictureLaysThePictureAlone() = runTest(dispatcher) {
         val vm = startedAtSeal()
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.saved).isTrue()
         // The fields re-stated beside it are not the change's.
-        assertThat(signedProfile.laid.value.over(TEST_PROFILE_ID))
-            .isEqualTo(SignedProfileFields(avatar = Setting(SignedPicture("m1", "https://media/m1"))))
+        assertThat(laid()).isEqualTo(SignedProfileFields(avatar = Setting(SignedPicture("m1", "https://media/m1"))))
     }
 
     @Test
@@ -434,23 +536,106 @@ class AvatarFlowViewModelTest {
             ),
         )
         val vm = startedAtSeal()
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.signingFailed).isTrue()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Bug)
         assertThat(signedProfile.laid.value).isNull()
     }
 
-    // -- THE KEY NOT ON THIS DEVICE (AvatarSeal.md:53): never a crash --
+    // -- CLOSE FROM THE PRESS: THE CHANGE GOES ON (AvatarSeal.md:31, :65-:73) --
+
+    /** The ViewModel in a store, cleared the way a popped back-stack entry clears it. */
+    private fun stored(store: ViewModelStore): AvatarFlowViewModel =
+        ViewModelProvider(
+            store,
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T = viewModel() as T
+            },
+        )[AvatarFlowViewModel::class.java]
+
+    @Test
+    fun closedWhileItWaitsOnTheUploadTheChangeGoesOnAndLands() = runTest(dispatcher) {
+        media.gate = CompletableDeferred()
+        val landed = mutableListOf<Unit>()
+        backgroundScope.launch { changes.landed.collect { landed += it } }
+        val store = ViewModelStore()
+        val vm = startedAtSeal(vm = stored(store))
+        vm.seal.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // Back from the press closes the seal: the route leaves, and the entry is cleared.
+        assertThat(vm.onBack()).isFalse()
+        store.clear()
+        assertThat(line()).isEqualTo(ProfileChangeLine.Signing)
+
+        media.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+        assertThat(laid()?.avatar).isEqualTo(Setting(SignedPicture("m1", "https://media/m1")))
+        assertThat(line()).isNull()
+        assertThat(landed).hasSize(1)
+    }
+
+    /** Airplane mode after Close: `That didn't sign.` under the head, the old head kept (:69). */
+    @Test
+    fun aClosedChangeThatDidNotSignStandsUnderTheHead() = runTest(dispatcher) {
+        media.gate = CompletableDeferred()
+        profiles.prepareOutcome = Outcome.Failed(IOException("down"))
+        val store = ViewModelStore()
+        val vm = startedAtSeal(vm = stored(store))
+        vm.seal.onSign()
+        vm.seal.onLeave()
+        store.clear()
+        media.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(line()).isInstanceOf(ProfileChangeLine.Failed::class.java)
+        assertThat(signedProfile.laid.value).isNull()
+    }
+
+    @Test
+    fun aSealLeftUnpressedSignsNothing() = runTest(dispatcher) {
+        media.gate = CompletableDeferred()
+        val store = ViewModelStore()
+        startedAtSeal(vm = stored(store))
+        store.clear()
+        media.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+        assertThat(line()).isNull()
+    }
+
+    // -- THE KEY NOT ON THIS DEVICE (AvatarSeal.md:53-:55): never a crash --
 
     @Test
     fun aPressWithoutTheKeyIsTheKeyNoticeAndPreparesNothing() = runTest(dispatcher) {
         val vm = startedAtSeal()
         identity.seed = null
-        vm.onSign()
+        vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.keyAbsent).isTrue()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.KeyAbsent)
         assertThat(profiles.prepareCalls).isEqualTo(0)
         assertThat(signedProfile.laid.value).isNull()
+
+        vm.seal.onNotNow()
+        assertThat(vm.state.value.fault).isNull()
+        assertThat(vm.state.value.step).isEqualTo(AvatarStep.Seal)
+    }
+
+    /** The key goes while the upload runs: the signer finds none, and nothing is signed. */
+    @Test
+    fun aKeyGoneBeforeTheSigningIsTheKeyNoticeNotACrash() = runTest(dispatcher) {
+        media.gate = CompletableDeferred()
+        val vm = startedAtSeal()
+        vm.seal.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        identity.seed = null
+        media.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.KeyAbsent)
+        assertThat(sealer.staged.values.map { it.state.name }).doesNotContain("RELAYING")
     }
 }
