@@ -810,8 +810,11 @@ class CograNavGraphTest {
 
         compose.onNodeWithTag("profile_edit_bio").performTextInput("Hello from the hand test.")
         compose.onNodeWithTag("profile_edit_save").performScrollTo().performClick()
+        // Save opens the change's seal; its commit signs (ProfileEditSeal.md).
+        waitForTag("profileEditSeal.foot.sign")
+        compose.onNodeWithTag("profileEditSeal.foot.sign").performScrollTo().performClick()
 
-        // The save pops back to the profile, which re-reads.
+        // The signing pops back to the profile, which re-reads.
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Profile>() == true
         }

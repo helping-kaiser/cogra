@@ -1,5 +1,9 @@
 package com.cogra.feature.profile
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.viewModelScope
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
@@ -36,6 +40,9 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
@@ -119,9 +126,16 @@ class ProfileEditViewModelTest {
     private val processor = ScriptedProcessor()
     private val session = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", TEST_PROFILE_ID) }
     private val signedProfile = SignedProfile(session, TestScope(dispatcher))
+    private val changes = ProfileChanges(session, TestScope(dispatcher))
 
     private fun viewModel() =
-        ProfileEditViewModel(profiles, media, processor, WriteSigner(sealer, identity), signedProfile)
+        ProfileEditViewModel(profiles, media, processor, WriteSigner(sealer, identity), signedProfile, changes)
+
+    /** Save opens the seal; its commit signs. */
+    private fun ProfileEditViewModel.save() {
+        onSubmit()
+        seal.onSign()
+    }
 
     @Before
     fun setDispatcher() = Dispatchers.setMain(dispatcher)
@@ -144,7 +158,7 @@ class ProfileEditViewModelTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onDisplayNameChange("  ")
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.emptyName).isTrue()
         assertThat(profiles.lastUpdate).isNull()
@@ -156,7 +170,7 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onBioChange("")
         vm.onWebsiteChange("https://ada.example")
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         // The form holds the full field set: a blanked bio rides null
         // (the wire's explicit clear); the saved one-shot fires.
@@ -176,10 +190,10 @@ class ProfileEditViewModelTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onBioChange("Hello")
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", "Hello", null))
-        assertThat(vm.state.value.signingFailed).isFalse()
+        assertThat(vm.state.value.fault).isNull()
         assertThat(vm.state.value.saved).isTrue()
     }
 
@@ -189,9 +203,9 @@ class ProfileEditViewModelTest {
             Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "no fields")))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.refused).isTrue()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Bug)
         assertThat(vm.state.value.saved).isFalse()
     }
 
@@ -200,9 +214,11 @@ class ProfileEditViewModelTest {
         profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Offline)
+        // The form is not swapped for the load's failure screen.
+        assertThat(vm.state.value.transportFailed).isFalse()
     }
 
     // -- The three-valued profile media fields (D13) --
@@ -216,7 +232,7 @@ class ProfileEditViewModelTest {
     fun anUntouchedPictureSendsNothing() = runTest(dispatcher) {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Untouched)
         assertThat(media.calls).isEqualTo(0)
@@ -227,7 +243,7 @@ class ProfileEditViewModelTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onAvatarCleared()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Clear)
     }
@@ -238,7 +254,7 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onAvatarPicked("content://pick/1")
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Set("m1"))
         assertThat(media.calls).isEqualTo(1)
@@ -262,7 +278,7 @@ class ProfileEditViewModelTest {
         assertThat(profiles.prepareCalls).isEqualTo(0)
 
         vm.onBioChange("Hello")
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(profiles.prepareCalls).isEqualTo(1)
@@ -287,7 +303,7 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onAvatarPicked("content://pick/1")
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         // A failed upload must never read as a clear: the account keeps
         // whatever picture it had.
@@ -301,7 +317,7 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onAvatarPicked("content://pick/1")
         // The upload has not run yet: submitting now would name no id.
-        vm.onSubmit()
+        vm.save()
         assertThat(vm.state.value.imagesPending).isTrue()
         assertThat(profiles.lastUpdate).isNull()
     }
@@ -367,7 +383,7 @@ class ProfileEditViewModelTest {
         vm.onDisplayNameChange("Noa")
         vm.onBioChange("")
         vm.onWebsiteChange("https://noa.example")
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.saved).isTrue()
@@ -387,7 +403,7 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onAvatarPicked("content://pick/1")
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(laid()?.avatar).isEqualTo(Setting(SignedPicture("m1", "https://media/m1")))
     }
@@ -397,7 +413,7 @@ class ProfileEditViewModelTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onAvatarCleared()
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(laid()?.avatar).isEqualTo(Setting(null))
     }
@@ -408,9 +424,9 @@ class ProfileEditViewModelTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onBioChange("Hello")
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.submitting).isTrue()
+        assertThat(vm.state.value.signing).isTrue()
         assertThat(signedProfile.laid.value).isNull()
 
         profiles.prepareGate?.complete(Unit)
@@ -429,15 +445,347 @@ class ProfileEditViewModelTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onDisplayNameChange("Noa")
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.signingFailed).isTrue()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Bug)
         assertThat(signedProfile.laid.value).isNull()
 
         // A refused prepare never reaches a signing.
         profiles.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "no fields")))
-        vm.onSubmit()
+        vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(signedProfile.laid.value).isNull()
+    }
+
+    // -- THE SEAL (ProfileEditSeal.md): Save opens it, only its commit signs --
+
+    private suspend fun line() = changes.line.first()
+
+    @Test
+    fun saveOpensTheSealAndSignsNothing() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Seal)
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+        assertThat(vm.state.value.saved).isFalse()
+    }
+
+    @Test
+    fun aValidationRefusalKeepsTheForm() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDisplayNameChange(" ")
+        vm.onSubmit()
+        assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Form)
+        vm.seal.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+    }
+
+    @Test
+    fun backOnTheSealBeforeThePressReturnsToTheFormAsLeft() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.onSubmit()
+        assertThat(vm.seal.onBack()).isTrue()
+        assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Form)
+        assertThat(vm.state.value.bio).isEqualTo("Hello")
+        // From the form, back leaves.
+        assertThat(vm.seal.onBack()).isFalse()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+    }
+
+    @Test
+    fun signRefusesASecondPressUntilItAnswers() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.seal.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+        assertThat(vm.state.value.signing).isTrue()
+
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.signing).isFalse()
+        assertThat(vm.state.value.saved).isTrue()
+        assertThat(sealer.staged).hasSize(1)
+    }
+
+    @Test
+    fun aChangeTakenWhileTheSealStandsLeavesNoHeadLine() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.saved).isTrue()
+        assertThat(line()).isNull()
+    }
+
+    @Test
+    fun backDuringTheSigningClosesTheSealAndTheChangeGoesOn() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        val landed = mutableListOf<Unit>()
+        backgroundScope.launch { changes.landed.collect { landed += it } }
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The route leaves on false: the seal closes, and nothing is cancelled.
+        assertThat(vm.seal.onBack()).isFalse()
+        vm.viewModelScope.cancel()
+        assertThat(line()).isEqualTo(ProfileChangeLine.Signing)
+        assertThat(signedProfile.laid.value).isNull()
+
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(sealer.staged).hasSize(1)
+        assertThat(laid()?.bio).isEqualTo(Setting("Hello"))
+        assertThat(line()).isNull()
+        assertThat(landed).hasSize(1)
+    }
+
+    @Test
+    fun theXDuringTheSigningClosesTheSealToo() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.seal.onLeave()
+        vm.viewModelScope.cancel()
+        profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isInstanceOf(ProfileChangeLine.Failed::class.java)
+    }
+
+    /** Airplane mode with the seal open: the fault line, the old head, nothing laid. */
+    @Test
+    fun noAnswerWithTheSealOpenIsTheFaultLineAndKeepsTheOldHead() = runTest(dispatcher) {
+        profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        val s = vm.state.value
+        assertThat(s.fault).isEqualTo(ProfileSealFault.Offline)
+        assertThat(s.stage).isEqualTo(ProfileEditStage.Seal)
+        assertThat(s.signing).isFalse()
+        assertThat(signedProfile.laid.value).isNull()
+        assertThat(line()).isNull()
+
+        // Retry is the commit pressed again.
+        profiles.prepareOutcome = null
+        vm.seal.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.saved).isTrue()
+        assertThat(laid()?.bio).isEqualTo(Setting("Hello"))
+    }
+
+    /** Airplane mode after Close: `That didn't sign.` with Retry, the old head, nothing laid. */
+    @Test
+    fun aClosedChangeThatDidNotSignStandsUnderTheHeadUntilRetry() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.seal.onBack()
+        vm.viewModelScope.cancel()
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val failed = line() as ProfileChangeLine.Failed
+        assertThat(signedProfile.laid.value).isNull()
+
+        profiles.prepareGate = CompletableDeferred()
+        profiles.prepareOutcome = null
+        failed.retry()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isEqualTo(ProfileChangeLine.Signing)
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isNull()
+        assertThat(laid()?.bio).isEqualTo(Setting("Hello"))
+    }
+
+    @Test
+    fun theWriteRuleIsItsNoticeAndNotNowRestsTheSeal() = runTest(dispatcher) {
+        profiles.prepareOutcome =
+            Outcome.Refused(listOf(UserError(ErrorCode.WRITE_RULE_FAILED, "write rule")))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.WriteRule)
+        vm.seal.onNotNow()
+        assertThat(vm.state.value.fault).isNull()
+        assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Seal)
+        assertThat(signedProfile.laid.value).isNull()
+    }
+
+    @Test
+    fun theBugsNotNowReturnsTheEditAsLeft() = runTest(dispatcher) {
+        profiles.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "no fields")))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Bug)
+        vm.seal.onNotNow()
+        assertThat(vm.state.value.stage).isEqualTo(ProfileEditStage.Form)
+        assertThat(vm.state.value.bio).isEqualTo("Hello")
+    }
+
+    // -- The Profile row's words (ProfileEditSeal.md:5-9) --
+
+    @Test
+    fun theRowNamesTheChangedPartsInTheEditsOrder() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onAvatarPicked("content://pick/1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onWebsiteChange("https://ada.example")
+        vm.onBioChange("New bio")
+        assertThat(vm.state.value.changeSummary).isEqualTo("A new picture, bio and website")
+        vm.onDisplayNameChange("Noa")
+        assertThat(vm.state.value.changeSummary).isEqualTo("A new picture, display name, bio and website")
+    }
+
+    @Test
+    fun aRemovedPictureReadsAloneOrAfterTheOthers() {
+        assertThat(profileChangeSummary(emptyList(), removed = true)).isEqualTo("The picture removed")
+        assertThat(profileChangeSummary(listOf("bio"), removed = true)).isEqualTo("A new bio, the picture removed")
+        assertThat(profileChangeSummary(listOf("display name", "website"), removed = false))
+            .isEqualTo("A new display name and website")
+        assertThat(profileChangeSummary(emptyList(), removed = false)).isEqualTo(NOTHING_CHANGED)
+    }
+
+    // -- A SEAL TORN DOWN WITHOUT Back OR THE X (a sign-out clears the stack) --
+
+    /** The ViewModel in a store, cleared the way a popped back-stack entry clears it. */
+    private fun storedViewModel(store: ViewModelStore): ProfileEditViewModel =
+        ViewModelProvider(
+            store,
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T = viewModel() as T
+            },
+        )[ProfileEditViewModel::class.java]
+
+    @Test
+    fun aSealClearedWhileItSignsHandsTheAnswerToTheHead() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
+        val store = ViewModelStore()
+        val vm = storedViewModel(store)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        store.clear()
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        // Never lost silently (ProfileEditSeal.md:77): the head carries it.
+        assertThat(line()).isInstanceOf(ProfileChangeLine.Failed::class.java)
+    }
+
+    @Test
+    fun aSealClearedAtRestClosesNothing() = runTest(dispatcher) {
+        val store = ViewModelStore()
+        val vm = storedViewModel(store)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSubmit()
+        store.clear()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isNull()
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+    }
+
+    // -- THE ACCOUNT BOUNDARY: an act prepares and signs only for the account that pressed --
+
+    private fun switchTo(account: String?) {
+        session.tokens.value = account?.let { AuthTokens("a2", "r2", it) }
+    }
+
+    @Test
+    fun aSwitchBeforeThePrepareAnswersSignsNothingForTheOtherAccount() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.seal.onBack()
+
+        switchTo("account-b")
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The prepare answered, the signing never ran: nothing relays.
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+        assertThat(sealer.staged.values.map { it.state.name }).doesNotContain("RELAYING")
+        assertThat(signedProfile.laid.value).isNull()
+        // Nothing is drawn under B's head, and nothing comes back for A.
+        assertThat(line()).isNull()
+        switchTo(TEST_PROFILE_ID)
+        assertThat(line()).isNull()
+    }
+
+    @Test
+    fun aPressWithAnotherAccountActiveNeverPrepares() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSubmit()
+        switchTo(null)
+        vm.seal.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+        assertThat(vm.state.value.signing).isFalse()
+    }
+
+    @Test
+    fun aRetryHeldPastASwitchDoesNothing() = runTest(dispatcher) {
+        profiles.prepareGate = CompletableDeferred()
+        profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.save()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.seal.onBack()
+        profiles.prepareGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        val failed = line() as ProfileChangeLine.Failed
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+
+        // The line goes at the switch; its Retry, held by a composition, is pressed under B.
+        switchTo("account-b")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isNull()
+        profiles.prepareGate = null
+        profiles.prepareOutcome = null
+        failed.retry()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+        assertThat(signedProfile.laid.value).isNull()
+
+        // Back on A, the dropped line stays dropped.
+        switchTo(TEST_PROFILE_ID)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(line()).isNull()
     }
 }

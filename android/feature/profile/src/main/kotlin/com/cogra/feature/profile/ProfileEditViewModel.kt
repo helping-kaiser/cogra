@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
+import com.cogra.domain.UserError
 import com.cogra.domain.content.isBioTooLong
 import com.cogra.domain.content.isDisplayNameTooLong
 import com.cogra.domain.content.isWebsiteUrlTooLong
@@ -82,22 +83,38 @@ sealed interface ProfileImageState {
     }
 }
 
+/** The edit's two stages: the form, and the change's seal (`ProfileEdit` → `ProfileEditSeal`). */
+enum class ProfileEditStage { Form, Seal }
+
+/**
+ * What took the commit's place on the seal when a press did not land
+ * (ProfileEditSeal.md:47-57): the fault line and Retry, the write rule's
+ * notice, or the bug's.
+ */
+enum class ProfileSealFault { Offline, WriteRule, Bug }
+
 data class ProfileEditUiState(
     /** The account's own id: the node a profile payload binds to. */
     val profileId: String = "",
     val loading: Boolean = true,
+    /** The form's own read failed: nothing to edit yet. */
     val transportFailed: Boolean = false,
     val displayName: String = "",
     val bio: String = "",
     val websiteUrl: String = "",
     val avatar: ProfileImageState = ProfileImageState.Held(null),
-    val submitting: Boolean = false,
+    /** The fields as read, which the seal's row names the change against. */
+    val readDisplayName: String = "",
+    val readBio: String = "",
+    val readWebsiteUrl: String = "",
+    val stage: ProfileEditStage = ProfileEditStage.Form,
+    /** `Sign the change` was pressed and has not answered. */
+    val signing: Boolean = false,
+    val fault: ProfileSealFault? = null,
     val emptyName: Boolean = false,
-    val refused: Boolean = false,
     /** CoGra reserves this name: the Display name field's own line, until the next Save. */
     val nameReserved: Boolean = false,
-    val signingFailed: Boolean = false,
-    /** One-shot: the update signed; the caller pops back and refreshes. */
+    /** One-shot: the change was taken while the seal stood; the caller pops back and confirms. */
     val saved: Boolean = false,
 ) {
     /** A picture is still on its way; saving would name nothing. */
@@ -108,10 +125,42 @@ data class ProfileEditUiState(
     val bioTooLong: Boolean get() = isBioTooLong(bio)
     val websiteUrlTooLong: Boolean get() = isWebsiteUrlTooLong(websiteUrl)
 
-    /** Save may fire: nothing pending, and no field is over its ruled cap. */
+    /** Save may open the seal: nothing pending, and no field is over its ruled cap. */
     val canSubmit: Boolean
-        get() = !submitting && !imagesPending && !displayNameTooLong && !bioTooLong && !websiteUrlTooLong
+        get() = !imagesPending && !displayNameTooLong && !bioTooLong && !websiteUrlTooLong
+
+    /** The seal's one acts row: what the change holds (ProfileEditSeal.md:5-9). */
+    val changeSummary: String
+        get() = profileChangeSummary(
+            renewed = listOfNotNull(
+                "picture".takeIf { avatar is ProfileImageState.Uploaded },
+                "display name".takeIf { displayName.trim() != readDisplayName.trim() },
+                "bio".takeIf { bio.trim() != readBio.trim() },
+                "website".takeIf { websiteUrl.trim() != readWebsiteUrl.trim() },
+            ),
+            removed = avatar == ProfileImageState.Cleared,
+        )
 }
+
+/**
+ * The Profile row's words (ProfileEditSeal.md:5-9; copy-voice, *The profile's
+ * seal*): `A new` and the changed parts in the edit's order, joined `, ` and a
+ * last ` and `; `The picture removed` alone, `, the picture removed` after the
+ * others. web's twin is `web/src/app/profile/edit/change-summary.ts`, whose
+ * `Nothing changed` this shares for a Save that changes nothing.
+ */
+internal fun profileChangeSummary(renewed: List<String>, removed: Boolean): String {
+    val said = buildList {
+        if (renewed.isNotEmpty()) add("A new ${listed(renewed)}")
+        if (removed) add(if (isEmpty()) "The picture removed" else "the picture removed")
+    }
+    return if (said.isEmpty()) NOTHING_CHANGED else said.joinToString(", ")
+}
+
+private fun listed(parts: List<String>): String =
+    if (parts.size <= 1) parts.joinToString("") else "${parts.dropLast(1).joinToString(", ")} and ${parts.last()}"
+
+internal const val NOTHING_CHANGED = "Nothing changed"
 
 /**
  * The profile edit form: pre-filled from the current version, saved as
@@ -126,6 +175,7 @@ class ProfileEditViewModel @Inject constructor(
     private val processor: MediaProcessor,
     private val signer: WriteSigner,
     private val signedProfile: SignedProfile,
+    private val changes: ProfileChanges,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileEditUiState())
@@ -151,6 +201,9 @@ class ProfileEditViewModel @Inject constructor(
                                 displayName = profile.displayName.value.orEmpty(),
                                 bio = profile.bio.value.orEmpty(),
                                 websiteUrl = profile.websiteUrl.value.orEmpty(),
+                                readDisplayName = profile.displayName.value.orEmpty(),
+                                readBio = profile.bio.value.orEmpty(),
+                                readWebsiteUrl = profile.websiteUrl.value.orEmpty(),
                                 // A picture the author has already touched
                                 // outranks the one the server holds: a
                                 // reload reached from the retry button
@@ -221,9 +274,13 @@ class ProfileEditViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Save: the form's checks, then the change's seal — nothing is signed
+     * before the seal's own commit (ProfileEdit.md, ProfileEditSeal.md:3).
+     */
     fun onSubmit() {
         val s = _state.value
-        if (s.submitting || s.imagesPending) return
+        if (s.stage != ProfileEditStage.Form || s.imagesPending) return
         // Every real press of Save takes the reserved line away (ProfileEdit.md:85),
         // even one that stops at a guard below.
         _state.update { it.copy(nameReserved = false) }
@@ -232,71 +289,78 @@ class ProfileEditViewModel @Inject constructor(
             return
         }
         if (s.displayNameTooLong || s.bioTooLong || s.websiteUrlTooLong) return
-        _state.update { it.copy(submitting = true, refused = false, signingFailed = false) }
-        viewModelScope.launch {
-            val sent = SentProfile(
-                displayName = s.displayName.trim(),
-                bio = s.bio.ifBlank { null },
-                websiteUrl = s.websiteUrl.trim().ifBlank { null },
-                avatar = s.avatar.toUpdate(),
-            )
-            val prepared = when (
-                val outcome = profiles.prepareProfileUpdate(
-                    displayName = sent.displayName,
-                    bio = sent.bio,
-                    websiteUrl = sent.websiteUrl,
-                    avatar = sent.avatar,
-                )
-            ) {
-                is Outcome.Success -> outcome.value
-                is Outcome.Refused -> {
-                    val reserved = outcome.errors.any {
-                        it.code == ErrorCode.DISPLAY_NAME_RESERVED && it.field?.firstOrNull() == "displayName"
-                    }
-                    _state.update {
-                        it.copy(submitting = false, nameReserved = reserved, refused = !reserved)
-                    }
-                    return@launch
-                }
-                is Outcome.Failed -> {
-                    _state.update { it.copy(submitting = false, transportFailed = true) }
-                    return@launch
-                }
+        _state.update { it.copy(stage = ProfileEditStage.Seal, fault = null) }
+    }
+
+    /** The seal's commit and its ways out (ProfileEditSeal.md:33-73): the seal is its own stage. */
+    val seal = SealCommit()
+
+    inner class SealCommit internal constructor() {
+        /**
+         * `Sign the change`: refuses a second press until the signing answers
+         * (ProfileEditSeal.md:33). The signing runs in [ProfileChanges], so a
+         * seal closed on it never cancels it (:73).
+         */
+        fun onSign() {
+            val s = _state.value
+            if (s.stage != ProfileEditStage.Seal || s.signing) return
+            _state.update { it.copy(signing = true, fault = null) }
+            val act = signingOf(s, profiles, signer, signedProfile)
+            viewModelScope.launch {
+                val outcome = changes.sign(act)
+                _state.update { it.answered(outcome) }
             }
-            // One profile update on this device's own profile, its payload held
-            // to the fields this form sent and the avatar this device uploaded
-            // (PayloadExpectation.kt).
-            val avatar = s.avatar as? ProfileImageState.Uploaded
-            val ledger = avatar?.known?.let { mapOf(avatar.mediaId to it) }.orEmpty()
-            val profile = profileExpectation(s.profileId, sent, ledger)
-            val signing = signedProfile.begin()
-            val results = signer.sign(prepared, Expectation(listOf(profileUpdate(profile))))
-            if (results.all { it is WriteResult.Done }) {
-                // Taken: the profile shows the change from the return's first
-                // frame (ProfileEditSeal.md:45) — exactly the fields it set.
-                signedProfile.lay(signing, s.profileId, sent.signedFields(s.avatar))
-                _state.update { it.copy(submitting = false, saved = true) }
+        }
+
+        /**
+         * The arrow, Back and the system gesture. On the seal before the press,
+         * the edit comes back one stage behind (ProfileEditSeal.md:65-67); from
+         * the press they close the seal and the change goes on (:73). Answers
+         * whether the stage handled it; false means the route leaves.
+         */
+        fun onBack(): Boolean {
+            val s = _state.value
+            return when {
+                s.signing -> {
+                    changes.close()
+                    false
+                }
+                s.stage == ProfileEditStage.Seal -> {
+                    _state.update { it.copy(stage = ProfileEditStage.Form, fault = null) }
+                    true
+                }
+                else -> false
+            }
+        }
+
+        /** The header X: the flow is left (:69), or, from the press, the seal closes and the change goes on (:73). */
+        fun onLeave() {
+            if (_state.value.signing) changes.close()
+        }
+
+        /**
+         * A notice's `Not now`: the write rule's brings the seal back as it stood
+         * before the press (:55); the bug's returns the profile edit as it was
+         * left (:59).
+         */
+        fun onNotNow() = _state.update {
+            if (it.fault == ProfileSealFault.Bug) {
+                it.copy(stage = ProfileEditStage.Form, fault = null)
             } else {
-                _state.update { it.copy(submitting = false, signingFailed = true) }
+                it.copy(fault = null)
             }
         }
     }
 
     /**
-     * What this form's change set, as the head wears it: the form states its
-     * full field set, so name, bio and website always; the picture only where
-     * the form changed it — a new one or the explicit clear.
+     * The seal can go without Back or the X — a sign-out or a session's end
+     * clears the whole stack (CograNavGraph.kt, `popUpTo(0)`) — and the change
+     * still goes on, its answer the head's (ProfileEditSeal.md:73-79). A
+     * rotation never reaches here: the entry's ViewModel outlives it.
      */
-    private fun SentProfile.signedFields(picture: ProfileImageState) = SignedProfileFields(
-        displayName = displayName,
-        bio = Setting(bio),
-        websiteUrl = Setting(websiteUrl),
-        avatar = when (picture) {
-            ProfileImageState.Cleared -> Setting(null)
-            is ProfileImageState.Uploaded -> Setting(SignedPicture(picture.mediaId, picture.url))
-            is ProfileImageState.Held, is ProfileImageState.Picked, is ProfileImageState.Failed -> null
-        },
-    )
+    override fun onCleared() {
+        if (_state.value.signing) changes.close()
+    }
 
     internal companion object {
         /** D13's fixed crop: a circle-masked square. */
@@ -309,5 +373,125 @@ class ProfileEditViewModel @Inject constructor(
 
         const val REFUSED = "The server would not take that picture."
         const val TRANSPORT = "The upload could not reach the server."
+    }
+}
+
+/** The seal as the signing's answer leaves it. */
+private fun ProfileEditUiState.answered(outcome: ProfileChangeOutcome): ProfileEditUiState = when (outcome) {
+    ProfileChangeOutcome.Taken -> copy(signing = false, saved = true)
+    // The name's own line stands under its field, on the form (ProfileEdit.md:85).
+    ProfileChangeOutcome.NameReserved -> copy(signing = false, stage = ProfileEditStage.Form, nameReserved = true)
+    ProfileChangeOutcome.Offline -> copy(signing = false, fault = ProfileSealFault.Offline)
+    ProfileChangeOutcome.WriteRule -> copy(signing = false, fault = ProfileSealFault.WriteRule)
+    ProfileChangeOutcome.Bug -> copy(signing = false, fault = ProfileSealFault.Bug)
+    // Another account is active: nothing was prepared or signed for it.
+    ProfileChangeOutcome.Foreign -> copy(signing = false)
+}
+
+/**
+ * One signing of the change [s] holds: prepare, sign, and — taken — lay it over
+ * the head (ProfileEditSeal.md:45). It holds values only, never the ViewModel:
+ * it may outlive it, and it is what the head's Retry signs again.
+ */
+private fun signingOf(
+    s: ProfileEditUiState,
+    repository: ProfileRepository,
+    writes: WriteSigner,
+    head: SignedProfile,
+): suspend (StillPressing) -> ProfileChangeOutcome {
+    val sent = SentProfile(
+        displayName = s.displayName.trim(),
+        bio = s.bio.ifBlank { null },
+        websiteUrl = s.websiteUrl.trim().ifBlank { null },
+        avatar = s.avatar.toUpdate(),
+    )
+    val avatar = s.avatar as? ProfileImageState.Uploaded
+    val ledger = avatar?.known?.let { mapOf(avatar.mediaId to it) }.orEmpty()
+    val change = ProfileChangeSigning(s.profileId, sent, ledger, sent.signedFields(s.avatar))
+    return { pressing -> change.sign(pressing, repository, writes, head) }
+}
+
+/** What one profile change signs: the fields it sends, the media it names, and what the head wears once taken. */
+private class ProfileChangeSigning(
+    val profileId: String,
+    val sent: SentProfile,
+    val ledger: Map<String, KnownMedia>,
+    val fields: SignedProfileFields,
+) {
+    suspend fun sign(
+        pressing: StillPressing,
+        repository: ProfileRepository,
+        writes: WriteSigner,
+        head: SignedProfile,
+    ): ProfileChangeOutcome {
+        if (!pressing.holds()) return ProfileChangeOutcome.Foreign
+        val prepared = when (
+            val outcome = repository.prepareProfileUpdate(
+                displayName = sent.displayName,
+                bio = sent.bio,
+                websiteUrl = sent.websiteUrl,
+                avatar = sent.avatar,
+            )
+        ) {
+            is Outcome.Success -> outcome.value
+            is Outcome.Refused -> return refusalOf(outcome.errors)
+            is Outcome.Failed -> return ProfileChangeOutcome.Offline
+        }
+        // One profile update on this device's own profile, its payload held
+        // to the fields this form sent and the avatar this device uploaded
+        // (PayloadExpectation.kt).
+        val profile = profileExpectation(profileId, sent, ledger)
+        // The account may have changed while the prepare ran: never sign it
+        // for another (the device would refuse it anyway, IntentCheck.kt).
+        if (!pressing.holds()) return ProfileChangeOutcome.Foreign
+        val signing = head.begin()
+        val results = writes.sign(prepared, Expectation(listOf(profileUpdate(profile))))
+        if (!results.all { it is WriteResult.Done }) return outcomeOfUntaken(results)
+        // Taken: the profile shows the change from the return's first frame
+        // (ProfileEditSeal.md:45) — exactly the fields it set.
+        head.lay(signing, profileId, fields)
+        return ProfileChangeOutcome.Taken
+    }
+}
+
+/**
+ * What this form's change set, as the head wears it: the form states its full
+ * field set, so name, bio and website always; the picture only where the form
+ * changed it — a new one or the explicit clear.
+ */
+private fun SentProfile.signedFields(picture: ProfileImageState) = SignedProfileFields(
+    displayName = displayName,
+    bio = Setting(bio),
+    websiteUrl = Setting(websiteUrl),
+    avatar = when (picture) {
+        ProfileImageState.Cleared -> Setting(null)
+        is ProfileImageState.Uploaded -> Setting(SignedPicture(picture.mediaId, picture.url))
+        is ProfileImageState.Held, is ProfileImageState.Picked, is ProfileImageState.Failed -> null
+    },
+)
+
+/**
+ * A refusal by its codes (copy-voice, *Faults by code*; the post seal's
+ * `sealFaultOf`): the reserved name goes back to its field; the write rule is
+ * its notice; anything else is a bug.
+ */
+private fun refusalOf(errors: List<UserError>): ProfileChangeOutcome = when {
+    errors.any { it.code == ErrorCode.DISPLAY_NAME_RESERVED && it.field?.firstOrNull() == "displayName" } ->
+        ProfileChangeOutcome.NameReserved
+    errors.any { it.code == ErrorCode.WRITE_RULE_FAILED } -> ProfileChangeOutcome.WriteRule
+    else -> ProfileChangeOutcome.Bug
+}
+
+/**
+ * A signing that was not taken: a refusal reads by its codes; the device's own
+ * refusal of bytes that were not what the form sent is a bug — nothing was
+ * signed, and it is no fault of the network's; anything else never answered.
+ */
+private fun outcomeOfUntaken(results: List<WriteResult>): ProfileChangeOutcome {
+    val refused = results.filterIsInstance<WriteResult.Refused>().firstOrNull()
+    return when {
+        refused != null -> refusalOf(refused.errors)
+        results.any { it is WriteResult.RejectedByDevice } -> ProfileChangeOutcome.Bug
+        else -> ProfileChangeOutcome.Offline
     }
 }
