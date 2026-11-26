@@ -100,6 +100,46 @@ impl Rig {
         );
     }
 
+    /// The first half of an ingestion pass alone (`ingest::ingest_pending`
+    /// up to its promotions): every epoch since the cursor mirrored and its
+    /// staged writes marked landed, and then the pass stops — as one does
+    /// when a later epoch's step fails, or the process ends, before the
+    /// confirm-side promotions run.
+    async fn close_and_mirror_unpromoted(&self) -> Vec<staged::PromotedWrite> {
+        self.standin.close_epoch().await.expect("closes");
+        let cursor = mirror::last_ingested_epoch(&self.pool)
+            .await
+            .expect("reads cursor");
+        let packages = self
+            .boundary
+            .epochs_since(cursor)
+            .await
+            .expect("reads epochs");
+        let mut promoted = Vec::new();
+        for package in &packages {
+            mirror::ingest_epoch(&self.pool, package)
+                .await
+                .expect("mirrors");
+            promoted.extend(
+                staged::promote_landed(&self.pool, package.epoch)
+                    .await
+                    .expect("promotes"),
+            );
+        }
+        promoted
+    }
+
+    /// Signs and relays one prepared content write, then runs a pass that
+    /// marks it landed and stops before its promotion.
+    async fn land_interrupted(&self, prepared: &content::PreparedContent, key: &ActorKey) {
+        self.sign_and_relay(prepared.writes[0].id, key).await;
+        let landed = self.close_and_mirror_unpromoted().await;
+        assert!(
+            landed.iter().any(|w| w.id == prepared.writes[0].id),
+            "the interrupted pass marked the write landed"
+        );
+    }
+
     /// Drives one prepared content write through signatures and confirm.
     async fn land(&self, prepared: &content::PreparedContent, key: &ActorKey) {
         self.sign_and_relay(prepared.writes[0].id, key).await;
@@ -2765,4 +2805,208 @@ mod galleries {
             other => panic!("expected a body refusal, got {other}"),
         }
     }
+}
+
+/// The edit draft every stranded-landing test below prepares.
+fn titled_edit(id: Uuid, title: &str) -> PostEditDraft {
+    PostEditDraft {
+        id,
+        title: Some(title.into()),
+        description: None,
+        content: Some("Body".into()),
+        attachments: vec![],
+        sensitive: Default::default(),
+        p_directed: 0.0,
+    }
+}
+
+/// A reply draft toward `target`.
+fn reply(target: Uuid, content: &str) -> CommentDraft {
+    CommentDraft {
+        target,
+        content: content.into(),
+        license: license(),
+        p_directed: 0.1,
+        tags: vec![],
+        references: vec![],
+        p_interest: 0.1,
+        attachments: vec![],
+        sensitive: Default::default(),
+    }
+}
+
+/// A new post whose write a pass marked landed and never promoted has no
+/// landing order, so every listing serves it in the pending band above
+/// every landed post, for ever. Confirm drops that mark (data-model.md
+/// "Staged writes", "Content nodes"), so the next pass promotes it.
+///
+/// A new post left unpromoted by an interrupted pass is promoted by the next pass, so it leaves the pending band.
+/// ´claim:content:a-stranded-post-is-promoted-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let prepared = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        PostDraft {
+            title: Some("Stranded".into()),
+            description: None,
+            content: Some("Body".into()),
+            license: license(),
+            p_directed: 0.1,
+            tags: vec![],
+            references: vec![],
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("prepares post");
+    rig.land_interrupted(&prepared, &alice_key).await;
+    rig.close_and_ingest().await;
+
+    let post = content_store::post(&rig.pool, prepared.node)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert!(post.order.is_some(), "the post is still pending: {post:?}");
+    assert!(!post.version_pending);
+}
+
+/// A post edit whose write a pass marked landed and never promoted keeps
+/// its version pending, and the post read puts a pending version first —
+/// so it would outrank every later landed edit for ever. The next pass
+/// promotes it, and the later edit stands.
+///
+/// A post edit left unpromoted by an interrupted pass is promoted by the next pass, so a later landed edit is not outranked by it.
+/// ´claim:content:a-stranded-post-edit-is-promoted-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_edit_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let first = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        titled_edit(post_id, "Stranded"),
+    )
+    .await
+    .expect("prepares the first edit");
+    rig.land_interrupted(&first, &alice_key).await;
+    let later = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        titled_edit(post_id, "Later"),
+    )
+    .await
+    .expect("the landed edit no longer holds the chain");
+    rig.land(&later, &alice_key).await;
+
+    let post = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert!(!post.version_pending, "a version stays pending: {post:?}");
+    assert_eq!(post.title.as_deref(), Some("Later"));
+    let pending: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM post_versions WHERE post_id = $1 AND pending")
+            .bind(post_id)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("counts");
+    assert_eq!(pending, 0);
+}
+
+/// A new comment whose write a pass marked landed and never promoted has
+/// no landing order, so the thread serves it among the pending replies
+/// for ever. The next pass promotes it.
+///
+/// A new comment left unpromoted by an interrupted pass is promoted by the next pass, so it leaves the pending replies.
+/// ´claim:content:a-stranded-comment-is-promoted-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_comment_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let comment = content::prepare_comment(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        reply(post_id, "Stranded"),
+    )
+    .await
+    .expect("prepares comment");
+    rig.land_interrupted(&comment, &alice_key).await;
+    rig.close_and_ingest().await;
+
+    let row = content_store::comment(&rig.pool, comment.node)
+        .await
+        .expect("reads")
+        .expect("comment");
+    assert!(row.order.is_some(), "the comment is still pending: {row:?}");
+    assert!(!row.version_pending);
+}
+
+/// A comment edit whose write a pass marked landed and never promoted
+/// keeps its version pending, outranking every later landed edit, until
+/// the next pass promotes it.
+///
+/// A comment edit left unpromoted by an interrupted pass is promoted by the next pass, so a later landed edit is not outranked by it.
+/// ´claim:content:a-stranded-comment-edit-is-promoted-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_comment_edit_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let comment = content::prepare_comment(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        reply(post_id, "First"),
+    )
+    .await
+    .expect("prepares comment");
+    rig.land(&comment, &alice_key).await;
+    let edit = |content: &str| CommentEditDraft {
+        id: comment.node,
+        content: content.into(),
+        attachments: vec![],
+        sensitive: Default::default(),
+    };
+    let first = content::prepare_comment_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        edit("Stranded"),
+    )
+    .await
+    .expect("prepares the first edit");
+    rig.land_interrupted(&first, &alice_key).await;
+    let later = content::prepare_comment_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        edit("Later"),
+    )
+    .await
+    .expect("the landed edit no longer holds the chain");
+    rig.land(&later, &alice_key).await;
+
+    let row = content_store::comment(&rig.pool, comment.node)
+        .await
+        .expect("reads")
+        .expect("comment");
+    assert!(!row.version_pending, "a version stays pending: {row:?}");
+    assert_eq!(row.content, "Later");
 }
