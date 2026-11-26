@@ -6,12 +6,14 @@
 package com.cogra.domain.identity
 
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.io.IOException
 import java.time.Instant
 
 class SecurityNoticesTest {
@@ -48,6 +50,41 @@ class SecurityNoticesTest {
 
         notices.dismissLockLost()
         assertThat(notices.lockLost.first()).isFalse()
+    }
+
+    @Test
+    fun twoAccountsWhoseLocksDiedAreEachToldOnce() = runTest {
+        // auth.md "Device lock": each account "is told so once" — a second
+        // dead lock never erases the first account's notice.
+        notices.postLockLost("u1")
+        notices.postLockLost("u2")
+        activate("u2")
+        assertThat(notices.lockLost.first()).isTrue()
+        notices.dismissLockLost()
+        assertThat(notices.lockLost.first()).isFalse()
+
+        activate("u1")
+        assertThat(notices.lockLost.first()).isTrue()
+    }
+
+    @Test
+    fun aStoreThatCannotWriteNeitherBlocksTheSignInNorLosesTheNotice() = runTest {
+        // The write throws (a DataStore I/O fault): the sign-in's path goes on,
+        // and the notice stands for the session's life instead.
+        val broken = object : IdentityStore by identity {
+            override suspend fun keepSecurityNotice(account: String, detectedAt: Instant) =
+                throw IOException("disk full")
+
+            override suspend fun dropSecurityNotice() = throw IOException("disk full")
+        }
+        val held = SecurityNotices(broken, tokens)
+
+        held.post(detectedAt, "u1")
+        activate("u1")
+        assertThat(held.reuseDetectedAt.first()).isEqualTo(detectedAt)
+
+        held.dismiss()
+        assertThat(held.reuseDetectedAt.first()).isNull()
     }
 
     @Test
