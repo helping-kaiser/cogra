@@ -228,6 +228,100 @@ describe("a stance pick's Retry asks the same signing again", () => {
     expect(signedAgain).toEqual([]);
   });
 
+  describe("a commit while the first is still signing is not a Retry", () => {
+    // The anchor refuses a second act while it signs (PadFailed.md:17, :37,
+    // :41) — per control. The seam is shared, so a second surface showing the
+    // same target can commit meanwhile: that is an act of its own, as on main.
+    function holding() {
+      let release: (answer: Answer) => void = () => {};
+      const first = new Promise<Answer>((resolve) => (release = resolve));
+      const signedAgain: string[][] = [];
+      let calls = 0;
+      const writes: WriteSigner = {
+        signStaged: vi.fn(),
+        sign: vi.fn(async (staged: readonly StagedWriteView[]) => {
+          calls += 1;
+          const answer = calls === 1 ? await first : done;
+          return staged.map((write) => answer(write.id));
+        }),
+        signAgain: vi.fn(async (ids: readonly string[]) => {
+          signedAgain.push([...ids]);
+          return ids.map((id) => done(id));
+        }),
+        signCarriedAtLanding: vi.fn(async () => []),
+        resume: vi.fn(async () => []),
+      };
+      return { writes, signedAgain, release: (answer: Answer) => release(answer) };
+    }
+
+    /** Lets the first commit reach its signing before the second starts. */
+    const reachSigning = (writes: WriteSigner) => vi.waitFor(() => expect(writes.sign).toHaveBeenCalledTimes(1));
+
+    it("the same pick is its own record: nothing of the first is signed twice at once", async () => {
+      const prepares = host();
+      const { writes, signedAgain, release } = holding();
+      const { data, retired } = seam(writes);
+
+      const first = data.commit(POST, PICK);
+      await reachSigning(writes);
+      const second = await data.commit(POST, PICK);
+
+      expect(signedAgain).toEqual([]);
+      expect(retired).toEqual([]);
+      expect(prepares).toEqual([PICK, PICK]);
+      expect(second).toEqual({ kind: "success", value: { records: 1 } });
+      release(done);
+      expect((await first).kind).toBe("success");
+    });
+
+    it("a changed pick never retires the material the first is signing with", async () => {
+      const prepares = host({ "w-1": "AWAITING_APPROVAL" });
+      const { writes, signedAgain, release } = holding();
+      const { data, retired } = seam(writes);
+
+      const first = data.commit(POST, PICK);
+      await reachSigning(writes);
+      await data.commit(POST, OTHER_PICK);
+
+      expect(retired).toEqual([]);
+      expect(signedAgain).toEqual([]);
+      expect(prepares).toEqual([PICK, OTHER_PICK]);
+      release(done);
+      await first;
+    });
+
+    it("a changed pick is signed, not dropped as landing, when the first is already relaying", async () => {
+      const prepares = host({ "w-1": "RELAYING" });
+      const { writes, release } = holding();
+      const { data } = seam(writes);
+
+      const first = data.commit(POST, PICK);
+      await reachSigning(writes);
+      const second = await data.commit(POST, OTHER_PICK);
+
+      expect(prepares).toEqual([PICK, OTHER_PICK]);
+      expect(second).toEqual({ kind: "success", value: { records: 1 } });
+      release(done);
+      await first;
+    });
+
+    it("the first keeps its own memory: once it answers not done, a Retry asks it again", async () => {
+      const prepares = host();
+      const { writes, signedAgain, release } = holding();
+      const { data } = seam(writes);
+
+      const first = data.commit(POST, PICK);
+      await reachSigning(writes);
+      await data.commit(POST, PICK);
+      release(lost);
+      expect((await first).kind).toBe("failed");
+      await data.commit(POST, PICK);
+
+      expect(prepares).toEqual([PICK, PICK]);
+      expect(signedAgain).toEqual([["w-1"]]);
+    });
+  });
+
   it("an account boundary lets the attempt go: the next account's pick is prepared for it", async () => {
     const prepares = host();
     const { signer: writes, signedAgain } = signer([lost]);
