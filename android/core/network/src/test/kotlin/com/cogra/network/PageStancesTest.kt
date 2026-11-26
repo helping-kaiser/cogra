@@ -173,9 +173,10 @@ class PageStancesTest {
             }
         }
 
-        val (post, comment, user, ghost) = listOf("p1", "c2", "u3", "x4")
-            .map { async { repo.standing(node(it)) } }
-            .awaitAll()
+        val faces = listOf("p1", "c2", "u3", "x4").map { async { repo.standing(node(it)) } }.awaitAll()
+        val (post, comment) = faces
+        val user = faces[2]
+        val ghost = faces[3]
 
         assertThat(bodies).hasSize(1)
         assertThat(post.directed()).isEqualTo(0.001)
