@@ -92,7 +92,14 @@ import {
   type KeptTargetPreview,
 } from "./kept-preview";
 import type { StancePair } from "./model";
-import { createStanceAttempts, severanceIntent, stanceIntent, type Slot } from "./stance-attempts";
+import {
+  createStanceAttempts,
+  KEPT_BATCH,
+  keptBatchIntent,
+  severanceIntent,
+  stanceIntent,
+  type Slot,
+} from "./stance-attempts";
 
 /** A gesture's batch as staged: its node, its writes, and what the signer checks them against. */
 type Staged = {
@@ -653,26 +660,33 @@ export function createApolloStanceData(deps: {
       );
     },
 
-    async commitBatch(entries): Promise<Outcome<StanceCommit>> {
-      // EACH PICK IS ITS OWN PREPARE (there is no prepare that stages
-      // stances toward several targets at once), and NOTHING IS SIGNED
-      // UNTIL EVERY ONE IS STAGED: a refused prepare stops the batch before
-      // its first pre-signature, so no pick signs without the others.
-      const staged: StagedWriteView[] = [];
-      const expected: Expectation[] = [];
-      for (const { target, pick } of entries) {
-        const node = await graphIdOf(target);
-        if (node.kind !== "success") return node;
-        const prepared = await guard.run(() =>
-          prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
-        );
-        if (prepared.kind !== "success") return prepared;
-        staged.push(...prepared.value);
-        expected.push(expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]));
-      }
-      // One pass over the whole set, checked whole against the picks the
-      // seal read back (write-signer.ts `sign`).
-      return signAll(staged, joinExpectations(expected));
+    commitBatch(entries): Promise<Outcome<StanceCommit>> {
+      // THE SEAL'S RETRY IS THE SAME BATCH (KeptPicksSeal.md:33, :63): each
+      // pick is a record of its own in a bundle that sums, so a batch
+      // prepared afresh beside one the server took sums every pick twice.
+      return slotted(KEPT_BATCH, keptBatchIntent(entries), async () => {
+        // EACH PICK IS ITS OWN PREPARE (there is no prepare that stages
+        // stances toward several targets at once), and NOTHING IS SIGNED
+        // UNTIL EVERY ONE IS STAGED: a refused prepare stops the batch
+        // before its first pre-signature, so no pick signs without the others.
+        const staged: StagedWriteView[] = [];
+        const expected: Expectation[] = [];
+        const nodes: string[] = [];
+        for (const { target, pick } of entries) {
+          const node = await graphIdOf(target);
+          if (node.kind !== "success") return node;
+          const prepared = await guard.run(() =>
+            prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
+          );
+          if (prepared.kind !== "success") return prepared;
+          staged.push(...prepared.value);
+          nodes.push(node.value);
+          expected.push(expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]));
+        }
+        // One pass over the whole set, checked whole against the picks the
+        // seal read back (write-signer.ts `sign`).
+        return success({ node: nodes.join(" "), writes: staged, expected: joinExpectations(expected) });
+      });
     },
 
     async preview(target): Promise<Outcome<KeptTargetPreview>> {
