@@ -853,7 +853,7 @@ export function SettingsView({
             onOpen={() => router.push("/settings/whats-new")}
             node={node("about.whatsNew")}
           />
-          <SettingsRow label="Report a problem" onOpen={() => {}} node={node("about.report")} />
+          <SettingsRow label="Report a problem" onOpen={() => router.push("/settings/report")} node={node("about.report")} />
           <SettingsRow
             label="Contact"
             value={CONTACT_ADDRESS}

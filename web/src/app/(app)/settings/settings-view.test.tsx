@@ -562,6 +562,13 @@ describe("the settings page", () => {
     expect(push).toHaveBeenCalledWith("/settings/whats-new");
   });
 
+  it("report_a_problem_opens_the_report_page", async () => {
+    renderSettings();
+    await screen.findByTestId("settings.about.contact.value");
+    fireEvent.click(screen.getByTestId("settings.about.report"));
+    expect(push).toHaveBeenCalledWith("/settings/report");
+  });
+
   it("says a subpage's return in its snackbar, once", async () => {
     search = new URLSearchParams("done=handle");
     renderSettings();
