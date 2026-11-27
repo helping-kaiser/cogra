@@ -20,6 +20,86 @@ use crate::l1::L1Boundary;
 /// one hour at the stand-in's 3-second clock.
 pub const DEFAULT_GC_AFTER_EPOCHS: i64 = 1_200;
 
+/// How long the server's loop lets passes that ingest no epoch skip the
+/// stranded checks (`content::land_stranded`, `profile::land_stranded`),
+/// in seconds; overridden by L1_STRANDED_CHECK_INTERVAL_SECS
+/// (development.md).
+///
+/// The checks read every landed write until a write carries a mark of its
+/// own promotion, and the loop ticks every two seconds, so an idle server
+/// paid that read on every tick for nothing. A write is left stranded only
+/// by a pass that ingested an epoch, one that failed, or a process that
+/// ended mid-pass — and the loop checks on each of those passes, or the
+/// pass after — so this bound is the backstop for anything else, not the
+/// path by which a stranded write is found.
+pub const DEFAULT_STRANDED_CHECK_SECS: u64 = 60;
+
+/// Whether a pass runs the stranded checks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StrandedChecks {
+    /// On every pass: what a direct call of [`ingest_pending`] gets, so
+    /// one call heals.
+    Always,
+    /// Only on a pass that ingests an epoch: the server loop's idle tick
+    /// inside its interval ([`StrandedCadence`]).
+    WithEpochs,
+}
+
+/// The server loop's memory between passes for the stranded checks: when
+/// they last ran, whether the last pass failed, and how many passes ran
+/// them. A process starts with no memory, so its first pass checks.
+#[derive(Debug)]
+pub struct StrandedCadence {
+    interval: std::time::Duration,
+    last_checked: Option<std::time::Instant>,
+    retry: bool,
+    checks_run: u64,
+}
+
+impl StrandedCadence {
+    /// A cadence that lets idle passes skip the checks for `interval`
+    /// after a pass that ran them.
+    pub fn new(interval: std::time::Duration) -> Self {
+        Self {
+            interval,
+            last_checked: None,
+            retry: false,
+            checks_run: 0,
+        }
+    }
+
+    /// What a pass starting at `now` runs: every check on the first pass,
+    /// after a failed one, or once the interval has passed; otherwise only
+    /// with an epoch.
+    pub fn checks_at(&self, now: std::time::Instant) -> StrandedChecks {
+        let due = self.retry
+            || self
+                .last_checked
+                .is_none_or(|at| now.saturating_duration_since(at) >= self.interval);
+        if due {
+            StrandedChecks::Always
+        } else {
+            StrandedChecks::WithEpochs
+        }
+    }
+
+    /// Records the pass that started at `now`: its outcome, or `None` when
+    /// it returned an error. A failed promotion, a stranded read that
+    /// failed, or a failed pass makes the next pass check.
+    pub fn record(&mut self, now: std::time::Instant, outcome: Option<&IngestOutcome>) {
+        if outcome.is_some_and(|o| o.stranded_checked) {
+            self.last_checked = Some(now);
+            self.checks_run += 1;
+        }
+        self.retry = outcome.is_none_or(|o| !o.promotion_failures.is_empty() || o.stranded_unread);
+    }
+
+    /// How many recorded passes ran the stranded checks.
+    pub fn checks_run(&self) -> u64 {
+        self.checks_run
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum IngestError {
     #[error(transparent)]
@@ -117,6 +197,11 @@ pub struct IngestOutcome {
     pub lapsed: u64,
     /// The admission settlement pass that rode this ingestion pass.
     pub funding: crate::onboarding::SettlementOutcome,
+    /// Whether this pass ran the stranded checks ([`StrandedChecks`]).
+    pub stranded_checked: bool,
+    /// Whether a stranded check could not read its writes; they are
+    /// logged, not failures of a write, so they ride here.
+    pub stranded_unread: bool,
 }
 
 /// Ingests every epoch published since the cursor, promoting staged
@@ -144,10 +229,25 @@ pub struct IngestOutcome {
 /// and a funding whose request was lost is re-requested there. Its own
 /// failures ride the outcome and are retried by the next pass — the
 /// mirror has already advanced by then.
+///
+/// Runs the stranded checks on every call; the server loop paces them
+/// through [`ingest_pass`].
 pub async fn ingest_pending<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
     gc_after_epochs: i64,
+) -> Result<IngestOutcome, IngestError> {
+    ingest_pass(boundary, pool, gc_after_epochs, StrandedChecks::Always).await
+}
+
+/// [`ingest_pending`] with the stranded checks run as `checks` says —
+/// always, or only when the pass ingests an epoch. Everything else runs
+/// on every pass.
+pub async fn ingest_pass<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    gc_after_epochs: i64,
+    checks: StrandedChecks,
 ) -> Result<IngestOutcome, IngestError> {
     let cursor = mirror::last_ingested_epoch(pool).await?;
     repair_instants(boundary, pool, cursor).await?;
@@ -168,21 +268,30 @@ pub async fn ingest_pending<B: L1Boundary>(
     let mut failures = crate::onboarding::land_ready_accounts(pool).await;
     failures.extend(crate::content::land_promoted(pool, &outcome.promoted).await);
     failures.extend(crate::profile::land_promoted(pool, &outcome.promoted).await);
-    match crate::content::land_stranded(pool, &outcome.promoted).await {
-        Ok(stranded) => failures.extend(stranded),
-        Err(e) => tracing::error!(
-            stage = "content",
-            error = %e,
-            "could not read the landed writes still pending; the next pass retries"
-        ),
-    }
-    match crate::profile::land_stranded(pool, &outcome.promoted).await {
-        Ok(stranded) => failures.extend(stranded),
-        Err(e) => tracing::error!(
-            stage = "profile",
-            error = %e,
-            "could not read the landed writes still pending; the next pass retries"
-        ),
+    if checks == StrandedChecks::Always || outcome.epochs > 0 {
+        outcome.stranded_checked = true;
+        match crate::content::land_stranded(pool, &outcome.promoted).await {
+            Ok(stranded) => failures.extend(stranded),
+            Err(e) => {
+                outcome.stranded_unread = true;
+                tracing::error!(
+                    stage = "content",
+                    error = %e,
+                    "could not read the landed writes still pending; the next pass retries"
+                );
+            }
+        }
+        match crate::profile::land_stranded(pool, &outcome.promoted).await {
+            Ok(stranded) => failures.extend(stranded),
+            Err(e) => {
+                outcome.stranded_unread = true;
+                tracing::error!(
+                    stage = "profile",
+                    error = %e,
+                    "could not read the landed writes still pending; the next pass retries"
+                );
+            }
+        }
     }
     for failure in &failures {
         tracing::error!(
@@ -236,19 +345,123 @@ async fn repair_instants<B: L1Boundary>(
 
 /// The server's background ingestion loop: poll the seam on an interval.
 /// The stand-in publishes on epoch close; the real substrate's cadence
-/// arrives with the swap.
+/// arrives with the swap. The stranded checks follow a
+/// [`StrandedCadence`] of `stranded_check_secs`.
 pub async fn ingest_loop<B: L1Boundary>(
     boundary: B,
     pool: PgPool,
     interval_secs: u64,
+    stranded_check_secs: u64,
     gc_after_epochs: i64,
 ) {
     let mut ticker = tokio::time::interval(std::time::Duration::from_secs(interval_secs));
     ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    let mut cadence = StrandedCadence::new(std::time::Duration::from_secs(stranded_check_secs));
     loop {
         ticker.tick().await;
-        if let Err(e) = ingest_pending(&boundary, &pool, gc_after_epochs).await {
-            tracing::error!(error = %e, "ingestion pass failed; will retry");
+        let now = std::time::Instant::now();
+        match ingest_pass(&boundary, &pool, gc_after_epochs, cadence.checks_at(now)).await {
+            Ok(outcome) => cadence.record(now, Some(&outcome)),
+            Err(e) => {
+                tracing::error!(error = %e, "ingestion pass failed; will retry");
+                cadence.record(now, None);
+            }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{Duration, Instant};
+
+    const INTERVAL: Duration = Duration::from_secs(60);
+
+    fn checked() -> IngestOutcome {
+        IngestOutcome {
+            stranded_checked: true,
+            ..IngestOutcome::default()
+        }
+    }
+
+    fn failure() -> PromotionFailure {
+        PromotionFailure {
+            stage: "content",
+            staged: uuid::Uuid::nil(),
+            act_id: "act".into(),
+            error: "refused".into(),
+        }
+    }
+
+    /// The first pass of a process runs every stranded check.
+    /// ´claim:ingest:the-first-pass-runs-the-stranded-checks´
+    #[test]
+    fn the_first_pass_of_a_process_runs_the_stranded_checks() {
+        let cadence = StrandedCadence::new(INTERVAL);
+        assert_eq!(cadence.checks_at(Instant::now()), StrandedChecks::Always);
+    }
+
+    /// An idle pass inside the interval after a clean checked pass runs the stranded checks only with an epoch.
+    /// ´claim:ingest:an-idle-pass-inside-the-interval-skips-the-stranded-checks´
+    #[test]
+    fn an_idle_pass_inside_the_interval_skips_the_stranded_checks() {
+        let start = Instant::now();
+        let mut cadence = StrandedCadence::new(INTERVAL);
+        cadence.record(start, Some(&checked()));
+        let inside = start + INTERVAL - Duration::from_secs(1);
+        assert_eq!(cadence.checks_at(inside), StrandedChecks::WithEpochs);
+    }
+
+    /// Once the interval has passed since the last checked pass, the next pass runs every stranded check.
+    /// ´claim:ingest:the-interval-bounds-how-long-the-stranded-checks-wait´
+    #[test]
+    fn a_pass_once_the_interval_has_passed_runs_the_stranded_checks() {
+        let start = Instant::now();
+        let mut cadence = StrandedCadence::new(INTERVAL);
+        cadence.record(start, Some(&checked()));
+        cadence.record(
+            start + Duration::from_secs(2),
+            Some(&IngestOutcome::default()),
+        );
+        assert_eq!(cadence.checks_at(start + INTERVAL), StrandedChecks::Always);
+    }
+
+    /// The pass after one whose promotion failed, whose stranded read failed, or which failed whole runs every stranded check.
+    /// ´claim:ingest:the-pass-after-a-failure-runs-the-stranded-checks´
+    #[test]
+    fn the_pass_after_a_failure_runs_the_stranded_checks() {
+        let start = Instant::now();
+        let soon = start + Duration::from_secs(2);
+        let failed_promotion = IngestOutcome {
+            promotion_failures: vec![failure()],
+            ..IngestOutcome::default()
+        };
+        let unread = IngestOutcome {
+            stranded_checked: true,
+            stranded_unread: true,
+            ..IngestOutcome::default()
+        };
+        for outcome in [Some(&failed_promotion), Some(&unread), None] {
+            let mut cadence = StrandedCadence::new(INTERVAL);
+            cadence.record(start, Some(&checked()));
+            cadence.record(start, outcome);
+            assert_eq!(
+                cadence.checks_at(soon),
+                StrandedChecks::Always,
+                "after {outcome:?}"
+            );
+        }
+    }
+
+    /// The count of checked passes moves only on a pass that ran the stranded checks.
+    /// ´claim:ingest:the-cadence-counts-only-checked-passes´
+    #[test]
+    fn the_cadence_counts_only_the_passes_that_checked() {
+        let start = Instant::now();
+        let mut cadence = StrandedCadence::new(INTERVAL);
+        cadence.record(start, Some(&checked()));
+        cadence.record(start, Some(&IngestOutcome::default()));
+        cadence.record(start, None);
+        assert_eq!(cadence.checks_run(), 1);
     }
 }
