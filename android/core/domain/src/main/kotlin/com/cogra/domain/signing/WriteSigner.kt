@@ -312,18 +312,37 @@ class WriteSigner @Inject constructor(
         }
     }
 
+    /** The staged write as the server holds it now, or the result that ends [id] when it cannot be read. */
+    private sealed interface Current {
+        data class Served(val staged: StagedWriteView) : Current
+
+        data class Ended(val result: WriteResult) : Current
+    }
+
+    /**
+     * Reads [id] back: a read-leg refusal or fault keeps the material, a write
+     * that is gone spends it.
+     */
+    private suspend fun current(id: String): Current = when (val read = writes.stagedWrite(id)) {
+        is Outcome.Failed -> Current.Ended(WriteResult.Failed(id, read.cause))
+        is Outcome.Refused -> Current.Ended(refusedKeeping(id, read.errors))
+        is Outcome.Success -> when (val staged = read.value) {
+            // Gone entirely — collected long ago; nothing to continue.
+            null -> {
+                identity.clearHandshake(id)
+                Current.Ended(WriteResult.Refused(id, listOf(UserError(ErrorCode.NOT_FOUND, "staged write is gone"))))
+            }
+            else -> Current.Served(staged)
+        }
+    }
+
     private suspend fun resumeOne(key: ActorKey, id: String): WriteResult {
         val pre = identity.handshake(id) ?: return WriteResult.Failed(id, IllegalStateException("no material"))
-        return when (val read = writes.stagedWrite(id)) {
-            is Outcome.Failed -> WriteResult.Failed(id, read.cause)
-            is Outcome.Refused -> refusedKeeping(id, read.errors)
-            is Outcome.Success -> when (val staged = read.value) {
-                // Gone entirely — collected long ago; nothing to continue.
-                null -> {
-                    identity.clearHandshake(id)
-                    WriteResult.Refused(id, listOf(UserError(ErrorCode.NOT_FOUND, "staged write is gone")))
-                }
-                else -> if (staged.family == Family.UNKNOWN) {
+        return when (val read = current(id)) {
+            is Current.Ended -> read.result
+            is Current.Served -> {
+                val staged = read.staged
+                if (staged.family == Family.UNKNOWN) {
                     unsupported(id, "record family")
                 } else {
                     when (staged.state) {
