@@ -13,6 +13,11 @@
 // every face is the monogram avatar); a post card, a comment and a chat
 // bubble are LIKENESSES built from the masters' roles, radii and anatomy,
 // with nothing pressable on them. Nothing on a stage takes input.
+//
+// MagicNumber is suppressed for this file by name: the numbers ARE the
+// boards' coordinates, copied verbatim so a diff against `screens/*.jsx`
+// reads line for line; a constant per point would hide the drawing.
+@file:Suppress("MagicNumber")
 
 package com.cogra.feature.onboarding.intro
 
