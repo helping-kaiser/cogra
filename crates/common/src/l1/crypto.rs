@@ -28,7 +28,12 @@ pub mod tags {
     pub const COMMIT_CONTENT: &[u8] = b"cogra-l1:commitment:content:v2";
     pub const COMMIT_DEPS: &[u8] = b"cogra-l1:commitment:deps:v2";
     pub const HOST_SEAL: &[u8] = b"cogra-l1:host-seal:v2";
-    pub const APPROVAL: &[u8] = b"cogra-l1:approval:v2";
+    /// The approval of the act alone (`handshake::act_approval_message`).
+    pub const APPROVAL: &[u8] = b"cogra-l1:approval:v3";
+    /// The approval of the encoded verified act followed by its host seal:
+    /// the form of every epoch closed under approval form 1
+    /// (`handshake::ApprovalForm::ActAndSeal`), kept so those epochs verify.
+    pub const SEALED_ACT_APPROVAL: &[u8] = b"cogra-l1:approval:v2";
     pub const NONCE_DIGEST: &[u8] = b"cogra-l1:nonce-digest:v1";
 }
 

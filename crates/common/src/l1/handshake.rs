@@ -165,9 +165,13 @@ pub fn pre_commitment_msg(
     e.finish()
 }
 
+/// The schema version the encoded verified act closes on.
+pub const SEAL_FRAME_VERSION: u64 = 1;
+
 /// The parts of a verified act its encoding is formed from
 /// (§8.2, "Verified act": body, pre-commitment, pre-signature, both
-/// commitments, both edition tags), borrowed from wherever they are held.
+/// commitments, both edition tags, and the frame's schema version),
+/// borrowed from wherever they are held.
 pub struct SealFrame<'a> {
     pub body: &'a StructuralBody,
     pub pre_commitment: &'a [u8],
@@ -176,11 +180,12 @@ pub struct SealFrame<'a> {
     pub deps_commitment: &'a [u8],
     pub content_edition: u64,
     pub deps_edition: u64,
+    pub version: u64,
 }
 
-/// The encoded verified act from its parts — the one encoding the seal and
-/// the approval cover, callable where only stored columns exist rather than
-/// an assembled act. Like the body, the frame closes on a schema version so
+/// The encoded verified act from its parts — the one encoding the host
+/// seal covers, callable where only stored columns exist rather than an
+/// assembled act. Like the body, the frame closes on a schema version so
 /// its shape can evolve forward.
 pub fn seal_message(frame: &SealFrame<'_>) -> Vec<u8> {
     let mut e = Encoder::new();
@@ -192,15 +197,89 @@ pub fn seal_message(frame: &SealFrame<'_>) -> Vec<u8> {
     e.bytes(frame.deps_commitment);
     e.uint(frame.content_edition);
     e.uint(frame.deps_edition);
+    e.uint(frame.version);
+    e.finish()
+}
+
+/// The message the author's approval signs: the act alone — the canonical
+/// body, which carries the act identifier (author, sequence value and
+/// family) and the public references, followed by both commitments — and
+/// nothing beside it. The pre-commitment, the pre-signature, the edition
+/// integers, the frame version and the host seal are not part of it; they
+/// travel beside the act as its seal attestation ([`SealAttestation`]).
+/// Like every frame, it closes on a schema version.
+pub fn act_approval_message(
+    body: &StructuralBody,
+    content_commitment: &[u8],
+    deps_commitment: &[u8],
+) -> Vec<u8> {
+    let mut e = Encoder::new();
+    e.array(4);
+    e.bytes(&body.canonical_bytes());
+    e.bytes(content_commitment);
+    e.bytes(deps_commitment);
     e.uint(1);
     e.finish()
 }
 
-/// The approval witness's digest: the tagged hash of the encoded verified
-/// act followed by its host seal (§8.2, "Approval witness"), so the
-/// author signs the seal itself along with what it seals.
-pub fn approval_digest(seal_msg: &[u8], host_seal: &[u8]) -> [u8; 32] {
-    crypto::sha256_tagged(tags::APPROVAL, &[seal_msg, host_seal])
+/// Which message an approval signs. The version governing an epoch fixes
+/// it for every act the epoch accepts, so a record carries no selector of
+/// its own: a reader takes the form from the epoch's package
+/// ([`EpochClosure::approval_form`]). Every epoch has exactly one form.
+///
+/// `Default` is [`ApprovalForm::CURRENT`], for fixtures.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+pub enum ApprovalForm {
+    /// The tagged hash of the encoded verified act followed by its host
+    /// seal ([`tags::SEALED_ACT_APPROVAL`]): the form of the epochs closed
+    /// before the approval covered the act alone.
+    ActAndSeal,
+    /// The tagged hash of [`act_approval_message`] ([`tags::APPROVAL`]).
+    #[default]
+    Act,
+}
+
+impl ApprovalForm {
+    /// The form every approval is formed and verified under now, and that
+    /// every epoch the host closes from now on states.
+    pub const CURRENT: ApprovalForm = ApprovalForm::Act;
+
+    /// The form's stored and published number.
+    pub fn number(self) -> i16 {
+        match self {
+            ApprovalForm::ActAndSeal => 1,
+            ApprovalForm::Act => 2,
+        }
+    }
+
+    pub fn from_number(number: i16) -> Option<ApprovalForm> {
+        match number {
+            1 => Some(ApprovalForm::ActAndSeal),
+            2 => Some(ApprovalForm::Act),
+            _ => None,
+        }
+    }
+}
+
+/// The approval witness's digest under `form`, from the parts of the
+/// verified act and its host seal. Under [`ApprovalForm::Act`] only the
+/// body and the two commitments enter it (§8.2, "Approval witness");
+/// under [`ApprovalForm::ActAndSeal`] the encoded verified act and the
+/// seal do.
+pub fn approval_digest(form: ApprovalForm, frame: &SealFrame<'_>, host_seal: &[u8]) -> [u8; 32] {
+    match form {
+        ApprovalForm::Act => crypto::sha256_tagged(
+            tags::APPROVAL,
+            &[&act_approval_message(
+                frame.body,
+                frame.content_commitment,
+                frame.deps_commitment,
+            )],
+        ),
+        ApprovalForm::ActAndSeal => {
+            crypto::sha256_tagged(tags::SEALED_ACT_APPROVAL, &[&seal_message(frame), host_seal])
+        }
+    }
 }
 
 /// The client's approval: the act identifier plus the approval-witness
@@ -230,55 +309,69 @@ pub struct PublishedRecord {
     /// The content commitment — the payload witness.
     pub payload_witness: Vec<u8>,
     pub legs: Vec<PublishedLeg>,
-    pub authentication: ActAuthentication,
+    /// The act's approval: with the identifier, author, family and content
+    /// commitment above, the act and what its author signed.
+    pub approval: ActApproval,
+    /// The separate object beside the act: the host's seal and what it
+    /// seals beyond the act.
+    pub attestation: SealAttestation,
 }
 
-/// What an accepted act's record carries so that its signatures and its
-/// formation verify from the record alone, with no hidden opening (§13.3,
-/// "Published Epoch Replay Floor"; §8.2, "Proposal pre-commitment",
-/// "Verified act" and "Approval witness"; §8.4, "Act envelope"): the
-/// approved body, the public key the record maps the proposal signature
-/// and the approval signature to, the signed pre-commitment, the
-/// dependency commitment beside the record's content commitment, the
-/// formation edition each commitment names, the host seal, and the
-/// approval witness. A reader verifies each signature under that key, the
-/// seal under the host key, and the commitments' formation; no record
-/// check relates the key to the stated Actor. The openings — the content
-/// pair, both salts, the dependency list and its nonce — are never part
-/// of it.
+/// The act's own member of an accepted act's record (§13.3, "Published
+/// Epoch Replay Floor"; §8.2, "Approval witness"; §8.4, "Act envelope"):
+/// the approved body, the dependency commitment beside the record's
+/// content commitment, the public key the record maps the author's
+/// signatures to, and the approval witness, which verifies under that key
+/// over the act alone in the form the epoch states. No record check
+/// relates the key to the stated Actor. The openings — the content pair,
+/// both salts, the dependency list and its nonce — are never part of it.
 #[derive(Debug, Clone, PartialEq)]
-pub struct ActAuthentication {
-    /// The approved structural body the pre-commitment, the seal and the
-    /// approval all cover.
+pub struct ActApproval {
+    /// The approved structural body; it carries the act identifier and the
+    /// public references.
     pub body: StructuralBody,
+    /// The dependency commitment C_d.
+    pub dependency_commitment: Vec<u8>,
     /// The public key the record maps both the proposal signature and the
-    /// approval signature to, which each verifies under. No record check
-    /// relates it to the stated Actor.
+    /// approval signature to, which each verifies under.
     pub author_pubkey: Vec<u8>,
+    /// The author's approval witness.
+    pub approval_signature: Vec<u8>,
+}
+
+/// The separate object an accepted act's record carries beside the act
+/// (§8.2, "Proposal pre-commitment" and "Verified act"): the signed
+/// pre-commitment, the formation edition each commitment names, the
+/// schema version of the encoded verified act, and the host seal over
+/// that encoding. It commits to the act it names — the seal covers the
+/// act's body and both commitments — and the act's approval does not
+/// cover it: a reader verifies the pre-signature under the record's key,
+/// the seal under the host key, and the commitments' formation under the
+/// editions.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct SealAttestation {
     /// P, the proposal pre-commitment.
     pub pre_commitment: Vec<u8>,
     /// The author's signature over P.
     pub pre_signature: Vec<u8>,
-    /// The dependency commitment C_d.
-    pub dependency_commitment: Vec<u8>,
     /// The formation edition the content commitment names.
     pub content_edition: u64,
     /// The formation edition the dependency commitment names.
     pub dependency_edition: u64,
+    /// The schema version the encoded verified act closes on.
+    pub seal_version: u64,
     /// The host verification seal over the encoded verified act.
     pub host_seal: Vec<u8>,
-    /// The author's approval witness over the verified act and its seal.
-    pub approval_signature: Vec<u8>,
 }
 
-impl ActAuthentication {
-    /// An authentication no host publishes: the body of `act_id` toward
-    /// its author's own Actor node, with every signature and commitment
-    /// empty. For fixtures of consumers that read records without
-    /// verifying them, as [`EpochClosure::default`] is for consumers that
-    /// read no closure.
+impl ActApproval {
+    /// An approval no host publishes: the body of `act_id` toward its
+    /// author's own Actor node, with every signature and commitment empty.
+    /// For fixtures of consumers that read records without verifying them
+    /// (with [`SealAttestation::default`]), as [`EpochClosure::default`]
+    /// is for consumers that read no closure.
     pub fn unverified(act_id: &ActId) -> Self {
-        ActAuthentication {
+        ActApproval {
             body: StructuralBody {
                 author: act_id.author.clone(),
                 seq: act_id.seq,
@@ -291,13 +384,8 @@ impl ActAuthentication {
                 license: None,
                 asserted_parents: Vec::new(),
             },
-            author_pubkey: Vec::new(),
-            pre_commitment: Vec::new(),
-            pre_signature: Vec::new(),
             dependency_commitment: Vec::new(),
-            content_edition: 0,
-            dependency_edition: 0,
-            host_seal: Vec::new(),
+            author_pubkey: Vec::new(),
             approval_signature: Vec::new(),
         }
     }
@@ -305,19 +393,25 @@ impl ActAuthentication {
 
 impl PublishedRecord {
     /// The verified act this record publishes, as the parts its encoding
-    /// is formed from: the seal and the approval witness verify over
+    /// is formed from, out of both members: the host seal verifies over
     /// [`seal_message`] of this frame.
     pub fn seal_frame(&self) -> SealFrame<'_> {
-        let auth = &self.authentication;
         SealFrame {
-            body: &auth.body,
-            pre_commitment: &auth.pre_commitment,
-            pre_signature: &auth.pre_signature,
+            body: &self.approval.body,
+            pre_commitment: &self.attestation.pre_commitment,
+            pre_signature: &self.attestation.pre_signature,
             content_commitment: &self.payload_witness,
-            deps_commitment: &auth.dependency_commitment,
-            content_edition: auth.content_edition,
-            deps_edition: auth.dependency_edition,
+            deps_commitment: &self.approval.dependency_commitment,
+            content_edition: self.attestation.content_edition,
+            deps_edition: self.attestation.dependency_edition,
+            version: self.attestation.seal_version,
         }
+    }
+
+    /// The digest this record's approval witness verifies over, in the
+    /// form the record's epoch states.
+    pub fn approval_digest(&self, form: ApprovalForm) -> [u8; 32] {
+        approval_digest(form, &self.seal_frame(), &self.attestation.host_seal)
     }
 }
 
@@ -576,8 +670,9 @@ pub struct BoundaryPolicy {
 /// The closure outputs of one epoch beyond its records (§5 host contract
 /// (i), (ii) and (vi)): the dependent-set partition and closure cause, the
 /// boundary triple it closed under, the final ledger with the debit
-/// vintage, the wall controller's step, the marker policy, and the
-/// verification-case declarations in force. The
+/// vintage, the wall controller's step, the marker policy, the
+/// verification-case declarations in force, and the approval form the
+/// epoch's governing version fixes. The
 /// deployment's fixed declarations — numéraire, floor, controller edition
 /// and constants — are published once per deployment, not here.
 ///
@@ -602,6 +697,9 @@ pub struct EpochClosure {
     /// Every verification-case declaration in force for the epoch, ordered
     /// by identity — empty when none is.
     pub case_declarations: Vec<CaseDeclaration>,
+    /// The approval form the version governing the epoch fixes: every
+    /// approval witness among the epoch's records verifies in it.
+    pub approval_form: ApprovalForm,
 }
 
 /// Boundary 0: the empty state before epoch 1 (§7.2, "Title Certificate").
@@ -906,7 +1004,7 @@ mod tests {
                 .map(|(seq, position)| {
                     let act_id = ActId::new("alice", seq as u64, Family::Opinion).expect("valid");
                     PublishedRecord {
-                        authentication: ActAuthentication::unverified(&act_id),
+                        attestation: SealAttestation::default(), approval: ActApproval::unverified(&act_id),
                         act_id,
                         author: "alice".into(),
                         family: Family::Opinion,
@@ -930,16 +1028,18 @@ mod tests {
     ///
     /// - the order of record and its asserted timestamp (epoch, positions,
     ///   act times, boundary instant);
-    /// - per accepted act, the act envelope at the floor: act identifier,
-    ///   author and family, the approved body, both commitments with the
-    ///   formation edition each names, the signed pre-commitment, the host
-    ///   seal, the approval witness, and the signing key the record maps
-    ///   both signatures to;
+    /// - per accepted act, two members: the act — act identifier, author
+    ///   and family, the approved body, both commitments, the approval
+    ///   witness and the signing key the record maps the author's
+    ///   signatures to — and the separate seal attestation beside it — the
+    ///   signed pre-commitment, the formation edition each commitment
+    ///   names, the frame version and the host seal;
     ///   with the host-derived edge projections and maturities;
     /// - the closure's Host Contract inputs: cause and boundary triple, the
     ///   dependent-set partition, the final ledger and debit vintage, the
     ///   wall controller's step, the marker policy and the verification-case
-    ///   declarations, both by identity and edition.
+    ///   declarations, both by identity and edition, and the approval form
+    ///   the epoch's governing version fixes.
     ///
     /// The package's field set is exactly the replay floor's plus the Host Contract inputs.
     /// ´claim:handshake:the-package-carries-the-floor-and-the-host-contract-inputs-only´
@@ -974,7 +1074,8 @@ mod tests {
                 position: _order_position,
                 payload_witness: _content_commitment,
                 legs,
-                authentication,
+                approval,
+                attestation,
             } = record;
             for leg in legs {
                 let PublishedLeg {
@@ -986,17 +1087,20 @@ mod tests {
                     tau: _host_cached_maturity,
                 } = leg;
             }
-            let ActAuthentication {
+            let ActApproval {
                 body: _approved_body,
+                dependency_commitment: _dependency_commitment,
                 author_pubkey: _recorded_signing_key,
+                approval_signature: _approval_witness,
+            } = approval;
+            let SealAttestation {
                 pre_commitment: _pre_commitment,
                 pre_signature: _author_signature_over_it,
-                dependency_commitment: _dependency_commitment,
                 content_edition: _content_formation_edition,
                 dependency_edition: _dependency_formation_edition,
+                seal_version: _seal_frame_version,
                 host_seal: _verification_seal,
-                approval_signature: _approval_witness,
-            } = authentication;
+            } = attestation;
         }
         let EpochClosure {
             cause: _closure_cause,
@@ -1007,6 +1111,7 @@ mod tests {
             wall,
             marker,
             case_declarations,
+            approval_form: _governing_approval_form,
         } = closure;
         let BoundaryPolicy {
             target_acts: _target,
@@ -1054,20 +1159,100 @@ mod tests {
         assert_eq!(EpochClosure::default().case_declarations, vec![]);
         let mut record = package(1, &[1]).records.remove(0);
         record.payload_witness = vec![7; 32];
-        record.authentication.dependency_commitment = vec![8; 32];
-        record.authentication.content_edition = 2;
-        record.authentication.dependency_edition = 3;
+        record.approval.dependency_commitment = vec![8; 32];
+        record.attestation.content_edition = 2;
+        record.attestation.dependency_edition = 3;
+        record.attestation.seal_version = 4;
         let frame = record.seal_frame();
         assert_eq!(frame.content_commitment, &[7; 32]);
         assert_eq!(frame.deps_commitment, &[8; 32]);
         assert_eq!((frame.content_edition, frame.deps_edition), (2, 3));
-        assert_eq!(frame.body, &record.authentication.body);
+        assert_eq!(frame.version, 4);
+        assert_eq!(frame.body, &record.approval.body);
         let mut other = record.clone();
         other.payload_witness = vec![9; 32];
         assert_ne!(
             seal_message(&record.seal_frame()),
             seal_message(&other.seal_frame())
         );
+    }
+
+    /// Under the current form the approval covers the act alone — the body
+    /// and both commitments — so nothing of the seal attestation reaches
+    /// its digest, while any part of the act does. Under the sealed-act
+    /// form, kept for the epochs closed in it, the attestation and the
+    /// seal reach it too. The two forms never share a digest, and the
+    /// stored numbers name each form once.
+    ///
+    /// The current approval covers the act alone and no part of the seal attestation.
+    /// ´claim:handshake:the-approval-covers-the-act-alone´
+    #[test]
+    fn the_approval_covers_the_act_alone() {
+        let mut record = package(1, &[1]).records.remove(0);
+        record.payload_witness = vec![7; 32];
+        record.approval.dependency_commitment = vec![8; 32];
+        record.attestation = SealAttestation {
+            pre_commitment: vec![1; 32],
+            pre_signature: vec![2; 64],
+            content_edition: 2,
+            dependency_edition: 2,
+            seal_version: SEAL_FRAME_VERSION,
+            host_seal: vec![3; 64],
+        };
+        let act = record.approval_digest(ApprovalForm::Act);
+        assert_eq!(ApprovalForm::CURRENT, ApprovalForm::Act);
+        assert_eq!(
+            act,
+            crypto::sha256_tagged(
+                tags::APPROVAL,
+                &[&act_approval_message(
+                    &record.approval.body,
+                    &record.payload_witness,
+                    &record.approval.dependency_commitment,
+                )]
+            )
+        );
+        let attestation_changes: [fn(&mut SealAttestation); 6] = [
+            |a| a.pre_commitment[0] ^= 1,
+            |a| a.pre_signature[0] ^= 1,
+            |a| a.content_edition += 1,
+            |a| a.dependency_edition += 1,
+            |a| a.seal_version += 1,
+            |a| a.host_seal[0] ^= 1,
+        ];
+        for change in attestation_changes {
+            let mut other = record.clone();
+            change(&mut other.attestation);
+            assert_eq!(other.approval_digest(ApprovalForm::Act), act);
+            assert_ne!(
+                other.approval_digest(ApprovalForm::ActAndSeal),
+                record.approval_digest(ApprovalForm::ActAndSeal)
+            );
+        }
+        let act_changes: [fn(&mut PublishedRecord); 4] = [
+            |r| r.payload_witness[0] ^= 1,
+            |r| r.approval.dependency_commitment[0] ^= 1,
+            |r| r.approval.body.p_d = 0.5,
+            |r| r.approval.body.seq += 1,
+        ];
+        for change in act_changes {
+            let mut other = record.clone();
+            change(&mut other);
+            assert_ne!(other.approval_digest(ApprovalForm::Act), act);
+        }
+        assert_eq!(
+            record.approval_digest(ApprovalForm::ActAndSeal),
+            crypto::sha256_tagged(
+                tags::SEALED_ACT_APPROVAL,
+                &[&seal_message(&record.seal_frame()), &record.attestation.host_seal]
+            )
+        );
+        assert_ne!(record.approval_digest(ApprovalForm::ActAndSeal), act);
+        for form in [ApprovalForm::ActAndSeal, ApprovalForm::Act] {
+            assert_eq!(ApprovalForm::from_number(form.number()), Some(form));
+        }
+        assert_eq!(ApprovalForm::from_number(0), None);
+        assert_eq!(ApprovalForm::from_number(3), None);
     }
 
     /// A ratio is held in lowest terms with a positive denominator, so

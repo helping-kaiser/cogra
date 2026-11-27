@@ -16,7 +16,7 @@ use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::crypto::{self, tags};
 use common::l1::device_lock::{self, Binding};
 use common::l1::encoding::Encoder;
-use common::l1::handshake::{canonical_deps, pre_commitment_msg};
+use common::l1::handshake::{self, canonical_deps, pre_commitment_msg};
 use common::l1::key_backup::{self, RecoveryCode};
 use common::l1::proposal;
 use common::l1::{ActId, ActorKey, NodeId, Proposal, StructuralBody, wire};
@@ -294,7 +294,7 @@ const SMALL_ORDER_KEYS: [&str; 8] = [
 
 fn signature_refusals(actor_signing: &SigningKey, sample: &[u8]) -> Value {
     let actor_pubkey = hx(actor_signing.verifying_key().as_bytes());
-    let tag = String::from_utf8(tags::APPROVAL.to_vec()).expect("ASCII");
+    let tag = String::from_utf8(tags::SEALED_ACT_APPROVAL.to_vec()).expect("ASCII");
 
     let mut small_order_sig = [0u8; 64];
     small_order_sig[0] = 1;
@@ -327,7 +327,7 @@ fn signature_refusals(actor_signing: &SigningKey, sample: &[u8]) -> Value {
         let key = crypto::verifying_key_from_bytes(&bytes)
             .unwrap_or_else(|| panic!("{key_hex}: a small-order encoding still parses as a key"));
         assert!(
-            !crypto::verify(&key, tags::APPROVAL, b"cogra", &small_order_sig),
+            !crypto::verify(&key, tags::SEALED_ACT_APPROVAL, b"cogra", &small_order_sig),
             "the small-order key {key_hex} is refused by the reference"
         );
     }
@@ -354,7 +354,7 @@ fn signature_refusals(actor_signing: &SigningKey, sample: &[u8]) -> Value {
         let key = crypto::verifying_key_from_bytes(actor_signing.verifying_key().as_bytes())
             .unwrap_or_else(|| panic!("{case}: the key parses, so the refusal is the signature's"));
         assert!(
-            !crypto::verify(&key, tags::APPROVAL, b"cogra", signature),
+            !crypto::verify(&key, tags::SEALED_ACT_APPROVAL, b"cogra", signature),
             "{case} is refused by the reference"
         );
     }
@@ -569,7 +569,18 @@ fn proposal_handshake_vectors(
     assert_eq!(sealed.act.content_commitment, content_commitment);
     assert_eq!(sealed.act.dependency_commitment, deps_commitment);
     let seal_msg = sealed.act.seal_message();
-    let approval_digest = crypto::sha256_tagged(tags::APPROVAL, &[&seal_msg, &sealed.host_seal]);
+    let mut approval_encoder = Encoder::new();
+    approval_encoder.array(4);
+    approval_encoder.bytes(&proposal.body.canonical_bytes());
+    approval_encoder.bytes(&content_commitment);
+    approval_encoder.bytes(&deps_commitment);
+    approval_encoder.uint(1);
+    let approval_msg = approval_encoder.finish();
+    assert_eq!(
+        handshake::act_approval_message(&proposal.body, &content_commitment, &deps_commitment),
+        approval_msg
+    );
+    let approval_digest = crypto::sha256_tagged(tags::APPROVAL, &[&approval_msg]);
     assert_eq!(sealed.approval_digest(), approval_digest);
 
     let witness = pre
@@ -622,6 +633,7 @@ fn proposal_handshake_vectors(
         "dependencyEdition": sealed.act.dependency_edition,
         "sealMsgHex": hx(&seal_msg),
         "hostSealHex": hx(&sealed.host_seal),
+        "approvalMsgHex": hx(&approval_msg),
         "approvalDigestHex": hx(&approval_digest),
         "wireVerifiedActHex": hx(&wire_sealed),
         "approvalActId": witness.act_id.to_string(),
@@ -867,11 +879,11 @@ fn build_vectors() -> Value {
     let host = SigningKey::from_bytes(&host_seed);
 
     let sign_msg = b"cogra".to_vec();
-    let sign_sample = crypto::sign(&actor_signing, tags::APPROVAL, &sign_msg);
+    let sign_sample = crypto::sign(&actor_signing, tags::SEALED_ACT_APPROVAL, &sign_msg);
     assert!(
         crypto::verify(
             &actor_signing.verifying_key(),
-            tags::APPROVAL,
+            tags::SEALED_ACT_APPROVAL,
             &sign_msg,
             &sign_sample,
         ),
@@ -962,14 +974,14 @@ fn build_vectors() -> Value {
         "sha256Tagged": [
             tagged(tags::PRE_COMMITMENT, &[]),
             tagged(tags::COMMIT_CONTENT, &[b"", &[1, 2]]),
-            tagged(tags::APPROVAL, &[b"seal"]),
+            tagged(tags::SEALED_ACT_APPROVAL, &[b"seal"]),
         ],
         "signing": {
             "seedHex": hx(&actor_seed),
             "publicKeyHex": hx(&actor.public_key_bytes()),
             "realizationAddress": actor.address(),
             "samples": [{
-                "tagUtf8": String::from_utf8(tags::APPROVAL.to_vec()).expect("ASCII"),
+                "tagUtf8": String::from_utf8(tags::SEALED_ACT_APPROVAL.to_vec()).expect("ASCII"),
                 "msgUtf8": "cogra",
                 "signatureHex": hx(&sign_sample),
             }],
