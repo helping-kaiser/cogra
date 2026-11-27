@@ -54,8 +54,8 @@ export function reportMailto(words: string, facts: ReportFacts): string {
 }
 
 /**
- * THE KEPT WORDS (ReportProblem.md: kept by Back and by the handoff, "as a
- * post's draft is kept, until the reader clears it"). Device-local, read and
+ * THE KEPT WORDS (ReportProblem.md:29,31: kept by Back and by the handoff;
+ * ReportProblem.jsx: "as a post's draft is kept, until the reader clears it"). Device-local, read and
  * written behind try/catch: a browser that refuses storage keeps nothing and
  * the page still works.
  */

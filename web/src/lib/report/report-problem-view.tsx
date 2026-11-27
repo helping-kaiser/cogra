@@ -21,6 +21,7 @@
 
 import { useEffect, useState } from "react";
 
+import { DeletionBandSlot } from "@/lib/deletion/deletion-status";
 import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { deviceLabel } from "@/lib/session/device-label";
 import { FactRow } from "@/lib/ui2/fact-row";
@@ -95,6 +96,10 @@ export function ReportProblemView({
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col" data-testid="reportProblem">
       <HeaderBar onBack={onBack} backLabel="Back" testId="reportProblem.header" />
+      {/* Every inner surface carries the deletion band under its header
+          (FeedDeleting.md:5), as `PageHeader` places it; the band is the
+          header's because the report's back arrow is a press, not a link. */}
+      <DeletionBandSlot />
       <div className="flex flex-col px-6 pb-8 pt-2">
         <h1 className="m-0 text-headline-small">{REPORT_TITLE}</h1>
         <p className="m-0 mt-2 text-body-medium text-on-surface-variant">{REPORT_LEAD}</p>
