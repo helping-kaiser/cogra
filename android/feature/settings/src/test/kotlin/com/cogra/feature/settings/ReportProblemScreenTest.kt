@@ -105,7 +105,9 @@ class ReportProblemScreenTest {
         render()
         field().assert(editable(""))
         node("reportProblem.facts.time.value").assertExists()
-        commit().performScrollTo().assertIsEnabled().assertTextEquals("Send by email")
+        // The button merges its label: read it on the merged tree.
+        compose.onNodeWithTag("reportProblem.commit").performScrollTo().assertIsEnabled()
+            .assertTextEquals("Send by email")
         commit().performClick()
         assertThat(sends).isEqualTo(1)
     }
