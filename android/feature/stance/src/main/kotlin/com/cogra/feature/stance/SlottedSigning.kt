@@ -33,6 +33,7 @@ import com.cogra.domain.signing.SameSigning
 import com.cogra.domain.signing.SigningAttempt
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.KeptPick
 import com.cogra.domain.stance.StanceAttempt
 import com.cogra.domain.stance.StanceAttempts
 import com.cogra.domain.stance.StancePair
@@ -41,7 +42,13 @@ import com.cogra.domain.store.TokenStore
 
 /** One gesture's batch as its prepare staged it, or why it did not. */
 internal sealed interface Staging {
-    data class Staged(val node: String, val writes: List<PreparedWriteView>, val expected: Expectation) : Staging
+    data class Staged(
+        val node: String,
+        val writes: List<PreparedWriteView>,
+        val expected: Expectation,
+        /** The kept picks a batch staged, remembered with its attempt. */
+        val entries: List<KeptPick>? = null,
+    ) : Staging
 
     /** A prepare was refused; its codes say whether the write rule said no. */
     data class Refused(val errors: List<UserError>) : Staging
@@ -207,7 +214,7 @@ internal class SlottedSigning(
         val mine = attempts.of(press.owner)
         if (intent != null) {
             val attempt = SigningAttempt(press.owner, staged.node, staged.writes.map { it.id }, intent)
-            mine.remember(slot, StanceAttempt(attempt, staged.expected, pick))
+            mine.remember(slot, StanceAttempt(attempt, staged.expected, pick, staged.entries))
         }
         // Staged under the account that pressed, signed only under it.
         if (!press.holds()) return Slotted.Stood

@@ -43,12 +43,15 @@ sealed interface StanceSlot {
 /**
  * A slot's attempt: the batch staged, what it was checked against when it
  * was staged, and — for a pick — the pick it signs, which is what lands when
- * a changed pick finds it approved.
+ * a changed pick finds it approved. The kept batch's attempt keeps the picks
+ * it staged ([entries]) the same way, so a changed batch that finds it landing
+ * lands exactly those.
  */
 data class StanceAttempt(
     val attempt: SigningAttempt,
     val expected: Expectation,
     val pick: StancePair? = null,
+    val entries: List<KeptPick>? = null,
 )
 
 /** The gesture a pick toward [target] was prepared from; a changed pick is another signing. */
