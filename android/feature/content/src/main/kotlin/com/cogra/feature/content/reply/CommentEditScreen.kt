@@ -120,6 +120,8 @@ fun CommentEditRoute(
     onSaved: () -> Unit,
     onLeave: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The bug notice's `Report a problem`: the report opens over the edit, which waits as it was. */
+    onReportProblem: () -> Unit = {},
     viewModel: CommentEditViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -153,6 +155,7 @@ fun CommentEditRoute(
                 coverPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             },
         )
+        .copy(onReport = onReportProblem)
     CommentEditScreen(state = state, actions = actions, modifier = modifier)
 }
 
@@ -252,11 +255,7 @@ data class CommentEditActions(
     val onDiscardAsked: () -> Unit = {},
     /** `Not now` under the write rule's notice. */
     val onNotNow: () -> Unit = {},
-    /**
-     * `Report a problem` under the bug notice. The report page Settings opens
-     * is not built on android — the word stands where the board draws it, as
-     * it does on the post seal (`SealStep`).
-     */
+    /** `Report a problem` under the bug notice: the report page Settings opens too. */
     val onReport: () -> Unit = {},
     val onTagInputChange: (String) -> Unit = {},
     val onAddTag: () -> Unit = {},

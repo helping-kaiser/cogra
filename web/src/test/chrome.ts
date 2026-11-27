@@ -2,7 +2,8 @@
 // (`AppVersions`, read by the cold-open announcer), the bell's dot
 // (`NotificationBell`), whether a recovery backup exists (`KeyBackupState`,
 // answered: one does, so a key-absent notice offers Restore)
-// and the composer's starting license (`DefaultLicense`). Screens ask them
+// the composer's starting license (`DefaultLicense`), and the intro's seen
+// flag (`IntroAccount`, answered: seen). Screens ask them
 // on arrival whatever the test is about, so each answers the state that
 // draws nothing: no releases, nothing unread, no license set (the
 // composer then starts at public domain). A test of any answers it with its
@@ -38,6 +39,21 @@ export const QUIET_CHROME = [
           __typename: "User",
           id: "u-viewer",
           preferences: { __typename: "UserPreferences", defaultLicense: null },
+        },
+      },
+    }),
+  ),
+  // The feed asks whether the intro was seen (OnboardingSteps.md:3); the
+  // answer that draws nothing is seen.
+  gqlLink.query("IntroAccount", () =>
+    HttpResponse.json({
+      data: {
+        me: {
+          __typename: "User",
+          id: "u-viewer",
+          preferences: { __typename: "UserPreferences", hasSeenOnboarding: true },
+          invitedBy: null,
+          application: null,
         },
       },
     }),

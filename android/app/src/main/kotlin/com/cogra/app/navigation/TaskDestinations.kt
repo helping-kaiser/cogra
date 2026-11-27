@@ -42,6 +42,7 @@ internal fun NavGraphBuilder.taskFlows(shell: ShellScope) {
                     navController.navigateUp()
                 },
                 onLeave = { navController.navigateUp() },
+                onReportProblem = { navController.navigate(ReportProblem) },
             )
         }
     }
@@ -58,6 +59,7 @@ internal fun NavGraphBuilder.taskFlows(shell: ShellScope) {
                     line?.let(::announce)
                 },
                 onOpenInvites = { navController.navigate(Invites(from = INVITES_FROM_KEPT_PICKS)) },
+                onReportProblem = { navController.navigate(ReportProblem) },
             )
         }
     }
@@ -158,6 +160,9 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
             onOpenPost = { postId -> navController.navigate(PostDetail(postId)) },
             keyBanner = keyBanner(node = null),
             deletionBand = deletionBand(node = null),
+            // The seal's bug notice opens the report over the wizard; back
+            // returns to the seal with the draft as it was.
+            onReportProblem = { navController.navigate(ReportProblem) },
         )
         return
     }
@@ -241,6 +246,7 @@ private fun ShellScope.ProfileEditDestination(entry: NavBackStackEntry) {
             consumeFramedUri()
             consumeFramedWindow()
         },
+        onReportProblem = { navController.navigate(ReportProblem) },
     )
 }
 
@@ -255,6 +261,7 @@ private fun ShellScope.AvatarFlowDestination(entry: NavBackStackEntry) {
         },
         onLeave = { navController.popBackStack() },
         onRestoreKey = { navController.navigate(Restore) },
+        onReportProblem = { navController.navigate(ReportProblem) },
         onFramed = if (route.fromEdit) {
             { window ->
                 navController.report(framedPictureWindowKey, window?.toFractions())

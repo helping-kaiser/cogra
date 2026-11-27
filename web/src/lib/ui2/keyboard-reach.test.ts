@@ -51,6 +51,7 @@ const CLASSES: Record<string, Record<string, string>> = {
   SCREEN_LAYER: {
     "app/posts/[id]/edit/comment-edit-view.tsx": "rides only while a picker (one search field, Done) stands over the edit",
     "app/posts/[id]/reply/reply-wizard-view.tsx": "rides: the reply's words are one field; its pickers one search field",
+    "lib/intro/intro.tsx": "inert: no field",
     "lib/ui2/media/media-viewer.tsx": "inert: no field",
   },
   SCREEN_LAYER_STILL: {

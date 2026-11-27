@@ -130,9 +130,10 @@ edit surface), the default-license setting, and share.
 
 **Slice 2.6 is built on both clients.** Saved, hidden actors,
 `markSeen` with the seen tail, the History screens (reached from the
-own profile's menu), and the server-stored preferences.
-`hasSeenOnboarding` is stored and no client reads it: the intro is
-not built.
+own profile's menu), and the server-stored preferences. Web alone
+has the intro: five cards over the first feed an account enters,
+`hasSeenOnboarding` set the moment it shows, and Settings' Watch the
+intro again.
 
 **Slice 2.7 is built on both clients.** One server matcher answers
 `search` and `referenceCandidates`. Explore — at rest and searching,
@@ -189,8 +190,9 @@ release build is unsigned and unshrunk.
 
 **Queued.** Android: the score readout, the Reel, the detail's
 opinions and cited-by rows, ProfileStances, the tag and reference
-pickers, the kept picks, and the profile's card lists. Both clients:
-the intro, the Report a problem page, the invite-link vantage, the
+pickers, the kept picks, the profile's card lists, and the intro.
+Web: the Report a problem page. Both clients: the invite-link
+vantage, the
 settings, entry, applicant, About, and What's new conformance
 re-audits, and the W8 copy sweep, last.
 

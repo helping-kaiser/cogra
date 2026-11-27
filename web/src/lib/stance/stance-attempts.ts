@@ -29,7 +29,7 @@
 import { intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
 import type { Expectation } from "@/lib/signing/intent";
 import type { StancePair } from "./model";
-import type { CommitSource, StanceTarget } from "./stance-data";
+import type { CommitSource, KeptEntry, StanceTarget } from "./stance-data";
 
 /**
  * The kept picks' seal: one batch across many targets, signed in one pass
@@ -49,8 +49,15 @@ export type Slot =
   | typeof KEPT_BATCH
   | { readonly alongside: Slot; readonly commit: number };
 
-/** A target's attempt, and what its batch was checked against when it was staged. */
-export type StanceAttempt = SigningAttempt & { readonly expected: Expectation };
+/**
+ * A target's attempt, and what its batch was checked against when it was
+ * staged. The kept batch's attempt also keeps the picks it staged, so a
+ * changed batch that finds it landing lands exactly those.
+ */
+export type StanceAttempt = SigningAttempt & {
+  readonly expected: Expectation;
+  readonly entries?: readonly KeptEntry[];
+};
 
 /**
  * AN ATTEMPT IN FLIGHT IS NOT A FAILED ATTEMPT. Only one whose own signing

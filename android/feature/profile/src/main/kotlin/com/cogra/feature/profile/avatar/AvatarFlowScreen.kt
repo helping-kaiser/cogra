@@ -72,6 +72,8 @@ fun AvatarFlowScreen(
     modifier: Modifier = Modifier,
     onNotNow: () -> Unit = {},
     onRestoreKey: () -> Unit = {},
+    /** The bug notice's `Report a problem`. */
+    onReport: () -> Unit = {},
 ) {
     if (state.step == AvatarStep.Seal) {
         ProfileSealPage(
@@ -91,6 +93,7 @@ fun AvatarFlowScreen(
                 onBack = onBack,
                 onLeave = onLeave,
                 onNotNow = onNotNow,
+                onReport = onReport,
                 onRestoreKey = onRestoreKey,
                 onRetryUpload = onRetryUpload,
             ),

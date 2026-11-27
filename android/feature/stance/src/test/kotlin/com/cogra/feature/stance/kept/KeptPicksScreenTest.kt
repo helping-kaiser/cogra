@@ -198,11 +198,14 @@ class KeptPicksScreenTest {
 
     @Test
     fun seal37_theBugNoticeOffersTryAgainReportAndNotNow() {
-        render(seal.copy(fault = KeptSealFault.BUG))
+        var reports = 0
+        render(seal.copy(fault = KeptSealFault.BUG), KeptPicksActions(onReport = { reports += 1 }))
         compose.onNodeWithText(KEPT_BUG_TITLE).assertExists()
         compose.onNodeWithText(KEPT_TRY_AGAIN).assertExists()
-        compose.onNodeWithText(KEPT_REPORT).assertExists()
         compose.onNodeWithText(KEPT_NOT_NOW).assertExists()
+        // Report a problem opens the report page (ReportProblem.md:3).
+        compose.onNodeWithTag("kept_picks_seal_report").assertTextEquals(KEPT_REPORT).performScrollTo().performClick()
+        assertThat(reports).isEqualTo(1)
     }
 
     @Test

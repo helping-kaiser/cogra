@@ -85,6 +85,8 @@ fun ComposeWizardRoute(
     keyBanner: @Composable () -> Unit = {},
     /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
     deletionBand: @Composable () -> Unit = {},
+    /** The seal's bug notice `Report a problem` (SealFaultBug.md): opens the report over the wizard. */
+    onReportProblem: () -> Unit = {},
     viewModel: ComposeWizardViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -217,6 +219,7 @@ fun ComposeWizardRoute(
         },
         keyBanner = keyBanner,
         deletionBand = deletionBand,
+        onReportProblem = onReportProblem,
     )
 }
 
@@ -298,6 +301,8 @@ internal fun ComposeWizardScreen(
     keyBanner: @Composable () -> Unit = {},
     modifier: Modifier = Modifier,
     deletionBand: @Composable () -> Unit = {},
+    /** The bug notice's `Report a problem`: the report page Settings opens too. */
+    onReportProblem: () -> Unit = {},
 ) {
     // Back is the header's arrow and the system gesture alike, and both
     // step back one stage (jakob 2026-08-31). Leaving happens from the
@@ -493,9 +498,7 @@ internal fun ComposeWizardScreen(
                                 onHelp = onOpenHelp,
                                 onRetryUploads = onRetryFailedUploads,
                                 onRemoveRefused = onRemoveReference,
-                                // The report page Settings opens is not built
-                                // on android (HAND TO FABLE).
-                                onReport = {},
+                                onReport = onReportProblem,
                                 onDiscardPost = onDiscardPost,
                             ),
                         )

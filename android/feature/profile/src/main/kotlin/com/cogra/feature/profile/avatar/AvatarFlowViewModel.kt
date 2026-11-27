@@ -78,8 +78,14 @@ class AvatarFlowViewModel @Inject constructor(
     @Volatile
     private var attempt: Deferred<AvatarUpload> = CompletableDeferred(AvatarUpload.Idle)
 
+    /**
+     * A new pick starts the flow afresh. The route hands its pick in again
+     * each time the destination re-enters composition — back from the report
+     * or the restore a seal opened — and that same pick keeps the flow where
+     * it stood rather than resetting it to the crop.
+     */
     fun onPicked(uri: String) = _state.update {
-        AvatarFlowState(uri = uri)
+        if (it.uri == uri) it else AvatarFlowState(uri = uri)
     }
 
     fun onSourceRatio(ratio: Float) = _state.update { it.copy(sourceRatio = ratio) }
