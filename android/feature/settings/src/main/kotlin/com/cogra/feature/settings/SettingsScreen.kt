@@ -77,6 +77,8 @@ data class SettingsDoors(
     val onChangeHandle: () -> Unit = {},
     val onOpenEmail: (EmailDoor) -> Unit = {},
     val onOpenAbout: () -> Unit = {},
+    /** The intro, opened again; Skip and Start reading land back here (OnboardingSteps.md:5). */
+    val onWatchIntro: () -> Unit = {},
     /** The release chronicle (WhatsNew.md). */
     val onOpenWhatsNew: () -> Unit = {},
     /** The reader's own mail, addressed to the contact address — never the report. */
@@ -834,8 +836,7 @@ private fun AboutGroup(versionName: String, doors: SettingsDoors) {
         label = stringResource(R.string.settings_about),
         node = group,
         rows = listOf(
-            // DRIFT (the intro packet): the intro has no Android surface yet.
-            row(R.string.settings_about_intro, "intro") {},
+            row(R.string.settings_about_intro, "intro", onClick = doors.onWatchIntro),
             row(R.string.settings_about_cogra, "aboutCogra", onClick = doors.onOpenAbout),
             row(R.string.settings_about_whats_new, "whatsNew", value = versionName, onClick = doors.onOpenWhatsNew),
             // DRIFT (the report-a-problem packet): the report is not built.

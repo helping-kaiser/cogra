@@ -240,6 +240,15 @@ data class VouchAsk(val askLinkId: String)
 @Serializable
 data object Settings
 
+/**
+ * The intro's five cards, full-screen and barless (OnboardingSteps.md). It
+ * opens over the feed it was first entered from, or over Settings when its
+ * `Watch the intro again` row re-opens it; either way it leaves by popping
+ * back to what it opened over.
+ */
+@Serializable
+data class Intro(val fromSettings: Boolean = false)
+
 @Serializable
 data object KeyExport
 
