@@ -90,10 +90,11 @@ enum class ProfileEditStage { Form, Seal }
 
 /**
  * What took the commit's place on the seal when a press did not land
- * (ProfileEditSeal.md:47-61): the fault line and Retry, the write rule's
- * notice, the bug's, or the key-absent notice.
+ * (ProfileEditSeal.md:47-61): the fault line and Retry — no answer
+ * ([Offline]) or the device's own refusal ([NotThrough], copy-voice's answered
+ * refusal) — the write rule's notice, the bug's, or the key-absent notice.
  */
-enum class ProfileSealFault { Offline, WriteRule, Bug, KeyAbsent }
+enum class ProfileSealFault { Offline, NotThrough, WriteRule, Bug, KeyAbsent }
 
 data class ProfileEditUiState(
     /** The account's own id: the node a profile payload binds to. */
@@ -385,6 +386,7 @@ private fun ProfileEditUiState.answered(outcome: ProfileChangeOutcome): ProfileE
     // The name's own line stands under its field, on the form (ProfileEdit.md:85).
     ProfileChangeOutcome.NameReserved -> copy(signing = false, stage = ProfileEditStage.Form, nameReserved = true)
     ProfileChangeOutcome.Offline -> copy(signing = false, fault = ProfileSealFault.Offline)
+    ProfileChangeOutcome.NotThrough -> copy(signing = false, fault = ProfileSealFault.NotThrough)
     ProfileChangeOutcome.WriteRule -> copy(signing = false, fault = ProfileSealFault.WriteRule)
     ProfileChangeOutcome.Bug -> copy(signing = false, fault = ProfileSealFault.Bug)
     // Another account is active: nothing was prepared or signed for it.
@@ -503,14 +505,16 @@ internal fun refusalOf(errors: List<UserError>): ProfileChangeOutcome = when {
 
 /**
  * A signing that was not taken: a refusal reads by its codes; the device's own
- * refusal of bytes that were not what the form sent is a bug — nothing was
- * signed, and it is no fault of the network's; anything else never answered.
+ * refusal of bytes that were not what the form sent, no server answer at all,
+ * reads as an answered refusal — `That didn't go through. Try again.`
+ * (copy-voice, *One rule for a refused or failed act*), never the bug notice,
+ * which is for a refusal nobody can name; anything else never answered.
  */
 internal fun outcomeOfUntaken(results: List<WriteResult>): ProfileChangeOutcome {
     val refused = results.filterIsInstance<WriteResult.Refused>().firstOrNull()
     return when {
         refused != null -> refusalOf(refused.errors)
-        results.any { it is WriteResult.RejectedByDevice } -> ProfileChangeOutcome.Bug
+        results.any { it is WriteResult.RejectedByDevice } -> ProfileChangeOutcome.NotThrough
         else -> ProfileChangeOutcome.Offline
     }
 }

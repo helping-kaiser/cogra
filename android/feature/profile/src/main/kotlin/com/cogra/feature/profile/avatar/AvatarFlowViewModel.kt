@@ -234,6 +234,7 @@ private fun AvatarFlowState.answered(outcome: ProfileChangeOutcome): AvatarFlowS
     // The held press drops; the gate says why, and Sign the change reads itself again (:21).
     ProfileChangeOutcome.UploadFailed -> copy(signing = false)
     ProfileChangeOutcome.Offline -> copy(signing = false, fault = ProfileSealFault.Offline)
+    ProfileChangeOutcome.NotThrough -> copy(signing = false, fault = ProfileSealFault.NotThrough)
     ProfileChangeOutcome.WriteRule -> copy(signing = false, fault = ProfileSealFault.WriteRule)
     ProfileChangeOutcome.KeyAbsent -> copy(signing = false, fault = ProfileSealFault.KeyAbsent)
     // A picture-only change sets no name: a refusal of one is no reading of this seal's.

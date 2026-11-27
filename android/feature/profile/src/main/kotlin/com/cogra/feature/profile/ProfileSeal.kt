@@ -17,7 +17,9 @@
 // gate while the new picture is on its way: running (the commit enabled, a
 // press waits), failed (with Retry, the commit disabled) or refused (the fact
 // alone, the commit disabled). In the commit's place: the fault line and Retry
-// where no answer reached the seal; the write rule's notice with `Not now`;
+// where no answer reached the seal, or where this device's own signer refused
+// the change (copy-voice: an answered refusal's words, `That didn't go through.
+// Try again.`); the write rule's notice with `Not now`;
 // the bug's with `Try again`, `Report a problem` and `Not now`; the key-absent
 // notice with `Restore the key` and `Not now`.
 
@@ -83,6 +85,9 @@ internal const val PUBLIC_RECORD_LINE =
 // The failure pack's words (copy-voice, *Faults by code*), the profile seals'
 // clause: they keep no draft (ProfileEditSeal.md:49, :53; AvatarSeal.md:41, :45).
 internal const val SEAL_OFFLINE_LINE = "That didn't send. Try again."
+
+/** An answered refusal, and the device's own refusal read as one (copy-voice, *One rule for a refused or failed act*). */
+internal const val SEAL_NOT_THROUGH_LINE = "That didn't go through. Try again."
 internal const val WRITE_RULE_TITLE = "You can't sign right now"
 internal const val WRITE_RULE_FACT =
     "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent."
@@ -278,7 +283,10 @@ private fun SealFoot(
             FootText(SEAL_NOT_NOW, actions.onNotNow, "${tag}_not_now")
         }
         ProfileSealFault.Bug -> BugFoot(tag, actions)
-        ProfileSealFault.Offline -> OfflineFoot(tag, actions)
+        ProfileSealFault.Offline -> FaultLineFoot(SEAL_OFFLINE_LINE, "${tag}_offline", tag, actions)
+        // The device refused its own signing: an answered refusal's words in the
+        // same shape — the line in the commit's place, an outlined Retry under it.
+        ProfileSealFault.NotThrough -> FaultLineFoot(SEAL_NOT_THROUGH_LINE, "${tag}_not_through", tag, actions)
         ProfileSealFault.KeyAbsent -> KeyAbsentFoot(tag, actions, onHelp = { onHelp(SealHelp.Key) })
         null -> RestingFoot(reading, status, participle, actions)
     }
@@ -330,14 +338,17 @@ private fun KeyAbsentFoot(tag: String, actions: ProfileSealActions, onHelp: () -
     FootText(SEAL_NOT_NOW, actions.onNotNow, "${tag}_not_now")
 }
 
-/** No answer reached the seal: the fault line and Retry in the commit's place, and Back. */
+/**
+ * A press that did not go through (`NetworkError`): the fault [line] and Retry in
+ * the commit's place, and Back — the words follow the answer, the shape the host.
+ */
 @Composable
-private fun OfflineFoot(tag: String, actions: ProfileSealActions) {
+private fun FaultLineFoot(line: String, lineTag: String, tag: String, actions: ProfileSealActions) {
     Column(
         verticalArrangement = Arrangement.spacedBy(Space.x2),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        ErrorLine(SEAL_OFFLINE_LINE, testTag = "${tag}_offline")
+        ErrorLine(line, testTag = lineTag)
         CograButton(
             text = SEAL_RETRY,
             onClick = actions.onSign,
