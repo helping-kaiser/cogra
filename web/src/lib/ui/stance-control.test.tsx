@@ -3308,6 +3308,68 @@ describe("severance", () => {
     expect(data.sent).toEqual([]);
   });
 
+  /** Holds every landing read the control makes until the test lets it go. */
+  const holdProjections = (data: ReturnType<typeof mount>) => {
+    const project = data.project;
+    const held: (() => void)[] = [];
+    data.project = (target, pick) =>
+      new Promise((resolve) => {
+        held.push(() => resolve(project(target, pick)));
+      });
+    return held;
+  };
+
+  /** Drag to a landing and let go, the pad parked on it, Set not yet pressed. */
+  const parkAt = async (clientX: number, clientY: number) => {
+    layOutPad();
+    moveKnob(clientX, clientY);
+    await settle();
+    await release();
+  };
+
+  // SeveranceConfirm.md:3: "WHEN tap Set GIVEN the pick lands at (0, 0)" —
+  // the pad's line already reads This takes you back to zero. (PadStanding.md:79),
+  // so the dialog rises at the tap from what the pad shows, and the pad's
+  // Cancel stays Cancel: Set signs nothing here, it asks (:49).
+  it("opens the walk-back's dialog at Set's tap when the pad's line already says zero", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 1, pInterest: 1 }] } } });
+    await settle();
+    await openPad();
+    await parkAt(-500, 700);
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("This takes you back to zero.");
+    const held = holdProjections(data);
+    await pressSet();
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-cancel`)).toHaveTextContent(/^Cancel$/);
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-cancel`)).toHaveTextContent(/^Cancel$/);
+    expect(data.sent).toEqual([]);
+  });
+
+  // EmptySignConfirm.md:3, :7: the pad's line already reads Says nothing., so
+  // Set's tap raises the ask at once, and Cancel stays Cancel (:47).
+  it("opens the empty sign's ask at Set's tap when the pad's line already says nothing", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    await parkAt(-0.1 * HALF, 0.1 * HALF);
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("Says nothing.");
+    const held = holdProjections(data);
+    await pressSet();
+    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-cancel`)).toHaveTextContent(/^Cancel$/);
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    expect(data.sent).toEqual([]);
+  });
+
   // THE RELEASE LANDS ON A HUNDREDTH: a drag a hair short of the raw sums'
   // opposite lands EXACTLY on it, so the pick that reads as netting 0.00 is
   // the severance the gate asks about — not a float a few thousandths off it
