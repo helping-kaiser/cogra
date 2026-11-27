@@ -78,9 +78,84 @@ class SameSigningTest {
     @Test
     fun everyWriteEndedRetiresTheAttemptForAFreshPrepare() = runTest {
         signed = listOf(refused(ErrorCode.STAGED_WRITE_EXPIRED), WriteResult.RejectedByDevice("w2", "tampered"))
+        states["w1"] = state(WriteState.EXPIRED)
+        states["w2"] = state(WriteState.AWAITING_APPROVAL)
 
         assertThat(ask()).isEqualTo(AskedAgain.Fresh)
+        // The device's refusal is read first: nothing of the attempt was approved.
+        assertThat(reads).containsExactly("w1", "w2").inOrder()
         assertThat(retired).containsExactly("w1", "w2")
+    }
+
+    @Test
+    fun everyWriteExpiredRetiresWithoutAReadWhenTheDeviceRefusedNothing() = runTest {
+        signed = listOf(refused(ErrorCode.STAGED_WRITE_EXPIRED), refused(ErrorCode.STAGED_WRITE_EXPIRED))
+
+        assertThat(ask()).isEqualTo(AskedAgain.Fresh)
+        assertThat(reads).isEmpty()
+        assertThat(retired).containsExactly("w1", "w2")
+    }
+
+    @Test
+    fun aDeviceRefusalOverALandedAttemptIsLanding() = runTest {
+        // The first press's approval went out and its answer was lost; the re-ask's
+        // intent check then refused the whole batch. Retiring it would be a second post.
+        signed = listOf(WriteResult.RejectedByDevice("w1", "moved"), WriteResult.RejectedByDevice("w2", "moved"))
+        states["w1"] = state(WriteState.LANDED)
+        states["w2"] = state(WriteState.LANDED)
+
+        assertThat(ask()).isEqualTo(AskedAgain.Landing)
+        assertThat(retired).isEmpty()
+    }
+
+    @Test
+    fun aDeviceRefusalOverARelayingWriteIsLanding() = runTest {
+        signed = listOf(WriteResult.RejectedByDevice("w1", "moved"), WriteResult.RejectedByDevice("w2", "moved"))
+        states["w1"] = state(WriteState.AWAITING_APPROVAL)
+        states["w2"] = state(WriteState.RELAYING)
+
+        assertThat(ask()).isEqualTo(AskedAgain.Landing)
+        assertThat(retired).isEmpty()
+    }
+
+    @Test
+    fun aDeviceRefusalWhoseReadDoesNotAnswerDecidesNothing() = runTest {
+        signed = listOf(WriteResult.RejectedByDevice("w1", "moved"), WriteResult.RejectedByDevice("w2", "moved"))
+        val down: Outcome<StagedWriteView?> = Outcome.Failed(IOException("down"))
+        states["w1"] = down
+
+        assertThat(ask()).isEqualTo(AskedAgain.Unread(down))
+        assertThat(retired).isEmpty()
+    }
+
+    @Test
+    fun aDeviceRefusalWhoseReadIsRefusedDecidesNothing() = runTest {
+        signed = listOf(WriteResult.RejectedByDevice("w1", "moved"), WriteResult.RejectedByDevice("w2", "moved"))
+        val refusedRead: Outcome<StagedWriteView?> = Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "no")))
+        states["w1"] = state(WriteState.AWAITING_APPROVAL)
+        states["w2"] = refusedRead
+
+        assertThat(ask()).isEqualTo(AskedAgain.Unread(refusedRead))
+        assertThat(retired).isEmpty()
+    }
+
+    @Test
+    fun anAccountChangeWhileADeviceRefusalIsReadRetiresNothing() = runTest {
+        val switching = SameSigning(
+            signAgain = { _, _ ->
+                listOf(WriteResult.RejectedByDevice("w1", "moved"), WriteResult.RejectedByDevice("w2", "moved"))
+            },
+            read = { id ->
+                reads += id
+                pressing = false
+                state(WriteState.AWAITING_APPROVAL)
+            },
+            retire = { id -> retired += id },
+        )
+
+        assertThat(switching.askAgain(attempt, "i", { ordered }, { pressing })).isEqualTo(AskedAgain.Foreign)
+        assertThat(reads).containsExactly("w1")
+        assertThat(retired).isEmpty()
     }
 
     @Test
