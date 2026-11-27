@@ -356,7 +356,10 @@ async fn waits_for_funding<B: L1Boundary>(
 /// Verifies a witness the relay is about to hold, exactly as the host
 /// would at approve: a held witness is relayed later by a pass the device
 /// never hears from, so a bad signature must be refused now, while the
-/// device can still fix it.
+/// device can still fix it. The rule is the host's own
+/// (`common::l1::handshake::approval_form_of`), with the write's mark of an
+/// act sealed before the approval covered the act alone — the same mark
+/// the host keeps, set by the same switch.
 fn check_witness(write: &staged::StagedWrite, approval_signature: &[u8]) -> Result<(), RelayError> {
     let act = write.sealed_act().ok_or(RelayError::Wedged(write.id))?;
     let author_pubkey = write
@@ -373,7 +376,10 @@ fn check_witness(write: &staged::StagedWrite, approval_signature: &[u8]) -> Resu
         act_id: write.proposal.body.act_id(),
         approval_signature: approval_signature.to_vec(),
     };
-    if act.verify_approval(author_pubkey, &witness) {
+    if act
+        .approval_form_of(author_pubkey, &witness, write.sealed_before_switch())
+        .is_some()
+    {
         Ok(())
     } else {
         Err(RelayError::SignatureInvalid(
