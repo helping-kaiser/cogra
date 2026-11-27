@@ -338,6 +338,93 @@ describe("a stance pick's Retry asks the same signing again", () => {
       expect(prepares).toEqual([PICK, PICK]);
       expect(signedAgain).toEqual([["w-1"]]);
     });
+
+    // EACH COMMIT'S RETRY ASKS ITS OWN ATTEMPT (SigningAfterClose.md:27: "the
+    // same signing is asked again … AND NEVER anything else is signed"): the
+    // overlapping commit's Retry, from its own surface, is that commit's
+    // signing — never the first commit's, which has a Retry of its own.
+    describe("an overlapping commit that fails is asked again by its own Retry", () => {
+      /** The first signing held open; the overlapping one answers lost; every re-sign done. */
+      function overlapFails() {
+        let release: (answer: Answer) => void = () => {};
+        const first = new Promise<Answer>((resolve) => (release = resolve));
+        const signedAgain: string[][] = [];
+        let calls = 0;
+        const writes: WriteSigner = {
+          signStaged: vi.fn(),
+          sign: vi.fn(async (staged: readonly StagedWriteView[]) => {
+            calls += 1;
+            const answer = calls === 1 ? await first : lost;
+            return staged.map((write) => answer(write.id));
+          }),
+          signAgain: vi.fn(async (ids: readonly string[]) => {
+            signedAgain.push([...ids]);
+            return ids.map((id) => done(id));
+          }),
+          signCarriedAtLanding: vi.fn(async () => []),
+          resume: vi.fn(async () => []),
+        };
+        return { writes, signedAgain, release: (answer: Answer) => release(answer) };
+      }
+
+      /** Two surfaces showing the same target — a feed card and the open post. */
+      const card = { source: {} };
+      const open = { source: {} };
+
+      it("the same pick: each surface's Retry asks the signing it made", async () => {
+        const prepares = host();
+        const { writes, signedAgain, release } = overlapFails();
+        const { data, retired } = seam(writes);
+
+        const first = data.commit(POST, PICK, card);
+        await reachSigning(writes);
+        expect((await data.commit(POST, PICK, open)).kind).toBe("failed");
+        release(lost);
+        expect((await first).kind).toBe("failed");
+
+        expect((await data.commit(POST, PICK, open)).kind).toBe("success");
+        expect(signedAgain).toEqual([["w-2"]]);
+        expect((await data.commit(POST, PICK, card)).kind).toBe("success");
+        expect(signedAgain).toEqual([["w-2"], ["w-1"]]);
+        expect(prepares).toEqual([PICK, PICK]);
+        expect(retired).toEqual([]);
+      });
+
+      it("a changed pick: the overlap's Retry never retires the first commit's material", async () => {
+        const prepares = host({ "w-1": "AWAITING_APPROVAL", "w-2": "AWAITING_APPROVAL" });
+        const { writes, signedAgain, release } = overlapFails();
+        const { data, retired } = seam(writes);
+
+        const first = data.commit(POST, PICK, card);
+        await reachSigning(writes);
+        await data.commit(POST, OTHER_PICK, open);
+        release(lost);
+        await first;
+
+        await data.commit(POST, OTHER_PICK, open);
+        expect(retired).toEqual([]);
+        expect(signedAgain).toEqual([["w-2"]]);
+        await data.commit(POST, PICK, card);
+        expect(signedAgain).toEqual([["w-2"], ["w-1"]]);
+        expect(prepares).toEqual([PICK, OTHER_PICK]);
+      });
+
+      it("a fresh identical Set from a third surface is still the target's Retry", async () => {
+        const prepares = host();
+        const { writes, signedAgain, release } = overlapFails();
+        const { data } = seam(writes);
+
+        const first = data.commit(POST, PICK, card);
+        await reachSigning(writes);
+        await data.commit(POST, PICK, open);
+        release(lost);
+        await first;
+
+        await data.commit(POST, PICK, { source: {} });
+        expect(signedAgain).toEqual([["w-1"]]);
+        expect(prepares).toEqual([PICK, PICK]);
+      });
+    });
   });
 
   it("an account boundary never hands the attempt over: the next account's pick is prepared for it", async () => {
