@@ -89,7 +89,11 @@ class AccountStanceAttempts internal constructor() {
     @Synchronized
     fun begin(slot: StanceSlot) {
         val entry = held[slot]
-        if (entry != null) entry.asking = true else held[slot] = Held(null, asking = true)
+        if (entry == null) {
+            held[slot] = Held(null, asking = true)
+        } else {
+            entry.asking = true
+        }
     }
 
     /** The asking gesture's batch, staged and about to be signed. Only a gesture holding the slot remembers. */
