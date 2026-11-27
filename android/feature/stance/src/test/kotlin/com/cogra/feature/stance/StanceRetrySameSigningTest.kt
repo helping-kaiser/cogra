@@ -101,7 +101,8 @@ class StanceRetrySameSigningTest {
         override suspend fun prepareSeverance(target: StanceTarget): Outcome<List<PreparedWriteView>> {
             severanceCalls += 1
             heldAtPrepare += identity.handshakes.keys.toSet()
-            val walkBack = severance(testGraphId((target as StanceTarget.Node).id), net.pDirected, net.pInterest, records)
+            val node = testGraphId((target as StanceTarget.Node).id)
+            val walkBack = severance(node, net.pDirected, net.pInterest, records)
             return Outcome.Success(sealer.stageFaithful(Expectation(emptyList(), listOf(walkBack))))
         }
     }
