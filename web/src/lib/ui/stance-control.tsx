@@ -1631,7 +1631,10 @@ export function StanceControl({
               onClick={closeAll}
               className={buttonClassName({ variant: "text", size: "sm" })}
             >
-              Cancel
+              {/* FROM THE PRESS ITSELF Cancel reads Close in its place: the act
+                  is made, so the way out only closes the pad and the act goes
+                  on (PadFailed.md:37, ApprovePad.md:31). */}
+              {inFlight === "pad" ? "Close" : "Cancel"}
             </button>
             {/* The only thing on the pad that signs anything — never through
                 the help, whose field is not there to check against. Inert
