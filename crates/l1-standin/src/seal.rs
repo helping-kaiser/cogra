@@ -14,7 +14,7 @@
 
 use common::l1::census::FamilyKind;
 use common::l1::crypto;
-use common::l1::handshake::{ApprovalWitness, approval_digest, is_canonical_dep_list};
+use common::l1::handshake::{ApprovalForm, ApprovalWitness, approval_digest, is_canonical_dep_list};
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::proposal::{
     CONTENT_EDITION, DEPENDENCY_EDITION, SealedAct, Submission, SubmissionError, VerifiedAct,
@@ -291,7 +291,8 @@ pub(crate) async fn sealed_act(
     }))
 }
 
-/// Verifies the approval witness over the exact sealed act and marks it
+/// Verifies the approval witness over the act, in the current approval
+/// form, and marks it
 /// approved. Idempotent once already approved: a repeat call re-checks
 /// nothing and changes nothing.
 pub(crate) async fn approve(
@@ -316,23 +317,24 @@ pub(crate) async fn approve(
     }
 
     let body = stored_body!(row).to_body()?;
-    let seal_msg = stored_header(
+    let header = stored_header(
         body,
         row.pre_commitment,
         row.pre_signature,
         row.content_commitment,
         row.deps_commitment,
-    )
-    .seal_message();
+    );
     let author_key = crypto::verifying_key_from_bytes(&row.author_pubkey)
         .ok_or_else(|| StandInError::Authentication("stored author key malformed".into()))?;
+    // Every epoch this host closes from now on states the current form, so
+    // an act is approved only in it: no epoch mixes forms.
     if !crypto::verify_digest(
         &author_key,
-        &approval_digest(&seal_msg, &row.host_seal),
+        &approval_digest(ApprovalForm::CURRENT, &header.frame(), &row.host_seal),
         &witness.approval_signature,
     ) {
         return Err(StandInError::Authentication(
-            "approval witness does not verify over the sealed act".into(),
+            "approval witness does not verify over the act".into(),
         ));
     }
 

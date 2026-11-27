@@ -79,7 +79,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use common::l1::census::LegRole;
 use common::l1::handshake::{
-    ActAuthentication, BoundaryPolicy, CaseDeclaration, ClosureCause, EpochClosure, EpochPackage,
+    ActApproval, ApprovalForm, BoundaryPolicy, CaseDeclaration, ClosureCause, EpochClosure,
+    EpochPackage, SEAL_FRAME_VERSION, SealAttestation,
     FIRST_POSITION, LedgerLine, MarkerPolicy, PublishedLeg, PublishedRecord, Ratio, WallStep,
 };
 use common::l1::identifier::NodeId;
@@ -123,21 +124,29 @@ pub(crate) struct SealedParts {
 }
 
 impl SealedParts {
-    /// The published authentication of the act these parts were sealed
-    /// for. Every act this host seals names the one content and one
-    /// dependency edition, so the editions are the constants, as the
-    /// stored header has them (`crate::seal`).
-    fn authentication(&self, body: &common::l1::StructuralBody) -> ActAuthentication {
-        ActAuthentication {
+    /// The published approval of the act these parts were sealed for: the
+    /// act's own member of its record.
+    fn approval(&self, body: &common::l1::StructuralBody) -> ActApproval {
+        ActApproval {
             body: body.clone(),
+            dependency_commitment: self.dependency_commitment.clone(),
             author_pubkey: self.author_pubkey.clone(),
+            approval_signature: self.approval_signature.clone(),
+        }
+    }
+
+    /// The seal attestation published beside the act. Every act this host
+    /// seals names the one content and one dependency edition and the one
+    /// frame version, so those are the constants, as the stored header has
+    /// them (`crate::seal`).
+    fn attestation(&self) -> SealAttestation {
+        SealAttestation {
             pre_commitment: self.pre_commitment.clone(),
             pre_signature: self.pre_signature.clone(),
-            dependency_commitment: self.dependency_commitment.clone(),
             content_edition: CONTENT_EDITION,
             dependency_edition: DEPENDENCY_EDITION,
+            seal_version: SEAL_FRAME_VERSION,
             host_seal: self.host_seal.clone(),
-            approval_signature: self.approval_signature.clone(),
         }
     }
 }
@@ -371,7 +380,8 @@ pub(crate) fn select_and_order(
             position,
             payload_witness: candidate.payload_witness.clone(),
             legs: published_legs,
-            authentication: candidate.sealed.authentication(&candidate.body),
+            approval: candidate.sealed.approval(&candidate.body),
+            attestation: candidate.sealed.attestation(),
         });
     }
 
@@ -709,6 +719,7 @@ fn closure_outputs(
         }),
         marker: DECLARATION.marker(),
         case_declarations: DECLARATION.case_declarations(),
+        approval_form: ApprovalForm::CURRENT,
     })
 }
 
@@ -846,9 +857,10 @@ async fn persist(
               marker_policy, marker_edition,
               wall_num, wall_den, width_num, width_den, rung_num, rung_den,
               proposal_num, proposal_den, delivered_num, delivered_den,
-              theta_next_micro, target_acts, min_duration_secs, max_duration_secs)
+              theta_next_micro, target_acts, min_duration_secs, max_duration_secs,
+              approval_form)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
-                 $18, $19, $20)
+                 $18, $19, $20, $21)
          RETURNING closed_at",
         epoch,
         selection.records.len() as i64,
@@ -870,6 +882,7 @@ async fn persist(
         closure.boundary.target_acts,
         closure.boundary.min_duration_secs,
         closure.boundary.max_duration_secs,
+        closure.approval_form.number(),
     )
     .fetch_one(&mut **tx)
     .await?;
@@ -924,7 +937,8 @@ pub(crate) async fn epochs_since(
                 marker_policy, marker_edition,
                 wall_num, wall_den, width_num, width_den, rung_num, rung_den,
                 proposal_num, proposal_den, delivered_num, delivered_den,
-                theta_next_micro, target_acts, min_duration_secs, max_duration_secs
+                theta_next_micro, target_acts, min_duration_secs, max_duration_secs,
+                approval_form
          FROM l1_epochs WHERE epoch > $1 ORDER BY epoch",
         after,
     )
@@ -983,6 +997,10 @@ pub(crate) async fn epochs_since(
             identity: e.marker_policy,
             edition: e.marker_edition,
         };
+        package.closure.approval_form =
+            ApprovalForm::from_number(e.approval_form).ok_or_else(|| {
+                StandInError::Host(format!("stored approval form {} unknown", e.approval_form))
+            })?;
         packages.push(package);
     }
     let epochs: Vec<i64> = packages.iter().map(|p| p.epoch).collect();
@@ -1085,17 +1103,17 @@ async fn load_epoch(
     let mut records = Vec::with_capacity(rows.len());
     for row in rows {
         let body = stored_body!(row).to_body()?;
-        let authentication = SealedParts {
+        let sealed = SealedParts {
             author_pubkey: row.author_pubkey,
             pre_commitment: row.pre_commitment,
             pre_signature: row.pre_signature,
             dependency_commitment: row.deps_commitment,
             host_seal: row.host_seal,
             approval_signature: row.approval_signature,
-        }
-        .authentication(&body);
+        };
         records.push(PublishedRecord {
-            authentication,
+            approval: sealed.approval(&body),
+            attestation: sealed.attestation(),
             act_id: common::l1::ActId::parse(&row.act_id)
                 .map_err(|e| StandInError::Formation(e.to_string()))?,
             legs: legs_by_act.remove(&row.act_id).unwrap_or_default(),

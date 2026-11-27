@@ -13,7 +13,7 @@ use api::l1::{L1Boundary, StandInBoundary};
 use common::l1::Family;
 use common::l1::census::LegRole;
 use common::l1::crypto::{self, tags};
-use common::l1::handshake::{PublishedRecord, approval_digest, seal_message};
+use common::l1::handshake::{ApprovalForm, PublishedRecord, seal_message};
 use common::l1::identifier::NodeId;
 use common::l1::proposal::{CONTENT_EDITION, DEPENDENCY_EDITION};
 use l1_standin::{StandIn, StandInConfig};
@@ -34,17 +34,22 @@ fn standin(pool: &PgPool) -> StandIn {
     StandIn::new(pool.clone(), StandInConfig::default())
 }
 
-/// Verifies one published record from its own fields and the published
-/// host key — the body is the record's act and its legs the body's
-/// projection, the pre-signature and the approval witness each verify
-/// under the key the record maps them to, and the host seal under the host
-/// key — and names the first member that does not. Like the floor's own
-/// checks, it relates no key to the stated Actor.
-fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), &'static str> {
-    let auth = &record.authentication;
+/// Verifies one published record from its own two members, the approval
+/// form its epoch states and the published host key — the body is the
+/// record's act and its legs the body's projection, the approval witness
+/// verifies over the act in that form and the pre-signature over P, each
+/// under the key the record maps them to, and the host seal of the
+/// attestation under the host key — and names the first member that does
+/// not. Like the floor's own checks, it relates no key to the stated Actor.
+fn verify_from_record(
+    record: &PublishedRecord,
+    form: ApprovalForm,
+    host_key: &[u8],
+) -> Result<(), &'static str> {
+    let (act, attestation) = (&record.approval, &record.attestation);
     let signing_key =
-        crypto::verifying_key_from_bytes(&auth.author_pubkey).ok_or("signing key malformed")?;
-    if auth.body.act_id() != record.act_id {
+        crypto::verifying_key_from_bytes(&act.author_pubkey).ok_or("signing key malformed")?;
+    if act.body.act_id() != record.act_id {
         return Err("body is another act");
     }
     let legs: Vec<(LegRole, NodeId, NodeId)> = record
@@ -52,37 +57,37 @@ fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), &
         .iter()
         .map(|leg| (leg.role, leg.source.clone(), leg.target.clone()))
         .collect();
-    let projected = match &auth.body.middle {
+    let projected = match &act.body.middle {
         None => vec![(
             LegRole::Binary,
-            auth.body.source(),
-            auth.body.target.clone(),
+            act.body.source(),
+            act.body.target.clone(),
         )],
         Some(middle) => vec![
-            (LegRole::A, auth.body.source(), middle.clone()),
-            (LegRole::T, middle.clone(), auth.body.target.clone()),
+            (LegRole::A, act.body.source(), middle.clone()),
+            (LegRole::T, middle.clone(), act.body.target.clone()),
         ],
     };
     if legs != projected {
         return Err("legs are not the body's projection");
     }
-    let pre_commitment: [u8; 32] = auth
+    let pre_commitment: [u8; 32] = attestation
         .pre_commitment
         .as_slice()
         .try_into()
         .map_err(|_| "pre-commitment is not a digest")?;
-    if !crypto::verify_digest(&signing_key, &pre_commitment, &auth.pre_signature) {
+    if !crypto::verify_digest(&signing_key, &pre_commitment, &attestation.pre_signature) {
         return Err("pre-signature");
     }
     let verified_act = seal_message(&record.seal_frame());
     let host = crypto::verifying_key_from_bytes(host_key).ok_or("host key malformed")?;
-    if !crypto::verify(&host, tags::HOST_SEAL, &verified_act, &auth.host_seal) {
+    if !crypto::verify(&host, tags::HOST_SEAL, &verified_act, &attestation.host_seal) {
         return Err("host seal");
     }
     if !crypto::verify_digest(
         &signing_key,
-        &approval_digest(&verified_act, &auth.host_seal),
-        &auth.approval_signature,
+        &record.approval_digest(form),
+        &act.approval_signature,
     ) {
         return Err("approval witness");
     }
@@ -111,12 +116,12 @@ async fn every_genesis_act_verifies_from_its_published_record(pool: PgPool) {
     assert_eq!(genesis.records.len(), 8);
     for record in &genesis.records {
         assert_eq!(
-            verify_from_record(record, &host_key),
+            verify_from_record(record, genesis.closure.approval_form, &host_key),
             Ok(()),
             "{}",
             record.act_id
         );
-        let signing_key = crypto::verifying_key_from_bytes(&record.authentication.author_pubkey)
+        let signing_key = crypto::verifying_key_from_bytes(&record.approval.author_pubkey)
             .expect("a well-formed key");
         assert_eq!(
             crypto::address_of(&signing_key),
@@ -125,8 +130,8 @@ async fn every_genesis_act_verifies_from_its_published_record(pool: PgPool) {
         );
         assert_eq!(
             (
-                record.authentication.content_edition,
-                record.authentication.dependency_edition
+                record.attestation.content_edition,
+                record.attestation.dependency_edition
             ),
             (CONTENT_EDITION, DEPENDENCY_EDITION)
         );
@@ -150,6 +155,7 @@ async fn every_genesis_act_verifies_from_its_published_record(pool: PgPool) {
         "a hyper-edge with both legs"
     );
     assert_eq!(genesis.closure.case_declarations, vec![]);
+    assert_eq!(genesis.closure.approval_form, ApprovalForm::Act);
 }
 
 /// Empties the replay-floor columns of every mirrored record — the state
@@ -159,7 +165,7 @@ async fn as_mirrored_before_the_floor(pool: &PgPool) {
         "UPDATE mirror_records
             SET body = NULL, author_pubkey = NULL, pre_commitment = NULL, pre_signature = NULL,
                 dependency_commitment = NULL, content_edition = NULL, dependency_edition = NULL,
-                host_seal = NULL, approval_signature = NULL",
+                seal_version = NULL, host_seal = NULL, approval_signature = NULL",
     )
     .execute(pool)
     .await
@@ -221,19 +227,29 @@ async fn the_next_pass_fills_the_mirrors_replay_floor(pool: PgPool) {
     );
     let published = boundary.epochs_since(0).await.expect("published");
     for record in &published[0].records {
-        let auth = &record.authentication;
+        let (act, attestation) = (&record.approval, &record.attestation);
         assert_eq!(
             mirrored_floor(&pool, &record.act_id.to_string()).await,
             (
-                Some(auth.body.canonical_bytes()),
-                Some(auth.host_seal.clone()),
-                Some(auth.approval_signature.clone()),
-                Some(auth.content_edition as i64),
+                Some(act.body.canonical_bytes()),
+                Some(attestation.host_seal.clone()),
+                Some(act.approval_signature.clone()),
+                Some(attestation.content_edition as i64),
             ),
             "{}",
             record.act_id
         );
     }
+
+    let mirrored_form: i16 =
+        sqlx::query_scalar("SELECT approval_form FROM mirror_epochs WHERE epoch = 1")
+            .fetch_one(&pool)
+            .await
+            .expect("the genesis epoch is mirrored");
+    assert_eq!(
+        ApprovalForm::from_number(mirrored_form),
+        Some(published[0].closure.approval_form)
+    );
 
     api::ingest::ingest_pending(&boundary, &pool, api::ingest::DEFAULT_GC_AFTER_EPOCHS)
         .await

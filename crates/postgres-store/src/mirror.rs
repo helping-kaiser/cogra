@@ -9,7 +9,9 @@
 //! no row is ever precious.
 
 use common::l1::census::Family;
-use common::l1::handshake::{EMPTY_BOUNDARY, EpochPackage, MalformedOrder, PublishedRecord};
+use common::l1::handshake::{
+    ApprovalForm, EMPTY_BOUNDARY, EpochPackage, MalformedOrder, PublishedRecord,
+};
 
 use sqlx::PgPool;
 
@@ -24,10 +26,10 @@ pub enum MirrorError {
     /// rather than mirror a malformed certificate.
     #[error("epoch package refused: {0}")]
     Unordered(#[from] MalformedOrder),
-    /// A record names a formation edition the mirror's integer column
+    /// A record names a formation edition or frame version the mirror's integer column
     /// cannot hold; refused before anything is written rather than stored
     /// as another number.
-    #[error("record {record} names formation edition {edition}, beyond the stored range")]
+    #[error("record {record} names formation edition or frame version {edition}, beyond the stored range")]
     EditionOutOfRange { record: String, edition: u64 },
     #[error(transparent)]
     Storage(#[from] sqlx::Error),
@@ -108,9 +110,10 @@ struct PackageRows {
 }
 
 /// The replay-floor columns of a set of records (data-model.md "The record
-/// mirror"), as parallel arrays: everything the published record holds so
-/// that its signatures and its formation verify, beside the content
-/// commitment.
+/// mirror"), as parallel arrays: both members of each published record —
+/// the act's approval and the seal attestation beside it — everything it
+/// holds so that its signatures and its formation verify, beside the
+/// content commitment.
 #[derive(Default)]
 struct FloorRows {
     record_id: Vec<String>,
@@ -121,33 +124,38 @@ struct FloorRows {
     dependency_commitment: Vec<Vec<u8>>,
     content_edition: Vec<i64>,
     dependency_edition: Vec<i64>,
+    seal_version: Vec<i64>,
     host_seal: Vec<Vec<u8>>,
     approval_signature: Vec<Vec<u8>>,
 }
 
 impl FloorRows {
     fn push(&mut self, record: &PublishedRecord) -> Result<(), MirrorError> {
-        let auth = &record.authentication;
+        let approval = &record.approval;
+        let attestation = &record.attestation;
         let edition = |edition: u64| {
             i64::try_from(edition).map_err(|_| MirrorError::EditionOutOfRange {
                 record: record.act_id.to_string(),
                 edition,
             })
         };
-        let content_edition = edition(auth.content_edition)?;
-        let dependency_edition = edition(auth.dependency_edition)?;
+        let content_edition = edition(attestation.content_edition)?;
+        let dependency_edition = edition(attestation.dependency_edition)?;
+        let seal_version = edition(attestation.seal_version)?;
         self.record_id.push(record.act_id.to_string());
-        self.body.push(auth.body.canonical_bytes());
-        self.author_pubkey.push(auth.author_pubkey.clone());
-        self.pre_commitment.push(auth.pre_commitment.clone());
-        self.pre_signature.push(auth.pre_signature.clone());
+        self.body.push(approval.body.canonical_bytes());
+        self.author_pubkey.push(approval.author_pubkey.clone());
+        self.pre_commitment
+            .push(attestation.pre_commitment.clone());
+        self.pre_signature.push(attestation.pre_signature.clone());
         self.dependency_commitment
-            .push(auth.dependency_commitment.clone());
+            .push(approval.dependency_commitment.clone());
         self.content_edition.push(content_edition);
         self.dependency_edition.push(dependency_edition);
-        self.host_seal.push(auth.host_seal.clone());
+        self.seal_version.push(seal_version);
+        self.host_seal.push(attestation.host_seal.clone());
         self.approval_signature
-            .push(auth.approval_signature.clone());
+            .push(approval.approval_signature.clone());
         Ok(())
     }
 }
@@ -239,20 +247,22 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
              (record_id, family, author, epoch, act_time, position,
               payload_marked, payload_witness,
               body, author_pubkey, pre_commitment, pre_signature, dependency_commitment,
-              content_edition, dependency_edition, host_seal, approval_signature)
+              content_edition, dependency_edition, seal_version, host_seal,
+              approval_signature)
          SELECT r.record_id, r.family, r.author, r.epoch, r.act_time, r.position,
                 EXISTS (SELECT 1 FROM act_payloads c WHERE c.act_id = r.record_id),
                 r.payload_witness,
                 r.body, r.author_pubkey, r.pre_commitment, r.pre_signature,
                 r.dependency_commitment, r.content_edition, r.dependency_edition,
-                r.host_seal, r.approval_signature
+                r.seal_version, r.host_seal, r.approval_signature
          FROM unnest($1::text[], $2::text[], $3::text[], $4::bigint[],
                      $5::bigint[], $6::bigint[], $7::bytea[],
                      $8::bytea[], $9::bytea[], $10::bytea[], $11::bytea[], $12::bytea[],
-                     $13::bigint[], $14::bigint[], $15::bytea[], $16::bytea[])
+                     $13::bigint[], $14::bigint[], $15::bigint[], $16::bytea[], $17::bytea[])
               AS r(record_id, family, author, epoch, act_time, position, payload_witness,
                    body, author_pubkey, pre_commitment, pre_signature, dependency_commitment,
-                   content_edition, dependency_edition, host_seal, approval_signature)",
+                   content_edition, dependency_edition, seal_version, host_seal,
+                   approval_signature)",
         &rows.record_id,
         &rows.family,
         &rows.author,
@@ -267,6 +277,7 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
         &floor.dependency_commitment,
         &floor.content_edition,
         &floor.dependency_edition,
+        &floor.seal_version,
         &floor.host_seal,
         &floor.approval_signature,
     )
@@ -305,9 +316,10 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
     .execute(&mut *tx)
     .await?;
     sqlx::query!(
-        "INSERT INTO mirror_epochs (epoch, asserted_at) VALUES ($1, $2)",
+        "INSERT INTO mirror_epochs (epoch, asserted_at, approval_form) VALUES ($1, $2, $3)",
         package.epoch,
         package.asserted_at,
+        package.closure.approval_form.number(),
     )
     .execute(&mut *tx)
     .await?;
@@ -714,20 +726,23 @@ pub async fn first_epoch_without_instant(pool: &PgPool) -> Result<Option<i64>, M
     .await?)
 }
 
-/// Records the asserted instants of already-ingested epochs, read back
-/// from their published packages. An epoch that already has one keeps it.
+/// Records the asserted instants of already-ingested epochs, with the
+/// approval form each states, read back from their published packages. An
+/// epoch that already has one keeps it.
 pub async fn record_instants(
     pool: &PgPool,
-    instants: &[(i64, chrono::DateTime<chrono::Utc>)],
+    instants: &[(i64, chrono::DateTime<chrono::Utc>, ApprovalForm)],
 ) -> Result<u64, MirrorError> {
-    let epochs: Vec<i64> = instants.iter().map(|(epoch, _)| *epoch).collect();
-    let at: Vec<chrono::DateTime<chrono::Utc>> = instants.iter().map(|(_, at)| *at).collect();
+    let epochs: Vec<i64> = instants.iter().map(|(epoch, _, _)| *epoch).collect();
+    let at: Vec<chrono::DateTime<chrono::Utc>> = instants.iter().map(|(_, at, _)| *at).collect();
+    let forms: Vec<i16> = instants.iter().map(|(_, _, form)| form.number()).collect();
     Ok(sqlx::query!(
-        "INSERT INTO mirror_epochs (epoch, asserted_at)
-         SELECT * FROM unnest($1::bigint[], $2::timestamptz[])
+        "INSERT INTO mirror_epochs (epoch, asserted_at, approval_form)
+         SELECT * FROM unnest($1::bigint[], $2::timestamptz[], $3::smallint[])
          ON CONFLICT (epoch) DO NOTHING",
         &epochs,
         &at,
+        &forms,
     )
     .execute(pool)
     .await?
@@ -760,12 +775,14 @@ pub async fn record_floor(pool: &PgPool, records: &[PublishedRecord]) -> Result<
                 pre_commitment = r.pre_commitment, pre_signature = r.pre_signature,
                 dependency_commitment = r.dependency_commitment,
                 content_edition = r.content_edition, dependency_edition = r.dependency_edition,
+                seal_version = r.seal_version,
                 host_seal = r.host_seal, approval_signature = r.approval_signature
            FROM unnest($1::text[], $2::bytea[], $3::bytea[], $4::bytea[], $5::bytea[],
-                       $6::bytea[], $7::bigint[], $8::bigint[], $9::bytea[], $10::bytea[])
+                       $6::bytea[], $7::bigint[], $8::bigint[], $9::bigint[], $10::bytea[],
+                       $11::bytea[])
                 AS r(record_id, body, author_pubkey, pre_commitment, pre_signature,
                      dependency_commitment, content_edition, dependency_edition,
-                     host_seal, approval_signature)
+                     seal_version, host_seal, approval_signature)
           WHERE m.record_id = r.record_id AND m.body IS NULL",
         &floor.record_id,
         &floor.body,
@@ -775,6 +792,7 @@ pub async fn record_floor(pool: &PgPool, records: &[PublishedRecord]) -> Result<
         &floor.dependency_commitment,
         &floor.content_edition,
         &floor.dependency_edition,
+        &floor.seal_version,
         &floor.host_seal,
         &floor.approval_signature,
     )
