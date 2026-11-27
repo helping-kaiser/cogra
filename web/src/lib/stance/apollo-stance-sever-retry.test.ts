@@ -225,6 +225,22 @@ describe("the walk-back's Retry asks the same signing again", () => {
     expect(retried.kind).toBe("success");
   });
 
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same walk-back, its re-ask
+  // refused by the device's intent check, over a first walk-back whose
+  // approvals went out with their answer lost.
+  it("a re-ask the device refuses reads the states first: a walk-back already relaying is landing", async () => {
+    const { batches } = host({ held: true, states: { "s-1": "RELAYING", "s-2": "RELAYING" } });
+    const { writes } = signer([lost], [deviceRefused]);
+    const { data, retired } = seam(writes);
+
+    await data.sever(POST, SHOWN);
+    const retried = await data.sever(POST, SHOWN);
+
+    expect(batches).toEqual([["s-1", "s-2"]]);
+    expect(retired).toEqual([]);
+    expect(retried).toEqual({ kind: "success", value: { records: 2 } });
+  });
+
   describe("a pick and a walk-back are different gestures: across kinds, main's road", () => {
     // This fixes the same-kind Retry only. A gesture of the other kind toward
     // the same target neither retires nor lands on the other's attempt: it

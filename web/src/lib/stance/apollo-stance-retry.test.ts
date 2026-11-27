@@ -188,6 +188,24 @@ describe("a stance pick's Retry asks the same signing again", () => {
     expect(retried).toEqual({ kind: "success", value: { records: 1 } });
   });
 
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same pick, refused by the
+  // device's intent check on its re-ask (the target's facts moved between the
+  // presses), over a first attempt whose approval went out with its answer
+  // lost. Retiring it unread would sum the pick twice.
+  it("a re-ask the device refuses reads the states first: a first attempt already relaying is landing", async () => {
+    const prepares = host({ "w-1": "RELAYING" });
+    const { signer: writes, signedAgain } = signer([lost], [deviceRefused]);
+    const { data, retired } = seam(writes);
+
+    await data.commit(POST, PICK);
+    const retried = await data.commit(POST, PICK);
+
+    expect(signedAgain.map((call) => call.ids)).toEqual([["w-1"]]);
+    expect(prepares).toEqual([PICK]);
+    expect(retired).toEqual([]);
+    expect(retried).toEqual({ kind: "success", value: { records: 1 } });
+  });
+
   it("a changed pick over a first attempt the server already took signs nothing new: it is landing", async () => {
     const prepares = host({ "w-1": "RELAYING" });
     const { signer: writes, signedAgain } = signer([lost]);

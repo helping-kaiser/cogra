@@ -1341,4 +1341,79 @@ describe("Retry after a signing that did not answer", () => {
     expect(prepares).toBe(1);
     expect(signer.signAgain).toHaveBeenCalledWith(["w1"], expect.anything());
   });
+
+  /** The server: every prepare stages a new reply; every staged write reads `state`. */
+  function replyHost(state: string) {
+    const host = { prepares: 0 };
+    server.use(
+      gqlLink.mutation("PrepareComment", () => {
+        host.prepares += 1;
+        return HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: `comment-${host.prepares}`,
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: `w${host.prepares}`,
+                  family: "REVIEW",
+                  canonicalProposal: "AA==",
+                  gcAfterEpochs: 3,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+      gqlLink.query("StagedWrite", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            stagedWrite: {
+              __typename: "StagedWrite",
+              id: variables.id,
+              state,
+              carried: false,
+              family: "REVIEW",
+              canonicalProposal: "AA==",
+              verifiedAct: null,
+              record: null,
+            },
+          },
+        }),
+      ),
+    );
+    return host;
+  }
+
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same words, their re-ask
+  // refused by the device's intent check, over a first reply whose approval
+  // went out with its answer lost.
+  it("a re-ask the device refuses reads the states first: a first reply already relaying is taken, nothing prepared again", async () => {
+    const host = replyHost("RELAYING");
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => ({ kind: "failed", id: write.id, cause: new Error("no answer") }),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "rejectedByDevice" as const, id, reason: "intent mismatch" })),
+      ),
+    });
+    const onSigned = vi.fn();
+    renderWithProviders(
+      <ReplyWizard
+        target={POST_TARGET}
+        store={fakeIdentityStore({ keyOnDevice: true })}
+        onLeave={vi.fn()}
+        onSigned={onSigned}
+      />,
+      { store: signedInStore(), writeSigner: signer },
+    );
+    await toSeal("Answering you.");
+    fireEvent.click(screen.getByTestId("reply-sign"));
+    fireEvent.click(await screen.findByTestId("reply-retry"));
+
+    await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-1"));
+    expect(signer.signAgain).toHaveBeenCalledWith(["w1"], expect.anything());
+    expect(host.prepares).toBe(1);
+  });
 });
