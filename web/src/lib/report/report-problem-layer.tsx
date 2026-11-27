@@ -20,11 +20,14 @@
 // rather than closing, so it hands it back itself.
 //
 // The layer scrolls on its own (ReportProblem.md:33: the page scrolls when its
-// content outgrows the screen).
+// content outgrows the screen). It stands on `SCREEN_LAYER`, a one-field
+// surface's geometry (seam 388): with the keyboard up the layer ends at the
+// keyboard's top, so `Send by email` is still reached by scrolling.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
+import { SCREEN_LAYER } from "@/lib/ui2/screen-layer";
 
 import { ReportProblemView } from "./report-problem-view";
 
@@ -48,7 +51,7 @@ function ReportLayer({ onLower }: { onLower: () => void }) {
         onLower();
       }}
       data-testid="reportProblem.layer"
-      className="m-0 flex h-dvh max-h-none w-full max-w-none flex-col overflow-y-auto border-0 bg-surface p-0 text-on-surface"
+      className={`${SCREEN_LAYER} m-0 h-auto max-h-none w-full max-w-none overflow-y-auto border-0 bg-surface px-0 pt-0 text-on-surface`}
     >
       <ReportProblemView onBack={onLower} />
     </dialog>
