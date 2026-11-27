@@ -4,7 +4,9 @@
 
 use common::l1::Family;
 use common::l1::census::LegRole;
-use common::l1::handshake::{ActApproval, SealAttestation, EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{
+    ActApproval, ApprovalForm, EpochPackage, PublishedLeg, PublishedRecord, SealAttestation,
+};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::mirror::{self, MirrorError};
 use sqlx::PgPool;
@@ -298,23 +300,24 @@ async fn mirror_is_rebuildable_from_the_published_sequence(pool: PgPool) {
     assert_eq!(before, after);
 }
 
-/// A record whose authentication bytes differ member by member, so a
+/// A record whose replay-floor bytes differ member by member, so a
 /// column read back can only match the member it came from.
 fn authenticated(author: &str, epoch: i64, seed: u8) -> PublishedRecord {
     let mut record = registration(author, epoch, 1);
     let bytes = |offset: u8, len: usize| vec![seed.wrapping_add(offset); len];
-    let auth = &mut record.authentication;
-    auth.body.target = NodeId::Prof(author.to_string());
-    auth.body.p_d = 1.0;
-    auth.body.p_i = 1.0;
-    auth.author_pubkey = bytes(1, 32);
-    auth.pre_commitment = bytes(2, 32);
-    auth.pre_signature = bytes(3, 64);
-    auth.dependency_commitment = bytes(4, 32);
-    auth.content_edition = 2;
-    auth.dependency_edition = 3;
-    auth.host_seal = bytes(5, 64);
-    auth.approval_signature = bytes(6, 64);
+    let (act, attestation) = (&mut record.approval, &mut record.attestation);
+    act.body.target = NodeId::Prof(author.to_string());
+    act.body.p_d = 1.0;
+    act.body.p_i = 1.0;
+    act.author_pubkey = bytes(1, 32);
+    attestation.pre_commitment = bytes(2, 32);
+    attestation.pre_signature = bytes(3, 64);
+    act.dependency_commitment = bytes(4, 32);
+    attestation.content_edition = 2;
+    attestation.dependency_edition = 3;
+    attestation.seal_version = 4;
+    attestation.host_seal = bytes(5, 64);
+    act.approval_signature = bytes(6, 64);
     record
 }
 
@@ -326,6 +329,7 @@ type FloorRow = (
     Option<Vec<u8>>,
     Option<i64>,
     Option<i64>,
+    Option<i64>,
     Option<Vec<u8>>,
     Option<Vec<u8>>,
 );
@@ -333,7 +337,7 @@ type FloorRow = (
 async fn floor_of(pool: &PgPool, record_id: &str) -> FloorRow {
     sqlx::query_as(
         "SELECT body, author_pubkey, pre_commitment, pre_signature, dependency_commitment,
-                content_edition, dependency_edition, host_seal, approval_signature
+                content_edition, dependency_edition, seal_version, host_seal, approval_signature
          FROM mirror_records WHERE record_id = $1",
     )
     .bind(record_id)
@@ -344,24 +348,27 @@ async fn floor_of(pool: &PgPool, record_id: &str) -> FloorRow {
 
 /// The row the mirror should hold for a published record's floor.
 fn expected_floor(record: &PublishedRecord) -> FloorRow {
-    let auth = &record.authentication;
+    let (act, attestation) = (&record.approval, &record.attestation);
     (
-        Some(auth.body.canonical_bytes()),
-        Some(auth.author_pubkey.clone()),
-        Some(auth.pre_commitment.clone()),
-        Some(auth.pre_signature.clone()),
-        Some(auth.dependency_commitment.clone()),
-        Some(auth.content_edition as i64),
-        Some(auth.dependency_edition as i64),
-        Some(auth.host_seal.clone()),
-        Some(auth.approval_signature.clone()),
+        Some(act.body.canonical_bytes()),
+        Some(act.author_pubkey.clone()),
+        Some(attestation.pre_commitment.clone()),
+        Some(attestation.pre_signature.clone()),
+        Some(act.dependency_commitment.clone()),
+        Some(attestation.content_edition as i64),
+        Some(attestation.dependency_edition as i64),
+        Some(attestation.seal_version as i64),
+        Some(attestation.host_seal.clone()),
+        Some(act.approval_signature.clone()),
     )
 }
 
 /// Ingestion stores what the published record holds at the replay floor:
 /// the approved body in its canonical encoding, the signing key, the signed
 /// pre-commitment, the dependency commitment, both formation editions, the
-/// host seal and the approval witness, each in its own column.
+/// frame version,
+/// host seal and the approval witness, each in its own column, and each
+/// epoch keeps the approval form its package states.
 ///
 /// The mirror stores every replay-floor member a published record carries.
 /// ´claim:mirror:the-mirror-stores-the-published-replay-floor´
@@ -374,6 +381,24 @@ async fn the_mirror_stores_the_published_replay_floor(pool: PgPool) {
     assert_eq!(
         floor_of(&pool, &record.act_id.to_string()).await,
         expected_floor(&record)
+    );
+    let mut earlier_form = package(2, vec![authenticated("bob", 2, 30)]);
+    earlier_form.closure.approval_form = ApprovalForm::ActAndSeal;
+    mirror::ingest_epoch(&pool, &earlier_form)
+        .await
+        .expect("ingests");
+    let forms: Vec<(i64, i16)> =
+        sqlx::query_as("SELECT epoch, approval_form FROM mirror_epochs ORDER BY epoch")
+            .fetch_all(&pool)
+            .await
+            .expect("epochs");
+    assert_eq!(
+        forms,
+        [
+            (1, ApprovalForm::Act.number()),
+            (2, ApprovalForm::ActAndSeal.number())
+        ],
+        "each epoch keeps the approval form its package states"
     );
     assert_eq!(
         mirror::first_epoch_without_floor(&pool)
@@ -404,7 +429,7 @@ async fn the_floor_repair_fills_only_records_without_one(pool: PgPool) {
         "UPDATE mirror_records
             SET body = NULL, author_pubkey = NULL, pre_commitment = NULL, pre_signature = NULL,
                 dependency_commitment = NULL, content_edition = NULL, dependency_edition = NULL,
-                host_seal = NULL, approval_signature = NULL
+                seal_version = NULL, host_seal = NULL, approval_signature = NULL
           WHERE epoch = 1",
     )
     .execute(&pool)
@@ -418,7 +443,7 @@ async fn the_floor_repair_fills_only_records_without_one(pool: PgPool) {
     );
 
     let mut other_late = authenticated("bob", 2, 90);
-    other_late.authentication.content_edition = 7;
+    other_late.attestation.content_edition = 7;
     let filled = mirror::record_floor(&pool, &[early.clone(), other_late])
         .await
         .expect("fills");
