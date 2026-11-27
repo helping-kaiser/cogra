@@ -1212,25 +1212,26 @@ describe("the control's own read follows the account", () => {
     return { data, reads };
   }
 
-  const exact = () => screen.queryByTestId(`${PREFIX}-resting-exact`);
+  /** What the face's exact pair reads now — empty while nothing is read for the account. */
+  const exact = () => screen.queryByTestId(`${PREFIX}-resting-exact`)?.textContent ?? "";
 
   it("reads the next account's standing, and never shows the last one's under it", async () => {
     const store = signedInStore();
     const { data, reads } = perAccount(store);
     renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
     await settle();
-    expect(exact()).toHaveTextContent("+0.45 / +0.10");
+    expect(exact()).toContain("+0.45 / +0.10");
 
     act(() => signInAs(store, "u2"));
-    expect(exact()).not.toHaveTextContent("+0.45 / +0.10");
+    expect(exact()).not.toContain("+0.45 / +0.10");
     await settle();
     expect(reads).toContain("u2");
-    expect(exact()).toHaveTextContent("−0.30 / +0.20");
+    expect(exact()).toContain("−0.30 / +0.20");
 
     act(() => signInAs(store, "u1"));
-    expect(exact()).not.toHaveTextContent("−0.30 / +0.20");
+    expect(exact()).not.toContain("−0.30 / +0.20");
     await settle();
-    expect(exact()).toHaveTextContent("+0.45 / +0.10");
+    expect(exact()).toContain("+0.45 / +0.10");
   });
 });
 
