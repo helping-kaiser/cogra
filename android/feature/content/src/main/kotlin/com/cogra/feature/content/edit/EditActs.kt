@@ -1,20 +1,15 @@
-// The edit family's foot, its detail, and its read-backs
-// (design/components/compose/ActsFooter.jsx, ActsCard.jsx; the EditActs and
-// CommentEditActs boards; `_shared.jsx` `WithdrawnLine`).
+// The edit family's detail and its read-backs (design/components/compose/
+// ActsCard.jsx; the EditActs and CommentEditActs boards; `_shared.jsx`
+// `WithdrawnLine`).
 //
 // ONE FOOT FOR EVERY EDIT, because the guard is the family's
 // (EditComposeUnchanged.md): `EditCompose`, `EditComposeVideo`, `EditWords`,
 // `CommentEdit` and `CommentEditVideo` carry the same line over the same
-// batch, so they carry the same zero.
-//
-// AT ZERO THE LINE STOPS BEING A BUTTON. `Nothing to sign yet` is plain
-// text: the acts sheet it would open has nothing in it, and a tap that can
-// only open an empty list is a tap spent on nothing. The line still speaks —
-// a foot gone silent would read as a fault.
+// batch, so they carry the same zero — the design system's `ActsFooter`,
+// which the profile edit's zero shares.
 
 package com.cogra.feature.content.edit
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,12 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
@@ -56,7 +46,6 @@ import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.atom.SheetTitle
-import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.R
 import kotlinx.coroutines.delay
@@ -83,88 +72,11 @@ fun rememberSlowAnswer(busy: Boolean): Boolean {
 /** The commit's label: `Sign the edit`, or `Signing the edit…` once the answer is slow. */
 fun signLabel(slow: Boolean): String = if (slow) "Signing the edit…" else "Sign the edit"
 
-/** The foot line's drawn height: one `label-small` line (`ActsFooter.jsx`). */
-private val FOOT_LINE = 16.dp
-
 /** Shown under the count once the signing has gone 5s unanswered. */
 const val EDIT_SLOW_LINE = "Still signing — the network is slow right now."
 
 /** Shown under the count when the prepared batch was not the one the foot read. */
 const val EDIT_COUNT_CHANGED_LINE = "The count changed while you were editing — check it, then sign again."
-
-/**
- * `You're signing N things ⌄` — the whole line is the control, opening the
- * acts sheet; at zero it is `Nothing to sign yet`, plain text and no control.
- * [subline] stands under it: the slow line or the count line.
- *
- * On a registered screen the foot wears [node] (`postEdit.acts`, keyed by the
- * state it draws), its line `line` and the subline [sublinePart] where the
- * board names it (`slow`).
- */
-@Composable
-fun ActsFooter(
-    count: Int,
-    onOpen: () -> Unit,
-    testTag: String,
-    subline: String? = null,
-    node: DataNode? = null,
-    sublinePart: String? = null,
-) {
-    val lineTag = node?.div("line")?.tag ?: testTag
-    Column(
-        modifier = Modifier.fillMaxWidth().dataNode(node),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        val line = actsFooterLine(count)
-        if (count == 0) {
-            Text(
-                text = line,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag(lineTag),
-            )
-        } else {
-            Row(
-                modifier = Modifier
-                    // `ActsFooter.jsx`: the line keeps its drawn label-small height
-                    // and answers at 48dp past it (`cg-hit`), so the foot stands
-                    // 14 over the commit as drawn rather than 48dp tall.
-                    .hitTarget(
-                        interactive = Modifier
-                            .testTag(lineTag)
-                            .clickable(role = Role.Button, onClick = onOpen),
-                        drawnHeight = FOOT_LINE,
-                    ),
-                horizontalArrangement = Arrangement.spacedBy(Space.x1, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = line,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Icon(
-                    imageVector = Icons.Filled.ExpandMore,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-        }
-        if (subline != null) {
-            Text(
-                text = subline,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.tertiary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .testTag(sublinePart?.let { node?.div(it)?.tag } ?: "${testTag}_subline")
-                    .semantics { liveRegion = LiveRegionMode.Polite },
-            )
-        }
-    }
-}
 
 /**
  * `EditActs` / `CommentEditActs`: the batch, every kind a row counted in the
