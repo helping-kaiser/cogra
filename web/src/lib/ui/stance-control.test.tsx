@@ -970,6 +970,271 @@ describe("the hold", () => {
   });
 });
 
+// THE ROW LINE IS THE PRESSING ACCOUNT'S (auth.md "Multi-account device
+// custody": material bound "to the account it belongs to, never to a
+// device-global slot"; RowSigning.md: "a row line stands until Retry is
+// pressed, another act is made on the same anchor, or the surface's next fresh
+// load" — an account change is none of these, so the line is HIDDEN under
+// another account, never erased, the way #679 keeps a profile change's line).
+describe("a failed row line keeps the account that pressed it", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  const line = () => screen.queryByTestId(`${PREFIX}-row-line`);
+  const retry = () => screen.getByTestId(`${PREFIX}-row-line-retry`);
+
+  function signInAs(store: ReturnType<typeof createTokenStore>, account: string) {
+    store.save({ accessToken: `access-${account}`, refreshToken: `refresh-${account}`, accountId: account });
+  }
+
+  /** A hold by u1 that did not sign; the seam's commit answers again from then on. */
+  async function failedUnderA() {
+    const store = signedInStore();
+    const data = createStubStanceData();
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    const commit = data.commit;
+    data.commit = createStubStanceData({ offline: true }).commit;
+    await hold();
+    expect(line()).toHaveTextContent("That didn't sign.");
+    data.commit = commit;
+    return { store, data };
+  }
+
+  it("is hidden under another account, and stands again under its own", async () => {
+    const { store } = await failedUnderA();
+    act(() => signInAs(store, "u2"));
+    expect(line()).toBeNull();
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("That didn't sign.");
+  });
+
+  it("signs nothing when its Retry is pressed once another account is active", async () => {
+    const { store, data } = await failedUnderA();
+    const pressed = retry();
+    // The switch and the press in one turn: the press reaches the Retry
+    // the line raised under u1 before the tab has drawn u2's anchor.
+    await act(async () => {
+      signInAs(store, "u2");
+      fireEvent.click(pressed);
+    });
+    await settle();
+    expect(data.sent).toEqual([]);
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("That didn't sign.");
+  });
+
+  it("signs the same hold once when its Retry is pressed back under its own account", async () => {
+    const { store, data } = await failedUnderA();
+    act(() => signInAs(store, "u2"));
+    act(() => signInAs(store, "u1"));
+    await act(async () => {
+      fireEvent.click(retry());
+    });
+    await settle();
+    expect(data.sent).toEqual([{ target: "post-1", pick: TAP_DEFAULT }]);
+    expect(line()).toBeNull();
+  });
+
+  it("stands under the account that pressed when its answer comes after a switch", async () => {
+    const store = signedInStore();
+    const data = createStubStanceData();
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    let answer: (outcome: Outcome<StanceCommit>) => void = () => {};
+    data.commit = () => new Promise((resolve) => (answer = resolve));
+    await hold();
+    act(() => signInAs(store, "u2"));
+    await act(async () => answer(await createStubStanceData({ offline: true }).commit(TARGET, TAP_DEFAULT)));
+    await settle();
+    expect(line()).toBeNull();
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("That didn't sign.");
+  });
+
+  it("is not erased by another account's act on the same face", async () => {
+    const { store, data } = await failedUnderA();
+    act(() => signInAs(store, "u2"));
+    await hold();
+    expect(data.sent).toEqual([{ target: "post-1", pick: TAP_DEFAULT }]);
+    expect(line()).toBeNull();
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("That didn't sign.");
+  });
+});
+
+// AN ACT IN FLIGHT, AND A TAKEN ONE, ARE THE PRESSING ACCOUNT'S (auth.md
+// "Multi-account device custody"), kept as the failed row line is: nothing of
+// A's wait or of A's landing shows under B, and it is all there again under A.
+describe("an act in flight and a taken act keep the account that pressed", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  const SEEDED = { seed: { "post-1": { records: [{ pDirected: 0.45, pInterest: 0.1 }] } } };
+  const line = () => screen.queryByTestId(`${PREFIX}-row-line`);
+  const exact = () => screen.getByTestId(`${PREFIX}-resting-exact`);
+
+  function signInAs(store: ReturnType<typeof createTokenStore>, account: string) {
+    store.save({ accessToken: `access-${account}`, refreshToken: `refresh-${account}`, accountId: account });
+  }
+
+  /**
+   * u1's control; the seam's FIRST commit waits for `answer`, and taken it
+   * stores nothing, so only the control's own projection can show it. Every
+   * later commit answers at once.
+   */
+  async function pressedByA() {
+    const store = signedInStore();
+    const data = createStubStanceData(SEEDED);
+    const commit = data.commit;
+    const gate: { answer: (taken: boolean) => void } = { answer: () => {} };
+    let calls = 0;
+    data.commit = (target, pick) => {
+      calls += 1;
+      if (calls > 1) return commit(target, pick);
+      return new Promise((resolve) => {
+        gate.answer = (taken) =>
+          resolve(
+            taken
+              ? { kind: "success", value: { records: 1 } }
+              : createStubStanceData({ offline: true }).commit(target, pick),
+          );
+      });
+    };
+    renderWithProviders(
+      <>
+        <StanceControl target={TARGET} testIdPrefix={PREFIX} />
+        <CarriedSnackbar />
+      </>,
+      { store, stanceData: data },
+    );
+    await settle();
+    return { store, data, gate };
+  }
+
+  it("never shows A's wait under B, and shows it again under A", async () => {
+    // RowSigning.md:5: past 200ms the closed ring and `Signing…` stand on the row.
+    const { store } = await pressedByA();
+    await hold();
+    await settle(SETTING_AFTER_MS);
+    expect(line()).toHaveTextContent("Signing…");
+    expect(control()).toHaveAttribute("aria-busy", "true");
+
+    act(() => signInAs(store, "u2"));
+    expect(line()).toBeNull();
+    expect(control()).not.toHaveAttribute("aria-busy");
+
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("Signing…");
+    expect(control()).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("leaves B's anchor live while A's act signs, and A's wait outlasts B's act", async () => {
+    // RowSigning.md:1: "the anchor refuses a second hold until the signing
+    // answers" — the presser's anchor; B's is B's own.
+    const { store, data } = await pressedByA();
+    await hold();
+    act(() => signInAs(store, "u2"));
+    await hold();
+    expect(data.sent).toEqual([{ target: "post-1", pick: TAP_DEFAULT }]);
+
+    act(() => signInAs(store, "u1"));
+    await settle(SETTING_AFTER_MS);
+    expect(line()).toHaveTextContent("Signing…");
+  });
+
+  it("lays A's taken act under A only: the face and the snackbar never move under B", async () => {
+    // RowSigning.md:13: taken, "the face moves to the new opinion AND the
+    // snackbar confirms the signature" — for the account that signed it.
+    const { store, gate } = await pressedByA();
+    await hold();
+    act(() => signInAs(store, "u2"));
+    await act(async () => gate.answer(true));
+    await settle();
+    expect(exact()).toHaveTextContent("+0.45 / +0.10");
+    expect(screen.queryByTestId(`${PREFIX}-signed`)).toBeNull();
+
+    act(() => signInAs(store, "u1"));
+    expect(exact()).toHaveTextContent("+0.55 / +0.20");
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toBeInTheDocument();
+  });
+
+  it("closes an open pad at the switch, as Cancel does, its act's wait passing to its own row", async () => {
+    // RowSigning.md:5 / PadFailed.md: a pad closed while its signing runs
+    // passes the wait to the target's row; never a pad of A's pick under B.
+    const { store } = await pressedByA();
+    await openPad();
+    layOutPad();
+    moveKnob(0.3 * HALF, -0.2 * HALF);
+    await settle();
+    await release();
+    await pressSet();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+
+    act(() => signInAs(store, "u2"));
+    await settle(SETTING_AFTER_MS);
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(line()).toBeNull();
+
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("Signing…");
+  });
+});
+
+// THE CONTROL'S OWN READ IS THE READER'S (auth.md "Multi-account device
+// custody"; StanceControl.prompt.md: the anchor is the reader's own opinion):
+// through another tab's account change on a mounted page, the face reads the
+// new account's standing — never the last account's, not even for a frame.
+describe("the control's own read follows the account", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  function signInAs(store: ReturnType<typeof createTokenStore>, account: string) {
+    store.save({ accessToken: `access-${account}`, refreshToken: `refresh-${account}`, accountId: account });
+  }
+
+  /** A seam whose standing is each account's own, as the server's is per session. */
+  function perAccount(store: ReturnType<typeof createTokenStore>) {
+    const a = createStubStanceData({ seed: { "post-1": { records: [{ pDirected: 0.45, pInterest: 0.1 }] } } });
+    const b = createStubStanceData({ seed: { "post-1": { records: [{ pDirected: -0.3, pInterest: 0.2 }] } } });
+    const reads: string[] = [];
+    const data = {
+      ...a,
+      bundle: (target: Parameters<typeof a.bundle>[0], options?: Parameters<typeof a.bundle>[1]) => {
+        const account = store.activeAccountId() ?? "none";
+        reads.push(account);
+        return (account === "u2" ? b : a).bundle(target, options);
+      },
+    };
+    return { data, reads };
+  }
+
+  /** What the face's exact pair reads now — empty while nothing is read for the account. */
+  const exact = () => screen.queryByTestId(`${PREFIX}-resting-exact`)?.textContent ?? "";
+
+  it("reads the next account's standing, and never shows the last one's under it", async () => {
+    const store = signedInStore();
+    const { data, reads } = perAccount(store);
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    expect(exact()).toContain("+0.45 / +0.10");
+
+    act(() => signInAs(store, "u2"));
+    expect(exact()).not.toContain("+0.45 / +0.10");
+    await settle();
+    expect(reads).toContain("u2");
+    expect(exact()).toContain("−0.30 / +0.20");
+
+    act(() => signInAs(store, "u1"));
+    expect(exact()).not.toContain("−0.30 / +0.20");
+    await settle();
+    expect(exact()).toContain("+0.45 / +0.10");
+  });
+});
+
 describe("the pad the tap opens", () => {
   beforeEach(() => {
     alreadyTaught();
