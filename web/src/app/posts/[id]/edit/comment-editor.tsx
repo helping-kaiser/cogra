@@ -89,6 +89,7 @@ import { useReferencesOnOpen } from "@/lib/references/use-references-on-open";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
+import { useReportProblem } from "@/lib/report/report-problem-layer";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
@@ -231,6 +232,8 @@ function LoadedCommentEditor({
   // Two help doors — the header's "Editing" and the mark sheet's "?" — plus
   // the write rule's own: the state is which topic is open.
   const [help, setHelp] = useState<HelpTopic | null>(null);
+  /** The bug notice's `Report a problem`: the one report page, over the edit (ReportProblem.md:3,31). */
+  const { openReport, reportLayer } = useReportProblem();
   const [sensitiveOpen, setSensitiveOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [held, setHeld] = useState(false);
@@ -917,8 +920,7 @@ function LoadedCommentEditor({
           setFault(null);
           void submit();
         }}
-        // Introduced-but-inert, as on the seal: the report path ships later.
-        onReport={() => {}}
+        onReport={openReport}
         onDiscard={() => setConfirmingDiscard(true)}
         onRemoveRefusedCitation={(targetId) => {
           setFault(null);
@@ -973,6 +975,7 @@ function LoadedCommentEditor({
         topic={help ?? HELP_TOPICS.editing}
         testId="comment-edit-help-dialog"
       />
+      {reportLayer}
     </>
   );
 }

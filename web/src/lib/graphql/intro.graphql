@@ -1,0 +1,54 @@
+# The intro (OnboardingSteps.md): shown once per account, on whichever
+# device signs in first — the seen flag is account state
+# (`UserPreferences.hasSeenOnboarding`), never device memory.
+
+# What the intro stands on: whether it was seen, and whose face the fifth
+# card wears — the member who vouched a landed account in (`invitedBy`),
+# or, before landing, the applicant's link issuer (`application.approver`).
+query IntroAccount {
+  me {
+    id
+    preferences {
+      hasSeenOnboarding
+    }
+    invitedBy {
+      id
+      handle
+      displayName {
+        value
+      }
+      ... on User {
+        avatar {
+          url
+        }
+      }
+    }
+    application {
+      id
+      approver {
+        id
+        handle
+        displayName {
+          value
+        }
+        ... on User {
+          avatar {
+            url
+          }
+        }
+      }
+    }
+  }
+}
+
+# The flag sets the moment the intro first shows (OnboardingSteps.md:29).
+mutation MarkIntroSeen {
+  setPreferences(input: { hasSeenOnboarding: true }) {
+    preferences {
+      hasSeenOnboarding
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

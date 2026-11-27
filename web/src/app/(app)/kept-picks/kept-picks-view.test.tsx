@@ -394,6 +394,12 @@ describe("the kept picks' seal", () => {
     expect(notice).toHaveTextContent("This shouldn't have happened");
     expect(within(notice).getByTestId("keptPicksSeal.tryAgain")).toHaveTextContent("Try again");
     expect(screen.getByTestId("keptPicksSeal.report")).toHaveTextContent("Report a problem");
+    // ReportProblem.md:3,31 — the one report page, over the notice; back returns it.
+    fireEvent.click(screen.getByTestId("keptPicksSeal.report"));
+    expect(screen.getByTestId("reportProblem")).toBeInTheDocument();
+    fireEvent.click(within(screen.getByTestId("reportProblem")).getByRole("button", { name: "Back" }));
+    expect(screen.queryByTestId("reportProblem")).toBeNull();
+    expect(screen.getByTestId("keptPicksSeal.bug")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("keptPicksSeal.notNow"));
     expect(await screen.findByText("Kept picks")).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -445,7 +451,7 @@ describe("the kept picks' seal", () => {
     });
     await waitFor(() => expect(data.batches).toHaveLength(1));
     expect(data.batches[0]!.map((entry) => entry.target)).toEqual(["post-ada"]);
-    expect((await listKeptPicks("u1")).map((k) => k.family)).toEqual(["approval"]);
+    await waitFor(async () => expect((await listKeptPicks("u1")).map((k) => k.family)).toEqual(["approval"]));
   });
 
   it("reads 1 thing, signed and no all-or-nothing line for a single pick", async () => {
@@ -527,6 +533,8 @@ describe("the seal closed while its batch signs", () => {
     expect(screen.getByTestId("keptPicksSeal.foot.back")).not.toBeDisabled();
     expect(screen.getAllByRole("button", { name: "Close" })).toHaveLength(3);
     await held.answer({ kind: "success", value: { records: 3 } });
+    // The landing finishes here, so its drop never reaches the next test's picks.
+    await waitFor(async () => expect(await listKeptPicks("u1")).toEqual([]));
   });
 
   it.each([

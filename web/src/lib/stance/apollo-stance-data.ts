@@ -110,11 +110,14 @@ type Staged = {
   readonly node: string;
   readonly writes: readonly StagedWriteView[];
   readonly expected: Expectation;
+  /** The kept picks a batch staged, remembered with its attempt. */
+  readonly entries?: readonly KeptEntry[];
 };
 import {
   INCLUDE_PENDING_DEFAULT,
   type BorrowedStance,
   type CommitSource,
+  type KeptEntry,
   type StanceBundle,
   type StanceCommit,
   type StanceData,
@@ -519,9 +522,9 @@ export function createApolloStanceData(deps: {
   ): Promise<Outcome<StanceCommit>> => {
     const staged = await stage();
     if (staged.kind !== "success") return staged;
-    const { node, writes, expected } = staged.value;
+    const { node, writes, expected, entries } = staged.value;
     if (intent !== null) {
-      mine.remember(target, { node, writes: writes.map((write) => write.id), intent, expected });
+      mine.remember(target, { node, writes: writes.map((write) => write.id), intent, expected, entries });
     }
     // Staged under the account that pressed, signed only under it.
     if (!still()) return accountChanged();
@@ -583,9 +586,14 @@ export function createApolloStanceData(deps: {
               : failed(asked.outcome.kind === "failed" ? asked.outcome.cause : undefined);
           case "landing":
             // The first gesture is relaying: it is what lands, and nothing
-            // else is signed (SigningAfterClose.md:27).
+            // else is signed (SigningAfterClose.md:27). A kept batch names
+            // the picks it held, so only those land.
             mine.forget(target);
-            return success({ records: remembered.writes.length });
+            return success(
+              remembered.entries === undefined
+                ? { records: remembered.writes.length }
+                : { records: remembered.writes.length, landed: remembered.entries },
+            );
           case "signed": {
             const outcome = outcomeOf(asked.results);
             if (outcome.kind === "success") mine.forget(target);
@@ -744,7 +752,7 @@ export function createApolloStanceData(deps: {
           }
           // One pass over the whole set, checked whole against the picks the
           // seal read back (write-signer.ts `sign`).
-          return success({ node: nodes.join(" "), writes: staged, expected: joinExpectations(expected) });
+          return success({ node: nodes.join(" "), writes: staged, expected: joinExpectations(expected), entries });
         },
         pressed,
       );
