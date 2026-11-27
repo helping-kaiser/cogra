@@ -126,6 +126,25 @@ pub async fn insert_profile_version(
         == 1)
 }
 
+/// Whether a version row of `actor_id` carries the authoring instant
+/// `created_at`, pending or landed. Only pending rows are unique on the
+/// instant, so the landing's insert branch asks this before appending a
+/// landed one.
+pub async fn has_version_at(
+    tx: &mut Transaction<'_, Postgres>,
+    actor_id: Uuid,
+    created_at: Timestamp,
+) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS (SELECT 1 FROM actor_profile_versions
+                          WHERE actor_id = $1 AND created_at = $2) AS "exists!""#,
+        actor_id,
+        created_at,
+    )
+    .fetch_one(&mut **tx)
+    .await
+}
+
 /// Confirm: writes the update record's landing coordinates onto the
 /// pending version row its write staged, and drops the mark. The row is
 /// named by its authoring instant, so a landing never stamps another

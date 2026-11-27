@@ -592,6 +592,82 @@ async fn an_update_landing_after_expiry_still_lands(pool: PgPool) {
     assert_eq!(rig.version_count(actor).await, 2);
 }
 
+/// An update landing after its pending row expired is promoted by the
+/// insert branch alone. A pass that marks the write landed and stops
+/// before that insert leaves no version row at all — nothing pending to
+/// retry, and no later pass marks the write landed again — so the record
+/// stands on L1 and in the mirror while the profile never shows it. The
+/// next pass writes the row, once: a second pass, and a confirm
+/// overlapping it, append nothing.
+///
+/// An update landing after its expiry whose promotion never ran is written by the next pass, once.
+/// ´claim:profile:an-unwritten-late-update-is-written-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_update_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    let prepared = rig
+        .update(actor, draft(Some("Ada L"), None, None))
+        .await
+        .expect("prepares update");
+    rig.sign_and_relay(prepared.id, &key).await;
+    staged::expire_one(&rig.pool, prepared.id, 0)
+        .await
+        .expect("expires");
+    let landed = rig.close_and_mirror_unpromoted().await;
+    assert!(
+        landed.iter().any(|w| w.id == prepared.id),
+        "the interrupted pass marked the write landed"
+    );
+    assert_eq!(rig.version_count(actor).await, 1, "no row stands for it");
+
+    rig.close_and_ingest().await;
+    rig.close_and_ingest().await;
+
+    let shown = current(&rig.pool, actor).await;
+    assert_eq!(shown.display_name, "Ada L", "the update never shows");
+    assert!(!shown.pending);
+    assert_eq!(rig.version_count(actor).await, 2);
+    assert!(
+        staged::landed_without_profile_row(&rig.pool)
+            .await
+            .expect("reads")
+            .is_empty(),
+        "a written update is chosen again"
+    );
+    let act_id = &landed
+        .iter()
+        .find(|w| w.id == prepared.id)
+        .expect("landed")
+        .act_id;
+    let record = mirror::record_meta(&rig.pool, act_id)
+        .await
+        .expect("reads")
+        .expect("mirrored")
+        .landing();
+    let row: (Option<i64>, Option<i64>) = sqlx::query_as(
+        "SELECT landed_epoch, position FROM actor_profile_versions
+         WHERE actor_id = $1 AND created_at = $2",
+    )
+    .bind(actor)
+    .bind(shown.created_at)
+    .fetch_one(&rig.pool)
+    .await
+    .expect("the update's own row");
+    assert_eq!(
+        row,
+        (Some(record.landed_epoch), Some(record.position)),
+        "the written row stands under its record's coordinates"
+    );
+
+    rig.promote_late(&landed).await;
+    assert_eq!(
+        rig.version_count(actor).await,
+        2,
+        "a confirm overlapping the pass appends a second row"
+    );
+}
+
 /// An update carrying no change is refused as the empty gesture it is.
 /// ´claim:profile:an-empty-update-is-refused´
 #[sqlx::test(migrations = "../../migrations")]
