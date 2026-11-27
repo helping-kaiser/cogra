@@ -1083,10 +1083,14 @@ export function StanceControl({
       const landed = await data.project(seamTarget, chosen);
       if (landed.kind !== "success") return { kind: "failed" as const };
       const { standing, ...landing } = landed.value;
-      // CANCEL DURING THE READ STAGED NOTHING: the pad that asked is gone,
-      // and no dialog may rise over a pad that is no longer there — nor over
-      // another account's anchor, the account change having closed it.
-      if ((origin === "pad" && !openRef.current) || !stillAs(by)) return { kind: "dropped" as const };
+      // NOTHING CANCELS THE ACT ONCE SET WAS PRESSED (PadFailed.md:35, :45):
+      // a pad closed during the read goes on to its signing. Only a landing
+      // that asks a question first — the walk-back's or the empty sign's
+      // dialog — stages nothing once its pad is gone, since no dialog may rise
+      // over a pad that is no longer there; nor over another account's
+      // anchor, the account change having closed it.
+      if (!stillAs(by)) return { kind: "dropped" as const };
+      if (origin === "pad" && !openRef.current && landing.severed) return { kind: "dropped" as const };
       if (landing.severed) {
         // THE LANDING'S `severed` IS THE PAIR ALONE (StanceProjection.severed):
         // whether it walks something back is the standing's to say, read on
@@ -1631,7 +1635,10 @@ export function StanceControl({
               onClick={closeAll}
               className={buttonClassName({ variant: "text", size: "sm" })}
             >
-              Cancel
+              {/* FROM THE PRESS ITSELF Cancel reads Close in its place: the act
+                  is made, so the way out only closes the pad and the act goes
+                  on (PadFailed.md:37, ApprovePad.md:31). */}
+              {inFlight === "pad" ? "Close" : "Cancel"}
             </button>
             {/* The only thing on the pad that signs anything — never through
                 the help, whose field is not there to check against. Inert

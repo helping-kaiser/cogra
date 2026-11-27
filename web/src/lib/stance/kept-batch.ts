@@ -35,7 +35,7 @@ import { useSyncExternalStore } from "react";
 import type { Outcome } from "@/lib/api/outcome";
 import { tokenStore } from "@/lib/session/token-store";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
-import { dropKeptPicks } from "./kept-picks";
+import { dropKeptPicks, listKeptPicks, sameTarget } from "./kept-picks";
 import { markSettling } from "./settling";
 import { announceStanceSigned } from "./signed-events";
 import type { KeptEntry, StanceCommit, StanceTarget } from "./stance-data";
@@ -73,7 +73,8 @@ function notify(): void {
 
 function publish(owner: string, batch: Batch, next: KeptBatchState | null): void {
   batch.state = next;
-  if (next === null && batch.inFlight === null) batches.delete(owner);
+  // Only this batch's own entry: a reset may have left the slot to another.
+  if (next === null && batch.inFlight === null && batches.get(owner) === batch) batches.delete(owner);
   notify();
 }
 
@@ -92,15 +93,35 @@ function active(): Batch | null {
   return account === null ? null : (batches.get(account) ?? null);
 }
 
-/** The batch landed: its picks are kept no longer, and the owner sees it settle. */
-async function land(by: string, entries: readonly KeptEntry[]): Promise<void> {
-  const signed = entries.map((entry) => entry.target);
+/**
+ * The batch landed: the picks it SIGNED are kept no longer, and the owner sees
+ * them settle. A changed batch's Retry may find the first batch landing
+ * (`StanceCommit.landed`): that batch is the one counted and dropped. A pick it
+ * did not hold — one kept since, or a target's pick changed since — was never
+ * signed and stays kept (repo rule "never erase silently").
+ */
+async function land(by: string, signed: readonly KeptEntry[]): Promise<void> {
+  const targets = signed.map((entry) => entry.target);
   if (tokenStore.activeAccountId() === by) {
-    markSettling(signed);
+    markSettling(targets);
     announceStanceSigned();
-    carrySnackbar(signedBatchLine(entries.length));
+    carrySnackbar(signedBatchLine(signed.length));
   }
-  await dropKeptPicks(by, signed);
+  const kept = await listKeptPicks(by);
+  const landed = kept.filter(
+    (pick) =>
+      pick.family === "opinion" &&
+      signed.some(
+        (entry) =>
+          sameTarget(entry.target, pick.target) &&
+          entry.pick.pDirected === pick.pick.pDirected &&
+          entry.pick.pInterest === pick.pick.pInterest,
+      ),
+  );
+  await dropKeptPicks(
+    by,
+    landed.map((pick) => pick.target),
+  );
 }
 
 /**
@@ -132,7 +153,7 @@ export function signKeptBatch(
       // Taken: the rows' wait goes at once, and the picks leave their slot.
       batch.state = null;
       notify();
-      await land(by, entries);
+      await land(by, outcome.value.landed ?? entries);
       batch.inFlight = null;
       publish(by, batch, null);
       return outcome;
