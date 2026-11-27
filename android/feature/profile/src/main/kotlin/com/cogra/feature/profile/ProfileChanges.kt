@@ -53,6 +53,13 @@ enum class ProfileChangeOutcome {
     /** No answer reached the seal — the fault line and Retry. */
     Offline,
 
+    /**
+     * `That didn't go through. Try again.` — a refusal the signer on this device
+     * made itself, no server answer at all, which reads as an answered refusal
+     * (copy-voice, *One rule for a refused or failed act*).
+     */
+    NotThrough,
+
     /** `You can't sign right now` — the write rule's refusal. */
     WriteRule,
 
