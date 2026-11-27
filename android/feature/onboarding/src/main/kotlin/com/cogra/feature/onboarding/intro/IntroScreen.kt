@@ -164,8 +164,9 @@ private fun IntroDots(step: Int) {
         Modifier
             .fillMaxWidth()
             .padding(top = 20.dp, bottom = 16.dp)
-            .clearAndSetSemantics { contentDescription = spoken }
-            .dataNode(IntroNode / "dots"),
+            // The tag rides before the clear: a clear wipes what follows it.
+            .dataNode(IntroNode / "dots")
+            .clearAndSetSemantics { contentDescription = spoken },
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
