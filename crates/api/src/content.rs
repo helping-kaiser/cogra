@@ -1540,6 +1540,14 @@ pub async fn land_promoted(
 /// listing, or, for an edit, outrank every later landed version, since the
 /// reads put pending first — and nothing else ever selects it again.
 ///
+/// A landed write that owns no display row at all is promoted here too
+/// (`staged::landed_without_content_row`): one that landed with its
+/// pending rows already gone, whose insert never committed. Its record
+/// stands on L1 and in the mirror while no reader ever sees it, and
+/// nothing else selects it again. Its landing runs the insert branch
+/// ([`Landing::Rebuild`]), which keys on the node and the authoring
+/// instant and so never writes a second row.
+///
 /// `promoted` is this pass's own confirmations, left out
 /// (`ingest::to_retry`). A failure here rides the outcome like any
 /// promotion's and is retried by the next pass.
@@ -1548,13 +1556,16 @@ pub async fn land_stranded(
     promoted: &[staged::PromotedWrite],
 ) -> Result<Vec<PromotionFailure>, ContentError> {
     let stranded = staged::landed_with_pending_content(pool).await?;
+    let unwritten = staged::landed_without_content_row(pool).await?;
     let mut failures = Vec::new();
-    for write in to_retry(&stranded, promoted) {
-        let Some(family) = content_family(write) else {
-            continue;
-        };
-        if let Err(e) = land_one(pool, write, family, Landing::Retry).await {
-            failures.push(PromotionFailure::of("content", write, e));
+    for (writes, landing_by) in [(stranded, Landing::Retry), (unwritten, Landing::Rebuild)] {
+        for write in to_retry(&writes, promoted) {
+            let Some(family) = content_family(write) else {
+                continue;
+            };
+            if let Err(e) = land_one(pool, write, family, landing_by).await {
+                failures.push(PromotionFailure::of("content", write, e));
+            }
         }
     }
     Ok(failures)
@@ -1586,7 +1597,8 @@ fn content_family(write: &staged::PromotedWrite) -> Option<ContentFamily> {
 /// row of its own — a mirror rebuild, or a write staged before pending
 /// rows existed. A retry ([`Landing::Retry`]) never takes one: it was
 /// chosen for a pending row it still owned, so finding none means another
-/// pass promoted it, and appending would only duplicate that.
+/// pass promoted it, and appending would only duplicate that. A rebuild
+/// ([`Landing::Rebuild`]) takes it like a confirm.
 ///
 /// The authoring instant, like `sealed`, is set by the pre-sign leg, so a
 /// landed write missing it is the same internal fault its sibling is:
@@ -1693,7 +1705,7 @@ async fn land_one(
             }
         }
     };
-    if let Some(shape) = shape.filter(|_| landing_by == Landing::Confirm) {
+    if let Some(shape) = shape.filter(|_| landing_by.inserts()) {
         write_display_rows(
             &mut tx,
             pool,
