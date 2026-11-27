@@ -976,6 +976,50 @@ describe("the hold", () => {
 // pressed, another act is made on the same anchor, or the surface's next fresh
 // load" — an account change is none of these, so the line is HIDDEN under
 // another account, never erased, the way #679 keeps a profile change's line).
+// EACH SURFACE'S COMMITS ARE ITS OWN (stance-attempts.ts `claim`): the seam
+// asks a Retry's own attempt only if the control names itself the same way on
+// every commit, and two controls showing one target never alike.
+describe("a control names itself as its commits' source", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  it("names the same source on its Retry as on the hold, and another control's apart", async () => {
+    const data = createStubStanceData();
+    const offline = createStubStanceData({ offline: true });
+    const commit = vi.fn(offline.commit);
+    data.commit = commit;
+    renderWithProviders(
+      <>
+        <StanceControl target={TARGET} testIdPrefix={PREFIX} />
+        <StanceControl target={TARGET} testIdPrefix="stance-other" />
+      </>,
+      { store: signedInStore(), stanceData: data },
+    );
+    await settle();
+    await hold();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    await settle();
+    const other = screen.getByTestId("stance-other");
+    fireEvent.pointerDown(other, { pointerId: 2, clientX: 0, clientY: 0 });
+    await settle(LONG_PRESS_MS + 1);
+    await act(async () => {
+      fireEvent.pointerUp(other, { pointerId: 2 });
+      fireEvent.click(other);
+    });
+    await settle();
+
+    expect(commit).toHaveBeenCalledTimes(3);
+    const [held, retried, elsewhere] = commit.mock.calls.map((call) => call[2]?.source);
+    expect(held).toBeDefined();
+    expect(retried).toBe(held);
+    expect(elsewhere).toBeDefined();
+    expect(elsewhere).not.toBe(held);
+  });
+});
+
 describe("a failed row line keeps the account that pressed it", () => {
   beforeEach(() => {
     alreadyTaught();
