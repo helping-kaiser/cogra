@@ -183,6 +183,15 @@ type EmptyAsk = {
   landing: StanceLanding;
 };
 
+/**
+ * An act a dialog over the pad signs, as it was confirmed — what the row's
+ * Retry asks again once the dialog was closed while it signed: the walk-back
+ * over the standing the reader was shown, or exactly the pick.
+ */
+type DialogAct =
+  | { readonly kind: "walkBack"; readonly shown: StanceBundle }
+  | { readonly kind: "pick"; readonly pick: StancePair; readonly landing: StanceLanding };
+
 /** Where a signed act was made — what re-raises its outcome. */
 type Origin = "pad" | "row" | "confirm" | "empty";
 
@@ -603,6 +612,13 @@ export function StanceControl({
   useEffect(() => {
     openRef.current = considered;
   }, [considered]);
+  /** A dialog over the pad is up — the walk-back's or the empty sign's. */
+  const dialogUp = confirming !== null || emptyAsk !== null;
+  /** Whether it is up right now — read when the act it sent answers. */
+  const dialogUpRef = useRef(dialogUp);
+  useEffect(() => {
+    dialogUpRef.current = dialogUp;
+  }, [dialogUp]);
 
   // THE OPINION PAD PAUSES, IT DOES NOT SUSPEND (Feed.md:39/41,
   // PostDetailVideo.md:39/41): opening it pauses the playing clip on its
@@ -1000,24 +1016,30 @@ export function StanceControl({
     // re-raise: the target's row carries it, as a hold's would. An account
     // change closed the presser's pad, so a pad open now is another's.
     if (origin === "pad" && openRef.current && stillAs(by)) setPadFault(fault);
-    else
-      // The row draws no not-through form of its own (RowSigning.md), so a
-      // FORBIDDEN on a row reads as a hold's fault does. The line is the
-      // pressing account's, and its Retry asks that account's act again:
-      // pressed once another account is active, it does nothing.
-      setRowLineOf(
-        by,
-        fault === "writeRule"
-          ? { kind: "writeRule" }
-          : {
-              kind: "didntSign",
-              onRetry: () => {
-                if (sessionStore.activeAccountId() !== by) return;
-                void signPick(sent, "row");
-              },
-            },
-      );
+    else raiseRow(fault, by, () => void signPick(sent, "row"));
   };
+
+  /**
+   * The target's row says an act of `by`'s did not go through — a hold's, or
+   * one whose surface was closed while it signed. The row draws no
+   * not-through form of its own (RowSigning.md), so a FORBIDDEN on a row
+   * reads as a hold's fault does. The line is the pressing account's, and its
+   * Retry asks that account's act again (`retry`): pressed once another
+   * account is active, it does nothing.
+   */
+  const raiseRow = (fault: Fault, by: string | null, retry: () => void) =>
+    setRowLineOf(
+      by,
+      fault === "writeRule"
+        ? { kind: "writeRule" }
+        : {
+            kind: "didntSign",
+            onRetry: () => {
+              if (sessionStore.activeAccountId() !== by) return;
+              retry();
+            },
+          },
+    );
 
   /** What a dialog's own signing answered: taken, a fault, or the write rule's no. */
   const answerOf = (
@@ -1097,19 +1119,66 @@ export function StanceControl({
   const onConfirmEmpty = async () => {
     const asked = emptyAsk;
     if (asked === null || busy) return;
-    const by = sessionStore.activeAccountId();
     setEmptyFault(null);
-    const answer = await runInFlight("empty", by, async () =>
-      answerOf(await data.commit(seamTarget, asked.pick, commitSource)),
+    await signDialogAct(
+      { kind: "pick", pick: asked.pick, landing: asked.landing },
+      "empty",
+      sessionStore.activeAccountId(),
     );
-    // An account change closed the ask as `Close` closes it while it signs:
-    // a later ask on this anchor is the next account's own.
+  };
+
+  /**
+   * Signs one act a dialog over the pad asked about — the walk-back over the
+   * standing the reader confirmed (`shown`), or the pick the walk-back's
+   * dialog or the empty sign's ask raised — as `by`, from that dialog or from
+   * the row's Retry.
+   *
+   * A DIALOG CLOSED WHILE ITS ACT SIGNS LEAVES THE ACT TO THE ROW
+   * (SeveranceConfirm.md:53, EmptySignConfirm.md:51, RowSigning.md:7): Close,
+   * the scrim, Back, Escape — or an account change, which closes it as Close
+   * does — and the act ends on the target's row as a hold's does. Taken, the
+   * face moves and the snackbar confirms; not, the row says `That didn't
+   * sign.` with a Retry that asks THIS act again — the same walk-back, the
+   * same pick, from this surface (SigningAfterClose.md:27: "NEVER anything
+   * else is signed"), never the dialog again: it was confirmed once.
+   */
+  const signDialogAct = async (act: DialogAct, from: "confirm" | "empty" | "row", by: string | null) => {
+    if (from === "row") {
+      setSignedOf(by, null);
+      setRowLineOf(by, null);
+    }
+    const answer = await runInFlight(from, by, async () =>
+      answerOf(
+        act.kind === "walkBack"
+          ? await data.sever(seamTarget, act.shown, commitSource)
+          : await data.commit(seamTarget, act.pick, commitSource),
+      ),
+    );
+    const onDialog = from !== "row" && stillAs(by) && dialogUpRef.current;
     if (answer.kind !== "taken") {
-      if (stillAs(by)) setEmptyFault(answer.kind);
+      // On its dialog: a fault with Retry in the act's slot, or the write
+      // rule's quiet line with the act dimmed and no Retry (round 21).
+      if (!onDialog) raiseRow(answer.kind, by, () => void signDialogAct(act, "row", by));
+      else if (from === "confirm") setConfirmFault(answer.kind);
+      else setEmptyFault(answer.kind);
       return;
     }
-    if (stillAs(by)) setEmptyAsk(null);
-    taken(asked.landing, answer.records, by);
+    if (onDialog) {
+      setConfirming(null);
+      setEmptyAsk(null);
+    }
+    if (act.kind === "pick") {
+      taken(act.landing, answer.records, by);
+      return;
+    }
+    announceStanceSigned();
+    readBundle({ fresh: true });
+    if (variant !== undefined) {
+      variant.onTaken(SEVERED.landing);
+      return;
+    }
+    if (stillAs(by)) closeSurfaces();
+    setSignedOf(by, signedLine(SEVERED.landing, answer.records, true, target.label, axes));
   };
 
   /** The explicit walk-back asks over the parked pad, and costs what it stages. */
@@ -1124,38 +1193,22 @@ export function StanceControl({
   const onConfirmSeverance = async () => {
     const asked = confirming;
     if (asked === null || busy) return;
-    const by = sessionStore.activeAccountId();
     setConfirmFault(null);
-    const answer = await runInFlight("confirm", by, async () => {
-      if (asked.pick === null) {
-        // The walk-back is checked against the standing the reader
-        // confirmed; with none known there is nothing to check against.
-        if (bundle === null || bundle === undefined) return { kind: "failed" as const };
-        return answerOf(await data.sever(seamTarget, bundle, commitSource));
-      }
-      return answerOf(await data.commit(seamTarget, asked.pick, commitSource));
-    });
-    if (answer.kind !== "taken") {
-      // The dialog stays up and says so: a fault with Retry in the confirm's
-      // slot, or the write rule's quiet line with the act dimmed and no
-      // Retry (SeveranceConfirm.md, round 21). An account change closed it
-      // as `Close` closes it while it signs.
-      if (stillAs(by)) setConfirmFault(answer.kind);
-      return;
-    }
-    if (stillAs(by)) setConfirming(null);
     if (asked.pick === null) {
-      announceStanceSigned();
-      readBundle({ fresh: true });
-      if (variant !== undefined) {
-        variant.onTaken(SEVERED.landing);
+      // The walk-back is checked against the standing the reader confirmed;
+      // with none known there is nothing to check against.
+      if (bundle === null || bundle === undefined) {
+        setConfirmFault("failed");
         return;
       }
-      if (stillAs(by)) closeSurfaces();
-      setSignedOf(by, signedLine(SEVERED.landing, answer.records, true, target.label, axes));
+      await signDialogAct({ kind: "walkBack", shown: bundle }, "confirm", sessionStore.activeAccountId());
       return;
     }
-    taken(asked.landing, answer.records, by);
+    await signDialogAct(
+      { kind: "pick", pick: asked.pick, landing: asked.landing },
+      "confirm",
+      sessionStore.activeAccountId(),
+    );
   };
 
   /**
@@ -1359,8 +1412,10 @@ export function StanceControl({
   // CANCEL MID-SIGNING CLOSES THE SURFACE, NEVER THE SIGNING (PadFailed.md,
   // round 21): the act was sent and cannot be called back, so its wait passes
   // to the target's row — `Signing…` under the face, the anchor refusing a
-  // second hold — and it ends there as a hold's would.
-  const rowSigning = inFlight === "row" || (inFlight === "pad" && !considered);
+  // second hold — and it ends there as a hold's would. A dialog closed while
+  // its act signs closes the pad beneath with it, so its wait passes the
+  // same way (SeveranceConfirm.md:53, EmptySignConfirm.md:51).
+  const rowSigning = inFlight === "row" || (inFlight !== null && !considered && !dialogUp);
   const rowState: RowLineState | null =
     (rowSigning && slow && confirming === null) || keptBatchSigning ? { kind: "signing" } : rowLine;
 
@@ -1847,6 +1902,10 @@ export function StanceControl({
           onCancel={() => {
             setConfirming(null);
             setConfirmFault(null);
+            // CLOSE WHILE IT SIGNS CLOSES THE PAD BENEATH TOO, and the whole
+            // walk-back goes on, carried by the target's row
+            // (SeveranceConfirm.md:53, :55); `Keep it` returns to the pick.
+            if (inFlight === "confirm") closeAll();
           }}
           onConfirm={() => void onConfirmSeverance()}
         />
@@ -1866,6 +1925,8 @@ export function StanceControl({
           onCancel={() => {
             setEmptyAsk(null);
             setEmptyFault(null);
+            // The same close while it signs (EmptySignConfirm.md:51, :53).
+            if (inFlight === "empty") closeAll();
           }}
           onConfirm={() => void onConfirmEmpty()}
         />

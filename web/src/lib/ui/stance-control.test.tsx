@@ -1279,6 +1279,270 @@ describe("the control's own read follows the account", () => {
   });
 });
 
+// A DIALOG CLOSED WHILE ITS ACT SIGNS (SeveranceConfirm.md:47-55,
+// EmptySignConfirm.md:45-53, RowSigning.md:7, PadFailed.md:47-51): Close —
+// `Keep it`'s place from the press — the scrim, Back or Escape close the
+// dialog AND the pad beneath it, the act goes on, its wait carried by the
+// target's row, and it ends there as a hold's does: taken, the face moves
+// and the snackbar confirms; not, the row says `That didn't sign.` with a
+// Retry that asks the same act again.
+describe("a dialog closed while its act signs", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  const STANDING = { seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } };
+  const line = () => screen.queryByTestId(`${PREFIX}-row-line`);
+  const exact = () => screen.getByTestId(`${PREFIX}-resting-exact`);
+
+  type Answer = "taken" | "offline" | "writeRule";
+  type Asked = {
+    kind: "sever" | "commit";
+    pick?: { pDirected: number; pInterest: number };
+    shown?: unknown;
+    source?: unknown;
+  };
+
+  /**
+   * From here on the seam's `sever` and `commit` wait for `answer`; each call
+   * is noted with what it was asked and the source it was pressed on.
+   */
+  function gateSeam(data: ReturnType<typeof mount>) {
+    const { sever, commit } = data;
+    const gate: { asked: Asked[]; answer: (how: Answer) => void } = { asked: [], answer: () => {} };
+    const fault = (how: Answer) =>
+      createStubStanceData(how === "writeRule" ? { refuse: "WRITE_RULE_FAILED" } : { offline: true });
+    data.sever = (target, shown, options) => {
+      gate.asked.push({ kind: "sever", shown, source: options?.source });
+      return new Promise((resolve) => {
+        gate.answer = (how) =>
+          resolve(how === "taken" ? sever(target, shown, options) : fault(how).sever(target, shown));
+      });
+    };
+    data.commit = (target, pick, options) => {
+      gate.asked.push({ kind: "commit", pick, source: options?.source });
+      return new Promise((resolve) => {
+        gate.answer = (how) =>
+          resolve(how === "taken" ? commit(target, pick, options) : fault(how).commit(target, pick));
+      });
+    };
+    return gate;
+  }
+
+  /** The pad's Walk it back, its dialog's Walk it back pressed — the seam gated. */
+  async function walkBackPressed(options: StubStanceOptions = STANDING) {
+    const data = mount(options);
+    await settle();
+    await openPad();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    const gate = gateSeam(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    return { data, gate };
+  }
+
+  /** A pick landing (0, 0) over nothing standing, its ask's Set it anyway pressed. */
+  async function emptySignPressed() {
+    const data = mount();
+    await settle();
+    await openPad();
+    await dragAndSet(-0.1 * HALF, 0.1 * HALF);
+    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    const gate = gateSeam(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-proceed"));
+    });
+    return { data, gate };
+  }
+
+  const closeWalkBack = async () => {
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-cancel"));
+    });
+  };
+
+  it("closes the walk-back's dialog and the pad beneath on Close, and the walk-back goes on, carried by the row", async () => {
+    const { data, gate } = await walkBackPressed();
+    expect(screen.getByTestId("severance-cancel")).toHaveTextContent("Close");
+    await closeWalkBack();
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    // Nothing cancels it: the one walk-back is still asking, the anchor
+    // refuses a second hold, and the face waits for the signature.
+    expect(gate.asked).toHaveLength(1);
+    expect(control()).toHaveAttribute("aria-busy", "true");
+    expect(exact()).toHaveTextContent("+0.50 / +0.50");
+    await settle(SETTING_AFTER_MS);
+    expect(line()).toHaveTextContent("Signing…");
+
+    await act(async () => gate.answer("taken"));
+    await settle();
+    expect(data.severed).toEqual(["post-1"]);
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("You've walked this post back to nothing.");
+    expect(control()).not.toHaveAttribute("aria-busy");
+    expect(line()).toBeNull();
+  });
+
+  it("closes both on the scrim, Back or Escape too, even under 200ms after the press", async () => {
+    const { gate } = await walkBackPressed();
+    await act(async () => {
+      fireEvent(screen.getByTestId("severance-confirm"), new Event("cancel", { cancelable: true }));
+    });
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(gate.asked).toHaveLength(1);
+    expect(control()).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("says That didn't sign. on the row when the walk-back fails after its close, and Retry asks the same walk-back", async () => {
+    const { data, gate } = await walkBackPressed();
+    await closeWalkBack();
+    await act(async () => gate.answer("offline"));
+    await settle();
+    expect(line()).toHaveTextContent("That didn't sign.");
+    expect(line()).toHaveAttribute("role", "alert");
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-signed`)).toBeNull();
+    expect(exact()).toHaveTextContent("+0.50 / +0.50");
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    // The same walk-back — the batch over the standing the reader confirmed,
+    // from the same surface — never a pick, never the hold's default.
+    expect(gate.asked).toHaveLength(2);
+    expect(gate.asked[1].kind).toBe("sever");
+    expect(gate.asked[1].shown).toEqual(gate.asked[0].shown);
+    expect(gate.asked[1].source).toBe(gate.asked[0].source);
+    expect(line()).toBeNull();
+    expect(control()).toHaveAttribute("aria-busy", "true");
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+
+    await act(async () => gate.answer("taken"));
+    await settle();
+    expect(data.severed).toEqual(["post-1"]);
+    expect(data.sent).toEqual([]);
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("You've walked this post back to nothing.");
+  });
+
+  it("asks the same pick again from the row when a pick's walk-back fails after its close", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 1, pInterest: 1 }] } } });
+    await settle();
+    await openPad();
+    await dragAndSet(-500, 700);
+    expect(screen.getByTestId("severance-pick")).toBeInTheDocument();
+    const gate = gateSeam(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    await closeWalkBack();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    await act(async () => gate.answer("offline"));
+    await settle();
+    expect(line()).toHaveTextContent("That didn't sign.");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    expect(gate.asked.map((asked) => asked.kind)).toEqual(["commit", "commit"]);
+    expect(gate.asked[1].pick).toEqual({ pDirected: -1, pInterest: -1 });
+    expect(gate.asked[1].source).toBe(gate.asked[0].source);
+    // Confirmed once: the Retry signs, it never asks the dialog again.
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    await act(async () => gate.answer("taken"));
+    await settle();
+    expect(data.sent).toEqual([{ target: "post-1", pick: { pDirected: -1, pInterest: -1 } }]);
+  });
+
+  it("says the write rule's quiet line on the row when it refuses the walk-back after its close", async () => {
+    const { gate } = await walkBackPressed();
+    await closeWalkBack();
+    await act(async () => gate.answer("writeRule"));
+    await settle();
+    expect(line()).toHaveTextContent("You can't sign right now.");
+    expect(line()).toHaveAttribute("role", "status");
+    expect(screen.queryByTestId(`${PREFIX}-row-line-retry`)).toBeNull();
+  });
+
+  it("closes the empty sign's ask and the pad on Close, and the act goes on to the ordinary snackbar", async () => {
+    const { gate } = await emptySignPressed();
+    expect(screen.getByTestId("empty-sign-keep")).toHaveTextContent("Close");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-keep"));
+    });
+    expect(screen.queryByTestId("empty-sign-confirm")).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(control()).toHaveAttribute("aria-busy", "true");
+    await settle(SETTING_AFTER_MS);
+    expect(line()).toHaveTextContent("Signing…");
+    await act(async () => gate.answer("taken"));
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("Signed, still settling.");
+    expect(line()).toBeNull();
+  });
+
+  it("says That didn't sign. on the row when the empty sign fails after its close, and Retry asks the same pick", async () => {
+    const { data, gate } = await emptySignPressed();
+    await act(async () => {
+      fireEvent(screen.getByTestId("empty-sign-confirm"), new Event("cancel", { cancelable: true }));
+    });
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    await act(async () => gate.answer("offline"));
+    await settle();
+    expect(line()).toHaveTextContent("That didn't sign.");
+    expect(screen.queryByTestId("empty-sign-confirm")).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    expect(gate.asked).toHaveLength(2);
+    expect(gate.asked[1].kind).toBe("commit");
+    expect(gate.asked[1].pick).toEqual(gate.asked[0].pick);
+    expect(gate.asked[1].pick).not.toEqual(TAP_DEFAULT);
+    expect(gate.asked[1].source).toBe(gate.asked[0].source);
+    expect(screen.queryByTestId("empty-sign-confirm")).toBeNull();
+    await act(async () => gate.answer("taken"));
+    await settle();
+    expect(data.sent).toHaveLength(1);
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("Signed, still settling.");
+  });
+
+  it("keeps the dialog up with its own fault when the act fails before any close", async () => {
+    const { gate } = await walkBackPressed();
+    await act(async () => gate.answer("offline"));
+    await settle();
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    expect(screen.getByTestId("severance-cancel")).toHaveTextContent("Keep it");
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    expect(line()).toBeNull();
+  });
+
+  it("lays a walk-back that fails after the account changed on its own account's row only", async () => {
+    // The account change closes the dialog as Close closes it (#703), so its
+    // failure is A's row line — hidden under B, standing again under A.
+    const store = signedInStore();
+    const data = createStubStanceData(STANDING);
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    await openPad();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    const gate = gateSeam(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    act(() => store.save({ accessToken: "access-u2", refreshToken: "refresh-u2", accountId: "u2" }));
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    await act(async () => gate.answer("offline"));
+    await settle();
+    expect(line()).toBeNull();
+    act(() => store.save({ accessToken: "access-u1", refreshToken: "refresh-u1", accountId: "u1" }));
+    expect(line()).toHaveTextContent("That didn't sign.");
+  });
+});
+
 describe("the pad the tap opens", () => {
   beforeEach(() => {
     alreadyTaught();
@@ -3171,7 +3435,9 @@ describe("the empty sign", () => {
     expect(screen.getByTestId<HTMLDialogElement>("empty-sign-confirm").open).toBe(true);
   });
 
-  it("reads Setting… past 200ms and locks its ways out while it signs", async () => {
+  // EmptySignConfirm.md:47-51: Keep it reads Close from the press, and Close
+  // leaves while the act goes on.
+  it("reads Setting… past 200ms, and its Close leaves while the act goes on", async () => {
     const data = mount();
     await settle();
     await openPad();
@@ -3187,14 +3453,17 @@ describe("the empty sign", () => {
     });
     await settle(SETTING_AFTER_MS + 1);
     expect(screen.getByTestId("empty-sign-proceed")).toHaveTextContent("Setting…");
+    expect(screen.getByTestId("empty-sign-keep")).toHaveTextContent("Close");
     await act(async () => {
       fireEvent.click(screen.getByTestId("empty-sign-keep"));
     });
-    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-sign-confirm")).not.toBeInTheDocument();
+    expect(data.sent).toEqual([]);
     await act(async () => {
       gate.answer?.();
     });
     await settle();
+    expect(data.sent).toHaveLength(1);
     expect(screen.queryByTestId("empty-sign-confirm")).not.toBeInTheDocument();
   });
 });

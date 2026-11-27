@@ -26,7 +26,7 @@ function show(props: Partial<React.ComponentProps<typeof EmptySignConfirm>> = {}
 
 describe("the empty-sign ask", () => {
   it("carries the master's words verbatim", () => {
-    for (const field of ["title", "cost", "confirm", "busy", "keep"] as const) {
+    for (const field of ["title", "cost", "confirm", "busy", "keep", "close"] as const) {
       expect(MASTER, field).toContain(`${field}: ${JSON.stringify(EMPTY_SIGN_WORDS[field])}`);
     }
     expect(MASTER).toContain(EMPTY_SIGN_WORDS.effect("${targetLabel}"));
@@ -82,17 +82,30 @@ describe("the empty-sign ask", () => {
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
-  it("waits while it signs: inert, never dimmed, Setting… past 200ms, the ways out locked (:23, :25, :39)", () => {
-    const { onConfirm, onCancel } = show({ busy: true, slow: true });
+  it("waits while it signs: inert, never dimmed, Setting… past 200ms (:25, :27)", () => {
+    const { onConfirm } = show({ busy: true, slow: true });
     const proceed = screen.getByTestId<HTMLButtonElement>("empty-sign-proceed");
     expect(proceed).toHaveTextContent("Setting…");
     expect(proceed.disabled).toBe(false);
     expect(proceed).toHaveAttribute("aria-disabled", "true");
     fireEvent.click(proceed);
-    fireEvent.click(screen.getByTestId("empty-sign-keep"));
-    fireEvent(screen.getByTestId("empty-sign-confirm"), new Event("cancel", { cancelable: true }));
     expect(onConfirm).not.toHaveBeenCalled();
-    expect(onCancel).not.toHaveBeenCalled();
+  });
+
+  // EmptySignConfirm.md:47: "WHEN press Set it anyway -> Keep it reads Close in
+  // the same place from the press itself, filled and live ... AND NEVER Close
+  // dims"; :51/:53: Close, the scrim, Back or Escape close it while it signs.
+  it("reads Close in Keep it's place while it signs, live, and Close, the scrim or Escape leave", () => {
+    const { onConfirm, onCancel } = show({ busy: true });
+    const close = screen.getByTestId("empty-sign-keep");
+    expect(close).toHaveTextContent("Close");
+    expect(close).toBeEnabled();
+    expect(close).not.toHaveAttribute("aria-disabled");
+    fireEvent.click(close);
+    expect(onCancel).toHaveBeenCalledOnce();
+    fireEvent(screen.getByTestId("empty-sign-confirm"), new Event("cancel", { cancelable: true }));
+    expect(onCancel).toHaveBeenCalledTimes(2);
+    expect(onConfirm).not.toHaveBeenCalled();
   });
 
   it("stays up when the signing did not go through, with the fault line and Retry (:33)", () => {
