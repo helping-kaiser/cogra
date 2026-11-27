@@ -1037,6 +1037,22 @@ describe("a failed row line keeps the account that pressed it", () => {
     expect(line()).toBeNull();
   });
 
+  it("stands under the account that pressed when its answer comes after a switch", async () => {
+    const store = signedInStore();
+    const data = createStubStanceData();
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    let answer: (outcome: Outcome<StanceCommit>) => void = () => {};
+    data.commit = () => new Promise((resolve) => (answer = resolve));
+    await hold();
+    act(() => signInAs(store, "u2"));
+    await act(async () => answer(await createStubStanceData({ offline: true }).commit(TARGET, TAP_DEFAULT)));
+    await settle();
+    expect(line()).toBeNull();
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("That didn't sign.");
+  });
+
   it("is not erased by another account's act on the same face", async () => {
     const { store, data } = await failedUnderA();
     act(() => signInAs(store, "u2"));
