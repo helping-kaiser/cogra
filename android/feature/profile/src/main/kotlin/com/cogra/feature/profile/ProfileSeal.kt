@@ -86,7 +86,10 @@ internal const val PUBLIC_RECORD_LINE =
 // clause: they keep no draft (ProfileEditSeal.md:49, :53; AvatarSeal.md:41, :45).
 internal const val SEAL_OFFLINE_LINE = "That didn't send. Try again."
 
-/** An answered refusal, and the device's own refusal read as one (copy-voice, *One rule for a refused or failed act*). */
+/**
+ * An answered refusal, and the device's own refusal read as one (copy-voice,
+ * *One rule for a refused or failed act*).
+ */
 internal const val SEAL_NOT_THROUGH_LINE = "That didn't go through. Try again."
 internal const val WRITE_RULE_TITLE = "You can't sign right now"
 internal const val WRITE_RULE_FACT =
