@@ -41,6 +41,8 @@ import com.cogra.feature.home.NewerVersionAnnouncement
 import com.cogra.feature.home.VouchedInScreen
 import com.cogra.feature.notifications.NotificationsRoute
 import com.cogra.feature.notifications.RootBellViewModel
+import com.cogra.feature.onboarding.intro.IntroGate
+import com.cogra.feature.onboarding.intro.IntroGateViewModel
 import com.cogra.feature.profile.COMMENTS_ORIGIN
 import com.cogra.feature.profile.FEED_ORIGIN
 import com.cogra.feature.profile.HISTORY_ORIGIN
@@ -157,6 +159,11 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
     // THE BELL LIGHTS ON THIS ROOT'S FRESH LOAD (FeedUnread.md:5):
     // once per entry, and again on the reader's pull.
     val rootBell: RootBellViewModel? = if (signedIn == true) hiltViewModel(entry) else null
+    // THE INTRO OPENS OVER THIS FEED on the account's first entry, from
+    // applicant on, while its seen flag is unset (OnboardingSteps.md:3).
+    if (signedIn == true) {
+        IntroGate(viewModel = hiltViewModel<IntroGateViewModel>(entry), onOpen = { navController.navigate(Intro()) })
+    }
     FeedRoute(
         signedIn = signedIn,
         reselectSignal = reselects(TopLevelTab.FEED),

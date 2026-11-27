@@ -11,6 +11,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
+import com.cogra.feature.onboarding.intro.IntroRoute
 import com.cogra.feature.settings.AboutScreen
 import com.cogra.feature.settings.BackupRoute
 import com.cogra.feature.settings.ChangeEmailConfirmRoute
@@ -30,6 +31,10 @@ import com.cogra.feature.settings.WhatsNewRoute
 /** Settings and its pages: the gear's whole subtree. */
 internal fun NavGraphBuilder.settingsFlows(shell: ShellScope) {
     composable<Settings> { entry -> shell.SettingsDestination(entry) }
+    // The intro stands in every tab's stack: it opens over the feed root and
+    // over Settings alike, and leaves by popping back to what it opened over
+    // (OnboardingSteps.md:23-27).
+    composable<Intro> { IntroRoute(onLeave = { shell.navController.popBackStack() }) }
     settingsPages(shell)
     credentialChanges(shell)
     accountDeletion(shell)
