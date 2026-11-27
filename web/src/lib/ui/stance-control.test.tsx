@@ -3435,7 +3435,9 @@ describe("the empty sign", () => {
     expect(screen.getByTestId<HTMLDialogElement>("empty-sign-confirm").open).toBe(true);
   });
 
-  it("reads Setting… past 200ms and locks its ways out while it signs", async () => {
+  // EmptySignConfirm.md:47-51: Keep it reads Close from the press, and Close
+  // leaves while the act goes on.
+  it("reads Setting… past 200ms, and its Close leaves while the act goes on", async () => {
     const data = mount();
     await settle();
     await openPad();
@@ -3451,14 +3453,17 @@ describe("the empty sign", () => {
     });
     await settle(SETTING_AFTER_MS + 1);
     expect(screen.getByTestId("empty-sign-proceed")).toHaveTextContent("Setting…");
+    expect(screen.getByTestId("empty-sign-keep")).toHaveTextContent("Close");
     await act(async () => {
       fireEvent.click(screen.getByTestId("empty-sign-keep"));
     });
-    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-sign-confirm")).not.toBeInTheDocument();
+    expect(data.sent).toEqual([]);
     await act(async () => {
       gate.answer?.();
     });
     await settle();
+    expect(data.sent).toHaveLength(1);
     expect(screen.queryByTestId("empty-sign-confirm")).not.toBeInTheDocument();
   });
 });
