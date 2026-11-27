@@ -154,6 +154,34 @@ describe("the kept picks' Retry asks the same batch again", () => {
     expect(retried).toEqual({ kind: "success", value: { records: 2 } });
   });
 
+  // K-ASKED-AGAIN-MIXED-EXPIRY: one pick's write expired while another's is
+  // still unanswered has not expired whole: the batch reads as no answer —
+  // the Settings row's `That didn't sign.` with Retry (KeptPicksSeal.md:63) —
+  // never the bug notice a lone refusal reads as, and its Retry asks the same
+  // batch again.
+  it("a re-ask with one write expired and one unanswered reads as no answer and keeps the batch", async () => {
+    const prepares = host();
+    const mixed: Answer = (id) =>
+      id === "w-1"
+        ? { kind: "refused", id, errors: [{ code: "STAGED_WRITE_EXPIRED", message: "garbage-collected unlanded", field: null }] }
+        : lost(id);
+    const { writes, signedAgain } = signer([lost], [mixed]);
+    const { data, retired } = seam(writes);
+
+    await data.commitBatch(BATCH);
+    const reasked = await data.commitBatch(BATCH);
+    const again = await data.commitBatch(BATCH);
+
+    expect(reasked.kind).toBe("failed");
+    expect(retired).toEqual([]);
+    expect(prepares).toHaveLength(2);
+    expect(signedAgain.map((call) => call.ids)).toEqual([
+      ["w-1", "w-2"],
+      ["w-1", "w-2"],
+    ]);
+    expect(again).toEqual({ kind: "success", value: { records: 2 } });
+  });
+
   it("a batch the device refused is spent: Retry retires it and prepares the batch afresh", async () => {
     const prepares = host();
     const { writes } = signer([deviceRefused], [deviceRefused]);
@@ -165,6 +193,22 @@ describe("the kept picks' Retry asks the same batch again", () => {
     expect(retired).toEqual(["w-1", "w-2"]);
     expect(prepares).toHaveLength(4);
     expect(retried.kind).toBe("success");
+  });
+
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ, at batch scale: the same batch,
+  // refused by the device's intent check on its re-ask, over a first batch
+  // whose approvals went out with their answer lost.
+  it("a re-ask the device refuses reads the states first: a first batch already relaying is landing", async () => {
+    const prepares = host({ "w-1": "RELAYING", "w-2": "RELAYING" });
+    const { writes } = signer([lost], [deviceRefused]);
+    const { data, retired } = seam(writes);
+
+    await data.commitBatch(BATCH);
+    const retried = await data.commitBatch(BATCH);
+
+    expect(prepares).toHaveLength(2);
+    expect(retired).toEqual([]);
+    expect(retried).toEqual({ kind: "success", value: { records: 2 } });
   });
 
   it("a batch whose picks changed retires an unapproved first batch, then signs the new one alone", async () => {

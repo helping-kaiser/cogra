@@ -203,6 +203,45 @@ describe("the approval pad's Retry after a landed approval", () => {
     expect(retried.kind).toBe("success");
   });
 
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same pick, its vouch's
+  // re-ask refused by the device's intent check, over a vouch whose approval
+  // went out with its answer lost. Retiring it unread would forget the
+  // approval and ask the server for a second.
+  it("a re-ask the device refuses reads the vouch's state first: a vouch already relaying is landing", async () => {
+    const { approvals } = host();
+    server.use(
+      gqlLink.query("StagedWrite", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            stagedWrite: {
+              __typename: "StagedWrite",
+              id: variables.id,
+              state: "RELAYING",
+              carried: false,
+              family: "OPINION",
+              canonicalProposal: "cHJvcG9zYWw=",
+              verifiedAct: null,
+              record: null,
+            },
+          },
+        }),
+      ),
+    );
+    const deviceRefused: Answer = (id) => ({ kind: "rejectedByDevice", id, reason: "intent mismatch" });
+    const { writes, signedAgain } = signer([lost], [deviceRefused]);
+    const retired: string[] = [];
+    const store = { clearHandshake: async (id: string) => void retired.push(id) };
+    const data = createApprovalStanceData({ client: client(), guard, signer: writes, base, store }, application());
+
+    await data.commit(TARGET, PICK);
+    const retried = await data.commit(TARGET, PICK);
+
+    expect(signedAgain.map((call) => call.ids)).toEqual([["v-1"]]);
+    expect(approvals).toEqual([PICK]);
+    expect(retired).toEqual([]);
+    expect(retried).toEqual({ kind: "success", value: { records: 1 } });
+  });
+
   it("a changed pick over the landed approval signs nothing: the approval is asked as today and refused", async () => {
     // The undrawn moment (PadFailed.md:15 "Retry will sign the pick the pad
     // shows" against the vouch the approval already staged): kept as today.

@@ -539,7 +539,7 @@ class AvatarFlowViewModelTest {
         vm.seal.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Bug)
+        assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.NotThrough)
         assertThat(signedProfile.laid.value).isNull()
     }
 
