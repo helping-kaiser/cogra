@@ -13,7 +13,8 @@
 //   continue on their stored material. Only an attempt NO write of which can
 //   still be, or become, approved is retired (`retirable`), and only then is a
 //   fresh prepare allowed: one write without an answer, or one already done,
-//   keeps the whole attempt, since a second act would sit beside it.
+//   keeps the whole attempt, since a second act would sit beside it. A batch
+//   the device itself refused is first read the way a changed gesture's is.
 // - The reader changed what would be signed → an attempt this device already
 //   approved is landing with its first content, and the surface finishes as if
 //   it had answered; any other attempt is retired first, so it can never land
@@ -51,7 +52,7 @@ export function intentOf(sent: unknown): string {
 export type AskedAgain =
   /** The same batch was signed again; the results read as a `sign`'s. */
   | { readonly kind: "signed"; readonly results: readonly WriteResult[] }
-  /** The reader changed the gesture, but the first attempt was approved: it is landing. */
+  /** The first attempt was approved — read so after a changed gesture or a device refusal: it is landing. */
   | { readonly kind: "landing" }
   /** The attempt is retired; a fresh prepare may run. */
   | { readonly kind: "fresh" }
@@ -164,21 +165,32 @@ export async function askAgain(
     return { kind: "fresh" };
   };
 
-  if (intent === attempt.intent) {
-    // A stand-in without the scoped re-sign cannot ask again; retiring keeps
-    // the one guarantee that matters, that no second act lands beside it.
-    if (deps.signer.signAgain === undefined) return retireAll();
-    const results = await deps.signer.signAgain(attempt.writes, expected);
-    // Anything undecided or approved keeps the attempt: the surface shows its
-    // fault, and the next Retry asks this same signing again.
-    return retirable(results) ? retireAll() : { kind: "signed", results };
-  }
+  // What the server holds decides it: an attempt already approved is landing,
+  // and only one no write of which is relaying or landed is retired.
+  const readThenRetire = async (): Promise<AskedAgain> => {
+    for (const id of attempt.writes) {
+      const read = await deps.read(id);
+      if (read.kind !== "success") return { kind: "unread", outcome: read };
+      const state = read.value?.state;
+      if (state === "RELAYING" || state === "LANDED") return { kind: "landing" };
+    }
+    return retireAll();
+  };
 
-  for (const id of attempt.writes) {
-    const read = await deps.read(id);
-    if (read.kind !== "success") return { kind: "unread", outcome: read };
-    const state = read.value?.state;
-    if (state === "RELAYING" || state === "LANDED") return { kind: "landing" };
-  }
-  return retireAll();
+  if (intent !== attempt.intent) return readThenRetire();
+
+  // A stand-in without the scoped re-sign cannot ask again; retiring keeps
+  // the one guarantee that matters, that no second act lands beside it.
+  if (deps.signer.signAgain === undefined) return retireAll();
+  const results = await deps.signer.signAgain(attempt.writes, expected);
+  // Anything undecided or approved keeps the attempt: the surface shows its
+  // fault, and the next Retry asks this same signing again.
+  if (!retirable(results)) return { kind: "signed", results };
+  // A DEVICE REFUSAL SAYS NOTHING OF THE FIRST PRESS. The intent check refuses
+  // the whole re-asked batch when the expectation rebuilt for the same gesture
+  // no longer matches the staged proposal — the server's facts keyed by the
+  // gesture's parts (a cited node's L1 id, a media digest) moved between the
+  // presses — while the first press's approval may have gone out with its
+  // answer lost. So the states are read, as for a changed gesture.
+  return results.some((result) => result.kind === "rejectedByDevice") ? readThenRetire() : retireAll();
 }

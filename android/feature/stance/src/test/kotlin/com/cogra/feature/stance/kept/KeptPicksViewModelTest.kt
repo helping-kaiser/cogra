@@ -12,6 +12,7 @@ import com.cogra.domain.UserError
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.stance.KeptFamily
 import com.cogra.domain.stance.KeptPreview
+import com.cogra.domain.stance.StanceAttempts
 import com.cogra.domain.stance.StanceKind
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceSignals
@@ -22,6 +23,7 @@ import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.ScriptedKeptPreviewRepository
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
+import com.cogra.domain.testing.signedInSession
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -86,7 +88,17 @@ class KeptPicksViewModelTest {
     }
 
     private fun viewModel() =
-        KeptPicksViewModel(kept, previews, stances, WriteSigner(writes, identity), identity, signals)
+        KeptPicksViewModel(
+            kept,
+            previews,
+            stances,
+            WriteSigner(writes, identity),
+            identity,
+            signals,
+            signedInSession(),
+            writes,
+            StanceAttempts(),
+        )
 
     private fun idle() = dispatcher.scheduler.advanceUntilIdle()
 

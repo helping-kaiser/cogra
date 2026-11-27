@@ -155,6 +155,12 @@ function approvalData(
           if (outcome.kind === "success") forgetLandedApproval(account, application.id);
           return outcome;
         }
+        if (asked.kind === "landing") {
+          // The vouch's first signing was approved, its answer lost: it is
+          // what lands, and nothing else is asked (SigningAfterClose.md:27).
+          forgetLandedApproval(account, application.id);
+          return success({ records: parked.writes.length });
+        }
         // Every write of the vouch ended: nothing of it can land, and the
         // approval is the server's to take again once its vouch is gone.
         forgetLandedApproval(account, application.id);

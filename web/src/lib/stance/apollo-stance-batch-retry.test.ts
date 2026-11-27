@@ -195,6 +195,22 @@ describe("the kept picks' Retry asks the same batch again", () => {
     expect(retried.kind).toBe("success");
   });
 
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ, at batch scale: the same batch,
+  // refused by the device's intent check on its re-ask, over a first batch
+  // whose approvals went out with their answer lost.
+  it("a re-ask the device refuses reads the states first: a first batch already relaying is landing", async () => {
+    const prepares = host({ "w-1": "RELAYING", "w-2": "RELAYING" });
+    const { writes } = signer([lost], [deviceRefused]);
+    const { data, retired } = seam(writes);
+
+    await data.commitBatch(BATCH);
+    const retried = await data.commitBatch(BATCH);
+
+    expect(prepares).toHaveLength(2);
+    expect(retired).toEqual([]);
+    expect(retried).toEqual({ kind: "success", value: { records: 2 } });
+  });
+
   it("a batch whose picks changed retires an unapproved first batch, then signs the new one alone", async () => {
     const prepares = host();
     const { writes, signedAgain } = signer([lost]);

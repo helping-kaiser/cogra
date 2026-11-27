@@ -2194,6 +2194,43 @@ describe("Retry after a signing that did not answer", () => {
     expect(drafts.held()?.attempt).toBeNull();
   });
 
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same post, its re-ask refused
+  // by the device's intent check (the expectation rebuilt for the unchanged
+  // gesture no longer matches the staged proposal — a cited node's L1 id or a
+  // media digest the server reads moved between the presses).
+  const refusedOnReask = () =>
+    fakeWriteSigner({
+      signStaged: async (write) => ({ kind: "failed", id: write.id, cause: new Error("no answer") }),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "rejectedByDevice" as const, id, reason: "intent mismatch" })),
+      ),
+    });
+
+  it("a re-ask the device refuses reads the states first: a first post already relaying opens, and nothing is prepared again", async () => {
+    const prepare = counting();
+    server.use(prepare.handler, stagedAt("RELAYING"));
+    const signer = refusedOnReask();
+    mount(fakeDrafts(), signer);
+    await signWords("Low tide.");
+
+    fireEvent.click(await screen.findByTestId("wizard-retry"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    expect(signer.signAgain).toHaveBeenCalledWith(["w1"], expect.anything());
+    expect(prepare.count()).toBe(1);
+  });
+
+  it("a re-ask the device refuses over a first post never approved retires it and prepares afresh", async () => {
+    const prepare = counting();
+    server.use(prepare.handler, stagedAt("AWAITING_APPROVAL"));
+    const signer = refusedOnReask();
+    mount(fakeDrafts(), signer);
+    await signWords("Low tide.");
+
+    fireEvent.click(await screen.findByTestId("wizard-retry"));
+    await waitFor(() => expect(prepare.count()).toBe(2));
+    expect(push).not.toHaveBeenCalledWith("/posts/post-1?published=1");
+  });
+
   it("puts the attempt on the draft before the first pre-signature: a late save holds the signing back", async () => {
     const prepare = counting();
     server.use(prepare.handler);
