@@ -1476,4 +1476,14 @@ describe("Watch the intro again (Settings.md:135, OnboardingSteps.md:7)", () => 
     expect(screen.queryByTestId("intro")).toBeNull();
     expect(screen.getByTestId("settings.about.intro")).toBeInTheDocument();
   });
+
+  it("gives focus back to Watch the intro again on leave", async () => {
+    renderSettings();
+    const row = await screen.findByTestId("settings.about.intro");
+    row.focus();
+    fireEvent.click(row);
+    expect(screen.getByTestId("onboarding.title")).toHaveFocus();
+    fireEvent.click(screen.getByTestId("onboarding.skip"));
+    expect(row).toHaveFocus();
+  });
 });

@@ -2,6 +2,7 @@
 // (design/designs/canonical/behavior/Onboarding*.md).
 
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Intro, type IntroExit } from "./intro";
@@ -191,6 +192,55 @@ describe("Intro", () => {
     );
     // The chat's two faces and the comment's author, as OnboardingPublic.jsx draws them.
     expect(discs.map((disc) => disc.style.width)).toEqual(["24px", "24px", "24px"]);
+  });
+
+  describe("a modal dialog, enforced (WAI-ARIA APG Dialog (Modal))", () => {
+    function Opener() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Watch the intro again
+          </button>
+          {open && <Intro inviter={MIRA} onLeave={() => setOpen(false)} />}
+        </>
+      );
+    }
+
+    it("moves focus to the card's heading on open and on every card change", () => {
+      renderIntro();
+      expect(screen.getByTestId("onboarding.title")).toHaveFocus();
+      next();
+      expect(screen.getByTestId("onboarding.title")).toHaveTextContent("Your opinions have a shape");
+      expect(screen.getByTestId("onboarding.title")).toHaveFocus();
+    });
+
+    it("makes the page beneath unreachable while it stands, and gives it back on leave", () => {
+      render(<Opener />);
+      const opener = screen.getByRole("button", { name: "Watch the intro again" });
+      fireEvent.click(opener);
+      expect(opener.closest("[inert]")).not.toBeNull();
+      expect(screen.getByTestId("intro").closest("[inert]")).toBeNull();
+      fireEvent.click(screen.getByTestId("onboarding.skip"));
+      expect(opener.closest("[inert]")).toBeNull();
+    });
+
+    it("returns focus to the control that opened it", () => {
+      render(<Opener />);
+      const opener = screen.getByRole("button", { name: "Watch the intro again" });
+      opener.focus();
+      fireEvent.click(opener);
+      expect(opener).not.toHaveFocus();
+      for (let step = 1; step <= 5; step++) next();
+      expect(screen.queryByTestId("intro")).toBeNull();
+      expect(opener).toHaveFocus();
+    });
+
+    it("Escape leaves the way Skip leaves (as built: undrawn)", () => {
+      const { onLeave } = renderAt(3);
+      fireEvent.keyDown(screen.getByTestId("onboarding.next"), { key: "Escape" });
+      expect(onLeave).toHaveBeenCalledExactlyOnceWith("skip");
+    });
   });
 
   it("covers the page: no bottom bar under it (OnboardingSteps.md:9)", () => {

@@ -26,7 +26,8 @@
 // keeping its proportions, and the card scrolls between Skip and its button —
 // both pinned at their edges — when its words outgrow the screen.
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { useStageHistory } from "@/lib/compose/stage-history";
 import { buttonClassName } from "@/lib/ui/button";
@@ -125,6 +126,35 @@ export function Intro({
   const step = index + 1;
   const last = step === INTRO_STEPS;
   useCoversSurface(true, "suspend");
+  const layer = useRef<HTMLDivElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+
+  // A MODAL DIALOG, ENFORCED (WAI-ARIA APG "Dialog (Modal)" pattern): focus
+  // moves into it on open, the page beneath is `inert` while it stands (MDN
+  // `inert`: unreachable by Tab and by assistive technology), and focus goes
+  // back to the control that opened it on leave. Not a native `showModal()`
+  // dialog: there Android's back gesture is a close request that closes the
+  // whole dialog (`stage-history.ts`), where the boards walk Back one card.
+  useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const own = layer.current;
+    const beneath = [...document.body.children].filter(
+      (element): element is HTMLElement =>
+        element instanceof HTMLElement && element !== own && !element.hasAttribute("inert"),
+    );
+    // The content attribute, which the `inert` property reflects.
+    for (const element of beneath) element.setAttribute("inert", "");
+    return () => {
+      for (const element of beneath) element.removeAttribute("inert");
+      if (opener?.isConnected) opener.focus();
+    };
+  }, []);
+
+  // Focus lands on the card's heading on open and on every card change — the
+  // wizard's stage-heading law, so a screen reader reads the new card first.
+  useEffect(() => {
+    heading.current?.focus();
+  }, [index]);
 
   useStageHistory({
     surface: SURFACE,
@@ -145,13 +175,22 @@ export function Intro({
   // account there is no one for its line to name.
   const line = card.id === "vouch" && inviter === null ? null : card.line(inviter?.handle ?? "");
 
-  return (
+  // Escape is undrawn; as built it leaves the way Skip leaves.
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Escape") onLeave("skip");
+  };
+
+  // On the body itself, so the page beneath is one sibling the layer can
+  // make inert without making itself inert too.
+  return createPortal(
     <div
+      ref={layer}
       role="dialog"
       aria-modal="true"
       aria-labelledby="intro-title"
       data-testid="intro"
       data-card={card.id}
+      onKeyDown={onKeyDown}
       className={`${SCREEN_LAYER} z-50 flex flex-col bg-surface text-on-surface`}
     >
       <div className="flex flex-none justify-end" style={{ padding: "8px 12px 0" }}>
@@ -175,7 +214,13 @@ export function Intro({
           </ScaledStage>
         </div>
         <div className="flex-none" style={{ padding: "0 24px" }}>
-          <h1 id="intro-title" {...testAttributes(part(NODE, "title"))} className="m-0 text-headline-small">
+          <h1
+            ref={heading}
+            id="intro-title"
+            tabIndex={-1}
+            {...testAttributes(part(NODE, "title"))}
+            className="m-0 text-headline-small outline-none"
+          >
             {card.headline}
           </h1>
           {line !== null && (
@@ -200,6 +245,7 @@ export function Intro({
           {card.cta}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
