@@ -29,7 +29,7 @@
 import { intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
 import type { Expectation } from "@/lib/signing/intent";
 import type { StancePair } from "./model";
-import type { StanceTarget } from "./stance-data";
+import type { CommitSource, StanceTarget } from "./stance-data";
 
 /**
  * The kept picks' seal: one batch across many targets, signed in one pass
@@ -38,8 +38,16 @@ import type { StanceTarget } from "./stance-data";
  */
 export const KEPT_BATCH = "keptBatch";
 
-/** What an attempt is kept under: a target's pick, its walk-back, or the kept picks' batch. */
-export type Slot = StanceTarget | { readonly walkBack: StanceTarget } | typeof KEPT_BATCH;
+/**
+ * What an attempt is kept under: a target's pick, its walk-back, the kept
+ * picks' batch — or a commit's OWN slot beside one of those, taken by a
+ * commit that arrived while that slot was still asking (`claim`).
+ */
+export type Slot =
+  | StanceTarget
+  | { readonly walkBack: StanceTarget }
+  | typeof KEPT_BATCH
+  | { readonly alongside: Slot; readonly commit: number };
 
 /** A target's attempt, and what its batch was checked against when it was staged. */
 export type StanceAttempt = SigningAttempt & { readonly expected: Expectation };
@@ -51,8 +59,23 @@ export type StanceAttempt = SigningAttempt & { readonly expected: Expectation };
  * commit there is an act of its own — the anchor refuses a second act while
  * it signs (PadFailed.md:17, :37, :41), but that guard is per control, and
  * the seam is shared by every surface showing the target.
+ *
+ * EACH COMMIT'S RETRY ASKS ITS OWN ATTEMPT (SigningAfterClose.md:27). A
+ * commit that arrives while the target's slot is asking takes a slot of its
+ * own beside it, and its source's next commit there — its Retry — is asked
+ * through that slot, never through the first commit's.
  */
 export type StanceAttempts = {
+  /**
+   * The slot a commit toward `primary` from `source` goes through:
+   * - the source's own earlier slot there, once its signing has answered
+   *   not done — the commit is that attempt's Retry;
+   * - else `primary` itself, unless a commit there is still asking — so a
+   *   fresh identical Set after a failure is still the target's Retry;
+   * - else a slot of the commit's own beside it, when the commit names its
+   *   source; without one, null: an act of its own that keeps no memory.
+   */
+  claim(primary: Slot, source: CommitSource | undefined): Slot | null;
   /** Whether a commit toward the target is signing or asking again right now. */
   asking(slot: Slot): boolean;
   /** The attempt whose signing answered not done, for a Retry to ask again. */
@@ -67,8 +90,14 @@ export type StanceAttempts = {
 };
 
 const targetKey = (target: StanceTarget) => `${target.kind}:${target.id}`;
-const keyOf = (slot: Slot) =>
-  slot === KEPT_BATCH ? "kept:batch" : "walkBack" in slot ? `sever:${targetKey(slot.walkBack)}` : targetKey(slot);
+const keyOf = (slot: Slot): string =>
+  slot === KEPT_BATCH
+    ? "kept:batch"
+    : "alongside" in slot
+      ? `commit:${slot.commit}:${keyOf(slot.alongside)}`
+      : "walkBack" in slot
+        ? `sever:${targetKey(slot.walkBack)}`
+        : targetKey(slot);
 
 /** The gesture a commit toward `target` was prepared from; a changed pick is another signing. */
 export function stanceIntent(target: StanceTarget, pick: StancePair): string {
@@ -109,7 +138,27 @@ export function createStanceAttempts(): AccountStanceAttempts {
 function createAccountAttempts(): StanceAttempts {
   const attempts = new Map<string, { attempt: StanceAttempt | null; asking: boolean }>();
   const held = (slot: Slot) => attempts.get(keyOf(slot));
+  /** Each source's last slot per primary; a source gone with its surface takes its entry along. */
+  const sources = new WeakMap<CommitSource, Map<string, Slot>>();
+  let commits = 0;
   return {
+    claim: (primary, source) => {
+      const mine = source === undefined ? undefined : sources.get(source);
+      const own = mine?.get(keyOf(primary));
+      if (own !== undefined && held(own)?.asking === false) return own;
+      const slot: Slot | null =
+        held(primary)?.asking !== true
+          ? primary
+          : source === undefined
+            ? null
+            : { alongside: primary, commit: ++commits };
+      if (slot !== null && source !== undefined) {
+        const map = mine ?? new Map<string, Slot>();
+        map.set(keyOf(primary), slot);
+        sources.set(source, map);
+      }
+      return slot;
+    },
     asking: (target) => held(target)?.asking === true,
     answered: (target) => {
       const entry = held(target);

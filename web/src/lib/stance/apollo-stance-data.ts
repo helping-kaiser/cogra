@@ -114,6 +114,7 @@ type Staged = {
 import {
   INCLUDE_PENDING_DEFAULT,
   type BorrowedStance,
+  type CommitSource,
   type StanceBundle,
   type StanceCommit,
   type StanceData,
@@ -539,16 +540,21 @@ export function createApolloStanceData(deps: {
    *   retires it before the new one is staged.
    * - A GESTURE WHILE ANOTHER TOWARD THE TARGET IS STILL ASKING IS NOT A
    *   RETRY: it is an act of its own, staged and signed as any is, and the
-   *   first attempt's memory and material are left alone.
+   *   first attempt's memory and material are left alone. Named by its
+   *   `source`, it keeps a slot of its own, so ITS Retry asks ITS attempt.
    */
   const slotted = async (
-    target: Slot,
+    primary: Slot,
     intent: string,
     stage: () => Promise<Outcome<Staged>>,
     pressed: Pressed,
+    source?: CommitSource,
   ): Promise<Outcome<StanceCommit>> => {
     const { attempts: mine, still } = pressed;
-    if (mine.asking(target)) return stageAndSign(target, stage, null, pressed);
+    // The commit's own slot: its source's answered attempt, the target's, or
+    // one beside a target still asking (stance-attempts.ts `claim`).
+    const target = mine.claim(primary, source);
+    if (target === null) return stageAndSign(primary, stage, null, pressed);
     const remembered = mine.answered(target);
     // Held from here, before anything is awaited, so a gesture that arrives
     // meanwhile finds this one asking.
@@ -643,9 +649,15 @@ export function createApolloStanceData(deps: {
       });
     },
 
-    commit(target, pick): Promise<Outcome<StanceCommit>> {
+    commit(target, pick, options): Promise<Outcome<StanceCommit>> {
       const pressed = pressedAs();
-      return slotted(target, stanceIntent(target, pick), stagePick(target, pick, pressed.still), pressed);
+      return slotted(
+        target,
+        stanceIntent(target, pick),
+        stagePick(target, pick, pressed.still),
+        pressed,
+        options?.source,
+      );
     },
 
     keyOnDevice(): Promise<boolean> {
@@ -775,7 +787,7 @@ export function createApolloStanceData(deps: {
       }
     },
 
-    sever(target, shown): Promise<Outcome<StanceCommit>> {
+    sever(target, shown, options): Promise<Outcome<StanceCommit>> {
       // THE WALK-BACK'S RETRY IS THE SAME BATCH (SeveranceConfirm.md:33-35).
       // The server stages a walk-back against the pending-inclusive standing
       // (crates/api stance.rs `prepare_severance`): one it holds nets the
@@ -804,7 +816,7 @@ export function createApolloStanceData(deps: {
             ],
           ),
         });
-      }, pressed);
+      }, pressed, options?.source);
     },
   };
 }

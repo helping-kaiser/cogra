@@ -6,6 +6,7 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
+import com.cogra.domain.PreparedContentView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
@@ -20,17 +21,24 @@ import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
+import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.search.SearchRepository
+import com.cogra.domain.signing.AskedAgain
 import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.SameSigning
 import com.cogra.domain.signing.SentContent
+import com.cogra.domain.signing.SigningAttempt
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.commentExpectation
 import com.cogra.domain.signing.contentExpectation
+import com.cogra.domain.signing.intentOf
 import com.cogra.domain.signing.ledgerFor
 import com.cogra.domain.signing.wireReason
+import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.TokenStore
 import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.ReferencePickerEditor
 import com.cogra.feature.content.ReferencePickerHandlers
@@ -56,6 +64,7 @@ import com.cogra.feature.content.wizard.toResolvedUpload
 import com.cogra.feature.content.wizard.uploadFirstFrame
 import com.cogra.feature.content.wizard.uploadPicture
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -86,7 +95,23 @@ class ReplyWizardViewModel @Inject constructor(
     private val signer: WriteSigner,
     /** The one search read the tag picker's index rides (`#prefix` over topics). */
     search: SearchRepository,
+    /** The staged writes' states, read when a Retry asks the same signing again. */
+    stagedWrites: WriteRepository,
+    /** Where a retired attempt's material is forgotten (`SameSigning`). */
+    identity: IdentityStore,
+    /** Whose press it is: a signing runs only for the account that pressed. */
+    private val tokens: TokenStore,
 ) : ViewModel() {
+
+    /**
+     * THE SEAL'S RETRY ASKS THE SAME SIGNING AGAIN (SealSigning.md:31): the
+     * batch this reply prepared, remembered until it answers. In memory only —
+     * a reply keeps no draft (SigningAfterClose.md:45), so a wizard that is
+     * gone forgets it and Home's Resume is what continues it then.
+     */
+    private var attempt: SigningAttempt? = null
+
+    private val sameSigning = SameSigning(signer, stagedWrites, identity)
 
     private val _state = MutableStateFlow(ReplyWizardState())
     val state: StateFlow<ReplyWizardState> = _state.asStateFlow()
@@ -676,52 +701,127 @@ class ReplyWizardViewModel @Inject constructor(
                 transportFailed = false,
             )
         }
-        viewModelScope.launch {
+        // UNDISPATCHED (kotlinx.coroutines `CoroutineStart`), as the profile
+        // seal's act starts (#680): the press reads its account at the press
+        // itself, with no dispatch between.
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            // THE SIGNING IS THE PRESSING ACCOUNT'S (auth.md "Multi-account
+            // device custody"): every leg asks first, and a press with another
+            // account active does nothing, leaving any attempt for its own.
+            val owner = tokens.current()?.accountId ?: return@launch stand()
+            // A remembered attempt is never asked under another account; it stands for its own.
+            if (attempt?.let { it.owner != owner } == true) return@launch stand()
             val tags = current.tagSection.tags.map { it.toClaim() }
             val references = current.referenceSection.references.map { it.toClaim() }
             val graphIds = graphIdsFor(target.id, references) ?: return@launch
             val sent = sentContent(current)
-            val prepared = when (
-                val outcome = content.prepareComment(
-                    target = target.id,
-                    content = current.body,
-                    license = current.license,
-                    tags = tags,
-                    references = references,
-                    attachments = sent.attachments,
-                    pDirected = current.pDirected,
-                    pInterest = current.pInterest,
-                    sensitive = sent.sensitive,
-                    sensitiveReason = sent.sensitiveReason,
-                )
-            ) {
-                is Outcome.Success -> outcome.value
-                is Outcome.Refused -> return@launch refuse(outcome.errors)
-                is Outcome.Failed -> return@launch failTransport()
-            }
             val parentGraphId = graphIds.getValue(target.id)
-            val expected = expectation(current, prepared.node, sent, parentGraphId, tags, references, graphIds)
-                ?: return@launch
-
-            val results = try {
-                signer.sign(prepared.writes, expected)
+            val press = Press(
+                owner = owner,
+                intent = replyIntent(target.id, current, sent, tags, references),
+                prepare = { prepareReply(current, target.id, sent, tags, references) },
+                expectedFor = { node -> expectation(current, node, sent, parentGraphId, tags, references, graphIds) },
+                holds = { tokens.current()?.accountId == owner },
+            )
+            try {
+                val remembered = attempt
+                if (remembered == null || askedAgain(remembered, press)) signFresh(press)
             } catch (_: NoActorKeyException) {
                 // `ComposeKeyAbsent`: the write waits on the reader
                 // restoring the key. There is no draft to keep, so the
                 // card offers the restore and the way out, nothing else.
                 _state.update { it.copy(submitting = false, keyAbsent = true) }
-                return@launch
-            }
-
-            if (results.all { it is WriteResult.Done }) {
-                _state.update {
-                    it.copy(submitting = false, outcome = ReplyOutcome.Signed(prepared.node))
-                }
-            } else {
-                _state.update { it.copy(submitting = false, signingFailed = true) }
             }
         }
     }
+
+    /** The reply's prepare: the request the seal sends, staged as one batch. */
+    private suspend fun prepareReply(
+        current: ReplyWizardState,
+        target: String,
+        sent: SentContent,
+        tags: List<TagClaim>,
+        references: List<ReferenceClaim>,
+    ): Outcome<PreparedContentView> = content.prepareComment(
+        target = target,
+        content = current.body,
+        license = current.license,
+        tags = tags,
+        references = references,
+        attachments = sent.attachments,
+        pDirected = current.pDirected,
+        pInterest = current.pInterest,
+        sensitive = sent.sensitive,
+        sensitiveReason = sent.sensitiveReason,
+    )
+
+    /** One press of Sign comment: who pressed, and what it orders. */
+    private class Press(
+        val owner: String,
+        /** The prepare's request as the attempt's key (`intentOf`). */
+        val intent: String,
+        val prepare: suspend () -> Outcome<PreparedContentView>,
+        val expectedFor: suspend (node: String) -> Expectation?,
+        /** Whether the account that pressed is still the active one. */
+        val holds: suspend () -> Boolean,
+    )
+
+    /**
+     * Asks the remembered attempt again (`SameSigning`), and answers whether a
+     * fresh prepare may run: only once the attempt is retired.
+     */
+    private suspend fun askedAgain(remembered: SigningAttempt, press: Press): Boolean {
+        val asked = sameSigning.askAgain(remembered, press.intent, { press.expectedFor(remembered.node) }, press.holds)
+        when (asked) {
+            AskedAgain.Foreign -> stand()
+            AskedAgain.Unchecked -> Unit
+            is AskedAgain.Unread -> when (val read = asked.outcome) {
+                is Outcome.Refused -> refuse(read.errors)
+                else -> failTransport()
+            }
+            // The first words were approved and are landing: the reply is taken (web #655).
+            AskedAgain.Landing -> signed(remembered.node)
+            is AskedAgain.Signed -> settle(remembered.node, asked.results)
+            // Retired: nothing of it can land, and the fresh prepare may run.
+            AskedAgain.Fresh -> attempt = null
+        }
+        return asked == AskedAgain.Fresh
+    }
+
+    /** Stages the reply anew and signs it, remembering the attempt before anything is signed. */
+    private suspend fun signFresh(press: Press) {
+        if (!press.holds()) return stand()
+        val prepared = when (val outcome = press.prepare()) {
+            is Outcome.Success -> outcome.value
+            is Outcome.Refused -> return refuse(outcome.errors)
+            is Outcome.Failed -> return failTransport()
+        }
+        val expected = press.expectedFor(prepared.node) ?: return
+        attempt = SigningAttempt(press.owner, prepared.node, prepared.writes.map { it.id }, press.intent)
+        if (!press.holds()) return stand()
+        val results = signer.sign(prepared.writes, expected)
+        // Answered after a switch: the attempt stays its account's, untouched.
+        if (!press.holds()) return stand()
+        settle(prepared.node, results)
+    }
+
+    /** What the signing's answer makes of the seal: the reply taken, or the fault and Retry. */
+    private fun settle(node: String, results: List<WriteResult>) {
+        if (results.all { it is WriteResult.Done }) {
+            signed(node)
+        } else {
+            // The attempt is kept, so the Retry asks THIS signing again.
+            _state.update { it.copy(submitting = false, signingFailed = true) }
+        }
+    }
+
+    private fun signed(node: String) {
+        attempt = null
+        _state.update { it.copy(submitting = false, outcome = ReplyOutcome.Signed(node)) }
+    }
+
+    /** The press stopped before it ran a leg: the seal stands as it was, nothing said. */
+    private fun stand() = _state.update { it.copy(submitting = false) }
 
     /**
      * The way out the author asked for, which is not always the way out
@@ -826,3 +926,18 @@ class ReplyWizardViewModel @Inject constructor(
         const val COVER_FRAME_COUNT = 4
     }
 }
+
+/**
+ * The reply's prepare request as its attempt's key (`intentOf`): every field
+ * `prepareComment` is sent, and so everything the reply's expectation is built
+ * from but the server's own facts about those fields (the cited nodes' L1 ids,
+ * the gallery's digests per media id).
+ */
+internal fun replyIntent(
+    target: String,
+    current: ReplyWizardState,
+    sent: SentContent,
+    tags: List<TagClaim>,
+    references: List<ReferenceClaim>,
+): String =
+    intentOf(target, current.body, current.license, tags, references, sent, current.pDirected, current.pInterest)
