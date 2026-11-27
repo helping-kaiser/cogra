@@ -50,6 +50,8 @@ import com.cogra.domain.history.HistoryRepository
 import com.cogra.domain.history.SeenHistorySource
 import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.ViewHistoryRepository
+import com.cogra.domain.intro.IntroAccount
+import com.cogra.domain.intro.IntroRepository
 import com.cogra.domain.invites.InvitesRepository
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
@@ -386,6 +388,23 @@ class ScriptedSettingsRepository(private val accounts: ScriptedAccountRepository
     override suspend fun emailChangeLinkCheck(token: String): Outcome<EmailChangeLinkCheck?> = linkCheck
 }
 
+/**
+ * Scriptable intro state. Seen by default, so a test that does not
+ * script it never meets the intro over its feed.
+ */
+class ScriptedIntroRepository : IntroRepository {
+    var account: IntroAccount? = IntroAccount(hasSeen = true, inviter = null)
+    var marks: Int = 0
+
+    override suspend fun introAccount(): Outcome<IntroAccount?> = Outcome.Success(account)
+
+    override suspend fun markIntroSeen(): Outcome<Unit> {
+        marks += 1
+        account = account?.copy(hasSeen = true)
+        return Outcome.Success(Unit)
+    }
+}
+
 /** Scriptable applicant state: tests set the me-driven status. */
 class ScriptedOnboardingRepository : ThrowingOnboardingRepository() {
     var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null, null)
@@ -643,6 +662,13 @@ object FakeBindingsModule {
 
     @Provides
     fun onboardingRepository(fake: ScriptedOnboardingRepository): OnboardingRepository = fake
+
+    @Provides
+    @Singleton
+    fun scriptedIntroRepository(): ScriptedIntroRepository = ScriptedIntroRepository()
+
+    @Provides
+    fun introRepository(fake: ScriptedIntroRepository): IntroRepository = fake
 
     @Provides
     @Singleton

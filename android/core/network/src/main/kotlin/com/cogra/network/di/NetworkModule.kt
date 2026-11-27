@@ -47,6 +47,7 @@ import com.cogra.domain.score.TraceRepository
 import com.cogra.domain.search.ExploreDeviceStore
 import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.intro.IntroRepository
 import com.cogra.domain.signing.CarriedLandingGate
 import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.DevicePreferences
@@ -69,6 +70,7 @@ import com.cogra.network.repo.ProfileRepositoryImpl
 import com.cogra.network.repo.OnboardingRepositoryImpl
 import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.repo.SettingsRepositoryImpl
+import com.cogra.network.repo.IntroRepositoryImpl
 import com.cogra.network.repo.StanceRepositoryImpl
 import com.cogra.network.repo.ReferenceRepositoryImpl
 import com.cogra.network.repo.CitedByRepositoryImpl
@@ -242,6 +244,9 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun settingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
+
+    @Binds
+    abstract fun introRepository(impl: IntroRepositoryImpl): IntroRepository
 
     @Binds
     abstract fun devicePreferences(impl: DevicePreferencesImpl): DevicePreferences
