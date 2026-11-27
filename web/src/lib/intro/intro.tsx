@@ -33,6 +33,7 @@ import { buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { nameInText } from "@/lib/ui/names";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
+import { SCREEN_LAYER } from "@/lib/ui2/screen-layer";
 
 import { INTRO_CARDS, INTRO_STEPS, stepWords } from "./intro-cards";
 import { IntroIllustration, STAGE_SIZE, type IntroInviter } from "./intro-stages";
@@ -151,7 +152,7 @@ export function Intro({
       aria-labelledby="intro-title"
       data-testid="intro"
       data-card={card.id}
-      className="fixed inset-0 z-50 flex flex-col bg-surface text-on-surface"
+      className={`${SCREEN_LAYER} z-50 flex flex-col bg-surface text-on-surface`}
     >
       <div className="flex flex-none justify-end" style={{ padding: "8px 12px 0" }}>
         <button
@@ -164,7 +165,10 @@ export function Intro({
         </button>
       </div>
       {/* Between Skip and the button, the stage and the words scroll. */}
-      <div data-testid="intro-scroll" className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+      <div
+        data-testid="intro-scroll"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain *:shrink-0"
+      >
         <div className="flex flex-1 items-center justify-center" style={{ padding: "0 24px" }}>
           <ScaledStage key={card.id} {...STAGE_SIZE[card.id]}>
             <IntroIllustration card={card.id} inviter={inviter} node={part(NODE, "stage")} />

@@ -185,7 +185,7 @@ describe("Intro", () => {
 
   it("covers the page: no bottom bar under it (OnboardingSteps.md:9)", () => {
     renderIntro();
-    expect(screen.getByTestId("intro")).toHaveClass("fixed", "inset-0");
+    expect(screen.getByTestId("intro")).toHaveClass("fixed", "inset-x-0", "top-0");
     expect(screen.getByRole("dialog", { name: "Your feed follows your own steps" })).toBeInTheDocument();
   });
 });
