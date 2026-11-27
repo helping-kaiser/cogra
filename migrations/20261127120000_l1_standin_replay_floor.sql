@@ -1,26 +1,37 @@
--- The stand-in publishes every accepted act at the replay floor, and every
--- epoch package binds the verification-case declarations in force
+-- The stand-in publishes every accepted act at the replay floor, every
+-- epoch states the approval form its witnesses verify in, and every epoch
+-- package binds the verification-case declarations in force
 -- (layer1-interface.md §8.4, "Act envelope"; §11.6, the published epoch
 -- package). Owned by the l1-standin crate and dropped at the swap with the
 -- rest of the l1_* set.
 --
--- An accepted act's published record carries its approval witness, so an
--- act past approval holds one for good. The one statement that approves an
--- act writes the witness with it and nothing clears it, so every existing
--- world already satisfies this; a world that does not cannot publish its
--- accepted acts at the floor and is refused before anything changes.
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM l1_acts WHERE status <> 'sealed' AND approval_signature IS NULL) THEN
-        RAISE EXCEPTION 'the stand-in holds an approved or accepted act without its approval witness'
-            USING HINT = 'Its published record cannot carry the approval witness; the world cannot be published at the replay floor as it stands.';
-    END IF;
-END
-$$;
+-- Approval forms: 1, the approval over the encoded verified act and its
+-- host seal; 2, the approval over the act alone. Every epoch closed before
+-- this migration was closed in form 1, so the epoch column fills with 1 and
+-- then loses its default: every later close states its form.
+ALTER TABLE l1_epochs
+    ADD COLUMN approval_form SMALLINT NOT NULL DEFAULT 1
+        CONSTRAINT l1_epochs_approval_form_known CHECK (approval_form IN (1, 2));
+ALTER TABLE l1_epochs ALTER COLUMN approval_form DROP DEFAULT;
 
+-- The form each act's approval was taken in — the host's own bookkeeping,
+-- never published per act: the close orders acts of one form into an
+-- epoch, so an act approved in form 1 that no epoch has accepted yet keeps
+-- its approval and lands in an epoch of form 1. Every act past approval
+-- was approved in form 1; a sealed act has none yet.
+ALTER TABLE l1_acts ADD COLUMN approval_form SMALLINT;
+UPDATE l1_acts SET approval_form = 1 WHERE status <> 'sealed';
+
+-- An accepted act's published record carries its approval witness, so an
+-- act past approval holds one for good, and the form it was taken in. The
+-- one statement that approves an act writes both with it and nothing
+-- clears them, so every world the stand-in wrote satisfies this.
 ALTER TABLE l1_acts
     ADD CONSTRAINT l1_acts_approved_holds_witness
-        CHECK (status = 'sealed' OR approval_signature IS NOT NULL);
+        CHECK (status = 'sealed' OR approval_signature IS NOT NULL),
+    ADD CONSTRAINT l1_acts_approval_form_known CHECK (
+        (status = 'sealed' AND approval_form IS NULL)
+        OR (status <> 'sealed' AND approval_form IN (1, 2)));
 
 -- The verification-case declarations each closed epoch bound, by identity
 -- and edition. An epoch with no row bound the empty set. The deployment

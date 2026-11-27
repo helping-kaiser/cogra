@@ -326,8 +326,8 @@ pub(crate) async fn approve(
     );
     let author_key = crypto::verifying_key_from_bytes(&row.author_pubkey)
         .ok_or_else(|| StandInError::Authentication("stored author key malformed".into()))?;
-    // Every epoch this host closes from now on states the current form, so
-    // an act is approved only in it: no epoch mixes forms.
+    // An act is approved in the current form only, and the form is kept
+    // with it: the close orders acts of one form per epoch (`crate::close`).
     if !crypto::verify_digest(
         &author_key,
         &approval_digest(ApprovalForm::CURRENT, &header.frame(), &row.host_seal),
@@ -340,10 +340,12 @@ pub(crate) async fn approve(
 
     sqlx::query!(
         "UPDATE l1_acts
-         SET status = 'approved', approval_signature = $2, approved_at = NOW()
+         SET status = 'approved', approval_signature = $2, approved_at = NOW(),
+             approval_form = $3
          WHERE act_id = $1 AND status = 'sealed'",
         act_id,
         &witness.approval_signature,
+        ApprovalForm::CURRENT.number(),
     )
     .execute(standin.pool())
     .await?;

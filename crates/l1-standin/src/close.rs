@@ -479,15 +479,20 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
                   settlement_ref, license, asserted_parents, deps,
                   pre_commitment, deps_salt, deps_commitment, content_commitment,
                   author_pubkey, pre_signature, host_seal,
-                  approval_signature AS "approval_signature!"
+                  approval_signature AS "approval_signature!",
+                  approval_form AS "approval_form!"
            FROM l1_acts WHERE status = 'approved'
            ORDER BY approved_at, act_id"#,
     )
     .fetch_all(&mut *tx)
     .await?;
 
+    let mut sealed_act_form = Vec::new();
     let mut candidates = Vec::with_capacity(rows.len());
     for row in &rows {
+        let form = ApprovalForm::from_number(row.approval_form).ok_or_else(|| {
+            StandInError::Host(format!("stored approval form {} unknown", row.approval_form))
+        })?;
         let body = stored_body!(row).to_body()?;
         if !dependency_opening_matches(
             &body.act_id(),
@@ -505,7 +510,11 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
         let parents = causal_parents(&row.asserted_parents, row.settlement_ref.as_ref());
         let mut prerequisites = row.deps.clone();
         prerequisites.extend(parents.iter().cloned());
-        candidates.push(Candidate {
+        let set = match form {
+            ApprovalForm::ActAndSeal => &mut sealed_act_form,
+            ApprovalForm::Act => &mut candidates,
+        };
+        set.push(Candidate {
             act_id: row.act_id.clone(),
             author: row.author.clone(),
             body,
@@ -523,22 +532,47 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
         });
     }
 
+    // One approval form per epoch. Acts approved in the sealed-act form
+    // before the approval covered the act alone are ordered first, in an
+    // epoch of that form, while any of them can be ordered; only a close
+    // that orders none of them selects among the acts approved in the
+    // current form. An act of one form waits while an epoch of the other
+    // closes, and its prerequisites stay where they are: an act ordered
+    // later than an act it follows is still ordered after it.
     let config = standin.config();
-    let (selection, state, counts) = if candidates.is_empty() {
-        (Selection::default(), LedgerState::default(), HashMap::new())
-    } else {
-        let (mut state, counts) = load_ledger_state(&mut tx, &candidates).await?;
-        let selection = select_and_order(
-            candidates,
-            &mut state,
-            epoch,
-            theta,
-            config.epoch_target_acts,
-        )?;
-        (selection, state, counts)
-    };
+    let mut chosen = None;
+    for (form, set) in [
+        (ApprovalForm::ActAndSeal, sealed_act_form),
+        (ApprovalForm::Act, candidates),
+    ] {
+        if set.is_empty() {
+            continue;
+        }
+        let (mut state, counts) = load_ledger_state(&mut tx, &set).await?;
+        let selection = select_and_order(set, &mut state, epoch, theta, config.epoch_target_acts)?;
+        if !selection.records.is_empty() || form == ApprovalForm::CURRENT {
+            chosen = Some((form, selection, state, counts));
+            break;
+        }
+    }
+    let (form, selection, state, counts) = chosen.unwrap_or_else(|| {
+        (
+            ApprovalForm::CURRENT,
+            Selection::default(),
+            LedgerState::default(),
+            HashMap::new(),
+        )
+    });
 
-    let closure = closure_outputs(&selection, &state, &counts, wall_in_force, theta, config)?;
+    let closure = closure_outputs(
+        &selection,
+        &state,
+        &counts,
+        wall_in_force,
+        theta,
+        config,
+        form,
+    )?;
     let asserted_at = persist(&mut tx, epoch, &selection, &closure).await?;
     crate::settle_due(&mut tx, epoch).await?;
     let package = EpochPackage {
@@ -680,6 +714,7 @@ fn closure_outputs(
     wall_in_force: Ratio,
     theta: i64,
     config: &crate::StandInConfig,
+    approval_form: ApprovalForm,
 ) -> Result<EpochClosure, StandInError> {
     let boundary = config.boundary();
     let size = i64::try_from(selection.records.len()).unwrap_or(i64::MAX);
@@ -719,7 +754,7 @@ fn closure_outputs(
         }),
         marker: DECLARATION.marker(),
         case_declarations: DECLARATION.case_declarations(),
-        approval_form: ApprovalForm::CURRENT,
+        approval_form,
     })
 }
 

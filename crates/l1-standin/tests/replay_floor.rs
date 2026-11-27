@@ -1,12 +1,15 @@
 //! The replay floor of a published epoch: every accepted act's record
-//! carries its signed pre-commitment, the host seal, both commitments with
-//! the formation edition each names, the approval witness, and the public
-//! key the record maps both signatures to, so each signature and the act's
-//! formation verify from the published record alone, with no hidden
-//! opening (layer1-interface.md §13.3, "Published Epoch Replay Floor";
-//! §8.4, "Act envelope"; §8.2, "Verified act" and "Approval witness").
-//! Every package binds the verification-case declarations in force, the
-//! empty set included (§11.6, the published epoch package).
+//! carries two members — the act, with both commitments, its approval
+//! witness and the public key the record maps the author's signatures to,
+//! and beside it the seal attestation, with the signed pre-commitment, the
+//! formation edition each commitment names, the frame version and the host
+//! seal — so each signature and the act's formation verify from the
+//! published record alone, with no hidden opening (layer1-interface.md
+//! §13.3, "Published Epoch Replay Floor"; §8.4, "Act envelope"; §8.2,
+//! "Verified act" and "Approval witness"). Every package states the
+//! approval form its witnesses verify in and binds the verification-case
+//! declarations in force, the empty set included (§11.6, the published
+//! epoch package).
 //!
 //! The checks here recompute every signature from the record's own bytes
 //! and the host key the deployment publishes; they read nothing the host
@@ -25,10 +28,13 @@ use common::l1::census::LegRole;
 use common::l1::client::ActorKey;
 use common::l1::crypto::{self, tags};
 use common::l1::handshake::{
-    ApprovalWitness, Proposal, PublishedRecord, StructuralBody, approval_digest, seal_message,
+    ApprovalForm, ApprovalWitness, EpochPackage, Proposal, PublishedRecord, StructuralBody,
+    approval_digest,
+    seal_message,
 };
 use common::l1::identifier::NodeId;
 use common::l1::proposal::{CONTENT_EDITION, DEPENDENCY_EDITION, PreSigned, SealedAct};
+use ed25519_dalek::SigningKey;
 use l1_standin::{StandIn, StandInConfig};
 use sqlx::PgPool;
 
@@ -115,20 +121,25 @@ enum Unverified {
     Approval,
 }
 
-/// Verifies one published record from its own fields and the published
-/// host key: the body is the record's act and the legs its projection,
-/// the pre-signature verifies over the pre-commitment under the key the
-/// record maps it to, the host seal over the verified act the record
-/// publishes under the host key, and the approval witness over that act
-/// and its seal under the same recorded key. It relates that key to no
-/// Actor.
-fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), Unverified> {
-    let auth = &record.authentication;
+/// Verifies one published record from its own two members, the approval
+/// form its epoch states and the published host key: the body is the
+/// record's act and the legs its projection, the pre-signature verifies
+/// over the pre-commitment under the key the record maps it to, the host
+/// seal over the verified act the record publishes under the host key, and
+/// the approval witness under the same recorded key over the message the
+/// form names — the act alone, or, in the form of the earlier epochs, the
+/// verified act and its seal. It relates that key to no Actor.
+fn verify_from_record(
+    record: &PublishedRecord,
+    form: ApprovalForm,
+    host_key: &[u8],
+) -> Result<(), Unverified> {
+    let (act, attestation) = (&record.approval, &record.attestation);
     let signing_key =
-        crypto::verifying_key_from_bytes(&auth.author_pubkey).ok_or(Unverified::SigningKey)?;
-    if auth.body.act_id() != record.act_id
-        || auth.body.author != record.author
-        || auth.body.family != record.family
+        crypto::verifying_key_from_bytes(&act.author_pubkey).ok_or(Unverified::SigningKey)?;
+    if act.body.act_id() != record.act_id
+        || act.body.author != record.author
+        || act.body.family != record.family
     {
         return Err(Unverified::Body);
     }
@@ -137,37 +148,37 @@ fn verify_from_record(record: &PublishedRecord, host_key: &[u8]) -> Result<(), U
         .iter()
         .map(|leg| (leg.role, leg.source.clone(), leg.target.clone()))
         .collect();
-    let projected = match &auth.body.middle {
+    let projected = match &act.body.middle {
         None => vec![(
             LegRole::Binary,
-            auth.body.source(),
-            auth.body.target.clone(),
+            act.body.source(),
+            act.body.target.clone(),
         )],
         Some(middle) => vec![
-            (LegRole::A, auth.body.source(), middle.clone()),
-            (LegRole::T, middle.clone(), auth.body.target.clone()),
+            (LegRole::A, act.body.source(), middle.clone()),
+            (LegRole::T, middle.clone(), act.body.target.clone()),
         ],
     };
     if endpoints != projected {
         return Err(Unverified::Legs);
     }
-    let pre_commitment: [u8; 32] = auth
+    let pre_commitment: [u8; 32] = attestation
         .pre_commitment
         .as_slice()
         .try_into()
         .map_err(|_| Unverified::PreSignature)?;
-    if !crypto::verify_digest(&signing_key, &pre_commitment, &auth.pre_signature) {
+    if !crypto::verify_digest(&signing_key, &pre_commitment, &attestation.pre_signature) {
         return Err(Unverified::PreSignature);
     }
     let verified_act = seal_message(&record.seal_frame());
     let host = crypto::verifying_key_from_bytes(host_key).ok_or(Unverified::Seal)?;
-    if !crypto::verify(&host, tags::HOST_SEAL, &verified_act, &auth.host_seal) {
+    if !crypto::verify(&host, tags::HOST_SEAL, &verified_act, &attestation.host_seal) {
         return Err(Unverified::Seal);
     }
     if !crypto::verify_digest(
         &signing_key,
-        &approval_digest(&verified_act, &auth.host_seal),
-        &auth.approval_signature,
+        &record.approval_digest(form),
+        &act.approval_signature,
     ) {
         return Err(Unverified::Approval);
     }
@@ -182,28 +193,28 @@ fn contains(haystack: &[u8], needle: &[u8]) -> bool {
 /// Every byte string a record carries, flattened, so a test can show no
 /// opening hides in any of them.
 fn record_bytes(record: &PublishedRecord) -> Vec<u8> {
-    let auth = &record.authentication;
+    let (act, attestation) = (&record.approval, &record.attestation);
     [
         record.payload_witness.as_slice(),
-        &auth.body.canonical_bytes(),
-        &auth.author_pubkey,
-        &auth.pre_commitment,
-        &auth.pre_signature,
-        &auth.dependency_commitment,
-        &auth.host_seal,
-        &auth.approval_signature,
+        &act.body.canonical_bytes(),
+        &act.author_pubkey,
+        &attestation.pre_commitment,
+        &attestation.pre_signature,
+        &act.dependency_commitment,
+        &attestation.host_seal,
+        &act.approval_signature,
     ]
     .concat()
 }
 
 /// A client-signed Registration with a payload, an Opinion with an empty
 /// payload that declares a dependency, and a hyper-edge Tag with two legs
-/// close into one epoch. Each published record verifies from its own
-/// fields: the pre-signature verifies over the published pre-commitment
-/// and the approval witness over the verified act and its seal, both under
-/// the key the record maps them to, and the host seal over the verified
-/// act under the host key. The authentication is exactly what the device
-/// held — the verified act it approved, the seal, its own witness and its
+/// close into one epoch, which states the current approval form. Each
+/// published record verifies from its own members: the pre-signature
+/// verifies over the published pre-commitment and the approval witness over
+/// the act alone, both under the key the record maps them to, and the host
+/// seal over the verified act under the host key. The members are exactly
+/// what the device held — the verified act it approved, the seal, its own witness and its
 /// own key — with the editions the host sealed under, and the read-back
 /// package publishes the same. Apart from the record checks, the recorded
 /// key is the one the author's address derives from: the stand-in seals
@@ -260,11 +271,12 @@ async fn every_accepted_act_verifies_from_its_published_record(pool: PgPool) {
     held.push(land(&host, &bob, tag, 3).await);
 
     let package = host.close_epoch().await.expect("closes");
+    assert_eq!(package.closure.approval_form, ApprovalForm::CURRENT);
     assert_eq!(package.records.len(), 3);
     let host_key = host.host_public_key().await.expect("host key");
     for record in &package.records {
         assert_eq!(
-            verify_from_record(record, &host_key),
+            verify_from_record(record, package.closure.approval_form, &host_key),
             Ok(()),
             "{}",
             record.act_id
@@ -273,30 +285,30 @@ async fn every_accepted_act_verifies_from_its_published_record(pool: PgPool) {
             .iter()
             .find(|(pre, _, _)| pre.act_id() == record.act_id)
             .expect("an act the device landed");
-        let auth = &record.authentication;
-        assert_eq!(auth.author_pubkey, pre.author_pubkey);
+        let (act, attestation) = (&record.approval, &record.attestation);
+        assert_eq!(act.author_pubkey, pre.author_pubkey);
         let signing_key =
-            crypto::verifying_key_from_bytes(&auth.author_pubkey).expect("a well-formed key");
+            crypto::verifying_key_from_bytes(&act.author_pubkey).expect("a well-formed key");
         assert_eq!(
             crypto::address_of(&signing_key),
             record.author,
             "the stand-in seals only under the key the author's address derives from"
         );
-        assert_eq!(auth.body, sealed.act.body);
-        assert_eq!(auth.pre_commitment, sealed.act.pre_commitment);
-        assert_eq!(auth.pre_signature, sealed.act.pre_signature);
+        assert_eq!(act.body, sealed.act.body);
+        assert_eq!(attestation.pre_commitment, sealed.act.pre_commitment);
+        assert_eq!(attestation.pre_signature, sealed.act.pre_signature);
         assert_eq!(record.payload_witness, sealed.act.content_commitment);
-        assert_eq!(auth.dependency_commitment, sealed.act.dependency_commitment);
+        assert_eq!(act.dependency_commitment, sealed.act.dependency_commitment);
         assert_eq!(
-            (auth.content_edition, auth.dependency_edition),
+            (attestation.content_edition, attestation.dependency_edition),
             (sealed.act.content_edition, sealed.act.dependency_edition)
         );
         assert_eq!(
-            (auth.content_edition, auth.dependency_edition),
+            (attestation.content_edition, attestation.dependency_edition),
             (CONTENT_EDITION, DEPENDENCY_EDITION)
         );
-        assert_eq!(auth.host_seal, sealed.host_seal);
-        assert_eq!(auth.approval_signature, witness.approval_signature);
+        assert_eq!(attestation.host_seal, sealed.host_seal);
+        assert_eq!(act.approval_signature, witness.approval_signature);
     }
     let tag_record = package
         .records
@@ -376,12 +388,12 @@ async fn a_published_record_holds_no_opening(pool: PgPool) {
 }
 
 /// Each published member is load-bearing: a record whose signing key,
-/// pre-signature, seal, approval witness, dependency commitment, edition
-/// or body is changed by one value no longer verifies, so the verification
+/// pre-signature, seal, approval witness, dependency commitment, edition,
+/// frame version or body is changed by one value no longer verifies, so the verification
 /// above reads every member rather than passing over it. A different
 /// well-formed key fails at the first signature it is checked under.
 ///
-/// Changing any member of a published record's authentication makes it fail to verify.
+/// Changing any part of either member of a published record makes it fail to verify.
 /// ´claim:standin:every-published-authentication-member-is-checked´
 #[sqlx::test(migrations = "../../migrations")]
 async fn every_published_authentication_member_is_checked(pool: PgPool) {
@@ -402,37 +414,37 @@ async fn every_published_authentication_member_is_checked(pool: PgPool) {
     let package = host.close_epoch().await.expect("closes");
     let host_key = host.host_public_key().await.expect("host key");
     let record = &package.records[0];
-    assert_eq!(verify_from_record(record, &host_key), Ok(()));
+    assert_eq!(verify_from_record(record, package.closure.approval_form, &host_key), Ok(()));
 
     fn flip(bytes: &mut [u8]) {
         bytes[0] ^= 1;
     }
     type Tamper = fn(&mut PublishedRecord);
-    let cases: [(&str, Tamper, Unverified); 10] = [
+    let cases: [(&str, Tamper, Unverified); 11] = [
         (
             "malformed signing key",
-            |r| r.authentication.author_pubkey.truncate(31),
+            |r| r.approval.author_pubkey.truncate(31),
             Unverified::SigningKey,
         ),
         (
             "signing key",
-            |r| r.authentication.author_pubkey = ActorKey::from_seed([7; 32]).public_key_bytes(),
+            |r| r.approval.author_pubkey = ActorKey::from_seed([7; 32]).public_key_bytes(),
             Unverified::PreSignature,
         ),
         (
             "body",
-            |r| r.authentication.body.p_i = 0.25,
+            |r| r.approval.body.p_i = 0.25,
             Unverified::Seal,
         ),
-        ("act", |r| r.authentication.body.seq = 1, Unverified::Body),
+        ("act", |r| r.approval.body.seq = 1, Unverified::Body),
         (
             "pre-commitment",
-            |r| flip(&mut r.authentication.pre_commitment),
+            |r| flip(&mut r.attestation.pre_commitment),
             Unverified::PreSignature,
         ),
         (
             "pre-signature",
-            |r| flip(&mut r.authentication.pre_signature),
+            |r| flip(&mut r.attestation.pre_signature),
             Unverified::PreSignature,
         ),
         (
@@ -442,17 +454,22 @@ async fn every_published_authentication_member_is_checked(pool: PgPool) {
         ),
         (
             "dependency commitment",
-            |r| flip(&mut r.authentication.dependency_commitment),
+            |r| flip(&mut r.approval.dependency_commitment),
             Unverified::Seal,
         ),
         (
             "edition",
-            |r| r.authentication.dependency_edition += 1,
+            |r| r.attestation.dependency_edition += 1,
+            Unverified::Seal,
+        ),
+        (
+            "frame version",
+            |r| r.attestation.seal_version += 1,
             Unverified::Seal,
         ),
         (
             "approval",
-            |r| flip(&mut r.authentication.approval_signature),
+            |r| flip(&mut r.approval.approval_signature),
             Unverified::Approval,
         ),
     ];
@@ -460,20 +477,20 @@ async fn every_published_authentication_member_is_checked(pool: PgPool) {
         let mut changed = record.clone();
         tamper(&mut changed);
         assert_eq!(
-            verify_from_record(&changed, &host_key),
+            verify_from_record(&changed, ApprovalForm::CURRENT, &host_key),
             Err(expected),
             "{what}"
         );
     }
     let mut resealed = record.clone();
-    flip(&mut resealed.authentication.host_seal);
+    flip(&mut resealed.attestation.host_seal);
     assert_eq!(
-        verify_from_record(&resealed, &host_key),
+        verify_from_record(&resealed, ApprovalForm::CURRENT, &host_key),
         Err(Unverified::Seal)
     );
     let mut moved = record.clone();
     moved.legs[0].target = NodeId::Prof("someone-else".into());
-    assert_eq!(verify_from_record(&moved, &host_key), Err(Unverified::Legs));
+    assert_eq!(verify_from_record(&moved, ApprovalForm::CURRENT, &host_key), Err(Unverified::Legs));
 }
 
 /// Every package binds the verification-case declarations in force — none
@@ -513,15 +530,15 @@ async fn every_package_binds_its_case_declarations(pool: PgPool) {
     assert_eq!(stored, 0, "no declaration was in force");
 }
 
-const UNDER_TEST: &str = "20261120230000_l1_standin_replay_floor.sql";
+const UNDER_TEST: &str = "20261127120000_l1_standin_replay_floor.sql";
 
 fn migrations() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../migrations")
 }
 
-/// Applies every migration that precedes the one under test, in order, one
+/// Applies every migration whose file name `wanted` selects, in order, one
 /// file to a transaction as sqlx applies them.
-async fn migrate_to_just_before(pool: &PgPool) {
+async fn apply_migrations(pool: &PgPool, wanted: impl Fn(&str) -> bool) {
     let mut files: Vec<PathBuf> = std::fs::read_dir(migrations())
         .expect("the migrations directory")
         .filter_map(|entry| entry.ok().map(|e| e.path()))
@@ -529,7 +546,7 @@ async fn migrate_to_just_before(pool: &PgPool) {
         .filter(|path| {
             path.file_name()
                 .and_then(|n| n.to_str())
-                .is_some_and(|n| n < UNDER_TEST)
+                .is_some_and(&wanted)
         })
         .collect();
     files.sort();
@@ -544,82 +561,256 @@ async fn migrate_to_just_before(pool: &PgPool) {
     }
 }
 
-async fn apply_under_test(pool: &PgPool) -> Result<(), sqlx::Error> {
-    let text =
-        std::fs::read_to_string(migrations().join(UNDER_TEST)).expect("the migration under test");
-    let mut tx = pool.begin().await?;
-    sqlx::raw_sql(&text).execute(&mut *tx).await?;
-    tx.commit().await
+/// A proposal sealed by the host, as its device holds it.
+async fn sealed_only(
+    host: &StandIn,
+    actor: &ActorKey,
+    proposal: Proposal,
+    nonce_seed: u8,
+) -> (PreSigned, SealedAct) {
+    let pre = PreSigned::sign_with_nonces(
+        actor,
+        proposal,
+        run(nonce_seed, 32),
+        run(nonce_seed.wrapping_add(100), 32),
+    );
+    let sealed = host.seal(pre.submission()).await.expect("seals");
+    (pre, sealed)
 }
 
-/// Inserts one act in the given status, with or without its approval
-/// witness, into `l1_acts` as it stands before the migration.
-async fn insert_act(pool: &PgPool, seq: i64, status: &str, approval: Option<&[u8]>) {
-    sqlx::query(
-        "INSERT INTO l1_acts (
-             act_id, author, seq, family, author_pubkey, target, p_d, p_i,
-             asserted_parents, deps, dependency_nonce, pre_signature, pre_commitment,
-             content_salt, deps_salt, content_commitment, deps_commitment, host_seal,
-             approval_signature, status)
-         VALUES ('act:alice:' || $1 || ':opinion', 'alice', $1, 'opinion', '\\x01',
-                 'prof:bob', 1, 1, '{}', '{}', '\\x02', '\\x03', '\\x04',
-                 CASE WHEN $2 = 'accepted' THEN NULL ELSE '\\x05'::BYTEA END,
-                 '\\x06', '\\x07', '\\x08', '\\x09', $3, $2)",
+fn registration(actor: &ActorKey) -> Proposal {
+    Proposal {
+        body: body(
+            actor,
+            0,
+            Family::Registration,
+            None,
+            NodeId::Prof(actor.address()),
+        ),
+        payload: b"profile".to_vec(),
+        deps: vec![],
+    }
+}
+
+/// An Opinion of `actor` toward `toward`'s profile that declares a
+/// dependency on `after`.
+fn opinion_after(actor: &ActorKey, toward: &ActorKey, after: &PreSigned) -> Proposal {
+    Proposal {
+        body: body(
+            actor,
+            0,
+            Family::Opinion,
+            None,
+            NodeId::Prof(toward.address()),
+        ),
+        payload: vec![],
+        deps: vec![after.act_id()],
+    }
+}
+
+/// The approval a device formed before the approval covered the act
+/// alone: over the encoded verified act and its host seal.
+fn sealed_act_approval(actor: &ActorKey, sealed: &SealedAct) -> Vec<u8> {
+    crypto::sign_digest(
+        &SigningKey::from_bytes(&actor.seed()),
+        &approval_digest(
+            ApprovalForm::ActAndSeal,
+            &sealed.act.frame(),
+            &sealed.host_seal,
+        ),
     )
-    .bind(seq)
-    .bind(status)
-    .bind(approval)
+}
+
+/// Approves a sealed act as the stand-in did before the migration: the
+/// witness over the verified act and its seal, stored with the act.
+async fn approve_before(pool: &PgPool, actor: &ActorKey, pre: &PreSigned, sealed: &SealedAct) {
+    sqlx::query(
+        "UPDATE l1_acts SET status = 'approved', approval_signature = $2, approved_at = NOW()
+          WHERE act_id = $1 AND status = 'sealed'",
+    )
+    .bind(pre.act_id().to_string())
+    .bind(sealed_act_approval(actor, sealed))
     .execute(pool)
     .await
-    .expect("an act, in the table as it was");
+    .expect("approved in form 1");
 }
 
-/// On a world whose stand-in holds an approved act without its approval
-/// witness — one its published record could not carry at the floor — the
-/// migration raises before anything changes: the case table is not
-/// created. A world whose acts past approval all hold their witness, with
-/// a sealed act still waiting for one, migrates, and afterwards an act
-/// past approval cannot be stored without its witness.
-///
-/// The replay-floor migration refuses a world with an approved act lacking its witness, and pins the witness on every later one.
-/// ´claim:standin:the-replay-floor-migration-refuses-an-act-without-its-witness´
-#[sqlx::test(migrations = false)]
-async fn the_migration_refuses_an_act_without_its_witness(pool: PgPool) {
-    migrate_to_just_before(&pool).await;
-    insert_act(&pool, 0, "approved", None).await;
+fn published(package: &EpochPackage) -> Vec<String> {
+    let mut ids: Vec<String> = package.records.iter().map(|r| r.act_id.to_string()).collect();
+    ids.sort();
+    ids
+}
 
-    let refused = apply_under_test(&pool)
-        .await
-        .expect_err("an approved act without its witness is refused");
-    assert!(
-        refused.to_string().contains("without its approval witness"),
-        "{refused}"
-    );
-    let created: bool = sqlx::query_scalar(
-        "SELECT EXISTS(SELECT 1 FROM information_schema.tables
-                        WHERE table_schema = current_schema()
-                          AND table_name = 'l1_epoch_case_declarations')",
+fn ids(acts: &[&PreSigned]) -> Vec<String> {
+    let mut ids: Vec<String> = acts.iter().map(|a| a.act_id().to_string()).collect();
+    ids.sort();
+    ids
+}
+
+/// Asserts every record of `package` verifies in the form the package
+/// states and in no other.
+fn verifies_in_its_form_only(package: &EpochPackage, host_key: &[u8]) {
+    let other = match package.closure.approval_form {
+        ApprovalForm::Act => ApprovalForm::ActAndSeal,
+        ApprovalForm::ActAndSeal => ApprovalForm::Act,
+    };
+    for record in &package.records {
+        assert_eq!(
+            verify_from_record(record, package.closure.approval_form, host_key),
+            Ok(()),
+            "epoch {}: {}",
+            package.epoch,
+            record.act_id
+        );
+        assert_eq!(
+            verify_from_record(record, other, host_key),
+            Err(Unverified::Approval),
+            "epoch {}: {}",
+            package.epoch,
+            record.act_id
+        );
+    }
+}
+
+/// A populated stand-in migrates, no approved act loses its approval, and
+/// every epoch has exactly one approval form. Before the migration the
+/// world holds a closed epoch that accepted an act approved over the
+/// verified act and its seal; an act approved that way that no epoch has
+/// accepted yet (bob); one approved that way whose declared dependency is
+/// still only sealed (dave, after carol); and that sealed act. After it the
+/// closed epoch states form 1 and still verifies in it. Bob lands in an
+/// epoch of form 1 of his own, while carol and erin — approved in form 2
+/// after the migration, erin depending on bob — wait; dave's form-1 attempt
+/// orders nothing while carol is out of history, so the next epoch is of
+/// form 2 and lands carol and erin, erin after bob; dave then lands in an
+/// epoch of form 1, and the close after that is of form 2 again. Every
+/// record verifies in its own epoch's form and in no other, an act past
+/// approval holds its witness for good, and no close can leave its form
+/// unstated.
+///
+/// A populated stand-in migrates with one approval form per epoch; acts approved in the old form keep their approval and land in old-form epochs.
+/// ´claim:standin:a-populated-world-migrates-with-one-approval-form-per-epoch´
+#[sqlx::test(migrations = false)]
+async fn a_populated_world_migrates_with_one_approval_form_per_epoch(pool: PgPool) {
+    apply_migrations(&pool, |name| name < UNDER_TEST).await;
+    let host = standin(pool.clone());
+    let alice = funded_actor(&host).await;
+    let bob = funded_actor(&host).await;
+    let carol = funded_actor(&host).await;
+    let dave = funded_actor(&host).await;
+    let erin = funded_actor(&host).await;
+    let (accepted, accepted_sealed) = sealed_only(&host, &alice, registration(&alice), 21).await;
+    let (bob_act, bob_sealed) = sealed_only(&host, &bob, registration(&bob), 23).await;
+    let (carol_act, _) = sealed_only(&host, &carol, registration(&carol), 25).await;
+    let (dave_act, dave_sealed) =
+        sealed_only(&host, &dave, opinion_after(&dave, &carol, &carol_act), 27).await;
+
+    sqlx::query(
+        "INSERT INTO l1_epochs (epoch, act_count, theta_charged_micro, closure_cause,
+                                marker_policy, marker_edition, target_acts, min_duration_secs)
+         VALUES (1, 1, $1, 'duration', 'marker', 1, 10000, 0)",
+    )
+    .bind(THETA)
+    .execute(&pool)
+    .await
+    .expect("the closed epoch, as it stood");
+    approve_before(&pool, &alice, &accepted, &accepted_sealed).await;
+    sqlx::query(
+        "UPDATE l1_acts SET status = 'accepted', epoch = 1, act_time = 1, position = 1,
+                content_salt = NULL
+          WHERE act_id = $1",
+    )
+    .bind(accepted.act_id().to_string())
+    .execute(&pool)
+    .await
+    .expect("accepted in epoch 1");
+    sqlx::query(
+        "INSERT INTO l1_act_legs (act_id, leg, source, target, p_d, p_i, tau)
+         VALUES ($1, 'binary', $2, $3, 1, 1, 0)",
+    )
+    .bind(accepted.act_id().to_string())
+    .bind(accepted.proposal.body.source().to_string())
+    .bind(accepted.proposal.body.target.to_string())
+    .execute(&pool)
+    .await
+    .expect("its leg");
+    approve_before(&pool, &bob, &bob_act, &bob_sealed).await;
+    approve_before(&pool, &dave, &dave_act, &dave_sealed).await;
+
+    apply_migrations(&pool, |name| name >= UNDER_TEST).await;
+
+    let host = standin(pool.clone());
+    let host_key = host.host_public_key().await.expect("host key");
+    let closed = host.epochs_since(0).await.expect("the closed epoch");
+    assert_eq!(closed.len(), 1);
+    assert_eq!(closed[0].closure.approval_form, ApprovalForm::ActAndSeal);
+    verifies_in_its_form_only(&closed[0], &host_key);
+
+    let approved: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM l1_acts
+          WHERE status = 'approved' AND approval_form = 1 AND approval_signature IS NOT NULL",
     )
     .fetch_one(&pool)
     .await
-    .expect("catalog");
-    assert!(!created, "nothing changed");
+    .expect("count");
+    assert_eq!(approved, 2, "bob and dave keep their approval");
 
-    sqlx::query("UPDATE l1_acts SET approval_signature = '\\x0a'")
+    let carol_stored = host
+        .sealed_act(&carol_act.act_id())
+        .await
+        .expect("read")
+        .and_then(|act| act.sealed)
+        .expect("carol's sealed act is still served");
+    let witness = carol_act
+        .approve(&carol, &carol_stored, &host_key)
+        .expect("approves");
+    host.approve(witness).await.expect("taken in form 2");
+    let (erin_act, _, _) = land(&host, &erin, opinion_after(&erin, &bob, &bob_act), 29).await;
+
+    let mut epochs = Vec::new();
+    for _ in 0..4 {
+        epochs.push(host.close_epoch().await.expect("closes"));
+    }
+    let forms: Vec<ApprovalForm> = epochs.iter().map(|p| p.closure.approval_form).collect();
+    assert_eq!(
+        forms,
+        [
+            ApprovalForm::ActAndSeal,
+            ApprovalForm::Act,
+            ApprovalForm::ActAndSeal,
+            ApprovalForm::Act,
+        ]
+    );
+    assert_eq!(published(&epochs[0]), ids(&[&bob_act]));
+    assert_eq!(published(&epochs[1]), ids(&[&carol_act, &erin_act]));
+    assert_eq!(published(&epochs[2]), ids(&[&dave_act]));
+    assert!(epochs[3].records.is_empty());
+    for package in &epochs {
+        verifies_in_its_form_only(package, &host_key);
+    }
+    let read_back = host.epochs_since(0).await.expect("epochs");
+    assert_eq!(read_back[0], closed[0]);
+    assert_eq!(&read_back[1..], epochs.as_slice());
+
+    let violated = sqlx::query("UPDATE l1_acts SET approval_signature = NULL WHERE act_id = $1")
+        .bind(accepted.act_id().to_string())
         .execute(&pool)
         .await
-        .expect("the witness");
-    insert_act(&pool, 1, "sealed", None).await;
-    apply_under_test(&pool).await.expect("migrates");
-
-    let violated = sqlx::query("UPDATE l1_acts SET approval_signature = NULL WHERE seq = 0")
-        .execute(&pool)
-        .await
-        .expect_err("an approved act keeps its witness");
+        .expect_err("an accepted act keeps its witness");
     assert!(
         violated
             .to_string()
             .contains("l1_acts_approved_holds_witness"),
         "{violated}"
     );
+    let unstated = sqlx::query(
+        "INSERT INTO l1_epochs (epoch, act_count, theta_charged_micro, closure_cause,
+                                marker_policy, marker_edition, target_acts, min_duration_secs)
+         VALUES (6, 0, $1, 'duration', 'marker', 1, 10000, 0)",
+    )
+    .bind(THETA)
+    .execute(&pool)
+    .await
+    .expect_err("a close states its form");
+    assert!(unstated.to_string().contains("approval_form"), "{unstated}");
 }
