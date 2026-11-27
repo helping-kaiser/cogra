@@ -68,6 +68,7 @@ import type { StancePair } from "@/lib/stance/model";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
 import { HeaderBar } from "@/lib/ui2/header-bar";
 import { HelpDot } from "@/lib/ui2/help-dot";
+import { useReportProblem } from "@/lib/report/report-problem-layer";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
@@ -144,6 +145,8 @@ export function ReplyWizard({
   const [stagedStance, setStagedStance] = useState<StancePair>(state.stance);
   const [describing, setDescribing] = useState<string | null>(null);
   const [help, setHelp] = useState<HelpTopic | null>(null);
+  /** The bug notice's `Report a problem`: the one report page, over the reply (ReportProblem.md:3,27). */
+  const { openReport, reportLayer } = useReportProblem();
   const [busy, setBusy] = useState(false);
   // A press made while the reply's bytes still move is HELD and signs the
   // moment the last one lands (ReplySealUploading.md:9-15); the commit is
@@ -810,9 +813,7 @@ export function ReplyWizard({
               onRetryUploads={retryUploads}
               onWriteRuleHelp={() => setHelp(HELP_TOPICS.whySigningWaitsAtReply)}
               onNotNow={() => setFault(null)}
-              // The report page Settings opens is not built on the web yet: the
-              // word stands where the board draws it, as on the post seal.
-              onReport={() => {}}
+              onReport={openReport}
               onBack={back}
               onDiscard={leave}
               onRestoreKey={() => router.push("/restore")}
@@ -853,6 +854,7 @@ export function ReplyWizard({
         topic={help ?? HELP_TOPICS.howSigningWorks}
         testId="reply-help-dialog"
       />
+      {reportLayer}
 
       <DiscardConfirm
         open={confirmingDiscard}

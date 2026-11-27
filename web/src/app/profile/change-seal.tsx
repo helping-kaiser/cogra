@@ -40,6 +40,7 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
+import { useReportProblem } from "@/lib/report/report-problem-layer";
 import { HelpDialog, HELP_TOPICS } from "@/lib/ui2/help-dialog";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { HeaderBar } from "@/lib/ui2/header-bar";
@@ -140,6 +141,8 @@ export function ChangeSeal({
   const id = reading.testId;
   const [foot, setFoot] = useState<Foot>({ kind: "rest" });
   const [help, setHelp] = useState<"change" | "key" | null>(null);
+  /** The bug notice's `Report a problem`: the one report page, over this seal (ReportProblem.md:3,27). */
+  const { openReport, reportLayer } = useReportProblem();
   const signing = foot.kind === "signing";
   const slowAnswer = useSlowAnswer(signing);
   const slowNetwork = useWaitedPast(signing, SLOW_NETWORK_MS);
@@ -250,9 +253,7 @@ export function ChangeSeal({
               </PillButton>
             </NoticePanel>
             <div className="flex flex-col">
-              {/* Report a problem is wired nowhere yet on web (its packet is
-                  undrawn, the settings row's precedent); the control stands. */}
-              <PillButton testId={`${id}-report`} variant="text" full onClick={() => {}}>
+              <PillButton testId={`${id}-report`} variant="text" full onClick={openReport}>
                 Report a problem
               </PillButton>
               <PillButton testId={`${id}-not-now`} variant="text" full onClick={onBack}>
@@ -282,6 +283,7 @@ export function ChangeSeal({
         topic={help === "key" ? HELP_TOPICS.yourKey : HELP_TOPICS[reading.help.topic]}
         testId={`${id}-help-dialog`}
       />
+      {reportLayer}
     </main>
   );
 }

@@ -973,6 +973,13 @@ describe("the reply wizard", () => {
       const notice = await screen.findByTestId("reply-seal-bug");
       expect(notice).toHaveTextContent("This shouldn't have happened");
       expect(screen.queryByTestId("reply-sign")).toBeNull();
+      // ReportProblem.md:3,27 — Report a problem raises the one report page,
+      // and its back arrow returns this notice as it stood.
+      fireEvent.click(screen.getByTestId("reply-report"));
+      expect(screen.getByTestId("reportProblem")).toBeInTheDocument();
+      fireEvent.click(within(screen.getByTestId("reportProblem")).getByRole("button", { name: "Back" }));
+      expect(screen.queryByTestId("reportProblem")).toBeNull();
+      expect(screen.getByTestId("reply-seal-bug")).toBeInTheDocument();
       fireEvent.click(screen.getByTestId("reply-discard"));
       const dialog = screen.getByTestId("reply-discard-confirm");
       await waitFor(() => expect(dialog).toHaveAttribute("open"));
