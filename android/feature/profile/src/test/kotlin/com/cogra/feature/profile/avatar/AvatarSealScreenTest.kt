@@ -171,6 +171,16 @@ class AvatarSealScreenTest {
         assertThat(notNows).isEqualTo(1)
     }
 
+    /** The device's own refusal reads as an answered refusal (copy-voice:1611-1613), never the bug notice. */
+    @Test
+    fun theDevicesRefusalIsTheNotThroughLineWithRetry() {
+        render(atRest.copy(fault = ProfileSealFault.NotThrough))
+        compose.onNodeWithTag("avatar_seal_not_through").assert(hasText("That didn't go through. Try again."))
+        compose.onNodeWithText("This shouldn't have happened").assertDoesNotExist()
+        compose.onNodeWithTag("avatar_seal_retry").performScrollTo().performClick()
+        assertThat(signs).isEqualTo(1)
+    }
+
     @Test
     fun withoutTheKeyTheNoticeRestoresOrStepsBack() {
         render(atRest.copy(fault = ProfileSealFault.KeyAbsent))

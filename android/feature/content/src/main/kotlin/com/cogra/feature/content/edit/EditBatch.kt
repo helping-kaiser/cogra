@@ -91,17 +91,6 @@ private class Gathered(val noun: String) {
 /** What one signature commits, in records — the footer's and the sheet's one number. */
 fun List<EditActRow>.actCount(): Int = sumOf { it.count }
 
-/**
- * The foot's sentence (`ActsFooter.jsx`): `Nothing to sign yet` at zero — and
- * then the line is no control — `You're signing 1 thing`, `You're signing N
- * things`.
- */
-fun actsFooterLine(count: Int): String = when (count) {
-    0 -> "Nothing to sign yet"
-    1 -> "You're signing 1 thing"
-    else -> "You're signing $count things"
-}
-
 /** The acts sheet's title (copy-voice "What one signature commits"). */
 fun actsSheetTitle(count: Int): String = if (count == 1) "1 thing, signed" else "$count things, signed together"
 

@@ -38,7 +38,7 @@ class ProfileEditSealScreenTest {
         displayName = "Sol Ferreira",
         bio = "New bio",
         websiteUrl = "https://sol.example",
-        readDisplayName = "Sol Ferreira",
+        staged = setOf(ProfileField.Bio, ProfileField.Website),
         stage = ProfileEditStage.Seal,
     )
 
@@ -166,9 +166,20 @@ class ProfileEditSealScreenTest {
         assertThat(notNows).isEqualTo(1)
     }
 
+    /** The device's own refusal reads as an answered refusal (copy-voice:1611-1613), never the bug notice. */
+    @Test
+    fun theDevicesRefusalIsTheNotThroughLineWithRetry() {
+        render(atRest.copy(fault = ProfileSealFault.NotThrough))
+        compose.onNodeWithTag("profile_edit_seal_not_through").assert(hasText("That didn't go through. Try again."))
+        compose.onNodeWithText("This shouldn't have happened").assertDoesNotExist()
+        compose.onNodeWithTag("profileEditSeal.foot.sign").assertDoesNotExist()
+        compose.onNodeWithTag("profile_edit_seal_retry").performScrollTo().performClick()
+        assertThat(signs).isEqualTo(1)
+    }
+
     @Test
     fun aRemovedPictureReadsTheRemovalAndTheMonogram() {
-        render(atRest.copy(bio = "", websiteUrl = "", avatar = ProfileImageState.Cleared))
+        render(atRest.copy(bio = "", websiteUrl = "", staged = emptySet(), avatar = ProfileImageState.Cleared))
         compose.onNodeWithText("The picture removed").assertExists()
         compose.onNodeWithTag("profile_edit_seal_picture").assertExists()
     }

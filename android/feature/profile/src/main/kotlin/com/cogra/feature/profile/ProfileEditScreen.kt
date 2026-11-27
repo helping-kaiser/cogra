@@ -13,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,14 +31,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
+import com.cogra.core.designsystem.v2.compose.ActsFooter
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.domain.content.MAX_BIO_CHARS
 import com.cogra.domain.content.MAX_DISPLAY_NAME_CHARS
 import com.cogra.domain.content.MAX_WEBSITE_URL_CHARS
+
+/** The board's registered prefix (nodes.json `profileEdit`). */
+internal val PROFILE_EDIT = DataNode("profileEdit")
 
 @Composable
 fun ProfileEditRoute(
@@ -244,19 +249,32 @@ fun ProfileEditScreen(
                         },
                         testTag = "profile_edit_website",
                     )
-                    Button(
+                    // Nothing staged: the edit family's zero foot stands on Save,
+                    // `Nothing to sign yet` in the quiet voice (ProfileEdit.md:43;
+                    // ProfileEdit.jsx's `rest` draws ActsFooter at 0), and goes
+                    // with the first staged change (:47).
+                    if (!state.anythingStaged) {
+                        ActsFooter(
+                            count = 0,
+                            onOpen = {},
+                            testTag = "profile_edit_acts",
+                            node = PROFILE_EDIT / "acts",
+                        )
+                    }
+                    CograButton(
+                        text = stringResource(R.string.profile_edit_save),
                         // Save opens the change's seal; its refusals and faults
                         // stand there, in the commit's place (ProfileEditSeal.md:47-57).
                         onClick = onSubmit,
-                        // A picture still on its way has no id to name, and
-                        // an over-cap field disables Save too (the counter
-                        // law) — `canSubmit` only makes visible what the
-                        // ViewModel's own submit gate already refuses.
+                        // Visible and inert with nothing staged (ProfileEdit.md:41);
+                        // a picture still on its way has no id to name, and an
+                        // over-cap field disables Save too (the counter law) —
+                        // `canSubmit` only makes visible what the ViewModel's own
+                        // submit gate already refuses.
                         enabled = state.canSubmit,
-                        modifier = Modifier.testTag("profile_edit_save"),
-                    ) {
-                        Text(stringResource(R.string.profile_edit_save))
-                    }
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "profile_edit_save",
+                    )
                 }
             }
         }
