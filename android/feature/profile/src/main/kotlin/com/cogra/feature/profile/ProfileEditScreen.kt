@@ -57,6 +57,8 @@ fun ProfileEditRoute(
     /** The crop's result on return, or null while there is none. */
     framedPicture: FramedPicture? = null,
     onFramedPictureConsumed: () -> Unit = {},
+    /** The seal's bug notice `Report a problem`: the report opens over the seal. */
+    onReportProblem: () -> Unit = {},
     viewModel: ProfileEditViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -110,6 +112,7 @@ fun ProfileEditRoute(
                     onBack()
                 },
                 onNotNow = viewModel.seal::onNotNow,
+                onReport = onReportProblem,
                 onRestoreKey = onRestoreKey,
             ),
         )
