@@ -703,15 +703,7 @@ class StanceViewModel @Inject constructor(
         // up until that one signature answers.
         if (open.fromPick) {
             val pick = _state.value.targets[target]?.pick ?: return
-            pressed {
-                when (val signed = sign(target, pick, retrying = open.failed)) {
-                    Signed.Done -> taken(target, pick)
-                    is Signed.Landed -> taken(target, signed.first)
-                    Signed.WriteRule -> severanceWriteRule(target)
-                    is Signed.Failed -> failSeverance(target)
-                    Signed.Stood -> standSeverance(target, open)
-                }
-            }
+            confirmPickAtZero(target, pick, open)
             return
         }
         // The explicit walk-back keeps its own slot: its Retry asks the
@@ -724,6 +716,17 @@ class StanceViewModel @Inject constructor(
                 Signed.Done, is Signed.Landed -> walkedBackAll(target, quote.records)
                 Signed.Stood -> standSeverance(target, open)
             }
+        }
+    }
+
+    /** The walk-back dialog reached by a pick signs that one pick, through the pick's slot. */
+    private fun confirmPickAtZero(target: StanceTarget, pick: StancePair, open: SeveranceState) = pressed {
+        when (val signed = sign(target, pick, retrying = open.failed)) {
+            Signed.Done -> taken(target, pick)
+            is Signed.Landed -> taken(target, signed.first)
+            Signed.WriteRule -> severanceWriteRule(target)
+            is Signed.Failed -> failSeverance(target)
+            Signed.Stood -> standSeverance(target, open)
         }
     }
 
@@ -829,8 +832,10 @@ class StanceViewModel @Inject constructor(
         pressed {
             when (val signed = sign(target, pick, retrying)) {
                 Signed.Done -> taken(target, pick)
-                // PadFailed.md:15 — the pick moved after a first signing the
-                // server had already approved: that first pick is what lands.
+                // The pick moved after a first signing the server had already
+                // approved: that first pick is what lands. Undrawn, the web's
+                // behaviour (#676); PadFailed.md:15 says Retry signs the pick
+                // the pad shows, which a landing first pick cannot.
                 is Signed.Landed -> taken(target, signed.first)
                 is Signed.Failed -> fail(target, needsKey = signed.needsKey)
                 Signed.WriteRule -> update(target) { it.copy(busy = false, writeRule = true) }
@@ -866,19 +871,7 @@ class StanceViewModel @Inject constructor(
     private suspend fun sign(target: StanceTarget, pick: StancePair, retrying: Boolean): Signed {
         val press = signing.press(retrying) ?: return Signed.Stood
         val slotted = signing.sign(StanceSlot.Pick(target), stanceIntent(target, pick), press, pick) {
-            // The record must come back as exactly the pick, toward the node
-            // the standing read named (Intent.kt).
-            val graphId = when (val read = stances.targetGraphId(target)) {
-                is Outcome.Success -> read.value
-                else -> return@sign Staging.Unreachable
-            }
-            val expected = Expectation(listOf(stanceRecord(graphId, pick.pDirected, pick.pInterest)))
-            if (!press.holds()) return@sign Staging.Stood
-            when (val outcome = stances.prepareStance(target, pick)) {
-                is Outcome.Success -> Staging.Staged(graphId, outcome.value, expected)
-                is Outcome.Refused -> Staging.Refused(outcome.errors)
-                is Outcome.Failed -> Staging.Unreachable
-            }
+            stagePick(target, pick, press)
         }
         return when (slotted) {
             is Slotted.Answered -> when {
@@ -890,6 +883,24 @@ class StanceViewModel @Inject constructor(
             // A husk device: the write waits on the reader restoring the key,
             // not on time passing.
             else -> signedOf(slotted, needsKey = true)
+        }
+    }
+
+    /**
+     * The pick's one record, staged: it must come back as exactly the pick,
+     * toward the node the standing read named (Intent.kt).
+     */
+    private suspend fun stagePick(target: StanceTarget, pick: StancePair, press: StancePress): Staging {
+        val graphId = when (val read = stances.targetGraphId(target)) {
+            is Outcome.Success -> read.value
+            else -> return Staging.Unreachable
+        }
+        val expected = Expectation(listOf(stanceRecord(graphId, pick.pDirected, pick.pInterest)))
+        if (!press.holds()) return Staging.Stood
+        return when (val outcome = stances.prepareStance(target, pick)) {
+            is Outcome.Success -> Staging.Staged(graphId, outcome.value, expected)
+            is Outcome.Refused -> Staging.Refused(outcome.errors)
+            is Outcome.Failed -> Staging.Unreachable
         }
     }
 

@@ -257,16 +257,25 @@ class StanceRetrySameSigningTest {
         val vm = opened()
         vm.set()
         assertThat(vm.entry().failed).isTrue()
+        val before = vm.entry()
 
         // The fault's Retry is acct-a's: under acct-b it reads, retires,
-        // prepares and signs nothing, and the fault stands as it was.
+        // prepares and signs nothing, and the fault line, the pad, its pick
+        // and the sent act stand exactly as they were.
         switchTo("acct-b")
         vm.set()
         assertThat(host.read).isEmpty()
         assertThat(identity.handshakes.keys).contains("w1")
         assertThat(stances.staged).containsExactly(PICK)
-        assertThat(vm.entry().failed).isTrue()
-        assertThat(vm.entry().busy).isFalse()
+        assertThat(vm.entry()).isEqualTo(before)
+        assertThat(vm.entry().pad).isEqualTo(PadMode.STICKY)
+        assertThat(vm.entry().sent).isEqualTo(PICK)
+
+        // The row's Retry under acct-b is the same no.
+        vm.onRetrySigning(TARGET)
+        settle()
+        assertThat(stances.staged).containsExactly(PICK)
+        assertThat(vm.entry()).isEqualTo(before)
 
         // Back under acct-a, the Retry asks acct-a's first attempt again.
         switchTo("acct-a")
