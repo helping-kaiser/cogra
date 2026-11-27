@@ -3,7 +3,7 @@
 // commitments_bind case) over the pre-sign/approve handshake.
 
 import { expect, it } from "vitest";
-import { equalBytes, toHex } from "./bytes";
+import { concat, equalBytes, toHex } from "./bytes";
 import { commitment, preDigest, sha256Tagged, Tags, verify, verifyDigest } from "./hashing";
 import { ActId, ProfId } from "./identifiers";
 import {
@@ -177,25 +177,57 @@ it("a verified act with an unexpected dependency edition is refused before appro
   await expect(actor.approve(sent, sealed, host.publicKeyBytes())).rejects.toThrow(/unexpected editions/);
 });
 
-it("the approval witness signs the verified act and its host seal together", async () => {
+it("the approval digest ignores the host seal and the pre-signature and binds the body and both commitments", async () => {
+  const actor = await ActorKey.generate();
+  const host = await ActorKey.generate();
+  const author = await actor.address();
+  const sent = await actor.preSign(proposal(author));
+  const sealed = await sealBy(host, sent);
+  const base = await sealed.approvalDigest();
+  const act = sealed.act;
+  const withAct = (over: Partial<ConstructorParameters<typeof VerifiedAct>[0]>) =>
+    new VerifiedAct({
+      body: act.body,
+      preCommitment: act.preCommitment,
+      preSignature: act.preSignature,
+      contentCommitment: act.contentCommitment,
+      depsCommitment: act.depsCommitment,
+      contentEdition: act.contentEdition,
+      depsEdition: act.depsEdition,
+      ...over,
+    });
+  const sealedWith = (a: VerifiedAct, hostSeal: Uint8Array) =>
+    new SealedAct({ act: a, contentSalt: sealed.contentSalt, depsSalt: sealed.depsSalt, hostSeal });
+
+  // Unchanged: another host seal, another pre-signature.
+  expect(equalBytes(await sealedWith(act, new Uint8Array(64)).approvalDigest(), base)).toBe(true);
+  const otherPreSignature = new Uint8Array(64).fill(7);
+  expect(equalBytes(await sealedWith(withAct({ preSignature: otherPreSignature }), sealed.hostSeal).approvalDigest(), base)).toBe(
+    true,
+  );
+  // Changed: another body, another content commitment, another dependency commitment.
+  const otherBody = body(author, { pI: -1.0 });
+  expect(equalBytes(await sealedWith(withAct({ body: otherBody }), sealed.hostSeal).approvalDigest(), base)).toBe(false);
+  const otherCommitment = new Uint8Array(32).fill(9);
+  expect(
+    equalBytes(await sealedWith(withAct({ contentCommitment: otherCommitment }), sealed.hostSeal).approvalDigest(), base),
+  ).toBe(false);
+  expect(
+    equalBytes(await sealedWith(withAct({ depsCommitment: otherCommitment }), sealed.hostSeal).approvalDigest(), base),
+  ).toBe(false);
+});
+
+it("an approval over the act message verifies and one in the form of earlier epochs does not", async () => {
   const actor = await ActorKey.generate();
   const host = await ActorKey.generate();
   const sent = await actor.preSign(proposal(await actor.address()));
   const sealed = await sealBy(host, sent);
   const witness = await actor.approve(sent, sealed, host.publicKeyBytes());
-  const digest = await sha256Tagged(Tags.APPROVAL, [sealed.act.sealMsg(), sealed.hostSeal]);
+  const digest = await sha256Tagged(Tags.APPROVAL, [sealed.act.approvalMsg()]);
   expect(await verifyDigest(actor.publicKeyBytes(), digest, witness.approvalSignature)).toBe(true);
-  const otherSeal = await sha256Tagged(Tags.APPROVAL, [sealed.act.sealMsg(), new Uint8Array(64)]);
-  expect(await verifyDigest(actor.publicKeyBytes(), otherSeal, witness.approvalSignature)).toBe(false);
-});
-
-it("an approval over the verified act without its seal does not verify", async () => {
-  const actor = await ActorKey.generate();
-  const host = await ActorKey.generate();
-  const sent = await actor.preSign(proposal(await actor.address()));
-  const sealed = await sealBy(host, sent);
-  const unsealed = await actor.signTagged(Tags.APPROVAL, sealed.act.sealMsg());
-  expect(await verifyDigest(actor.publicKeyBytes(), await sealed.approvalDigest(), unsealed)).toBe(false);
+  const earlierEpochsTag = "cogra-l1:approval:v2";
+  const earlierSigned = await actor.signTagged(earlierEpochsTag, concat(sealed.act.sealMsg(), sealed.hostSeal));
+  expect(await verifyDigest(actor.publicKeyBytes(), await sealed.approvalDigest(), earlierSigned)).toBe(false);
 });
 
 it("approve rejects an altered body", async () => {

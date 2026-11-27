@@ -100,6 +100,7 @@ interface Vectors {
   proposalHandshake: {
     approvalActId: string;
     approvalDigestHex: string;
+    approvalMsgHex: string;
     approvalSignatureHex: string;
     canonicalDepsHex: string;
     contentCommitmentHex: string;
@@ -365,6 +366,7 @@ it("the device reproduces every two-nonce handshake vector from the inputs", asy
     depsEdition: DEPENDENCY_EDITION,
   });
   expect(toHex(act.sealMsg())).toBe(h.sealMsgHex);
+  expect(toHex(act.approvalMsg())).toBe(h.approvalMsgHex);
   expect(toHex(host.publicKeyBytes())).toBe(h.host.publicKeyHex);
   const hostSeal = await host.signTagged(Tags.HOST_SEAL, act.sealMsg());
   expect(toHex(hostSeal)).toBe(h.hostSealHex);
