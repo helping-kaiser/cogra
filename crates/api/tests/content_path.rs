@@ -3209,12 +3209,28 @@ async fn land_after_expiry_interrupted(
 }
 
 /// Two full passes, then a confirm of `landed` overlapping them — the
-/// dev CLI's pass beside the live loop. None of the three may append.
-async fn heal_twice_and_overlap(rig: &Rig, landed: &[staged::PromotedWrite]) {
+/// dev CLI's pass beside the live loop. The passes must write the node's
+/// missing version, leaving it `rows` rows, and the overlap none more.
+async fn heal_twice_and_overlap(
+    rig: &Rig,
+    landed: &[staged::PromotedWrite],
+    (table, column, node): (&str, &str, Uuid),
+    rows: i64,
+) {
     rig.close_and_ingest().await;
     rig.close_and_ingest().await;
+    assert_eq!(
+        version_rows(&rig.pool, table, column, node).await,
+        rows,
+        "the next passes leave the landed write unwritten"
+    );
     let failures = content::land_promoted(&rig.pool, landed).await;
     assert!(failures.is_empty(), "the overlap failed: {failures:?}");
+    assert_eq!(
+        version_rows(&rig.pool, table, column, node).await,
+        rows,
+        "a confirm overlapping the passes appends a row"
+    );
     assert!(
         staged::landed_without_content_row(&rig.pool)
             .await
@@ -3276,7 +3292,13 @@ async fn a_post_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(
         "expiry took the pending rows"
     );
 
-    heal_twice_and_overlap(&rig, &landed).await;
+    heal_twice_and_overlap(
+        &rig,
+        &landed,
+        ("post_versions", "post_id", prepared.node),
+        1,
+    )
+    .await;
 
     let post = content_store::post(&rig.pool, prepared.node)
         .await
@@ -3285,10 +3307,6 @@ async fn a_post_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(
     assert!(post.order.is_some());
     assert!(!post.version_pending);
     assert_eq!(post.title.as_deref(), Some("Late"));
-    assert_eq!(
-        version_rows(&rig.pool, "post_versions", "post_id", prepared.node).await,
-        1
-    );
 }
 
 /// The edit twin: an edit landing after its pending version expired,
@@ -3315,7 +3333,7 @@ async fn a_post_edit_landing_after_expiry_left_unwritten_is_written_by_the_next_
     .expect("prepares the edit");
     let landed = land_after_expiry_interrupted(&rig, &edit, &alice_key).await;
 
-    heal_twice_and_overlap(&rig, &landed).await;
+    heal_twice_and_overlap(&rig, &landed, ("post_versions", "post_id", post_id), 2).await;
 
     let post = content_store::post(&rig.pool, post_id)
         .await
@@ -3323,10 +3341,6 @@ async fn a_post_edit_landing_after_expiry_left_unwritten_is_written_by_the_next_
         .expect("post");
     assert_eq!(post.title.as_deref(), Some("Late"), "the edit never shows");
     assert!(!post.version_pending);
-    assert_eq!(
-        version_rows(&rig.pool, "post_versions", "post_id", post_id).await,
-        2
-    );
 }
 
 /// The comment twin of the post case.
@@ -3349,7 +3363,13 @@ async fn a_comment_landing_after_expiry_left_unwritten_is_written_by_the_next_pa
     .expect("prepares comment");
     let landed = land_after_expiry_interrupted(&rig, &comment, &alice_key).await;
 
-    heal_twice_and_overlap(&rig, &landed).await;
+    heal_twice_and_overlap(
+        &rig,
+        &landed,
+        ("comment_versions", "comment_id", comment.node),
+        1,
+    )
+    .await;
 
     let row = content_store::comment(&rig.pool, comment.node)
         .await
@@ -3357,8 +3377,4 @@ async fn a_comment_landing_after_expiry_left_unwritten_is_written_by_the_next_pa
         .expect("the landed comment has no display row");
     assert!(row.order.is_some());
     assert_eq!(row.content, "Late");
-    assert_eq!(
-        version_rows(&rig.pool, "comment_versions", "comment_id", comment.node).await,
-        1
-    );
 }
