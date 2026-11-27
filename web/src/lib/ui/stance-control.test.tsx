@@ -116,6 +116,17 @@ function mount(
 
 const control = () => screen.getByTestId(PREFIX);
 
+/**
+ * The hold's ring stands CLOSED around the face (RowSigning.md:5): drawn
+ * whole — no dash left to fill — and still, never filling again.
+ */
+function expectClosedRing() {
+  const ring = screen.getByTestId(`${PREFIX}-hold-ring`);
+  const circle = ring.querySelector("circle");
+  expect(circle).toHaveAttribute("stroke-dashoffset", "0");
+  expect(ring.querySelector("animate")).toBeNull();
+}
+
 /** Rebuilds the target prop on every render, the way the real hosts do. */
 function Host() {
   const [, setTick] = useState(0);
@@ -822,7 +833,11 @@ describe("the hold", () => {
     expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
   });
 
-  it("says Signing… under the face past 200ms, and never before", async () => {
+  // RowSigning.md:5: "WHEN the hold's signing runs -> the ring that filled
+  // during the hold stays closed around the face AND NEVER a line stands under
+  // the face for the wait"; :9: "a visually hidden status speaks Signing… AND
+  // NEVER Signing… is drawn"; :11: never within 200ms; :13: taken, the ring goes.
+  it("keeps the ring closed around the face while the hold signs, and speaks Signing… unseen past 200ms", async () => {
     const data = mount();
     await settle();
     const commit = data.commit;
@@ -833,17 +848,143 @@ describe("the hold", () => {
       });
     fireEvent.pointerDown(control(), { pointerId: 1, clientX: 0, clientY: 0 });
     await settle(LONG_PRESS_MS + 1);
-    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
-    // Inert at once, and saying so only past the wait.
+    await act(async () => {
+      fireEvent.pointerUp(control(), { pointerId: 1 });
+      fireEvent.click(control());
+    });
+    // The lift does not clear it: the ring stands, closed and still.
+    expectClosedRing();
+    expect(screen.queryByTestId(`${PREFIX}-signing`)).toBeNull();
     expect(control()).toHaveAttribute("aria-busy", "true");
     await settle(SETTING_AFTER_MS);
-    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("Signing…");
-    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveAttribute("role", "status");
+    const status = screen.getByTestId(`${PREFIX}-signing`);
+    expect(status).toHaveTextContent("Signing…");
+    expect(status).toHaveAttribute("role", "status");
+    expect(status).toHaveClass("sr-only");
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+    expectClosedRing();
     await act(async () => {
       for (const open of held) open();
     });
     await settle();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-signing`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent("+0.10 / +0.10");
+  });
+
+  // RowSigning.md:35: "WHEN the hold reaches 500ms -> the ring stays closed AND
+  // the signing begins" — even while the key's answer is still coming, and
+  // whatever the lift does meanwhile.
+  it("keeps the ring closed from 500ms while the key is asked, the finger lifted", async () => {
+    const data = mount();
+    await settle();
+    let keyAnswer: (present: boolean) => void = () => {};
+    data.keyOnDevice = () => new Promise((resolve) => (keyAnswer = resolve));
+    data.commit = () => new Promise(() => {});
+    fireEvent.pointerDown(control(), { pointerId: 1, clientX: 0, clientY: 0 });
+    await settle(LONG_PRESS_MS + 1);
+    await act(async () => {
+      fireEvent.pointerUp(control(), { pointerId: 1 });
+      fireEvent.click(control());
+    });
+    expectClosedRing();
+    await act(async () => keyAnswer(true));
+    await settle();
+    expectClosedRing();
+    expect(control()).toHaveAttribute("aria-busy", "true");
+  });
+
+  // RowSigning.md:15: not taken, "the ring goes"; :23: Retry -> "the closed
+  // ring stands around the face while it signs, as after the hold".
+  it("takes the ring away when the hold does not sign, and closes it again around the Retry's signing", async () => {
+    const data = mount();
+    await settle();
+    const commit = data.commit;
+    const held: ((taken: boolean) => void)[] = [];
+    data.commit = (target, pick) =>
+      new Promise((resolve) => {
+        held.push((taken) =>
+          resolve(taken ? commit(target, pick) : createStubStanceData({ offline: true }).commit(target, pick)),
+        );
+      });
+    await hold();
+    expectClosedRing();
+    await act(async () => held[0](false));
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("That didn't sign.");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    await settle();
+    expectClosedRing();
     expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+    await act(async () => held[1](true));
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+  });
+
+  // PadFailed.md:41: "WHEN tap Close GIVEN Set is waiting on its signing -> the
+  // pad closes AND the act goes on AND the ring stands closed around the
+  // target's face while it signs, as after a hold".
+  it("closes the ring around the face when the pad is closed while Set signs", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    const commit = data.commit;
+    const held: (() => void)[] = [];
+    data.commit = (target, pick) =>
+      new Promise((resolve) => {
+        held.push(() => resolve(commit(target, pick)));
+      });
+    await pressSet();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-cancel`));
+    });
+    expectClosedRing();
+    await settle(SETTING_AFTER_MS);
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveClass("sr-only");
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+    await act(async () => held[0]());
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+  });
+
+  // SeveranceConfirm.md:53: "its wait carried by the closed ring around the
+  // target's face, Signing… spoken from a visually hidden status and never drawn".
+  it("closes the ring around the face when the walk-back's dialog is closed while it signs", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } });
+    await settle();
+    await openPad();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    data.sever = () => new Promise(() => {});
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-cancel"));
+    });
+    expectClosedRing();
+    await settle(SETTING_AFTER_MS);
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveClass("sr-only");
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+  });
+
+  it("never rings B's face for A's hold, and rings it again under A", async () => {
+    const store = signedInStore();
+    const data = createStubStanceData();
+    data.commit = () => new Promise(() => {});
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    await hold();
+    expectClosedRing();
+    act(() => store.save({ accessToken: "access-u2", refreshToken: "refresh-u2", accountId: "u2" }));
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+    act(() => store.save({ accessToken: "access-u1", refreshToken: "refresh-u1", accountId: "u1" }));
+    expectClosedRing();
   });
 
   it("rings the face while held, and clears the ring when the press lifts early", async () => {
@@ -1117,7 +1258,7 @@ describe("an act in flight and a taken act keep the account that pressed", () =>
   });
 
   const SEEDED = { seed: { "post-1": { records: [{ pDirected: 0.45, pInterest: 0.1 }] } } };
-  const line = () => screen.queryByTestId(`${PREFIX}-row-line`);
+  const line = () => screen.queryByTestId(`${PREFIX}-signing`);
   const exact = () => screen.getByTestId(`${PREFIX}-resting-exact`);
 
   function signInAs(store: ReturnType<typeof createTokenStore>, account: string) {
@@ -1376,7 +1517,7 @@ describe("a dialog closed while its act signs", () => {
     expect(control()).toHaveAttribute("aria-busy", "true");
     expect(exact()).toHaveTextContent("+0.50 / +0.50");
     await settle(SETTING_AFTER_MS);
-    expect(line()).toHaveTextContent("Signing…");
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveTextContent("Signing…");
 
     await act(async () => gate.answer("taken"));
     await settle();
@@ -1476,7 +1617,7 @@ describe("a dialog closed while its act signs", () => {
     expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
     expect(control()).toHaveAttribute("aria-busy", "true");
     await settle(SETTING_AFTER_MS);
-    expect(line()).toHaveTextContent("Signing…");
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveTextContent("Signing…");
     await act(async () => gate.answer("taken"));
     await settle();
     expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("Signed, still settling.");
@@ -3925,7 +4066,7 @@ describe("round 21's waits, write rule and typed input", () => {
       fireEvent.click(screen.getByTestId("stance-alt-cancel"));
     });
     expect(screen.queryByTestId("stance-alternates")).toBeNull();
-    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("Signing…");
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveTextContent("Signing…");
     await act(async () => {
       gate.answer?.(true);
     });
@@ -4029,7 +4170,7 @@ describe("round 21's waits, write rule and typed input", () => {
       fireEvent.click(screen.getByTestId(`${PREFIX}-cancel`));
     });
     expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
-    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("Signing…");
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveTextContent("Signing…");
     expect(control()).toHaveAttribute("aria-busy", "true");
     const sentPick = gate.picks[0];
     expect(sentPick).not.toEqual(TAP_DEFAULT);
