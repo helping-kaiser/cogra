@@ -322,7 +322,7 @@ describe("a stance pick's Retry asks the same signing again", () => {
     });
   });
 
-  it("an account boundary lets the attempt go: the next account's pick is prepared for it", async () => {
+  it("an account boundary never hands the attempt over: the next account's pick is prepared for it", async () => {
     const prepares = host();
     const { signer: writes, signedAgain } = signer([lost]);
     const { data, tab } = seam(writes);
@@ -333,5 +333,82 @@ describe("a stance pick's Retry asks the same signing again", () => {
 
     expect(signedAgain).toEqual([]);
     expect(prepares).toEqual([PICK, PICK]);
+  });
+
+  // THE ATTEMPT IS THE PRESSING ACCOUNT'S (auth.md "Multi-account device
+  // custody": bound "to the account it belongs to, never to a device-global
+  // slot"): never asked under another account, there again under its own,
+  // so its Retry asks the same signing (SigningAfterClose.md:27) rather than
+  // preparing afresh beside stagings the server may still hold.
+  describe("an attempt is kept beside the account that pressed it", () => {
+    it("comes back with its account: the Retry asks the same signing, prepared once", async () => {
+      const prepares = host();
+      const { signer: writes, signedAgain } = signer([lost]);
+      const { data, tab } = seam(writes);
+
+      expect((await data.commit(POST, PICK)).kind).toBe("failed");
+      tab.switchTo("acct-b");
+      tab.switchTo("acct-a");
+      const retried = await data.commit(POST, PICK);
+
+      expect(prepares).toEqual([PICK]);
+      expect(signedAgain.map((call) => call.ids)).toEqual([["w-1"]]);
+      expect(retried).toEqual({ kind: "success", value: { records: 1 } });
+    });
+
+    it("is never asked under another account's commit, and is still there for its own", async () => {
+      const prepares = host();
+      const { signer: writes, signedAgain } = signer([lost]);
+      const { data, tab } = seam(writes);
+
+      await data.commit(POST, PICK);
+      tab.switchTo("acct-b");
+      expect((await data.commit(POST, PICK)).kind).toBe("success");
+      expect(signedAgain).toEqual([]);
+      tab.switchTo("acct-a");
+      await data.commit(POST, PICK);
+
+      expect(prepares).toEqual([PICK, PICK]);
+      expect(signedAgain.map((call) => call.ids)).toEqual([["w-1"]]);
+    });
+
+    it("answers into its own account's memory when the switch comes while it signs", async () => {
+      const prepares = host();
+      let release: (answer: Answer) => void = () => {};
+      const first = new Promise<Answer>((resolve) => (release = resolve));
+      const signedAgain: string[][] = [];
+      let calls = 0;
+      const writes: WriteSigner = {
+        signStaged: vi.fn(),
+        sign: vi.fn(async (staged: readonly StagedWriteView[]) => {
+          calls += 1;
+          const answer = calls === 1 ? await first : lost;
+          return staged.map((write) => answer(write.id));
+        }),
+        signAgain: vi.fn(async (ids: readonly string[]) => {
+          signedAgain.push([...ids]);
+          return ids.map((id) => done(id));
+        }),
+        signCarriedAtLanding: vi.fn(async () => []),
+        resume: vi.fn(async () => []),
+      };
+      const { data, tab } = seam(writes);
+
+      const pressedByA = data.commit(POST, PICK);
+      await vi.waitFor(() => expect(writes.sign).toHaveBeenCalledTimes(1));
+      tab.switchTo("acct-b");
+      // B's own pick toward the same target fails too: its attempt is B's.
+      expect((await data.commit(POST, OTHER_PICK)).kind).toBe("failed");
+      release(lost);
+      expect((await pressedByA).kind).toBe("failed");
+
+      tab.switchTo("acct-a");
+      await data.commit(POST, PICK);
+      expect(signedAgain).toEqual([["w-1"]]);
+      tab.switchTo("acct-b");
+      await data.commit(POST, OTHER_PICK);
+      expect(signedAgain).toEqual([["w-1"], ["w-2"]]);
+      expect(prepares).toEqual([PICK, OTHER_PICK]);
+    });
   });
 });
