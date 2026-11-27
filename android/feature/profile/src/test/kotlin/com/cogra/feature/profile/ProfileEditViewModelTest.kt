@@ -192,6 +192,7 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onAvatarPicked("content://pick/1")
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         // A failed upload must never read as a clear: the account keeps

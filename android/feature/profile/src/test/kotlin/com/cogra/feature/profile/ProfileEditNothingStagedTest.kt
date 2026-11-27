@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.cogra.domain.MediaFieldUpdate
+import com.cogra.domain.Outcome
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -15,6 +16,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.io.IOException
 
 /**
  * The edit signs only when a change is staged, never by comparing the fields'
@@ -92,6 +94,24 @@ class ProfileEditNothingStagedTest : ProfileEditHarness() {
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Set("m1"))
+    }
+
+    /**
+     * A failed upload stages nothing: the seal has no gate to wait on it
+     * (ProfileEditSeal.md:23-29 not built here), so it never names a picture its
+     * commit would sign without.
+     */
+    @Test
+    fun aFailedUploadAloneStagesNothing() = runTest(dispatcher) {
+        media.outcome = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onAvatarPicked("content://pick/1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.avatar).isInstanceOf(ProfileImageState.Failed::class.java)
+        assertThat(vm.state.value.anythingStaged).isFalse()
+        vm.onBioChange("Hello")
+        assertThat(vm.state.value.changeSummary).isEqualTo("A new bio")
     }
 
     // -- The form as drawn (ProfileEdit.jsx, `rest` and `changed`) --

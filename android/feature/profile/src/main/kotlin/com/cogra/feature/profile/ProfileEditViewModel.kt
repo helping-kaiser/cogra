@@ -64,14 +64,16 @@ sealed interface ProfileImageState {
     data class Failed(val uri: String, val message: String) : ProfileImageState
 
     /**
-     * The form has staged something about the picture: a new one (on its way,
-     * up, or failed — `ProfileEdit.md:31`, Save still answers) or the removal.
-     * [Held] is the picture as it stood, nothing staged.
+     * The form has staged something about the picture: a new one, on its way or
+     * up, or the removal. [Held] is the picture as it stood. A [Failed] upload
+     * stages nothing: this seal has no upload gate to wait on it
+     * (ProfileEditSeal.md:23-29, not built), so a seal over it would name a
+     * picture its commit cannot sign.
      */
-    val staged: Boolean get() = this !is Held
+    val staged: Boolean get() = this is Cleared || isNewPicture
 
     /** A new picture is staged, which the seal's row names `picture`. */
-    val isNewPicture: Boolean get() = this is Picked || this is Uploaded || this is Failed
+    val isNewPicture: Boolean get() = this is Picked || this is Uploaded
 
     /** What the header should draw right now, or null for the monogram. */
     val previewUrl: Any?
