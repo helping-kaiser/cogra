@@ -91,7 +91,7 @@ import type {
   StanceLanding,
   StanceTargetRef,
 } from "@/lib/stance/stance-data";
-import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
+import { useActiveAccountId, useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { OPINION_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 import { BUTTON_CLASS, buttonClassName } from "@/lib/ui/button";
@@ -464,6 +464,8 @@ export function StanceControl({
   const data = useStanceData();
   const phase = useAuthPhase();
   const accountId = useActiveAccountId();
+  /** The session's token store, read live where a press must know whose it is. */
+  const sessionStore = useTokenStore();
   // AN APPLICANT'S FACE IS LOCKED, NOT GONE (ruling PR-103; ApplicantFeed.md:45-53,
   // ProfileOther.md:45-49; the master's `anchorOpacity`): the disabled
   // opacity, still tappable, a tap or a hold answering OPINION_LOCKED, the
@@ -499,8 +501,26 @@ export function StanceControl({
   const [pick, setPick] = useState<StancePair>(TAP_DEFAULT);
   /** What did not go through from the open pad or the alternates. */
   const [padFault, setPadFault] = useState<Fault | null>(null);
-  /** What did not go through from the hold, on the target's own row. */
-  const [rowLine, setRowLine] = useState<RowLineState | null>(null);
+  /**
+   * What did not go through from the hold, on the target's own row — kept
+   * beside the account that pressed (auth.md "Multi-account device custody":
+   * bound "to the account it belongs to, never to a device-global slot").
+   * Several accounts share a tab and the page stays mounted through another
+   * tab's switch, so a line stands only under its own account: hidden under
+   * any other, never erased by the switch — it "stands until Retry is
+   * pressed, another act is made on the same anchor, or the surface's next
+   * fresh load" (RowSigning.md), and an account change is none of these.
+   */
+  const [rowLines, setRowLines] = useState<ReadonlyMap<string | null, RowLineState>>(() => new Map());
+  const rowLine = rowLines.get(accountId) ?? null;
+  const setRowLineOf = (owner: string | null, line: RowLineState | null) =>
+    setRowLines((current) => {
+      if (line === null && !current.has(owner)) return current;
+      const next = new Map(current);
+      if (line === null) next.delete(owner);
+      else next.set(owner, line);
+      return next;
+    });
   /** A signed act in flight, and where it was made. */
   const [inFlight, setInFlight] = useState<Origin | null>(null);
   /** The act in flight has waited past [SETTING_AFTER_MS]. */
@@ -893,17 +913,26 @@ export function StanceControl({
    * it signed (PadFailed.md: "NEVER the hold's +0.10 / +0.10 is signed in its
    * place").
    */
-  const notTaken = (origin: "pad" | "row", fault: Fault, sent: StancePair) => {
+  const notTaken = (origin: "pad" | "row", fault: Fault, sent: StancePair, by: string | null) => {
     // A pad closed while its act was in flight has no surface left to
     // re-raise: the target's row carries it, as a hold's would.
     if (origin === "pad" && openRef.current) setPadFault(fault);
     else
       // The row draws no not-through form of its own (RowSigning.md), so a
-      // FORBIDDEN on a row reads as a hold's fault does.
-      setRowLine(
+      // FORBIDDEN on a row reads as a hold's fault does. The line is the
+      // pressing account's, and its Retry asks that account's act again:
+      // pressed once another account is active, it does nothing.
+      setRowLineOf(
+        by,
         fault === "writeRule"
           ? { kind: "writeRule" }
-          : { kind: "didntSign", onRetry: () => void signPick(sent, "row") },
+          : {
+              kind: "didntSign",
+              onRetry: () => {
+                if (sessionStore.activeAccountId() !== by) return;
+                void signPick(sent, "row");
+              },
+            },
       );
   };
 
@@ -924,9 +953,12 @@ export function StanceControl({
    */
   const signPick = async (chosen: StancePair, origin: "pad" | "row") => {
     if (busy) return;
+    // The act is the account the tab is signed in as at the press: its own
+    // line is the one it replaces, and the one its failure raises.
+    const by = sessionStore.activeAccountId();
     setSigned(null);
     setPadFault(null);
-    setRowLine(null);
+    setRowLineOf(by, null);
     setConfirmFault(null);
     setEmptyFault(null);
     const answer = await runInFlight(origin, async () => {
@@ -966,7 +998,7 @@ export function StanceControl({
         setEmptyAsk({ pick: chosen, landing: { ...answer.landing, severed: false } });
         return;
       default:
-        notTaken(origin, answer.kind, chosen);
+        notTaken(origin, answer.kind, chosen, by);
     }
   };
 
@@ -1046,7 +1078,7 @@ export function StanceControl({
     setPick(from);
     setSigned(null);
     setPadFault(null);
-    setRowLine(null);
+    setRowLineOf(sessionStore.activeAccountId(), null);
     setExplaining(false);
     if (surface === "pad") {
       setCoaching(!taught);

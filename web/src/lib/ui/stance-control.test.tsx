@@ -970,6 +970,100 @@ describe("the hold", () => {
   });
 });
 
+// THE ROW LINE IS THE PRESSING ACCOUNT'S (auth.md "Multi-account device
+// custody": material bound "to the account it belongs to, never to a
+// device-global slot"; RowSigning.md: "a row line stands until Retry is
+// pressed, another act is made on the same anchor, or the surface's next fresh
+// load" — an account change is none of these, so the line is HIDDEN under
+// another account, never erased, the way #679 keeps a profile change's line).
+describe("a failed row line keeps the account that pressed it", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  const line = () => screen.queryByTestId(`${PREFIX}-row-line`);
+  const retry = () => screen.getByTestId(`${PREFIX}-row-line-retry`);
+
+  function signInAs(store: ReturnType<typeof createTokenStore>, account: string) {
+    store.save({ accessToken: `access-${account}`, refreshToken: `refresh-${account}`, accountId: account });
+  }
+
+  /** A hold by u1 that did not sign; the seam's commit answers again from then on. */
+  async function failedUnderA() {
+    const store = signedInStore();
+    const data = createStubStanceData();
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    const commit = data.commit;
+    data.commit = createStubStanceData({ offline: true }).commit;
+    await hold();
+    expect(line()).toHaveTextContent("That didn't sign.");
+    data.commit = commit;
+    return { store, data };
+  }
+
+  it("is hidden under another account, and stands again under its own", async () => {
+    const { store } = await failedUnderA();
+    act(() => signInAs(store, "u2"));
+    expect(line()).toBeNull();
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("That didn't sign.");
+  });
+
+  it("signs nothing when its Retry is pressed once another account is active", async () => {
+    const { store, data } = await failedUnderA();
+    const pressed = retry();
+    // The switch and the press in one turn: the press reaches the Retry
+    // the line raised under u1 before the tab has drawn u2's anchor.
+    await act(async () => {
+      signInAs(store, "u2");
+      fireEvent.click(pressed);
+    });
+    await settle();
+    expect(data.sent).toEqual([]);
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("That didn't sign.");
+  });
+
+  it("signs the same hold once when its Retry is pressed back under its own account", async () => {
+    const { store, data } = await failedUnderA();
+    act(() => signInAs(store, "u2"));
+    act(() => signInAs(store, "u1"));
+    await act(async () => {
+      fireEvent.click(retry());
+    });
+    await settle();
+    expect(data.sent).toEqual([{ target: "post-1", pick: TAP_DEFAULT }]);
+    expect(line()).toBeNull();
+  });
+
+  it("stands under the account that pressed when its answer comes after a switch", async () => {
+    const store = signedInStore();
+    const data = createStubStanceData();
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    let answer: (outcome: Outcome<StanceCommit>) => void = () => {};
+    data.commit = () => new Promise((resolve) => (answer = resolve));
+    await hold();
+    act(() => signInAs(store, "u2"));
+    await act(async () => answer(await createStubStanceData({ offline: true }).commit(TARGET, TAP_DEFAULT)));
+    await settle();
+    expect(line()).toBeNull();
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("That didn't sign.");
+  });
+
+  it("is not erased by another account's act on the same face", async () => {
+    const { store, data } = await failedUnderA();
+    act(() => signInAs(store, "u2"));
+    await hold();
+    expect(data.sent).toEqual([{ target: "post-1", pick: TAP_DEFAULT }]);
+    expect(line()).toBeNull();
+    act(() => signInAs(store, "u1"));
+    expect(line()).toHaveTextContent("That didn't sign.");
+  });
+});
+
 describe("the pad the tap opens", () => {
   beforeEach(() => {
     alreadyTaught();
