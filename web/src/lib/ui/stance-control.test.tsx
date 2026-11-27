@@ -3429,6 +3429,85 @@ describe("severance", () => {
     expect(screen.queryByTestId("severance-confirm")).toBeNull();
   });
 
+  /**
+   * Answers each landing read the next way queued: offline, agreeing (the
+   * real fold), or disagreeing (a landing away from zero).
+   */
+  const scriptProjections = (data: ReturnType<typeof mount>, answers: ("fail" | "real" | "away")[]) => {
+    const project = data.project;
+    data.project = async (target, pick) => {
+      const next = answers.shift() ?? "real";
+      // Each read answers 50ms on, so a press can land while it is out.
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      if (next === "fail") return createStubStanceData({ offline: true }).project(target, pick);
+      if (next === "away") return project(target, { pDirected: 1, pInterest: 1 });
+      return project(target, pick);
+    };
+  };
+
+  const proceed = async () => {
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    await settle(100);
+  };
+
+  const seversAtTap = async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 1, pInterest: 1 }] } } });
+    await settle();
+    await openPad();
+    await parkAt(-500, 700);
+    return data;
+  };
+
+  // Nothing a tap raised signs without one fresh read that agrees: a failed
+  // read is read again by the next press.
+  it("signs the tap's dialog only once a read agrees after a failed one, Retry reading again", async () => {
+    const data = await seversAtTap();
+    scriptProjections(data, ["fail", "real"]);
+    await pressSet();
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    await proceed();
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    expect(data.sent).toEqual([]);
+    await proceed();
+    expect(data.sent).toHaveLength(1);
+  });
+
+  it("reads again for a first commit pressed after the tap's read failed", async () => {
+    const data = await seversAtTap();
+    scriptProjections(data, ["fail", "away"]);
+    await pressSet();
+    await settle(100);
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    await proceed();
+    expect(data.sent).toEqual([]);
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+  });
+
+  it("answers the fault again, nothing signed, when Retry's read fails too", async () => {
+    const data = await seversAtTap();
+    scriptProjections(data, ["fail", "fail"]);
+    await pressSet();
+    await proceed();
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    await proceed();
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    expect(data.sent).toEqual([]);
+  });
+
+  it("takes the tap's dialog down, nothing signed, when Retry's read lands elsewhere", async () => {
+    const data = await seversAtTap();
+    scriptProjections(data, ["fail", "away"]);
+    await pressSet();
+    await proceed();
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    await proceed();
+    expect(data.sent).toEqual([]);
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+  });
+
   // PadFailed.md:53's Close is for a press that signs; the alternates' Sign it
   // over a landing their line already reads at zero asks at the press instead.
   it("asks at the alternates' Sign it press when their line already says zero", async () => {
