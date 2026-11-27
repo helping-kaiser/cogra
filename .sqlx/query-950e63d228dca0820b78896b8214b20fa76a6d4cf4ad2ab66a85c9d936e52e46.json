@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO mirror_epochs (epoch, asserted_at, approval_form) VALUES ($1, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Timestamptz",
+        "Int2"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "950e63d228dca0820b78896b8214b20fa76a6d4cf4ad2ab66a85c9d936e52e46"
+}

@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE mirror_records m\n            SET body = r.body, author_pubkey = r.author_pubkey,\n                pre_commitment = r.pre_commitment, pre_signature = r.pre_signature,\n                dependency_commitment = r.dependency_commitment,\n                content_edition = r.content_edition, dependency_edition = r.dependency_edition,\n                seal_version = r.seal_version,\n                host_seal = r.host_seal, approval_signature = r.approval_signature\n           FROM unnest($1::text[], $2::bytea[], $3::bytea[], $4::bytea[], $5::bytea[],\n                       $6::bytea[], $7::bigint[], $8::bigint[], $9::bigint[], $10::bytea[],\n                       $11::bytea[])\n                AS r(record_id, body, author_pubkey, pre_commitment, pre_signature,\n                     dependency_commitment, content_edition, dependency_edition,\n                     seal_version, host_seal, approval_signature)\n          WHERE m.record_id = r.record_id AND m.body IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "ByteaArray",
+        "ByteaArray",
+        "ByteaArray",
+        "ByteaArray",
+        "ByteaArray",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array",
+        "ByteaArray",
+        "ByteaArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3d25e16e80cd75dd3e14687d169ed338402faa9142c0eb17d7160e9be291a2d2"
+}

@@ -469,7 +469,8 @@ impl SealedAct {
     /// Whether `witness` is the author's approval of this exact act, in the
     /// current form.
     pub fn verify_approval(&self, author_pubkey: &[u8], witness: &ApprovalWitness) -> bool {
-        self.approval_form_of(author_pubkey, witness, false) == Some(handshake::ApprovalForm::CURRENT)
+        self.approval_form_of(author_pubkey, witness, false)
+            == Some(handshake::ApprovalForm::CURRENT)
     }
 
     /// The form `witness` approves this exact act in, under the host's rule

@@ -58,11 +58,7 @@ fn verify_from_record(
         .map(|leg| (leg.role, leg.source.clone(), leg.target.clone()))
         .collect();
     let projected = match &act.body.middle {
-        None => vec![(
-            LegRole::Binary,
-            act.body.source(),
-            act.body.target.clone(),
-        )],
+        None => vec![(LegRole::Binary, act.body.source(), act.body.target.clone())],
         Some(middle) => vec![
             (LegRole::A, act.body.source(), middle.clone()),
             (LegRole::T, middle.clone(), act.body.target.clone()),
@@ -81,7 +77,12 @@ fn verify_from_record(
     }
     let verified_act = seal_message(&record.seal_frame());
     let host = crypto::verifying_key_from_bytes(host_key).ok_or("host key malformed")?;
-    if !crypto::verify(&host, tags::HOST_SEAL, &verified_act, &attestation.host_seal) {
+    if !crypto::verify(
+        &host,
+        tags::HOST_SEAL,
+        &verified_act,
+        &attestation.host_seal,
+    ) {
         return Err("host seal");
     }
     if !crypto::verify_digest(

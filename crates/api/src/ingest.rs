@@ -333,7 +333,13 @@ async fn repair_instants<B: L1Boundary>(
         .await?
         .into_iter()
         .filter(|package| package.epoch <= cursor)
-        .map(|package| (package.epoch, package.asserted_at, package.closure.approval_form))
+        .map(|package| {
+            (
+                package.epoch,
+                package.asserted_at,
+                package.closure.approval_form,
+            )
+        })
         .collect();
     let repaired = mirror::record_instants(pool, &instants).await?;
     tracing::info!(

@@ -1,27 +1,27 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT act_id, author, seq, family, middle, target, p_d, p_i,\n                  settlement_ref, license, asserted_parents, deps,\n                  pre_commitment, deps_salt, deps_commitment, content_commitment,\n                  author_pubkey, pre_signature, host_seal,\n                  approval_signature AS \"approval_signature!\"\n           FROM l1_acts WHERE status = 'approved'\n           ORDER BY approved_at, act_id",
+  "query": "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, pre_signature,\n                pre_commitment, content_commitment, deps_commitment, host_seal,\n                status, sealed_before_switch\n         FROM l1_acts WHERE act_id = $1",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "act_id",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 1,
         "name": "author",
         "type_info": "Text"
       },
       {
-        "ordinal": 2,
+        "ordinal": 1,
         "name": "seq",
         "type_info": "Int8"
       },
       {
-        "ordinal": 3,
+        "ordinal": 2,
         "name": "family",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "author_pubkey",
+        "type_info": "Bytea"
       },
       {
         "ordinal": 4,
@@ -60,8 +60,8 @@
       },
       {
         "ordinal": 11,
-        "name": "deps",
-        "type_info": "TextArray"
+        "name": "pre_signature",
+        "type_info": "Bytea"
       },
       {
         "ordinal": 12,
@@ -70,7 +70,7 @@
       },
       {
         "ordinal": 13,
-        "name": "deps_salt",
+        "name": "content_commitment",
         "type_info": "Bytea"
       },
       {
@@ -80,32 +80,24 @@
       },
       {
         "ordinal": 15,
-        "name": "content_commitment",
-        "type_info": "Bytea"
-      },
-      {
-        "ordinal": 16,
-        "name": "author_pubkey",
-        "type_info": "Bytea"
-      },
-      {
-        "ordinal": 17,
-        "name": "pre_signature",
-        "type_info": "Bytea"
-      },
-      {
-        "ordinal": 18,
         "name": "host_seal",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 19,
-        "name": "approval_signature!",
-        "type_info": "Bytea"
+        "ordinal": 16,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "sealed_before_switch",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Text"
+      ]
     },
     "nullable": [
       false,
@@ -125,10 +117,8 @@
       false,
       false,
       false,
-      false,
-      false,
-      true
+      false
     ]
   },
-  "hash": "49032471fc08c34b3ad214d4f39a96ff30d9b559bd040fe656c2e32d88139737"
+  "hash": "11b8f45eb52a32c15720d131cc2883c2988d02855a70400a6df355539c8332da"
 }

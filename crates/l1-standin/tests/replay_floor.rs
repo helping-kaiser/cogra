@@ -29,8 +29,7 @@ use common::l1::client::ActorKey;
 use common::l1::crypto::{self, tags};
 use common::l1::handshake::{
     ApprovalForm, ApprovalWitness, EpochPackage, Proposal, PublishedRecord, StructuralBody,
-    approval_digest,
-    seal_message,
+    approval_digest, seal_message,
 };
 use common::l1::identifier::NodeId;
 use common::l1::proposal::{CONTENT_EDITION, DEPENDENCY_EDITION, PreSigned, SealedAct};
@@ -149,11 +148,7 @@ fn verify_from_record(
         .map(|leg| (leg.role, leg.source.clone(), leg.target.clone()))
         .collect();
     let projected = match &act.body.middle {
-        None => vec![(
-            LegRole::Binary,
-            act.body.source(),
-            act.body.target.clone(),
-        )],
+        None => vec![(LegRole::Binary, act.body.source(), act.body.target.clone())],
         Some(middle) => vec![
             (LegRole::A, act.body.source(), middle.clone()),
             (LegRole::T, middle.clone(), act.body.target.clone()),
@@ -172,7 +167,12 @@ fn verify_from_record(
     }
     let verified_act = seal_message(&record.seal_frame());
     let host = crypto::verifying_key_from_bytes(host_key).ok_or(Unverified::Seal)?;
-    if !crypto::verify(&host, tags::HOST_SEAL, &verified_act, &attestation.host_seal) {
+    if !crypto::verify(
+        &host,
+        tags::HOST_SEAL,
+        &verified_act,
+        &attestation.host_seal,
+    ) {
         return Err(Unverified::Seal);
     }
     if !crypto::verify_digest(
@@ -414,7 +414,10 @@ async fn every_published_authentication_member_is_checked(pool: PgPool) {
     let package = host.close_epoch().await.expect("closes");
     let host_key = host.host_public_key().await.expect("host key");
     let record = &package.records[0];
-    assert_eq!(verify_from_record(record, package.closure.approval_form, &host_key), Ok(()));
+    assert_eq!(
+        verify_from_record(record, package.closure.approval_form, &host_key),
+        Ok(())
+    );
 
     fn flip(bytes: &mut [u8]) {
         bytes[0] ^= 1;
@@ -431,11 +434,7 @@ async fn every_published_authentication_member_is_checked(pool: PgPool) {
             |r| r.approval.author_pubkey = ActorKey::from_seed([7; 32]).public_key_bytes(),
             Unverified::PreSignature,
         ),
-        (
-            "body",
-            |r| r.approval.body.p_i = 0.25,
-            Unverified::Seal,
-        ),
+        ("body", |r| r.approval.body.p_i = 0.25, Unverified::Seal),
         ("act", |r| r.approval.body.seq = 1, Unverified::Body),
         (
             "pre-commitment",
@@ -490,7 +489,10 @@ async fn every_published_authentication_member_is_checked(pool: PgPool) {
     );
     let mut moved = record.clone();
     moved.legs[0].target = NodeId::Prof("someone-else".into());
-    assert_eq!(verify_from_record(&moved, ApprovalForm::CURRENT, &host_key), Err(Unverified::Legs));
+    assert_eq!(
+        verify_from_record(&moved, ApprovalForm::CURRENT, &host_key),
+        Err(Unverified::Legs)
+    );
 }
 
 /// Every package binds the verification-case declarations in force — none
@@ -636,7 +638,11 @@ async fn approve_before(pool: &PgPool, actor: &ActorKey, pre: &PreSigned, sealed
 }
 
 fn published(package: &EpochPackage) -> Vec<String> {
-    let mut ids: Vec<String> = package.records.iter().map(|r| r.act_id.to_string()).collect();
+    let mut ids: Vec<String> = package
+        .records
+        .iter()
+        .map(|r| r.act_id.to_string())
+        .collect();
     ids.sort();
     ids
 }
@@ -802,7 +808,10 @@ async fn a_populated_world_migrates_with_one_approval_form_per_epoch(pool: PgPoo
     let mut forms = forms;
     forms.sort();
     let mut expected = vec![
-        (frank_act.act_id().to_string(), ApprovalForm::ActAndSeal.number()),
+        (
+            frank_act.act_id().to_string(),
+            ApprovalForm::ActAndSeal.number(),
+        ),
         (erin_act.act_id().to_string(), ApprovalForm::Act.number()),
     ];
     expected.sort();

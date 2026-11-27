@@ -15,7 +15,9 @@ use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::Family;
 use common::l1::census::LegRole;
 use common::l1::client::ActorKey;
-use common::l1::handshake::{ActApproval, SealAttestation, EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{
+    ActApproval, EpochPackage, PublishedLeg, PublishedRecord, SealAttestation,
+};
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::wire;
 use http_body_util::BodyExt;
@@ -1365,7 +1367,8 @@ impl Rig {
             .enumerate()
             .map(|(index, (seq, family, p_d))| PublishedRecord {
                 act_id: ActId::new(author, seq, family).expect("act id"),
-                attestation: SealAttestation::default(), approval: ActApproval::unverified(
+                attestation: SealAttestation::default(),
+                approval: ActApproval::unverified(
                     &ActId::new(author, seq, family).expect("act id"),
                 ),
                 author: author.to_string(),

@@ -9,7 +9,9 @@
 
 use common::l1::Family;
 use common::l1::census::{LegRole, leg_params};
-use common::l1::handshake::{ActApproval, SealAttestation, EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{
+    ActApproval, EpochPackage, PublishedLeg, PublishedRecord, SealAttestation,
+};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{self, ContentCursor, LandingOrder, Post};
 use postgres_store::{auth, genesis, mirror, references};
@@ -153,9 +155,8 @@ fn tag(author: &str, seq: u64, epoch: i64, position: i64) -> PublishedRecord {
     let (t_pd, t_pi) = leg_params(LegRole::T, 0.5, 0.5);
     PublishedRecord {
         act_id: ActId::new(author, seq, Family::Tag).expect("act id"),
-        attestation: SealAttestation::default(), approval: ActApproval::unverified(
-            &ActId::new(author, seq, Family::Tag).expect("act id"),
-        ),
+        attestation: SealAttestation::default(),
+        approval: ActApproval::unverified(&ActId::new(author, seq, Family::Tag).expect("act id")),
         author: author.to_string(),
         family: Family::Tag,
         epoch,
@@ -238,9 +239,8 @@ fn record(
 ) -> PublishedRecord {
     PublishedRecord {
         act_id: ActId::new(author, seq, family).expect("act id"),
-        attestation: SealAttestation::default(), approval: ActApproval::unverified(
-            &ActId::new(author, seq, family).expect("act id"),
-        ),
+        attestation: SealAttestation::default(),
+        approval: ActApproval::unverified(&ActId::new(author, seq, family).expect("act id")),
         author: author.to_string(),
         family,
         epoch: 1,

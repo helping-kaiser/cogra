@@ -80,8 +80,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use common::l1::census::LegRole;
 use common::l1::handshake::{
     ActApproval, ApprovalForm, BoundaryPolicy, CaseDeclaration, ClosureCause, EpochClosure,
-    EpochPackage, SEAL_FRAME_VERSION, SealAttestation,
-    FIRST_POSITION, LedgerLine, MarkerPolicy, PublishedLeg, PublishedRecord, Ratio, WallStep,
+    EpochPackage, FIRST_POSITION, LedgerLine, MarkerPolicy, PublishedLeg, PublishedRecord, Ratio,
+    SEAL_FRAME_VERSION, SealAttestation, WallStep,
 };
 use common::l1::identifier::NodeId;
 use common::l1::proposal::{CONTENT_EDITION, DEPENDENCY_EDITION, dependency_commitment};
@@ -491,7 +491,10 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
     let mut candidates = Vec::with_capacity(rows.len());
     for row in &rows {
         let form = ApprovalForm::from_number(row.approval_form).ok_or_else(|| {
-            StandInError::Host(format!("stored approval form {} unknown", row.approval_form))
+            StandInError::Host(format!(
+                "stored approval form {} unknown",
+                row.approval_form
+            ))
         })?;
         let body = stored_body!(row).to_body()?;
         if !dependency_opening_matches(

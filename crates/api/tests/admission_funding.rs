@@ -24,8 +24,7 @@ use common::l1::client::ActorKey;
 use common::l1::encoding::Encoder;
 use common::l1::handshake::{
     AccountBalance, ApprovalForm, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage, Micro,
-    Proposal, approval_digest,
-    StructuralBody,
+    Proposal, StructuralBody, approval_digest,
 };
 use common::l1::identifier::NodeId;
 use common::l1::proposal::{PreSigned, SealedAct, Submission};
@@ -1282,7 +1281,11 @@ async fn sealed_with_old_witness(
         .expect("sealed");
     let witness = common::l1::crypto::sign_digest(
         &ed25519_dalek::SigningKey::from_bytes(&applicant.seed()),
-        &approval_digest(ApprovalForm::ActAndSeal, &sealed.act.frame(), &sealed.host_seal),
+        &approval_digest(
+            ApprovalForm::ActAndSeal,
+            &sealed.act.frame(),
+            &sealed.host_seal,
+        ),
     );
     (registration, witness)
 }
@@ -1323,7 +1326,10 @@ async fn a_held_pre_switch_approval_lands_in_an_old_form_epoch(pool: PgPool) {
     api::relay::submit_approval(&rig.realization, &rig.pool, write.id, old_witness.clone())
         .await
         .expect("held, by the host's rule");
-    assert_eq!(rig.held_signature(write.id).await, Some(old_witness.clone()));
+    assert_eq!(
+        rig.held_signature(write.id).await,
+        Some(old_witness.clone())
+    );
     rig.standin
         .credit_burn(&before.key.address(), 10_000_000)
         .await
@@ -1335,7 +1341,11 @@ async fn a_held_pre_switch_approval_lands_in_an_old_form_epoch(pool: PgPool) {
     let mut landed = None;
     for _ in 0..3 {
         let package = rig.standin.close_epoch().await.expect("closes");
-        if package.records.iter().any(|r| r.act_id.to_string() == act_id) {
+        if package
+            .records
+            .iter()
+            .any(|r| r.act_id.to_string() == act_id)
+        {
             landed = Some(package);
             break;
         }
@@ -1347,8 +1357,8 @@ async fn a_held_pre_switch_approval_lands_in_an_old_form_epoch(pool: PgPool) {
         .iter()
         .find(|r| r.act_id.to_string() == act_id)
         .expect("lands");
-    let key = common::l1::crypto::verifying_key_from_bytes(&record.approval.author_pubkey)
-        .expect("key");
+    let key =
+        common::l1::crypto::verifying_key_from_bytes(&record.approval.author_pubkey).expect("key");
     assert!(common::l1::crypto::verify_digest(
         &key,
         &record.approval_digest(ApprovalForm::ActAndSeal),

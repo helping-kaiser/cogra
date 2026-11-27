@@ -29,7 +29,9 @@ pub enum MirrorError {
     /// A record names a formation edition or frame version the mirror's integer column
     /// cannot hold; refused before anything is written rather than stored
     /// as another number.
-    #[error("record {record} names formation edition or frame version {edition}, beyond the stored range")]
+    #[error(
+        "record {record} names formation edition or frame version {edition}, beyond the stored range"
+    )]
     EditionOutOfRange { record: String, edition: u64 },
     #[error(transparent)]
     Storage(#[from] sqlx::Error),
@@ -145,8 +147,7 @@ impl FloorRows {
         self.record_id.push(record.act_id.to_string());
         self.body.push(approval.body.canonical_bytes());
         self.author_pubkey.push(approval.author_pubkey.clone());
-        self.pre_commitment
-            .push(attestation.pre_commitment.clone());
+        self.pre_commitment.push(attestation.pre_commitment.clone());
         self.pre_signature.push(attestation.pre_signature.clone());
         self.dependency_commitment
             .push(approval.dependency_commitment.clone());

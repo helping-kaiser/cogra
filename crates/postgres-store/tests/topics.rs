@@ -8,7 +8,9 @@
 use common::hashtag::canonicalize;
 use common::l1::Family;
 use common::l1::census::{LegRole, leg_params};
-use common::l1::handshake::{ActApproval, SealAttestation, EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{
+    ActApproval, EpochPackage, PublishedLeg, PublishedRecord, SealAttestation,
+};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::topics::{TagChannel, TopicView};
 use postgres_store::{hashtag, mirror, topics};
@@ -39,7 +41,8 @@ fn tag(
     let (t_pd, t_pi) = leg_params(LegRole::T, relevance, confidence);
     PublishedRecord {
         act_id: ActId::new(author, seq, Family::Tag).expect("valid act id"),
-        attestation: SealAttestation::default(), approval: ActApproval::unverified(
+        attestation: SealAttestation::default(),
+        approval: ActApproval::unverified(
             &ActId::new(author, seq, Family::Tag).expect("valid act id"),
         ),
         author: author.to_string(),

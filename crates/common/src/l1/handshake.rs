@@ -303,9 +303,10 @@ pub fn approval_digest(form: ApprovalForm, frame: &SealFrame<'_>, host_seal: &[u
                 frame.deps_commitment,
             )],
         ),
-        ApprovalForm::ActAndSeal => {
-            crypto::sha256_tagged(tags::SEALED_ACT_APPROVAL, &[&seal_message(frame), host_seal])
-        }
+        ApprovalForm::ActAndSeal => crypto::sha256_tagged(
+            tags::SEALED_ACT_APPROVAL,
+            &[&seal_message(frame), host_seal],
+        ),
     }
 }
 
@@ -1031,7 +1032,8 @@ mod tests {
                 .map(|(seq, position)| {
                     let act_id = ActId::new("alice", seq as u64, Family::Opinion).expect("valid");
                     PublishedRecord {
-                        attestation: SealAttestation::default(), approval: ActApproval::unverified(&act_id),
+                        attestation: SealAttestation::default(),
+                        approval: ActApproval::unverified(&act_id),
                         act_id,
                         author: "alice".into(),
                         family: Family::Opinion,
@@ -1271,7 +1273,10 @@ mod tests {
             record.approval_digest(ApprovalForm::ActAndSeal),
             crypto::sha256_tagged(
                 tags::SEALED_ACT_APPROVAL,
-                &[&seal_message(&record.seal_frame()), &record.attestation.host_seal]
+                &[
+                    &seal_message(&record.seal_frame()),
+                    &record.attestation.host_seal
+                ]
             )
         );
         assert_ne!(record.approval_digest(ApprovalForm::ActAndSeal), act);

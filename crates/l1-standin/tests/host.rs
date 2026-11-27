@@ -258,9 +258,10 @@ async fn a_published_record_carries_no_payload_mark(pool: PgPool) {
             position,
             payload_witness,
             legs,
-            authentication,
+            approval,
+            attestation: _,
         } = record;
-        assert_eq!(&authentication.body.act_id(), act_id);
+        assert_eq!(&approval.body.act_id(), act_id);
         assert_eq!(&act_id.author, author);
         assert_eq!(act_id.family, *family);
         assert_eq!(*epoch, 1);

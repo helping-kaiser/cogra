@@ -14,7 +14,8 @@ use sqlx::PgPool;
 fn registration(author: &str, epoch: i64, position: i64) -> PublishedRecord {
     PublishedRecord {
         act_id: ActId::new(author, 0, Family::Registration).expect("ok"),
-        attestation: SealAttestation::default(), approval: ActApproval::unverified(
+        attestation: SealAttestation::default(),
+        approval: ActApproval::unverified(
             &ActId::new(author, 0, Family::Registration).expect("ok"),
         ),
         author: author.to_string(),
