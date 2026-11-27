@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.id, s.actor_id, s.act_id, s.family\n         FROM staged_writes s\n         WHERE s.state = 'landed'\n           AND s.family IN ($1, $2)\n           AND s.node_id IS NOT NULL\n           AND s.pre_signed_at IS NOT NULL\n           AND NOT EXISTS (SELECT 1 FROM post_versions v\n                           WHERE s.family = $1\n                             AND v.post_id = s.node_id\n                             AND v.created_at = s.pre_signed_at)\n           AND NOT EXISTS (SELECT 1 FROM comment_versions v\n                           WHERE s.family = $2\n                             AND v.comment_id = s.node_id\n                             AND v.created_at = s.pre_signed_at)\n           AND NOT EXISTS (SELECT 1 FROM act_payloads c\n                           WHERE c.act_id = s.act_id AND c.payload_state = 'reduced')\n         ORDER BY s.act_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "act_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "family",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "643376c03290972e9c310685573a0c337d89e24e76ed08882c07404222a73dfb"
+}

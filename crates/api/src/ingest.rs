@@ -69,6 +69,18 @@ pub(crate) enum Landing {
     /// write was chosen for a pending row it still owns, so a row gone by
     /// now was promoted by another pass, and nothing is appended.
     Retry,
+    /// A later pass re-running a promotion that never completed for a
+    /// write chosen for owning no display row at all — it landed with its
+    /// pending row already gone — so the insert branch runs, as on
+    /// confirm.
+    Rebuild,
+}
+
+impl Landing {
+    /// Whether a landing that finds no row of its own to land appends one.
+    pub(crate) fn inserts(self) -> bool {
+        self != Self::Retry
+    }
 }
 
 /// The stranded writes a pass retries: those an earlier pass marked
@@ -122,8 +134,9 @@ pub struct IngestOutcome {
 /// confirmed (`onboarding::land_ready_accounts`), and after the GC its
 /// collected vouches lapse (`onboarding::lapse_dead_vouches`). A landed
 /// content write or profile update an earlier pass never promoted is
-/// promoted here too (`content::land_stranded`, `profile::land_stranded`):
-/// its write is already landed, so no epoch returns it again.
+/// promoted here too (`content::land_stranded`, `profile::land_stranded`),
+/// whether its display row is still pending or was never written: its
+/// write is already landed, so no epoch returns it again.
 ///
 /// The admission settlement pass rides last, on every pass whether or
 /// not an epoch arrived (`onboarding::settle_admission_fundings`): a

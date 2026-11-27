@@ -1335,6 +1335,89 @@ pub async fn landed_with_pending_content(pool: &PgPool) -> Result<Vec<PromotedWr
         .collect())
 }
 
+/// Landed profile updates that own no version row at all: a write that
+/// landed after expiry took its pending row ([`expire_due`]), so only the
+/// promotion's insert branch writes one, and that insert never committed.
+/// [`landed_with_pending_profile`] cannot see them, having no pending row
+/// to start from.
+///
+/// A write whose carriage is reduced is left out: its landing builds no
+/// row ([`load_promotable`]'s reaped case, or a redaction during the
+/// promotion), so nothing is missing.
+///
+/// Driven from the landed writes, which no index narrows: the read scans
+/// `staged_writes` and probes each landed update's instant.
+pub async fn landed_without_profile_row(pool: &PgPool) -> Result<Vec<PromotedWrite>, StagedError> {
+    let rows = sqlx::query!(
+        "SELECT s.id, s.actor_id, s.act_id, s.family
+         FROM staged_writes s
+         WHERE s.state = 'landed'
+           AND s.family = $1
+           AND cardinality(s.asserted_parents) > 0
+           AND s.pre_signed_at IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM actor_profile_versions v
+                           WHERE v.actor_id = s.actor_id
+                             AND v.created_at = s.pre_signed_at)
+           AND NOT EXISTS (SELECT 1 FROM act_payloads c
+                           WHERE c.act_id = s.act_id AND c.payload_state = 'reduced')
+         ORDER BY s.act_id",
+        Family::Registration.as_str(),
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| PromotedWrite {
+            id: r.id,
+            actor_id: r.actor_id,
+            act_id: r.act_id,
+            family: r.family,
+        })
+        .collect())
+}
+
+/// Landed content writes that own no version row at all — the content
+/// twin of [`landed_without_profile_row`]: a new post or comment, or an
+/// edit, whose version is named by the write's node and authoring instant
+/// as in [`landed_with_pending_content`], and whose pending row was gone
+/// when it landed — expiry took it, or the expiry of the node it replies
+/// to (`content::discard_pending_many`) — so that only the promotion's
+/// insert writes one, and the insert never committed.
+pub async fn landed_without_content_row(pool: &PgPool) -> Result<Vec<PromotedWrite>, StagedError> {
+    let rows = sqlx::query!(
+        "SELECT s.id, s.actor_id, s.act_id, s.family
+         FROM staged_writes s
+         WHERE s.state = 'landed'
+           AND s.family IN ($1, $2)
+           AND s.node_id IS NOT NULL
+           AND s.pre_signed_at IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM post_versions v
+                           WHERE s.family = $1
+                             AND v.post_id = s.node_id
+                             AND v.created_at = s.pre_signed_at)
+           AND NOT EXISTS (SELECT 1 FROM comment_versions v
+                           WHERE s.family = $2
+                             AND v.comment_id = s.node_id
+                             AND v.created_at = s.pre_signed_at)
+           AND NOT EXISTS (SELECT 1 FROM act_payloads c
+                           WHERE c.act_id = s.act_id AND c.payload_state = 'reduced')
+         ORDER BY s.act_id",
+        Family::Publish.as_str(),
+        Family::Review.as_str(),
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| PromotedWrite {
+            id: r.id,
+            actor_id: r.actor_id,
+            act_id: r.act_id,
+            family: r.family,
+        })
+        .collect())
+}
+
 /// Expires one staged write immediately — the terminal path for a
 /// handshake that can never complete (a seal lost before it was stored).
 ///
