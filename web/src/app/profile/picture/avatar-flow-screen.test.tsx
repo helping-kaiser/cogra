@@ -218,10 +218,13 @@ describe("the avatar-only prepare", () => {
     draw();
     fireEvent.click(await screen.findByTestId("avatar-crop-next"));
     await screen.findByTestId("avatar-seal");
-    expect(seen.input).toEqual({ avatarMediaId: "m-9" });
+    // The prepare rides the press, once the picture is up.
+    expect(seen.calls).toBe(0);
+    fireEvent.click(screen.getByTestId("avatar-seal-sign"));
+    await waitFor(() => expect(seen.input).toEqual({ avatarMediaId: "m-9" }));
   });
 
-  it("keeps today's line on the crop for a picture over the cap, uploading nothing (held at design)", async () => {
+  it("refuses a picture over the cap on the crop, uploading nothing (AvatarCrop.md:43, :55)", async () => {
     installEncoder(PICTURE_MAX_BYTES + 1);
     holdPicture(face());
     const upload = vi.fn();
@@ -296,5 +299,159 @@ describe("the picture's seal in its flow", () => {
     expect(await screen.findByTestId("avatar-seal-bug")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("avatar-seal-not-now"));
     expect(await screen.findByTestId("avatar-crop")).toBeInTheDocument();
+  });
+});
+
+/** An upload the test answers when it chooses: ok, a failure, or the server's refusal. */
+function heldUpload() {
+  let answer: (how: "ok" | "fail" | "refuse") => void = () => {};
+  const calls = { count: 0 };
+  const handler = gqlLink.mutation("UploadMedia", async () => {
+    calls.count += 1;
+    const how = await new Promise<"ok" | "fail" | "refuse">((resolve) => {
+      answer = resolve;
+    });
+    if (how === "fail") return HttpResponse.error();
+    if (how === "refuse") {
+      return HttpResponse.json({
+        data: {
+          uploadMedia: {
+            __typename: "UploadMediaPayload",
+            media: null,
+            userErrors: [{ __typename: "UserError", code: "BAD_INPUT", message: "not a picture", field: ["file"] }],
+          },
+        },
+      });
+    }
+    return HttpResponse.json({
+      data: {
+        uploadMedia: {
+          __typename: "UploadMediaPayload",
+          media: {
+            __typename: "MediaAttachment",
+            id: "m-9",
+            url: "https://media.test/m-9.webp",
+            altText: null,
+            status: "NORMAL",
+            mimeType: "image/webp",
+            options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+            coverMedia: null,
+            coverTaken: false,
+            state: "READY",
+            failureReason: null,
+            digest: ENCODED_DIGEST,
+            uploadDigest: ENCODED_DIGEST,
+          },
+          userErrors: [],
+        },
+      },
+    });
+  });
+  return { handler, calls, answer: (how: "ok" | "fail" | "refuse") => answer(how) };
+}
+
+// AvatarSeal.md:13-23 — the seal opens at once, its upload behind the gate;
+// a press held at the gate is the act (design/readme.md, round 50).
+describe("the picture's seal waits on its upload", () => {
+  async function toGate(signer = fakeWriteSigner()) {
+    installEncoder();
+    holdPicture(face());
+    const seen = { calls: 0 } as { input?: Record<string, unknown>; calls: number };
+    const upload = heldUpload();
+    server.use(myProfileHandler(), upload.handler, capturingPrepare(seen));
+    draw(signer);
+    fireEvent.click(await screen.findByTestId("avatar-crop-next"));
+    await screen.findByTestId("avatar-seal");
+    await waitFor(() => expect(upload.calls.count).toBe(1));
+    return { signer, seen, upload };
+  }
+
+  it("opens before the picture is up, the gate running over the foot and Sign the change live (:13)", async () => {
+    await toGate();
+    const gate = screen.getByTestId("avatarSeal.gate");
+    expect(gate).toHaveAttribute("data-testid-key", "uploading");
+    expect(screen.getByTestId("avatarSeal.gate.line")).toHaveTextContent(
+      "Uploading 0 of 1 — signing waits for the picture.",
+    );
+    expect(screen.getByTestId("avatar-seal-sign")).toBeEnabled();
+  });
+
+  it("holds a press until the picture is up, then prepares and signs once (:13)", async () => {
+    const { signer, seen, upload } = await toGate();
+    fireEvent.click(screen.getByTestId("avatar-seal-sign"));
+    // From the press itself Back reads Close (:63).
+    expect(await screen.findByTestId("avatar-seal-back")).toHaveTextContent("Close");
+    expect(seen.calls).toBe(0);
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    upload.answer("ok");
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/profile"));
+    expect(seen.input).toEqual({ avatarMediaId: "m-9" });
+    expect(signer.signStaged).toHaveBeenCalledTimes(1);
+    expect(readSignedProfile("u1")).toEqual({ avatar: { id: "m-9", url: "https://media.test/m-9.webp" } });
+  });
+
+  it("reads the gate's fault with Retry and disables the commit when the upload fails, no Remove it (:15, :19)", async () => {
+    const { upload } = await toGate();
+    upload.answer("fail");
+    const gate = await screen.findByTestId("avatarSeal.gate.message");
+    expect(gate).toHaveTextContent("One picture didn't upload.");
+    expect(gate).toHaveClass("text-error");
+    expect(screen.getByTestId("avatarSeal.gate.wait")).toHaveTextContent("Signing waits for it.");
+    expect(screen.getByTestId("avatarSeal.gate")).toHaveAttribute("data-testid-key", "upload-failed");
+    expect(screen.getByTestId("avatarSeal.gate.retry")).toHaveTextContent("Retry");
+    expect(screen.getByTestId("avatar-seal-sign")).toBeDisabled();
+    expect(screen.queryByText("Remove it")).toBeNull();
+  });
+
+  it("drops a held press when its upload fails: Sign the change and Back again, nothing signed (:21)", async () => {
+    const { signer, seen, upload } = await toGate();
+    fireEvent.click(screen.getByTestId("avatar-seal-sign"));
+    expect(await screen.findByTestId("avatar-seal-back")).toHaveTextContent("Close");
+    upload.answer("fail");
+    await screen.findByTestId("avatarSeal.gate.message");
+    await waitFor(() => expect(screen.getByTestId("avatar-seal-back")).toHaveTextContent("Back"));
+    expect(screen.getByTestId("avatar-seal-sign")).toHaveTextContent("Sign the change");
+    expect(seen.calls).toBe(0);
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("starts the upload again from Retry, the gate running and the commit live, signing nothing until pressed (:23)", async () => {
+    const { signer, upload } = await toGate();
+    upload.answer("fail");
+    fireEvent.click(await screen.findByTestId("avatarSeal.gate.retry"));
+    await waitFor(() => expect(upload.calls.count).toBe(2));
+    expect(screen.getByTestId("avatarSeal.gate.line")).toHaveTextContent(
+      "Uploading 0 of 1 — signing waits for the picture.",
+    );
+    expect(screen.getByTestId("avatar-seal-sign")).toBeEnabled();
+    upload.answer("ok");
+    await waitFor(() => expect(screen.queryByTestId("avatarSeal.gate")).toBeNull());
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("avatar-seal-sign"));
+    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
+  });
+
+  it("reads a refused upload's fact alone, no Retry, the commit disabled and Back to the crop (:17)", async () => {
+    const { upload } = await toGate();
+    upload.answer("refuse");
+    const message = await screen.findByTestId("avatarSeal.gate.message");
+    expect(message).toHaveTextContent("One picture didn't upload.");
+    expect(message).toHaveClass("text-error");
+    expect(screen.getByTestId("avatarSeal.gate")).toHaveAttribute("data-testid-key", "upload-refused");
+    expect(screen.queryByTestId("avatarSeal.gate.wait")).toBeNull();
+    expect(screen.queryByTestId("avatarSeal.gate.retry")).toBeNull();
+    expect(screen.getByTestId("avatar-seal-sign")).toBeDisabled();
+    fireEvent.click(screen.getByTestId("avatar-seal-back"));
+    expect(await screen.findByTestId("avatar-crop")).toBeInTheDocument();
+  });
+
+  it("goes on after Close on a held press: the upload finishes and the signing proceeds (:65; readme)", async () => {
+    const { signer, upload } = await toGate();
+    fireEvent.click(screen.getByTestId("avatar-seal-sign"));
+    fireEvent.click(await screen.findByTestId("avatar-seal-back"));
+    expect(push).toHaveBeenCalledWith("/profile");
+    upload.answer("ok");
+    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
   });
 });
