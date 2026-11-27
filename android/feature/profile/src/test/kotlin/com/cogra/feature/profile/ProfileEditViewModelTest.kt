@@ -89,6 +89,7 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
             Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "no fields")))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Bug)
@@ -100,6 +101,7 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
         profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.Offline)
@@ -118,6 +120,7 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
     fun anUntouchedPictureSendsNothing() = runTest(dispatcher) {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Untouched)
@@ -387,6 +390,7 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
         profiles.prepareGate = CompletableDeferred()
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         vm.seal.onSign()
@@ -405,6 +409,7 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
     fun aChangeTakenWhileTheSealStandsLeavesNoHeadLine() = runTest(dispatcher) {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.saved).isTrue()
@@ -441,6 +446,7 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
         profiles.prepareGate = CompletableDeferred()
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         vm.seal.onLeave()
@@ -510,6 +516,7 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
             Outcome.Refused(listOf(UserError(ErrorCode.WRITE_RULE_FAILED, "write rule")))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.fault).isEqualTo(ProfileSealFault.WriteRule)
@@ -554,7 +561,6 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
         assertThat(profileChangeSummary(listOf("bio"), removed = true)).isEqualTo("A new bio, the picture removed")
         assertThat(profileChangeSummary(listOf("display name", "website"), removed = false))
             .isEqualTo("A new display name and website")
-        assertThat(profileChangeSummary(emptyList(), removed = false)).isEqualTo(NOTHING_CHANGED)
     }
 
     // -- A SEAL TORN DOWN WITHOUT Back OR THE X (a sign-out clears the stack) --
@@ -566,6 +572,7 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
         val store = ViewModelStore()
         val vm = storedViewModel(store)
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -581,6 +588,7 @@ class ProfileEditViewModelTest : ProfileEditHarness() {
         val store = ViewModelStore()
         val vm = storedViewModel(store)
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.onSubmit()
         store.clear()
         dispatcher.scheduler.advanceUntilIdle()

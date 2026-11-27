@@ -38,7 +38,7 @@ class ProfileEditSealScreenTest {
         displayName = "Sol Ferreira",
         bio = "New bio",
         websiteUrl = "https://sol.example",
-        readDisplayName = "Sol Ferreira",
+        staged = setOf(ProfileField.Bio, ProfileField.Website),
         stage = ProfileEditStage.Seal,
     )
 
