@@ -3370,6 +3370,83 @@ describe("severance", () => {
     expect(data.sent).toEqual([]);
   });
 
+  // The served raw sums say the default lands at zero; the fresh read, folding
+  // the records themselves, says it does not — the standing moved meanwhile.
+  const staleZero = () =>
+    mount({
+      rawSum: () => ({ pDirected: -0.1, pInterest: -0.1 }),
+      seed: { "post-1": { records: [ORIGIN] } },
+    });
+
+  it("takes the tap's dialog down over the parked pad when the fresh read lands elsewhere", async () => {
+    const data = staleZero();
+    await settle();
+    await openPad();
+    layOutPad();
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("This takes you back to zero.");
+    await pressSet();
+    await settle();
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-cancel`)).toHaveTextContent(/^Cancel$/);
+    expect(data.sent).toEqual([]);
+  });
+
+  it("signs nothing from the tap's dialog pressed before a fresh read that disagrees", async () => {
+    const data = staleZero();
+    await settle();
+    await openPad();
+    layOutPad();
+    const held = holdProjections(data);
+    await pressSet();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(data.sent).toEqual([]);
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+  });
+
+  it("signs the tap's dialog pressed before a fresh read that agrees, once", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 1, pInterest: 1 }] } } });
+    await settle();
+    await openPad();
+    await parkAt(-500, 700);
+    const held = holdProjections(data);
+    await pressSet();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    expect(data.sent).toEqual([]);
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(data.sent).toHaveLength(1);
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+  });
+
+  // PadFailed.md:53's Close is for a press that signs; the alternates' Sign it
+  // over a landing their line already reads at zero asks at the press instead.
+  it("asks at the alternates' Sign it press when their line already says zero", async () => {
+    const data = staleZero();
+    await settle();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-choose`));
+    });
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("This takes you back to zero.");
+    holdProjections(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("stance-alt-commit"));
+    });
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    expect(screen.getByTestId("stance-alt-cancel")).toHaveTextContent(/^Cancel$/);
+    expect(data.sent).toEqual([]);
+  });
+
   // THE RELEASE LANDS ON A HUNDREDTH: a drag a hair short of the raw sums'
   // opposite lands EXACTLY on it, so the pick that reads as netting 0.00 is
   // the severance the gate asks about — not a float a few thousandths off it

@@ -195,6 +195,9 @@ type DialogAct =
 /** Where a signed act was made — what re-raises its outcome. */
 type Origin = "pad" | "row" | "confirm" | "empty";
 
+/** What the fresh read behind a dialog raised at Set's tap said of it. */
+type TapCheck = "agrees" | "differs" | "failed";
+
 /**
  * Where a TAKEN signing put the standing, and whether it walked it back —
  * which word a (0, 0) resting face speaks until a fresh read replaces it.
@@ -632,6 +635,10 @@ export function StanceControl({
   useEffect(() => {
     dialogUpRef.current = dialogUp;
   }, [dialogUp]);
+  /** Counts the dialogs raised; the one raised at Set's tap keeps its number in [tapCheck]. */
+  const tapAsk = useRef(0);
+  /** The fresh read checking the dialog raised at Set's tap, answering whether it still stands. */
+  const tapCheck = useRef<{ readonly ask: number; readonly check: Promise<TapCheck> } | null>(null);
 
   // THE OPINION PAD PAUSES, IT DOES NOT SUSPEND (Feed.md:39/41,
   // PostDetailVideo.md:39/41): opening it pauses the playing clip on its
@@ -1063,6 +1070,54 @@ export function StanceControl({
       : { kind: refusalFault(outcome) };
 
   /**
+   * Raises the dialog the pad's own line already owes — the walk-back's over
+   * a standing, the empty sign's ask over nothing standing — at Set's tap,
+   * then checks it against a fresh read behind it: the backend's projection
+   * stays the authority the moment anything is signed (`landing.ts`). The
+   * fresh answer re-asks the dialog the standing now owes, or, landing
+   * anywhere but zero, takes it down over the parked pad, nothing signed.
+   * The dialog's own commit waits on that check ([tapCheck]) and signs only
+   * the act the fresh read confirmed.
+   */
+  const askAtTap = (chosen: StancePair, shown: StanceLanding, by: string | null) => {
+    const ask = (tapAsk.current += 1);
+    if (shown.empty === true) setEmptyAsk({ pick: chosen, landing: { ...shown, severed: false } });
+    else setConfirming({ pick: chosen, records: 1, alreadySevered: false, landing: shown });
+    const check = data.project(seamTarget, chosen).then((landed): TapCheck => {
+      if (landed.kind !== "success") {
+        // Unread, the dialog stays as the pad raised it: a commit waiting on
+        // this check answers the dialog's own fault line, and its Retry signs.
+        if (tapCheck.current?.ask === ask) tapCheck.current = null;
+        return "failed";
+      }
+      const current = ask === tapAsk.current && stillAs(by) && dialogUpRef.current;
+      const { standing, ...fresh } = landed.value;
+      const nothingStands = standing.records === 0 || standing.severed;
+      const same = fresh.severed && nothingStands === (shown.empty === true);
+      if (same) return "agrees";
+      if (!current) return "differs";
+      // What it raises now is the fresh read's own: nothing left to check.
+      tapAsk.current += 1;
+      setConfirming(null);
+      setEmptyAsk(null);
+      if (!fresh.severed) readBundle({ fresh: true });
+      else if (nothingStands) setEmptyAsk({ pick: chosen, landing: { ...fresh, severed: false } });
+      else setConfirming({ pick: chosen, records: 1, alreadySevered: false, landing: fresh });
+      return "differs";
+    });
+    tapCheck.current = { ask, check };
+  };
+
+  /**
+   * The fresh check of the dialog raised at Set's tap, if the dialog up now
+   * is that one; null for any other dialog.
+   */
+  const tapCheckFor = (): Promise<TapCheck> | null => {
+    const pending = tapCheck.current;
+    return pending !== null && pending.ask === tapAsk.current ? pending.check : null;
+  };
+
+  /**
    * Every commit route lands here: read where the pick puts the bundle,
    * and if the fold says that reaches (0, 0), ask over the parked pad
    * rather than refusing (§8.2) — the walk-back's dialog over a standing,
@@ -1079,6 +1134,15 @@ export function StanceControl({
     setRowLineOf(by, null);
     setConfirmFault(null);
     setEmptyFault(null);
+    // THE PAD ALREADY SAYS A DIALOG IS OWED (SeveranceConfirm.md:3,
+    // EmptySignConfirm.md:3, :7): its line reads `This takes you back to
+    // zero.` or `Says nothing.`, so Set signs nothing here — it asks, at the
+    // tap, from what the pad shows, and Cancel stays Cancel (:49, :47).
+    if (origin === "pad" && landing !== null && landing.severed) {
+      askAtTap(chosen, landing, by);
+      return;
+    }
+    tapAsk.current += 1;
     const answer = await runInFlight(origin, by, async () => {
       const landed = await data.project(seamTarget, chosen);
       if (landed.kind !== "success") return { kind: "failed" as const };
@@ -1141,6 +1205,7 @@ export function StanceControl({
       { kind: "pick", pick: asked.pick, landing: asked.landing },
       "empty",
       sessionStore.activeAccountId(),
+      tapCheckFor(),
     );
   };
 
@@ -1159,18 +1224,30 @@ export function StanceControl({
    * same pick, from this surface (SigningAfterClose.md:27: "NEVER anything
    * else is signed"), never the dialog again: it was confirmed once.
    */
-  const signDialogAct = async (act: DialogAct, from: "confirm" | "empty" | "row", by: string | null) => {
+  const signDialogAct = async (
+    act: DialogAct,
+    from: "confirm" | "empty" | "row",
+    by: string | null,
+    checked: Promise<TapCheck> | null = null,
+  ) => {
     if (from === "row") {
       setSignedOf(by, null);
       setRowLineOf(by, null);
     }
-    const answer = await runInFlight(from, by, async () =>
-      answerOf(
+    const answer = await runInFlight(from, by, async () => {
+      // Raised at Set's tap from the pad's line, the dialog signs only once
+      // the fresh read behind it agrees; disagreeing, that read has already
+      // re-asked or taken the dialog down, and nothing is signed.
+      const verdict = checked === null ? "agrees" : await checked;
+      if (verdict === "differs") return { kind: "dropped" as const };
+      if (verdict === "failed") return { kind: "failed" as const };
+      return answerOf(
         act.kind === "walkBack"
           ? await data.sever(seamTarget, act.shown, commitSource)
           : await data.commit(seamTarget, act.pick, commitSource),
-      ),
-    );
+      );
+    });
+    if (answer.kind === "dropped") return;
     const onDialog = from !== "row" && stillAs(by) && dialogUpRef.current;
     if (answer.kind !== "taken") {
       // On its dialog: a fault with Retry in the act's slot, or the write
@@ -1200,6 +1277,7 @@ export function StanceControl({
 
   /** The explicit walk-back asks over the parked pad, and costs what it stages. */
   const openSeverance = () => {
+    tapAsk.current += 1;
     setSignedOf(sessionStore.activeAccountId(), null);
     setPadFault(null);
     setConfirmFault(null);
@@ -1225,6 +1303,7 @@ export function StanceControl({
       { kind: "pick", pick: asked.pick, landing: asked.landing },
       "confirm",
       sessionStore.activeAccountId(),
+      tapCheckFor(),
     );
   };
 
