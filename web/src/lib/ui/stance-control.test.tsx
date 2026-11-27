@@ -3308,6 +3308,224 @@ describe("severance", () => {
     expect(data.sent).toEqual([]);
   });
 
+  /** Holds every landing read the control makes until the test lets it go. */
+  const holdProjections = (data: ReturnType<typeof mount>) => {
+    const project = data.project;
+    const held: (() => void)[] = [];
+    data.project = (target, pick) =>
+      new Promise((resolve) => {
+        held.push(() => resolve(project(target, pick)));
+      });
+    return held;
+  };
+
+  /** Drag to a landing and let go, the pad parked on it, Set not yet pressed. */
+  const parkAt = async (clientX: number, clientY: number) => {
+    layOutPad();
+    moveKnob(clientX, clientY);
+    await settle();
+    await release();
+  };
+
+  // SeveranceConfirm.md:3: "WHEN tap Set GIVEN the pick lands at (0, 0)" —
+  // the pad's line already reads This takes you back to zero. (PadStanding.md:79),
+  // so the dialog rises at the tap from what the pad shows, and the pad's
+  // Cancel stays Cancel: Set signs nothing here, it asks (:49).
+  it("opens the walk-back's dialog at Set's tap when the pad's line already says zero", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 1, pInterest: 1 }] } } });
+    await settle();
+    await openPad();
+    await parkAt(-500, 700);
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("This takes you back to zero.");
+    const held = holdProjections(data);
+    await pressSet();
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-cancel`)).toHaveTextContent(/^Cancel$/);
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-cancel`)).toHaveTextContent(/^Cancel$/);
+    expect(data.sent).toEqual([]);
+  });
+
+  // EmptySignConfirm.md:3, :7: the pad's line already reads Says nothing., so
+  // Set's tap raises the ask at once, and Cancel stays Cancel (:47).
+  it("opens the empty sign's ask at Set's tap when the pad's line already says nothing", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    await parkAt(-0.1 * HALF, 0.1 * HALF);
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("Says nothing.");
+    const held = holdProjections(data);
+    await pressSet();
+    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-cancel`)).toHaveTextContent(/^Cancel$/);
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    expect(data.sent).toEqual([]);
+  });
+
+  // The served raw sums say the default lands at zero; the fresh read, folding
+  // the records themselves, says it does not — the standing moved meanwhile.
+  const staleZero = () =>
+    mount({
+      rawSum: () => ({ pDirected: -0.1, pInterest: -0.1 }),
+      seed: { "post-1": { records: [ORIGIN] } },
+    });
+
+  it("takes the tap's dialog down over the parked pad when the fresh read lands elsewhere", async () => {
+    const data = staleZero();
+    await settle();
+    await openPad();
+    layOutPad();
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("This takes you back to zero.");
+    await pressSet();
+    await settle();
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-cancel`)).toHaveTextContent(/^Cancel$/);
+    expect(data.sent).toEqual([]);
+  });
+
+  it("signs nothing from the tap's dialog pressed before a fresh read that disagrees", async () => {
+    const data = staleZero();
+    await settle();
+    await openPad();
+    layOutPad();
+    const held = holdProjections(data);
+    await pressSet();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(data.sent).toEqual([]);
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+  });
+
+  it("signs the tap's dialog pressed before a fresh read that agrees, once", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 1, pInterest: 1 }] } } });
+    await settle();
+    await openPad();
+    await parkAt(-500, 700);
+    const held = holdProjections(data);
+    await pressSet();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    expect(data.sent).toEqual([]);
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(data.sent).toHaveLength(1);
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+  });
+
+  /**
+   * Answers each landing read the next way queued: offline, agreeing (the
+   * real fold), or disagreeing (a landing away from zero).
+   */
+  const scriptProjections = (data: ReturnType<typeof mount>, answers: ("fail" | "real" | "away")[]) => {
+    const project = data.project;
+    data.project = async (target, pick) => {
+      const next = answers.shift() ?? "real";
+      // Each read answers 50ms on, so a press can land while it is out.
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      if (next === "fail") return createStubStanceData({ offline: true }).project(target, pick);
+      if (next === "away") return project(target, { pDirected: 1, pInterest: 1 });
+      return project(target, pick);
+    };
+  };
+
+  const proceed = async () => {
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    await settle(100);
+  };
+
+  const seversAtTap = async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 1, pInterest: 1 }] } } });
+    await settle();
+    await openPad();
+    await parkAt(-500, 700);
+    return data;
+  };
+
+  // Nothing a tap raised signs without one fresh read that agrees: a failed
+  // read is read again by the next press.
+  it("signs the tap's dialog only once a read agrees after a failed one, Retry reading again", async () => {
+    const data = await seversAtTap();
+    scriptProjections(data, ["fail", "real"]);
+    await pressSet();
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    await proceed();
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    expect(data.sent).toEqual([]);
+    await proceed();
+    expect(data.sent).toHaveLength(1);
+  });
+
+  it("reads again for a first commit pressed after the tap's read failed", async () => {
+    const data = await seversAtTap();
+    scriptProjections(data, ["fail", "away"]);
+    await pressSet();
+    await settle(100);
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    await proceed();
+    expect(data.sent).toEqual([]);
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+  });
+
+  it("answers the fault again, nothing signed, when Retry's read fails too", async () => {
+    const data = await seversAtTap();
+    scriptProjections(data, ["fail", "fail"]);
+    await pressSet();
+    await proceed();
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    await proceed();
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    expect(data.sent).toEqual([]);
+  });
+
+  it("takes the tap's dialog down, nothing signed, when Retry's read lands elsewhere", async () => {
+    const data = await seversAtTap();
+    scriptProjections(data, ["fail", "away"]);
+    await pressSet();
+    await proceed();
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    await proceed();
+    expect(data.sent).toEqual([]);
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+  });
+
+  // PadFailed.md:53's Close is for a press that signs; the alternates' Sign it
+  // over a landing their line already reads at zero asks at the press instead.
+  it("asks at the alternates' Sign it press when their line already says zero", async () => {
+    const data = staleZero();
+    await settle();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-choose`));
+    });
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("This takes you back to zero.");
+    holdProjections(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("stance-alt-commit"));
+    });
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    expect(screen.getByTestId("stance-alt-cancel")).toHaveTextContent(/^Cancel$/);
+    expect(data.sent).toEqual([]);
+  });
+
   // THE RELEASE LANDS ON A HUNDREDTH: a drag a hair short of the raw sums'
   // opposite lands EXACTLY on it, so the pick that reads as netting 0.00 is
   // the severance the gate asks about — not a float a few thousandths off it
