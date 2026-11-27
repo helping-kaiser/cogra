@@ -49,6 +49,7 @@ class ProfileChangeAccountTest : ProfileEditHarness() {
     fun aPressWithAnotherAccountActiveNeverPrepares() = runTest(dispatcher) {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.onSubmit()
         switchTo(null)
         vm.seal.onSign()
@@ -63,6 +64,7 @@ class ProfileChangeAccountTest : ProfileEditHarness() {
         profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         vm.seal.onBack()
@@ -100,6 +102,7 @@ class ProfileChangeAccountTest : ProfileEditHarness() {
         profiles.prepareOutcome = Outcome.Failed(IOException("offline"))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         vm.seal.onBack()
@@ -125,6 +128,7 @@ class ProfileChangeAccountTest : ProfileEditHarness() {
         backgroundScope.launch { changes.landed.collect { landed += it } }
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         vm.seal.onBack()
@@ -165,6 +169,7 @@ class ProfileChangeAccountTest : ProfileEditHarness() {
         profiles.prepareGate = CompletableDeferred()
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
         vm.save()
         dispatcher.scheduler.advanceUntilIdle()
         identity.seed = null

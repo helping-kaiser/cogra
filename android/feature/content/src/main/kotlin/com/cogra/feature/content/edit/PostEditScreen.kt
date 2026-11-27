@@ -46,6 +46,7 @@ import com.cogra.core.designsystem.v2.atom.InlineSize
 import com.cogra.core.designsystem.v2.atom.QuietNote
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.WizardHeader
+import com.cogra.core.designsystem.v2.compose.ActsFooter
 import com.cogra.core.designsystem.v2.compose.DescribeSheet
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.PickedRow

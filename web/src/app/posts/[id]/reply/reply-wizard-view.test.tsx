@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
+import type { WriteResult } from "@/lib/signing/write-signer";
 import { fakeWriteSigner } from "@/test/registration";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -1292,6 +1293,75 @@ describe("the reply wizard as a covering layer", () => {
 // RETRY ASKS THE SAME SIGNING AGAIN (SigningAfterClose.md:27): the batch this
 // mount prepared, never a second reply beside it.
 describe("Retry after a signing that did not answer", () => {
+  // K-ASKED-AGAIN-MIXED-EXPIRY: a re-ask with one write expired and one still
+  // unanswered has not expired whole, and the undecided write may still land:
+  // the seal shows the fault line with Retry (ReplySeal.md:19), never the bug
+  // notice an expiry alone would read as, and the next Retry asks it again.
+  it("a re-ask with one write expired and one unanswered shows the fault line with Retry and keeps the attempt", async () => {
+    let prepares = 0;
+    server.use(
+      gqlLink.mutation("PrepareComment", () => {
+        prepares += 1;
+        const write = (id: string) => ({
+          __typename: "PreparedWrite",
+          id,
+          family: "REVIEW",
+          canonicalProposal: "AA==",
+          gcAfterEpochs: 3,
+        });
+        return HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: `comment-${prepares}`,
+              writes: [write(`w${prepares}a`), write(`w${prepares}b`)],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const lostOne = (id: string) => ({ kind: "failed" as const, id, cause: new TypeError("Failed to fetch") });
+    const answers: ((id: string) => WriteResult)[] = [
+      (id: string) =>
+        id.endsWith("a")
+          ? {
+              kind: "refused" as const,
+              id,
+              errors: [{ code: "STAGED_WRITE_EXPIRED" as const, message: "garbage-collected unlanded", field: null }],
+            }
+          : lostOne(id),
+      (id: string) => ({ kind: "done" as const, id, state: "RELAYING" as const }),
+    ];
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => lostOne(write.id),
+      signAgain: vi.fn(async (ids: readonly string[]) => ids.map(answers.shift()!)),
+    });
+    const onSigned = vi.fn();
+    renderWithProviders(
+      <ReplyWizard
+        target={POST_TARGET}
+        store={fakeIdentityStore({ keyOnDevice: true })}
+        onLeave={vi.fn()}
+        onSigned={onSigned}
+      />,
+      { store: signedInStore(), writeSigner: signer },
+    );
+    await toSeal("Answering you.");
+    fireEvent.click(screen.getByTestId("reply-sign"));
+    fireEvent.click(await screen.findByTestId("reply-retry"));
+    await waitFor(() => expect(signer.signAgain).toHaveBeenCalledTimes(1));
+
+    expect(await screen.findByTestId("reply-retry")).toBeInTheDocument();
+    expect(screen.getByTestId("reply-transport-error")).toBeInTheDocument();
+    expect(screen.queryByTestId("reply-seal-bug")).toBeNull();
+
+    fireEvent.click(screen.getByTestId("reply-retry"));
+    await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-1"));
+    expect(signer.signAgain).toHaveBeenCalledTimes(2);
+    expect(prepares).toBe(1);
+  });
+
   it("does not prepare a second reply: Retry asks the first batch again and the reply is taken", async () => {
     let prepares = 0;
     server.use(
@@ -1340,5 +1410,80 @@ describe("Retry after a signing that did not answer", () => {
     await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-1"));
     expect(prepares).toBe(1);
     expect(signer.signAgain).toHaveBeenCalledWith(["w1"], expect.anything());
+  });
+
+  /** The server: every prepare stages a new reply; every staged write reads `state`. */
+  function replyHost(state: string) {
+    const host = { prepares: 0 };
+    server.use(
+      gqlLink.mutation("PrepareComment", () => {
+        host.prepares += 1;
+        return HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: `comment-${host.prepares}`,
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: `w${host.prepares}`,
+                  family: "REVIEW",
+                  canonicalProposal: "AA==",
+                  gcAfterEpochs: 3,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+      gqlLink.query("StagedWrite", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            stagedWrite: {
+              __typename: "StagedWrite",
+              id: variables.id,
+              state,
+              carried: false,
+              family: "REVIEW",
+              canonicalProposal: "AA==",
+              verifiedAct: null,
+              record: null,
+            },
+          },
+        }),
+      ),
+    );
+    return host;
+  }
+
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same words, their re-ask
+  // refused by the device's intent check, over a first reply whose approval
+  // went out with its answer lost.
+  it("a re-ask the device refuses reads the states first: a first reply already relaying is taken, nothing prepared again", async () => {
+    const host = replyHost("RELAYING");
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => ({ kind: "failed", id: write.id, cause: new Error("no answer") }),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "rejectedByDevice" as const, id, reason: "intent mismatch" })),
+      ),
+    });
+    const onSigned = vi.fn();
+    renderWithProviders(
+      <ReplyWizard
+        target={POST_TARGET}
+        store={fakeIdentityStore({ keyOnDevice: true })}
+        onLeave={vi.fn()}
+        onSigned={onSigned}
+      />,
+      { store: signedInStore(), writeSigner: signer },
+    );
+    await toSeal("Answering you.");
+    fireEvent.click(screen.getByTestId("reply-sign"));
+    fireEvent.click(await screen.findByTestId("reply-retry"));
+
+    await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-1"));
+    expect(signer.signAgain).toHaveBeenCalledWith(["w1"], expect.anything());
+    expect(host.prepares).toBe(1);
   });
 });
