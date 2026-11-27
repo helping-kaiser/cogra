@@ -157,6 +157,31 @@ class ReportProblemScreenTest {
     }
 }
 
+/** Settings' `Report a problem` row is the page's first door (ReportProblem.md:3). */
+@RunWith(RobolectricTestRunner::class)
+class ReportProblemSettingsDoorTest {
+
+    @get:Rule
+    val compose = createComposeRule()
+
+    @Test
+    fun theSettingsRowOpensTheReportPage() {
+        var report = 0
+        compose.setContent {
+            SettingsScreen(
+                state = SettingsUiState(account = account(), actorKeyHere = true, now = NOW),
+                versionName = "0.1.0",
+                actions = SettingsActions(),
+                doors = SettingsDoors(onOpenReport = { report++ }),
+            )
+        }
+        compose.onNodeWithTag("settings.about.report.label", useUnmergedTree = true)
+            .assertTextEquals("Report a problem")
+        compose.onNodeWithTag("settings.about.report").performScrollTo().performClick()
+        assertThat(report).isEqualTo(1)
+    }
+}
+
 /** The press's handoff: the system's own send, prefilled, never a send from CoGra. */
 @RunWith(RobolectricTestRunner::class)
 class ReportMailHandoffTest {

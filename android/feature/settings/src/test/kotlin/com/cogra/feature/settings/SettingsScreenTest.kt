@@ -533,15 +533,6 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun reportAProblemOpensTheReportPage() {
-        var report = 0
-        render(doors = SettingsDoors(onOpenReport = { report++ }))
-        node("settings.about.report.label").assertTextEquals("Report a problem")
-        node("settings.about.report").performScrollTo().performClick()
-        assertThat(report).isEqualTo(1)
-    }
-
-    @Test
     fun `contact_opens_mail_not_the_report`() {
         var contact = 0
         render(doors = SettingsDoors(onContact = { contact++ }))
