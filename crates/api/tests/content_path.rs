@@ -147,9 +147,10 @@ impl Rig {
         cadence: &mut api::ingest::StrandedCadence,
         at: std::time::Instant,
     ) -> api::ingest::IngestOutcome {
-        let outcome = api::ingest::ingest_pass(&self.boundary, &self.pool, GC, cadence.checks_at(at))
-            .await
-            .expect("ingests");
+        let outcome =
+            api::ingest::ingest_pass(&self.boundary, &self.pool, GC, cadence.checks_at(at))
+                .await
+                .expect("ingests");
         cadence.record(at, Some(&outcome));
         outcome
     }
@@ -3132,8 +3133,15 @@ async fn the_loop_skips_stranded_checks_on_idle_passes_and_heals_on_the_next_epo
         .drive(&mut cadence, start + std::time::Duration::from_secs(2))
         .await;
     assert_eq!(idle.epochs, 0);
-    assert_eq!(cadence.checks_run(), 1, "an idle pass inside the interval does not check");
-    assert!(!post_is_landed(&rig, node).await, "nothing healed the post yet");
+    assert_eq!(
+        cadence.checks_run(),
+        1,
+        "an idle pass inside the interval does not check"
+    );
+    assert!(
+        !post_is_landed(&rig, node).await,
+        "nothing healed the post yet"
+    );
 
     rig.standin.close_epoch().await.expect("closes");
     let epoch = rig
@@ -3141,8 +3149,15 @@ async fn the_loop_skips_stranded_checks_on_idle_passes_and_heals_on_the_next_epo
         .await;
     assert_eq!(epoch.epochs, 1);
     assert_eq!(cadence.checks_run(), 2, "an epoch pass checks");
-    assert!(post_is_landed(&rig, node).await, "the epoch pass promoted the post");
-    assert!(epoch.promotion_failures.is_empty(), "{:?}", epoch.promotion_failures);
+    assert!(
+        post_is_landed(&rig, node).await,
+        "the epoch pass promoted the post"
+    );
+    assert!(
+        epoch.promotion_failures.is_empty(),
+        "{:?}",
+        epoch.promotion_failures
+    );
 }
 
 /// With no epoch at all, the stranded post waits at most the interval:
@@ -3162,7 +3177,11 @@ async fn an_idle_loop_heals_a_stranded_post_once_its_interval_passes(pool: PgPoo
     let node = strand_a_post(&rig, alice, &alice_key).await;
     let idle = rig.drive(&mut cadence, start + interval).await;
     assert_eq!(idle.epochs, 0);
-    assert_eq!(cadence.checks_run(), 2, "the idle pass past the interval checks");
+    assert_eq!(
+        cadence.checks_run(),
+        2,
+        "the idle pass past the interval checks"
+    );
     assert!(post_is_landed(&rig, node).await, "and promoted the post");
 }
 

@@ -91,8 +91,7 @@ impl StrandedCadence {
             self.last_checked = Some(now);
             self.checks_run += 1;
         }
-        self.retry =
-            outcome.is_none_or(|o| !o.promotion_failures.is_empty() || o.stranded_unread);
+        self.retry = outcome.is_none_or(|o| !o.promotion_failures.is_empty() || o.stranded_unread);
     }
 
     /// How many recorded passes ran the stranded checks.
@@ -420,7 +419,10 @@ mod tests {
         let start = Instant::now();
         let mut cadence = StrandedCadence::new(INTERVAL);
         cadence.record(start, Some(&checked()));
-        cadence.record(start + Duration::from_secs(2), Some(&IngestOutcome::default()));
+        cadence.record(
+            start + Duration::from_secs(2),
+            Some(&IngestOutcome::default()),
+        );
         assert_eq!(cadence.checks_at(start + INTERVAL), StrandedChecks::Always);
     }
 
