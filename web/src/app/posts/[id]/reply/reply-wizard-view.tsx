@@ -145,7 +145,7 @@ export function ReplyWizard({
   const [stagedStance, setStagedStance] = useState<StancePair>(state.stance);
   const [describing, setDescribing] = useState<string | null>(null);
   const [help, setHelp] = useState<HelpTopic | null>(null);
-  /** The bug notice's `Report a problem`: the one report page, over the reply (ReportProblem.md:3,27). */
+  /** The bug notice's `Report a problem`: the one report page, over the reply (ReportProblem.md:3,31). */
   const { openReport, reportLayer } = useReportProblem();
   const [busy, setBusy] = useState(false);
   // A press made while the reply's bytes still move is HELD and signs the

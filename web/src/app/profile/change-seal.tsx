@@ -141,7 +141,7 @@ export function ChangeSeal({
   const id = reading.testId;
   const [foot, setFoot] = useState<Foot>({ kind: "rest" });
   const [help, setHelp] = useState<"change" | "key" | null>(null);
-  /** The bug notice's `Report a problem`: the one report page, over this seal (ReportProblem.md:3,27). */
+  /** The bug notice's `Report a problem`: the one report page, over this seal (ReportProblem.md:3,31). */
   const { openReport, reportLayer } = useReportProblem();
   const signing = foot.kind === "signing";
   const slowAnswer = useSlowAnswer(signing);

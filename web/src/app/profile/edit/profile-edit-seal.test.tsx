@@ -182,7 +182,7 @@ describe("what a press can come to", () => {
     expect(notice).toHaveTextContent(BUG_FACT);
     expect(screen.getByTestId("profile-edit-seal-try-again")).toBeInTheDocument();
     expect(screen.getByTestId("profile-edit-seal-report")).toHaveTextContent("Report a problem");
-    // ReportProblem.md:3,27 — the one report page, over the notice; back returns it.
+    // ReportProblem.md:3,31 — the one report page, over the notice; back returns it.
     fireEvent.click(screen.getByTestId("profile-edit-seal-report"));
     expect(screen.getByTestId("reportProblem")).toBeInTheDocument();
     fireEvent.click(within(screen.getByTestId("reportProblem")).getByRole("button", { name: "Back" }));

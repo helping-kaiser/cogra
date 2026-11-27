@@ -5,18 +5,18 @@
 // opened it — Settings' `Report a problem` row or a seal's bug notice — and it
 // carries nothing about where it was opened from (ReportProblem.md:3).
 //
-// A TASK PAGE (ReportProblem.md:11): the back arrow and no bottom bar. Then the
+// A TASK PAGE (ReportProblem.md:13): the back arrow and no bottom bar. Then the
 // headline, the lead, the one field `What happened` (four lines, growing a line
 // at a time — `TextField`'s growth law), the four facts read back in the seal's
 // fact list, the line saying nothing else travels, and `Send by email` — which
 // stands AFTER the read-back, the two-placement law's stated exception
 // (ReportProblem.jsx), so the reader sees everything that goes before the press.
 //
-// `Send by email` IS LIVE WHATEVER THE FIELD HOLDS (ReportProblem.md:17,
+// `Send by email` IS LIVE WHATEVER THE FIELD HOLDS (ReportProblem.md:19,
 // ReportProblemEmpty.md:5): the press commits nothing, it only hands the reader's
-// own mail a prefilled draft through a `mailto:` link (ReportProblem.md:21).
+// own mail a prefilled draft through a `mailto:` link (ReportProblem.md:23).
 //
-// THE WORDS ARE KEPT by Back and by the handoff (ReportProblem.md:27,29); an
+// THE WORDS ARE KEPT by Back and by the handoff (ReportProblem.md:29,31); an
 // empty field keeps nothing (ReportProblemEmpty.md:13).
 
 import { useEffect, useState } from "react";
@@ -51,7 +51,7 @@ export function ReportProblemView({
     window.location.href = url;
   },
 }: {
-  /** The header's back arrow: the surface that opened the report returns (ReportProblem.md:27). */
+  /** The header's back arrow: the surface that opened the report returns (ReportProblem.md:31). */
   onBack: () => void;
   /** Test injection: the clock `Time` reads. */
   now?: () => Date;
@@ -85,7 +85,7 @@ export function ReportProblemView({
   };
 
   const send = () => {
-    // `Time` reads the moment of the press (ReportProblem.md:19).
+    // `Time` reads the moment of the press (ReportProblem.md:21).
     const pressed = reportTime(now());
     setTime(pressed);
     keepWords(words);

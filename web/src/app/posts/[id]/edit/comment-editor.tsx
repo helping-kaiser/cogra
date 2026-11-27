@@ -232,7 +232,7 @@ function LoadedCommentEditor({
   // Two help doors — the header's "Editing" and the mark sheet's "?" — plus
   // the write rule's own: the state is which topic is open.
   const [help, setHelp] = useState<HelpTopic | null>(null);
-  /** The bug notice's `Report a problem`: the one report page, over the edit (ReportProblem.md:3,27). */
+  /** The bug notice's `Report a problem`: the one report page, over the edit (ReportProblem.md:3,31). */
   const { openReport, reportLayer } = useReportProblem();
   const [sensitiveOpen, setSensitiveOpen] = useState(false);
   const [busy, setBusy] = useState(false);

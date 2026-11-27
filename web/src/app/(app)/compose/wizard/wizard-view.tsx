@@ -193,7 +193,7 @@ export function ComposeWizard({
   // Which explanation is open, if any — the `?`s share one dialog because only
   // one can be open at a time and each names its own topic.
   const [help, setHelp] = useState<HelpTopic | null>(null);
-  /** The bug notice's `Report a problem`: the one report page, over the wizard (ReportProblem.md:3,27). */
+  /** The bug notice's `Report a problem`: the one report page, over the wizard (ReportProblem.md:3,31). */
   const { openReport, reportLayer } = useReportProblem();
   // Which picker stands in the details stage's place, if any — `+ Add a tag`
   // and `+ Cite something` open them; Done and the arrow close them, every

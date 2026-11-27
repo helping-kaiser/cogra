@@ -394,7 +394,7 @@ describe("the kept picks' seal", () => {
     expect(notice).toHaveTextContent("This shouldn't have happened");
     expect(within(notice).getByTestId("keptPicksSeal.tryAgain")).toHaveTextContent("Try again");
     expect(screen.getByTestId("keptPicksSeal.report")).toHaveTextContent("Report a problem");
-    // ReportProblem.md:3,27 — the one report page, over the notice; back returns it.
+    // ReportProblem.md:3,31 — the one report page, over the notice; back returns it.
     fireEvent.click(screen.getByTestId("keptPicksSeal.report"));
     expect(screen.getByTestId("reportProblem")).toBeInTheDocument();
     fireEvent.click(within(screen.getByTestId("reportProblem")).getByRole("button", { name: "Back" }));

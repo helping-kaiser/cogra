@@ -1,7 +1,7 @@
 "use client";
 
 // Settings' `Report a problem` row opens the report as its own page; the back
-// arrow returns to Settings (ReportProblem.md:27), as What's new's does.
+// arrow returns to Settings (ReportProblem.md:31), as What's new's does.
 
 import { useRouter } from "next/navigation";
 

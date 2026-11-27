@@ -2,12 +2,12 @@
 
 // THE REPORT OVER THE SURFACE THAT OPENED IT. A seal's bug notice opens the
 // same page Settings does (ReportProblem.md:3), and its back arrow returns
-// "the surface that opened the report" (ReportProblem.md:27) — the notice with
+// "the surface that opened the report" (ReportProblem.md:31) — the notice with
 // its fault, its staged act and its draft. A route change would unmount the
 // wizard that holds all of that, so a notice raises the page over itself
 // instead and the opener stays mounted beneath; the back arrow lowers it.
 //
-// The layer is the whole screen and scrolls on its own (ReportProblem.md:31:
+// The layer is the whole screen and scrolls on its own (ReportProblem.md:33:
 // the page scrolls when its content outgrows the screen).
 
 import { useState, type ReactNode } from "react";

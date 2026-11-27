@@ -149,7 +149,7 @@ export function KeptPicksView() {
   const [signing, setSigning] = useState(false);
   const [fault, setFault] = useState<SealFault | null>(null);
   const retryLine = retryLineOf(fault);
-  /** The bug notice's `Report a problem`: the one report page, over this seal (ReportProblem.md:3,27). */
+  /** The bug notice's `Report a problem`: the one report page, over this seal (ReportProblem.md:3,31). */
   const { openReport, reportLayer } = useReportProblem();
   const [help, setHelp] = useState<HelpTopic | null>(null);
   /** The batch landed; the view is leaving and must not read its emptiness as a last drop. */
