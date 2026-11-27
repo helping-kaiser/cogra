@@ -300,6 +300,33 @@ const OVER_MEDIA_ANCHOR: CSSProperties = {
   filter: "drop-shadow(0 1px 6px rgba(0,0,0,0.75))",
 };
 
+/**
+ * STATE AN ACT KEEPS BESIDE THE ACCOUNT THAT PRESSED IT (auth.md
+ * "Multi-account device custody": bound "to the account it belongs to, never
+ * to a device-global slot"). Several accounts share a tab and a page stays
+ * mounted through another tab's switch, so the control reads only the
+ * active account's entry: another's is hidden, never erased, and stands again
+ * under its own account. Setting null removes the owner's entry alone.
+ */
+function useOwned<T>(): readonly [
+  ReadonlyMap<string | null, T>,
+  (owner: string | null, value: T | null) => void,
+] {
+  const [owned, setOwned] = useState<ReadonlyMap<string | null, T>>(() => new Map());
+  const setOf = useCallback(
+    (owner: string | null, value: T | null) =>
+      setOwned((current) => {
+        if (value === null && !current.has(owner)) return current;
+        const next = new Map(current);
+        if (value === null) next.delete(owner);
+        else next.set(owner, value);
+        return next;
+      }),
+    [],
+  );
+  return [owned, setOf] as const;
+}
+
 const HOLD_RING_PX = 40;
 const HOLD_RING_STROKE_PX = 4;
 
@@ -503,24 +530,13 @@ export function StanceControl({
   const [padFault, setPadFault] = useState<Fault | null>(null);
   /**
    * What did not go through from the hold, on the target's own row — kept
-   * beside the account that pressed (auth.md "Multi-account device custody":
-   * bound "to the account it belongs to, never to a device-global slot").
-   * Several accounts share a tab and the page stays mounted through another
-   * tab's switch, so a line stands only under its own account: hidden under
-   * any other, never erased by the switch — it "stands until Retry is
-   * pressed, another act is made on the same anchor, or the surface's next
-   * fresh load" (RowSigning.md), and an account change is none of these.
+   * beside the account that pressed (`useOwned`): never erased by a switch,
+   * since it "stands until Retry is pressed, another act is made on the same
+   * anchor, or the surface's next fresh load" (RowSigning.md), and an account
+   * change is none of these.
    */
-  const [rowLines, setRowLines] = useState<ReadonlyMap<string | null, RowLineState>>(() => new Map());
+  const [rowLines, setRowLineOf] = useOwned<RowLineState>();
   const rowLine = rowLines.get(accountId) ?? null;
-  const setRowLineOf = (owner: string | null, line: RowLineState | null) =>
-    setRowLines((current) => {
-      if (line === null && !current.has(owner)) return current;
-      const next = new Map(current);
-      if (line === null) next.delete(owner);
-      else next.set(owner, line);
-      return next;
-    });
   /** A signed act in flight, and where it was made. */
   const [inFlight, setInFlight] = useState<Origin | null>(null);
   /** The act in flight has waited past [SETTING_AFTER_MS]. */
