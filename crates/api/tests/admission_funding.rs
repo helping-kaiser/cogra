@@ -23,7 +23,8 @@ use common::l1::census::Family;
 use common::l1::client::ActorKey;
 use common::l1::encoding::Encoder;
 use common::l1::handshake::{
-    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage, Micro, Proposal,
+    AccountBalance, ApprovalForm, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage, Micro,
+    Proposal, approval_digest,
     StructuralBody,
 };
 use common::l1::identifier::NodeId;
@@ -1254,4 +1255,65 @@ async fn a_held_approval_is_verified_before_it_is_held(pool: PgPool) {
         StagedState::AwaitingApproval
     );
     assert!(rig.held_signature(registration.id).await.is_none());
+}
+
+/// A hold taken before the approval covered the act alone carries a
+/// witness over the verified act and its seal. When its funding settles the
+/// relay passes it on, the host refuses it as not verifying, and the hold
+/// is dropped rather than relayed again on every pass: the write stays
+/// relaying for the GC, and the act on the host awaits its approval.
+///
+/// A held witness the host refuses as not verifying is dropped, not relayed again.
+/// ´claim:onboarding:a-refused-held-approval-is-dropped´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_refused_held_approval_is_dropped(pool: PgPool) {
+    let rig = Rig::settling_after(pool, 2).await;
+    let (mira, _) = rig.inviter("mira").await;
+    let link = rig.link(mira).await;
+    let applicant = rig.applicant(link, "newbie").await;
+    rig.approve_one(mira, rig.registration_path(applicant.account).await)
+        .await;
+    let registration = rig.the_registration(applicant.account).await;
+    let pre = PreSigned::sign(&applicant.key, registration.proposal.clone());
+    api::relay::submit_pre_signed(
+        &rig.realization,
+        &rig.pool,
+        registration.id,
+        PreSignedParts::from(&pre),
+    )
+    .await
+    .expect("seals");
+    let sealed = staged::load(&rig.pool, registration.id)
+        .await
+        .expect("loads")
+        .sealed_act()
+        .expect("sealed");
+    let old_witness = common::l1::crypto::sign_digest(
+        &ed25519_dalek::SigningKey::from_bytes(&applicant.key.seed()),
+        &approval_digest(ApprovalForm::ActAndSeal, &sealed.act.frame(), &sealed.host_seal),
+    );
+    staged::hold_approval(&rig.pool, registration.id, &old_witness)
+        .await
+        .expect("held as before the switch");
+
+    let refused =
+        api::relay::relay_held(&rig.realization, &rig.pool, registration.id, old_witness).await;
+    assert!(matches!(
+        refused,
+        Err(api::relay::RelayError::SignatureInvalid(_))
+    ));
+    assert!(rig.held_signature(registration.id).await.is_none());
+    assert_eq!(
+        staged::load(&rig.pool, registration.id)
+            .await
+            .expect("loads")
+            .state,
+        StagedState::Relaying
+    );
+    assert_eq!(
+        rig.l1_status(&registration.proposal.body.act_id().to_string())
+            .await
+            .as_deref(),
+        Some("sealed")
+    );
 }
