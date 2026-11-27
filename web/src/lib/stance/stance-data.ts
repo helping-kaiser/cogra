@@ -161,6 +161,18 @@ export type StanceReadOptions = {
 
 export const INCLUDE_PENDING_DEFAULT = true;
 
+/**
+ * Where a commit was pressed — one per surface showing the target (a stance
+ * control). Its identity is all it carries: a later commit from the same
+ * source toward the same target is that commit's Retry (stance-attempts.ts).
+ */
+export type CommitSource = object;
+
+export type StanceCommitOptions = {
+  /** The surface the commit was pressed on; absent, the target's attempt is the one asked. */
+  readonly source?: CommitSource;
+};
+
 export interface StanceData {
   /**
    * The viewer's standing toward `target`. A bundle folding no records is
@@ -181,7 +193,7 @@ export interface StanceData {
   ): Promise<Outcome<StanceProjection>>;
 
   /** Author one edge carrying exactly `pick`, and sign it. */
-  commit(target: StanceTarget, pick: StancePair): Promise<Outcome<StanceCommit>>;
+  commit(target: StanceTarget, pick: StancePair, options?: StanceCommitOptions): Promise<Outcome<StanceCommit>>;
 
   /**
    * Author the counter-record batch that nets the bundle to `(0, 0)`.
@@ -189,7 +201,11 @@ export interface StanceData {
    * signed only if it nets exactly those raw sums, in exactly the records
    * its cost stated (intent.ts).
    */
-  sever(target: StanceTarget, shown: StanceBundle): Promise<Outcome<StanceCommit>>;
+  sever(
+    target: StanceTarget,
+    shown: StanceBundle,
+    options?: StanceCommitOptions,
+  ): Promise<Outcome<StanceCommit>>;
 
   /**
    * Whether this device can sign at all — the signing key is here. Asked

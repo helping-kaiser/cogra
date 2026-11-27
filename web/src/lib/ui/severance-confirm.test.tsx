@@ -163,15 +163,29 @@ describe("the severance confirmation", () => {
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 
-  it("cannot be signed twice, nor left, while the first is in flight", () => {
-    const { onConfirm, onCancel } = show({ busy: true });
+  it("cannot be signed twice while the first is in flight, inert and never dimmed", () => {
+    const { onConfirm } = show({ busy: true });
     fireEvent.click(screen.getByTestId("severance-proceed"));
-    fireEvent.click(screen.getByTestId("severance-cancel"));
     expect(onConfirm).not.toHaveBeenCalled();
-    expect(onCancel).not.toHaveBeenCalled();
-    // Locked, never dimmed.
     expect(screen.getByTestId("severance-proceed")).toBeEnabled();
     expect(screen.getByTestId("severance-proceed")).toHaveAttribute("aria-disabled", "true");
+  });
+
+  // SeveranceConfirm.md:49: "WHEN press Walk it back -> Keep it reads Close in
+  // the same place from the press itself, filled and live ... AND NEVER Close
+  // dims"; :53/:55: Close, the scrim, Back or Escape close it while it signs.
+  it("reads Close in Keep it's place while it signs, live, and Close, the scrim or Escape leave", () => {
+    const { onConfirm, onCancel } = show({ busy: true });
+    const close = screen.getByTestId("severance-cancel");
+    expect(close).toHaveTextContent("Close");
+    expect(close).not.toHaveTextContent("Keep it");
+    expect(close).toBeEnabled();
+    expect(close).not.toHaveAttribute("aria-disabled");
+    fireEvent.click(close);
+    expect(onCancel).toHaveBeenCalledOnce();
+    fireEvent(screen.getByTestId("severance-confirm"), new Event("cancel", { cancelable: true }));
+    expect(onCancel).toHaveBeenCalledTimes(2);
+    expect(onConfirm).not.toHaveBeenCalled();
   });
 
   it("says what is happening once the wait passes 200ms", () => {
