@@ -99,7 +99,11 @@ import {
   severanceIntent,
   stanceIntent,
   type Slot,
+  type StanceAttempts,
 } from "./stance-attempts";
+
+/** A gesture's pressing account: its own remembered attempts, and whether it is still the active one. */
+type Pressed = { readonly attempts: StanceAttempts; readonly still: () => boolean };
 
 /** A gesture's batch as staged: its node, its writes, and what the signer checks them against. */
 type Staged = {
@@ -344,13 +348,13 @@ export function createApolloStanceData(deps: {
   signer: WriteSigner;
   /** Where a retired attempt's device material is forgotten; tests inject a double. */
   store?: Pick<IdentityStore, "clearHandshake">;
-  /** The tab's account boundary the remembered attempts end at; tests inject a double. */
+  /** The tab's active account, which every gesture is pressed as; tests inject a double. */
   accounts?: Pick<TokenStore, "activeAccountId" | "subscribe">;
 }): StanceData {
   const { client, guard, signer } = deps;
   const store = deps.store ?? identityStore;
-  /** Each target's pick whose signing has not answered done (stance-attempts.ts). */
-  const attempts = createStanceAttempts(deps.accounts);
+  /** Each account's picks whose signing has not answered done (stance-attempts.ts). */
+  const attempts = createStanceAttempts();
   const accounts = deps.accounts ?? tokenStore;
 
   /** The node each target's last read named — what its acts must point at. */
@@ -456,11 +460,13 @@ export function createApolloStanceData(deps: {
    * between it and the signing: a prepare under the next account's session
    * is that account's own stance, and its key would sign it. Each gesture
    * takes the account as it starts and asks `still` before each prepare and
-   * before the signing pass; a change stops it there.
+   * before the signing pass; a change stops it there. It remembers, reads
+   * and settles only that account's attempts, whichever account is active
+   * when it answers.
    */
-  const pressedAs = (): (() => boolean) => {
+  const pressedAs = (): Pressed => {
     const owner = accounts.activeAccountId();
-    return () => accounts.activeAccountId() === owner;
+    return { attempts: attempts.of(owner), still: () => accounts.activeAccountId() === owner };
   };
   /** The tab's account changed under a gesture: stopped, answered as a failure. */
   const accountChanged = (): Outcome<never> =>
@@ -506,18 +512,18 @@ export function createApolloStanceData(deps: {
     target: Slot,
     stage: () => Promise<Outcome<Staged>>,
     intent: string | null,
-    still: () => boolean,
+    { attempts: mine, still }: Pressed,
   ): Promise<Outcome<StanceCommit>> => {
     const staged = await stage();
     if (staged.kind !== "success") return staged;
     const { node, writes, expected } = staged.value;
     if (intent !== null) {
-      attempts.remember(target, { node, writes: writes.map((write) => write.id), intent, expected });
+      mine.remember(target, { node, writes: writes.map((write) => write.id), intent, expected });
     }
     // Staged under the account that pressed, signed only under it.
     if (!still()) return accountChanged();
     const outcome = await signAll(writes, expected);
-    if (intent !== null && outcome.kind === "success") attempts.forget(target);
+    if (intent !== null && outcome.kind === "success") mine.forget(target);
     return outcome;
   };
 
@@ -539,13 +545,14 @@ export function createApolloStanceData(deps: {
     target: Slot,
     intent: string,
     stage: () => Promise<Outcome<Staged>>,
-    still: () => boolean,
+    pressed: Pressed,
   ): Promise<Outcome<StanceCommit>> => {
-    if (attempts.asking(target)) return stageAndSign(target, stage, null, still);
-    const remembered = attempts.answered(target);
+    const { attempts: mine, still } = pressed;
+    if (mine.asking(target)) return stageAndSign(target, stage, null, pressed);
+    const remembered = mine.answered(target);
     // Held from here, before anything is awaited, so a gesture that arrives
     // meanwhile finds this one asking.
-    attempts.begin(target);
+    mine.begin(target);
     try {
       if (remembered !== null) {
         if (!still()) return accountChanged();
@@ -569,23 +576,23 @@ export function createApolloStanceData(deps: {
           case "landing":
             // The first gesture is relaying: it is what lands, and nothing
             // else is signed (SigningAfterClose.md:27).
-            attempts.forget(target);
+            mine.forget(target);
             return success({ records: remembered.writes.length });
           case "signed": {
             const outcome = outcomeOf(asked.results);
-            if (outcome.kind === "success") attempts.forget(target);
+            if (outcome.kind === "success") mine.forget(target);
             return outcome;
           }
           case "fresh":
             // Retired: the slot stays held for the fresh prepare.
-            attempts.forget(target);
-            attempts.begin(target);
+            mine.forget(target);
+            mine.begin(target);
         }
       }
-      return await stageAndSign(target, stage, intent, still);
+      return await stageAndSign(target, stage, intent, pressed);
     } finally {
       // Not done: the attempt, if one was staged, waits for a Retry.
-      attempts.settle(target);
+      mine.settle(target);
     }
   };
 
@@ -637,8 +644,8 @@ export function createApolloStanceData(deps: {
     },
 
     commit(target, pick): Promise<Outcome<StanceCommit>> {
-      const still = pressedAs();
-      return slotted(target, stanceIntent(target, pick), stagePick(target, pick, still), still);
+      const pressed = pressedAs();
+      return slotted(target, stanceIntent(target, pick), stagePick(target, pick, pressed.still), pressed);
     },
 
     keyOnDevice(): Promise<boolean> {
@@ -695,7 +702,8 @@ export function createApolloStanceData(deps: {
       // THE BATCH IS THE PRESSING ACCOUNT'S (`pressedAs`): its seal closes
       // from the press and the batch goes on (KeptPicksSeal.md:59), so the
       // account is checked before every leg too, not only before the signing.
-      const still = pressedAs();
+      const pressed = pressedAs();
+      const { still } = pressed;
       return slotted(
         KEPT_BATCH,
         keptBatchIntent(entries),
@@ -724,7 +732,7 @@ export function createApolloStanceData(deps: {
           // seal read back (write-signer.ts `sign`).
           return success({ node: nodes.join(" "), writes: staged, expected: joinExpectations(expected) });
         },
-        still,
+        pressed,
       );
     },
 
@@ -774,7 +782,8 @@ export function createApolloStanceData(deps: {
       // bundle to (0, 0), so a fresh prepare beside it is refused as already
       // netted, and one it never saw is staged a second time — two walk-backs
       // that Home's Resume would both land.
-      const still = pressedAs();
+      const pressed = pressedAs();
+      const { still } = pressed;
       return slotted({ walkBack: target }, severanceIntent(target), async () => {
         const node = await graphIdOf(target);
         if (node.kind !== "success") return node;
@@ -795,7 +804,7 @@ export function createApolloStanceData(deps: {
             ],
           ),
         });
-      }, still);
+      }, pressed);
     },
   };
 }
