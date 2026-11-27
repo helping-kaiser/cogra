@@ -53,6 +53,7 @@ describe("a layer that takes the whole screen", () => {
     expect(users.sort()).toEqual([
       "app/posts/[id]/edit/comment-edit-view.tsx",
       "app/posts/[id]/reply/reply-wizard-view.tsx",
+      "lib/report/report-problem-layer.tsx",
       "lib/ui2/media/media-viewer.tsx",
     ]);
   });
