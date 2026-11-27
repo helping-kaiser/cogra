@@ -264,7 +264,7 @@ class KeptPicksViewModel @Inject constructor(
         // is read on the press's first leg.
         viewModelScope.launch {
             when (val signed = signBatch(batch, retrying = current.fault != null)) {
-                BatchSigned.Taken -> taken(batch)
+                is BatchSigned.Taken -> taken(signed.signed)
                 is BatchSigned.Fault -> _state.update { it.copy(signing = false, fault = signed.fault) }
                 // Another account is active: nothing ran, the seal stands as it was.
                 BatchSigned.Stood -> _state.update { it.copy(signing = false, fault = current.fault) }
@@ -274,7 +274,8 @@ class KeptPicksViewModel @Inject constructor(
 
     /** How one press of the seal ended. */
     private sealed interface BatchSigned {
-        data object Taken : BatchSigned
+        /** The batch was taken: [signed] are the picks it signed. */
+        data class Taken(val signed: List<KeptPick>) : BatchSigned
 
         data class Fault(val fault: KeptSealFault) : BatchSigned
 
@@ -282,12 +283,22 @@ class KeptPicksViewModel @Inject constructor(
         data object Stood : BatchSigned
     }
 
-    private suspend fun taken(batch: List<KeptPick>) {
-        val targets = batch.map { it.target }
+    /**
+     * The batch landed: the picks it SIGNED are kept no longer, and they settle.
+     * A changed batch's Retry may find the first batch landing: that batch is
+     * the one counted and dropped. A pick it did not hold — one kept since, or
+     * a target whose kept pick changed since — was never signed and stays kept
+     * (repo rule "never erase silently"; web's twin `land` in `kept-batch.ts`).
+     */
+    private suspend fun taken(signed: List<KeptPick>) {
+        val targets = signed.map { it.target }
         signals.markSettling(targets)
         signals.announceSigned()
-        exit(KeptSnack.Signed(batch.size))
-        kept.drop(targets, KeptFamily.OPINION)
+        exit(KeptSnack.Signed(signed.size))
+        val landed = kept.list().opinions().filter { pick ->
+            signed.any { it.target == pick.target && it.pick == pick.pick }
+        }
+        kept.drop(landed.map { it.target }, KeptFamily.OPINION)
     }
 
     /**
@@ -306,10 +317,10 @@ class KeptPicksViewModel @Inject constructor(
         }
         val fault = when (slotted) {
             is Slotted.Answered -> faultOf(slotted.results)
-            // A changed batch found the first one approved: it is what lands.
-            // INTERIM, the web's (#693): the batch as the seal holds it now is
-            // what is dropped and counted.
-            is Slotted.Landing -> null
+            // A changed batch found the first one approved: it is what lands,
+            // and only the picks it held are counted and dropped
+            // (KeptPicksSeal.md:31).
+            is Slotted.Landing -> return BatchSigned.Taken(slotted.first.entries ?: batch)
             is Slotted.Refused -> if (slotted.errors.any { it.code in WRITE_RULE_CODES }) {
                 KeptSealFault.WRITE_RULE
             } else {
@@ -323,7 +334,7 @@ class KeptPicksViewModel @Inject constructor(
                 KeptSealFault.OFFLINE
             }
         }
-        return fault?.let { BatchSigned.Fault(it) } ?: BatchSigned.Taken
+        return fault?.let { BatchSigned.Fault(it) } ?: BatchSigned.Taken(batch)
     }
 
     /**
@@ -347,7 +358,7 @@ class KeptPicksViewModel @Inject constructor(
             nodes += graphId
             expected += Expectation(listOf(stanceRecord(graphId, pick.pick.pDirected, pick.pick.pInterest)))
         }
-        return Staging.Staged(nodes.joinToString(" "), prepared, joinExpectations(expected))
+        return Staging.Staged(nodes.joinToString(" "), prepared, joinExpectations(expected), batch)
     }
 
     /** What a signing pass's answers make of the seal; null when the batch was taken. */
