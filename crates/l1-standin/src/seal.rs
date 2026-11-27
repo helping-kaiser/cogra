@@ -3,8 +3,8 @@
 //! Host side of the admission handshake's two relay legs
 //! (layer1-interface.md §8.2). `seal` runs the act checks on a submission,
 //! adds salts, forms the binding commitments, and seals the verified act;
-//! `approve` verifies the approval witness over that exact verified act
-//! and its seal. Ordering admits only a verified act carrying a valid
+//! `approve` verifies the approval witness over that exact act — its body
+//! and both commitments, not the seal. Ordering admits only a verified act carrying a valid
 //! approval witness.
 //!
 //! The submission carries no content pair, and this host never asks for
@@ -14,7 +14,7 @@
 
 use common::l1::census::FamilyKind;
 use common::l1::crypto;
-use common::l1::handshake::{ApprovalWitness, approval_digest, is_canonical_dep_list};
+use common::l1::handshake::{ApprovalWitness, approval_form_of, is_canonical_dep_list};
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::proposal::{
     CONTENT_EDITION, DEPENDENCY_EDITION, SealedAct, Submission, SubmissionError, VerifiedAct,
@@ -291,7 +291,12 @@ pub(crate) async fn sealed_act(
     }))
 }
 
-/// Verifies the approval witness over the exact sealed act and marks it
+/// Verifies the approval witness over the act, in a form the act takes
+/// (`approval_form_of`, the one rule the relay applies too): the current
+/// form, or, for an act sealed before the approval covered the act alone,
+/// the sealed-act form as well. The form that verified is kept with the
+/// act, and the close orders acts of one form per epoch (`crate::close`).
+/// Then it marks the act
 /// approved. Idempotent once already approved: a repeat call re-checks
 /// nothing and changes nothing.
 pub(crate) async fn approve(
@@ -303,7 +308,7 @@ pub(crate) async fn approve(
         "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,
                 settlement_ref, license, asserted_parents, pre_signature,
                 pre_commitment, content_commitment, deps_commitment, host_seal,
-                status
+                status, sealed_before_switch
          FROM l1_acts WHERE act_id = $1",
         act_id,
     )
@@ -316,32 +321,35 @@ pub(crate) async fn approve(
     }
 
     let body = stored_body!(row).to_body()?;
-    let seal_msg = stored_header(
+    let header = stored_header(
         body,
         row.pre_commitment,
         row.pre_signature,
         row.content_commitment,
         row.deps_commitment,
-    )
-    .seal_message();
+    );
     let author_key = crypto::verifying_key_from_bytes(&row.author_pubkey)
         .ok_or_else(|| StandInError::Authentication("stored author key malformed".into()))?;
-    if !crypto::verify_digest(
+    let Some(form) = approval_form_of(
+        &header.frame(),
+        &row.host_seal,
         &author_key,
-        &approval_digest(&seal_msg, &row.host_seal),
         &witness.approval_signature,
-    ) {
+        row.sealed_before_switch,
+    ) else {
         return Err(StandInError::Authentication(
-            "approval witness does not verify over the sealed act".into(),
+            "approval witness does not verify over the act".into(),
         ));
-    }
+    };
 
     sqlx::query!(
         "UPDATE l1_acts
-         SET status = 'approved', approval_signature = $2, approved_at = NOW()
+         SET status = 'approved', approval_signature = $2, approved_at = NOW(),
+             approval_form = $3
          WHERE act_id = $1 AND status = 'sealed'",
         act_id,
         &witness.approval_signature,
+        form.number(),
     )
     .execute(standin.pool())
     .await?;

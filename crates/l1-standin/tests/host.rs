@@ -232,8 +232,8 @@ async fn a_submission_without_its_content_pair_seals_approves_and_lands(pool: Pg
 }
 
 /// The published record names exactly its act, author, family, place in
-/// the order of record, witness and legs — the pattern below is
-/// exhaustive, so a payload mark on the type fails to compile — and the
+/// the order of record, witness, legs and authentication — the pattern
+/// below is exhaustive, so a payload mark on the type fails to compile — and the
 /// read-back package equals the published one. The host never sees a
 /// payload, so it publishes nothing about one beyond the witness.
 ///
@@ -258,7 +258,10 @@ async fn a_published_record_carries_no_payload_mark(pool: PgPool) {
             position,
             payload_witness,
             legs,
+            approval,
+            attestation: _,
         } = record;
+        assert_eq!(&approval.body.act_id(), act_id);
         assert_eq!(&act_id.author, author);
         assert_eq!(act_id.family, *family);
         assert_eq!(*epoch, 1);
@@ -1554,8 +1557,8 @@ async fn the_tables_refuse_a_numbering_without_an_order_of_record(pool: PgPool) 
     let zero = sqlx::query(
         "INSERT INTO l1_epochs
              (epoch, act_count, theta_charged_micro, closure_cause, marker_policy, marker_edition,
-              target_acts, min_duration_secs)
-         VALUES (0, 0, 50186, 'duration', 'stand-in: the epoch close', 1, 10000, 0)",
+              target_acts, min_duration_secs, approval_form)
+         VALUES (0, 0, 50186, 'duration', 'stand-in: the epoch close', 1, 10000, 0, 2)",
     )
     .execute(&pool)
     .await;

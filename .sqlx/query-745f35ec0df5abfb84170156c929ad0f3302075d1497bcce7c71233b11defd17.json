@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT act_id, author, seq, family, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, deps,\n                pre_commitment, deps_salt, deps_commitment, content_commitment\n         FROM l1_acts WHERE status = 'approved'\n         ORDER BY approved_at, act_id",
+  "query": "SELECT act_id, author, seq, family, middle, target, p_d, p_i,\n                  settlement_ref, license, asserted_parents, deps,\n                  pre_commitment, deps_salt, deps_commitment, content_commitment,\n                  author_pubkey, pre_signature, host_seal,\n                  approval_signature AS \"approval_signature!\",\n                  approval_form AS \"approval_form!\"\n           FROM l1_acts WHERE status = 'approved'\n           ORDER BY approved_at, act_id",
   "describe": {
     "columns": [
       {
@@ -82,6 +82,31 @@
         "ordinal": 15,
         "name": "content_commitment",
         "type_info": "Bytea"
+      },
+      {
+        "ordinal": 16,
+        "name": "author_pubkey",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 17,
+        "name": "pre_signature",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 18,
+        "name": "host_seal",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 19,
+        "name": "approval_signature!",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 20,
+        "name": "approval_form!",
+        "type_info": "Int2"
       }
     ],
     "parameters": {
@@ -103,8 +128,13 @@
       false,
       false,
       false,
-      false
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
     ]
   },
-  "hash": "3f0d8496ef6ebfd952b20281eafcf388d375f6e271b0bc463b92de435b46b212"
+  "hash": "745f35ec0df5abfb84170156c929ad0f3302075d1497bcce7c71233b11defd17"
 }

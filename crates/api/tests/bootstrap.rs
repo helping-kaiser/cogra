@@ -385,7 +385,8 @@ async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
     )
     .await;
     sqlx::query(
-        "UPDATE l1_acts SET status = 'sealed', approval_signature = NULL, approved_at = NULL
+        "UPDATE l1_acts SET status = 'sealed', approval_signature = NULL, approved_at = NULL,
+                            approval_form = NULL
          WHERE act_id = $1",
     )
     .bind(format!("act:{treasury}:0:registration"))
@@ -436,7 +437,8 @@ async fn a_sealed_act_whose_carriage_was_never_written_is_recovered(pool: PgPool
     ]);
     rewind_to_partial_genesis(&pool, &keep).await;
     for statement in [
-        "UPDATE l1_acts SET status = 'sealed', approval_signature = NULL, approved_at = NULL
+        "UPDATE l1_acts SET status = 'sealed', approval_signature = NULL, approved_at = NULL,
+                            approval_form = NULL
          WHERE act_id = $1",
         "UPDATE genesis_handshake_nonces g SET content_nonce = c.content_nonce
          FROM act_payloads c WHERE c.act_id = g.act_id AND g.act_id = $1",

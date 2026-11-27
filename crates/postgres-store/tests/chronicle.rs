@@ -7,7 +7,9 @@
 
 use common::l1::Family;
 use common::l1::census::{LegRole, leg_params};
-use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{
+    ActApproval, EpochPackage, PublishedLeg, PublishedRecord, SealAttestation,
+};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{self, ChronicleEntry, ContentCursor, LandingOrder, Listing};
 use postgres_store::{genesis, mirror};
@@ -113,6 +115,8 @@ fn binary(act_id: ActId, epoch: i64, position: i64, target: NodeId) -> Published
     let family = act_id.family;
     let (p_d, p_i) = leg_params(LegRole::Binary, 0.5, 0.5);
     PublishedRecord {
+        attestation: SealAttestation::default(),
+        approval: ActApproval::unverified(&act_id),
         act_id,
         author: ALICE.to_string(),
         family,

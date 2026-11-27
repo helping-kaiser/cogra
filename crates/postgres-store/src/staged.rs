@@ -159,6 +159,10 @@ pub struct SealedParts {
     pub content_commitment: Vec<u8>,
     pub deps_commitment: Vec<u8>,
     pub host_seal: Vec<u8>,
+    /// Sealed before the approval covered the act alone: the host takes an
+    /// approval in the sealed-act form for it too
+    /// (`common::l1::handshake::approval_form_of`).
+    pub sealed_before_switch: bool,
 }
 
 impl From<&PreSigned> for PreSignedParts {
@@ -210,6 +214,14 @@ impl StagedWrite {
                 .pre_signed(&self.proposal)
                 .submission(),
         )
+    }
+
+    /// Whether the write's act was sealed before the approval covered the
+    /// act alone, so the host takes a sealed-act witness for it too.
+    pub fn sealed_before_switch(&self) -> bool {
+        self.sealed
+            .as_ref()
+            .is_some_and(|sealed| sealed.sealed_before_switch)
     }
 
     /// The host-sealed verified act, once the seal has returned.
@@ -449,7 +461,7 @@ async fn load_row(pool: &PgPool, id: Uuid) -> Result<(Promotable, bool), StagedE
                 deps, payload, state, author_pubkey, content_nonce,
                 dependency_nonce, pre_signature,
                 content_salt, deps_salt, content_commitment, deps_commitment,
-                host_seal, prepared_epoch, node_id, pre_signed_at, carried,
+                host_seal, sealed_before_switch, prepared_epoch, node_id, pre_signed_at, carried,
                 payload_reaped_at, payload_custodied_at,
                 kept_at IS NOT NULL AS \"kept!\"
          FROM staged_writes WHERE id = $1",
@@ -581,6 +593,7 @@ async fn load_row(pool: &PgPool, id: Uuid) -> Result<(Promotable, bool), StagedE
             content_commitment,
             deps_commitment,
             host_seal,
+            sealed_before_switch: row.sealed_before_switch,
         }),
         (None, None, None, None, None) => None,
         _ => return Err(corrupt("seal leg")),

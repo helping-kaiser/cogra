@@ -88,8 +88,8 @@ impl PreSigned {
     }
 
     /// Step 4 of the write — approve: the actor's checks of §8.2,
-    /// "Approval witness", then the witness over the encoded verified act
-    /// and its seal.
+    /// "Approval witness", then the witness over the act alone — its body
+    /// and both commitments, in the current approval form.
     ///
     /// Exact equality of the returned body's canonical bytes, P and
     /// pre-signature with what was pre-signed; the editions; the host seal;

@@ -54,6 +54,26 @@ Conventions:
   by-product; `w̃`'s order-derived ingredient), the payload-marked
   flag (set from carriage — "Act payload carriage"), and the
   payload-witness reference.
+- **The replay floor.** Beside the payload witness — the content
+  commitment — each record keeps what its published record carries
+  so that its signatures and its formation verify from it alone, in
+  the record's two members: the act's approval — the approved body
+  in its canonical encoding, the dependency commitment, the public
+  key the record maps the proposal signature and the approval
+  signature to, and the approval witness — and the seal attestation
+  beside the act — the signed pre-commitment, the formation edition
+  each commitment names, the frame version and the host seal
+  ([layer1-interface.md §13.3](../primitive/layer1-interface.md#133-the-replay-floor-and-the-declared-cases),
+  "Published Epoch Replay Floor";
+  [§8.4](../primitive/layer1-interface.md#84-the-act-record-and-payload-carriage),
+  "Act envelope"). Each mirrored epoch keeps the approval form its
+  package states, which names the message every witness of the
+  epoch verifies over: the act alone, or, for the epochs closed
+  before that, the verified act and its host seal. No record check
+  relates that key to the stated Actor. A record holds all of them
+  or none: a record mirrored before the package carried them holds
+  none until the next ingestion pass fills it from the published
+  sequence, through the seam. Ingestion verifies none of them.
 - **Indexes serve the standing query shapes:** by **author**
   (forward expansion — the feed's hop-by-hop frontier queries —
   and per-author bundle folds), by **target** (fold inputs,
@@ -707,6 +727,11 @@ CREATE TABLE staged_writes (
     content_commitment  BYTEA,
     deps_commitment     BYTEA,
     host_seal           BYTEA,
+    -- Sealed before the approval covered the act alone: the host
+    -- takes an approval over the verified act and its seal for such
+    -- an act too, and the relay checks a witness it holds by the
+    -- same rule (common::l1::handshake::approval_form_of).
+    sealed_before_switch BOOLEAN NOT NULL DEFAULT FALSE,
 
     -- The approval witness of an admission Registration whose
     -- funding has not settled: held here, with the write in

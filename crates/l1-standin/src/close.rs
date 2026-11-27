@@ -79,11 +79,12 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use common::l1::census::LegRole;
 use common::l1::handshake::{
-    BoundaryPolicy, ClosureCause, EpochClosure, EpochPackage, FIRST_POSITION, LedgerLine,
-    MarkerPolicy, PublishedLeg, PublishedRecord, Ratio, WallStep,
+    ActApproval, ApprovalForm, BoundaryPolicy, CaseDeclaration, ClosureCause, EpochClosure,
+    EpochPackage, FIRST_POSITION, LedgerLine, MarkerPolicy, PublishedLeg, PublishedRecord, Ratio,
+    SEAL_FRAME_VERSION, SealAttestation, WallStep,
 };
 use common::l1::identifier::NodeId;
-use common::l1::proposal::dependency_commitment;
+use common::l1::proposal::{CONTENT_EDITION, DEPENDENCY_EDITION, dependency_commitment};
 use sqlx::PgConnection;
 
 use crate::seal::{projection_legs, stored_body};
@@ -99,11 +100,55 @@ pub(crate) struct Candidate {
     pub author: String,
     pub body: common::l1::StructuralBody,
     pub payload_witness: Vec<u8>,
+    pub sealed: SealedParts,
     /// Declared dependencies and causal parents together — every act this
     /// one must follow.
     pub prerequisites: Vec<String>,
     /// The causal parents alone, which form the dependent-set partition.
     pub parents: Vec<String>,
+}
+
+/// The stored parts of an accepted act's authentication beside its body
+/// and content commitment: what its published record carries so that each
+/// signature verifies under the key the record maps it to, and the act's
+/// formation verifies, from the record alone (layer1-interface.md §8.4,
+/// "Act envelope"; §13.3, "Published Epoch Replay Floor").
+#[derive(Debug, Clone, Default)]
+pub(crate) struct SealedParts {
+    pub author_pubkey: Vec<u8>,
+    pub pre_commitment: Vec<u8>,
+    pub pre_signature: Vec<u8>,
+    pub dependency_commitment: Vec<u8>,
+    pub host_seal: Vec<u8>,
+    pub approval_signature: Vec<u8>,
+}
+
+impl SealedParts {
+    /// The published approval of the act these parts were sealed for: the
+    /// act's own member of its record.
+    fn approval(&self, body: &common::l1::StructuralBody) -> ActApproval {
+        ActApproval {
+            body: body.clone(),
+            dependency_commitment: self.dependency_commitment.clone(),
+            author_pubkey: self.author_pubkey.clone(),
+            approval_signature: self.approval_signature.clone(),
+        }
+    }
+
+    /// The seal attestation published beside the act. Every act this host
+    /// seals names the one content and one dependency edition and the one
+    /// frame version, so those are the constants, as the stored header has
+    /// them (`crate::seal`).
+    fn attestation(&self) -> SealAttestation {
+        SealAttestation {
+            pre_commitment: self.pre_commitment.clone(),
+            pre_signature: self.pre_signature.clone(),
+            content_edition: CONTENT_EDITION,
+            dependency_edition: DEPENDENCY_EDITION,
+            seal_version: SEAL_FRAME_VERSION,
+            host_seal: self.host_seal.clone(),
+        }
+    }
 }
 
 /// An act's causal parents (layer1-interface.md §8.2): its asserted
@@ -335,6 +380,8 @@ pub(crate) fn select_and_order(
             position,
             payload_witness: candidate.payload_witness.clone(),
             legs: published_legs,
+            approval: candidate.sealed.approval(&candidate.body),
+            attestation: candidate.sealed.attestation(),
         });
     }
 
@@ -416,6 +463,13 @@ fn linearizes(
 /// duration, empty or not (§11.6, "Final-set closure"), and its controller
 /// steps from the wall in force at the declared width like any other. An
 /// idle close skips the history load, which only a selection reads.
+///
+/// One approval form per epoch. Acts approved in the sealed-act form are
+/// ordered first, in an epoch of that form, while any of them can be
+/// ordered; only a close that orders none of them selects among the acts
+/// approved in the current form. An act of one form waits while an epoch
+/// of the other closes, and its prerequisites stay where they are: an act
+/// is still ordered after every act it follows.
 pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, StandInError> {
     standin.config().check()?;
     let mut tx = standin.pool().begin().await?;
@@ -428,17 +482,27 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
     let theta = DECLARATION.burn_image(wall_in_force).map_err(wall_fault)?;
 
     let rows = sqlx::query!(
-        "SELECT act_id, author, seq, family, middle, target, p_d, p_i,
-                settlement_ref, license, asserted_parents, deps,
-                pre_commitment, deps_salt, deps_commitment, content_commitment
-         FROM l1_acts WHERE status = 'approved'
-         ORDER BY approved_at, act_id",
+        r#"SELECT act_id, author, seq, family, middle, target, p_d, p_i,
+                  settlement_ref, license, asserted_parents, deps,
+                  pre_commitment, deps_salt, deps_commitment, content_commitment,
+                  author_pubkey, pre_signature, host_seal,
+                  approval_signature AS "approval_signature!",
+                  approval_form AS "approval_form!"
+           FROM l1_acts WHERE status = 'approved'
+           ORDER BY approved_at, act_id"#,
     )
     .fetch_all(&mut *tx)
     .await?;
 
+    let mut sealed_act_form = Vec::new();
     let mut candidates = Vec::with_capacity(rows.len());
     for row in &rows {
+        let form = ApprovalForm::from_number(row.approval_form).ok_or_else(|| {
+            StandInError::Host(format!(
+                "stored approval form {} unknown",
+                row.approval_form
+            ))
+        })?;
         let body = stored_body!(row).to_body()?;
         if !dependency_opening_matches(
             &body.act_id(),
@@ -456,32 +520,62 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
         let parents = causal_parents(&row.asserted_parents, row.settlement_ref.as_ref());
         let mut prerequisites = row.deps.clone();
         prerequisites.extend(parents.iter().cloned());
-        candidates.push(Candidate {
+        let set = match form {
+            ApprovalForm::ActAndSeal => &mut sealed_act_form,
+            ApprovalForm::Act => &mut candidates,
+        };
+        set.push(Candidate {
             act_id: row.act_id.clone(),
             author: row.author.clone(),
             body,
             payload_witness: row.content_commitment.clone(),
+            sealed: SealedParts {
+                author_pubkey: row.author_pubkey.clone(),
+                pre_commitment: row.pre_commitment.clone(),
+                pre_signature: row.pre_signature.clone(),
+                dependency_commitment: row.deps_commitment.clone(),
+                host_seal: row.host_seal.clone(),
+                approval_signature: row.approval_signature.clone(),
+            },
             prerequisites,
             parents,
         });
     }
 
     let config = standin.config();
-    let (selection, state, counts) = if candidates.is_empty() {
-        (Selection::default(), LedgerState::default(), HashMap::new())
-    } else {
-        let (mut state, counts) = load_ledger_state(&mut tx, &candidates).await?;
-        let selection = select_and_order(
-            candidates,
-            &mut state,
-            epoch,
-            theta,
-            config.epoch_target_acts,
-        )?;
-        (selection, state, counts)
-    };
+    let mut chosen = None;
+    for (form, set) in [
+        (ApprovalForm::ActAndSeal, sealed_act_form),
+        (ApprovalForm::Act, candidates),
+    ] {
+        if set.is_empty() {
+            continue;
+        }
+        let (mut state, counts) = load_ledger_state(&mut tx, &set).await?;
+        let selection = select_and_order(set, &mut state, epoch, theta, config.epoch_target_acts)?;
+        if !selection.records.is_empty() || form == ApprovalForm::CURRENT {
+            chosen = Some((form, selection, state, counts));
+            break;
+        }
+    }
+    let (form, selection, state, counts) = chosen.unwrap_or_else(|| {
+        (
+            ApprovalForm::CURRENT,
+            Selection::default(),
+            LedgerState::default(),
+            HashMap::new(),
+        )
+    });
 
-    let closure = closure_outputs(&selection, &state, &counts, wall_in_force, theta, config)?;
+    let closure = closure_outputs(
+        &selection,
+        &state,
+        &counts,
+        wall_in_force,
+        theta,
+        config,
+        form,
+    )?;
     let asserted_at = persist(&mut tx, epoch, &selection, &closure).await?;
     crate::settle_due(&mut tx, epoch).await?;
     let package = EpochPackage {
@@ -623,6 +717,7 @@ fn closure_outputs(
     wall_in_force: Ratio,
     theta: i64,
     config: &crate::StandInConfig,
+    approval_form: ApprovalForm,
 ) -> Result<EpochClosure, StandInError> {
     let boundary = config.boundary();
     let size = i64::try_from(selection.records.len()).unwrap_or(i64::MAX);
@@ -661,6 +756,8 @@ fn closure_outputs(
             theta_next_micro: DECLARATION.burn_image(step.delivered).map_err(wall_fault)?,
         }),
         marker: DECLARATION.marker(),
+        case_declarations: DECLARATION.case_declarations(),
+        approval_form,
     })
 }
 
@@ -798,9 +895,10 @@ async fn persist(
               marker_policy, marker_edition,
               wall_num, wall_den, width_num, width_den, rung_num, rung_den,
               proposal_num, proposal_den, delivered_num, delivered_den,
-              theta_next_micro, target_acts, min_duration_secs, max_duration_secs)
+              theta_next_micro, target_acts, min_duration_secs, max_duration_secs,
+              approval_form)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
-                 $18, $19, $20)
+                 $18, $19, $20, $21)
          RETURNING closed_at",
         epoch,
         selection.records.len() as i64,
@@ -822,6 +920,7 @@ async fn persist(
         closure.boundary.target_acts,
         closure.boundary.min_duration_secs,
         closure.boundary.max_duration_secs,
+        closure.approval_form.number(),
     )
     .fetch_one(&mut **tx)
     .await?;
@@ -848,6 +947,21 @@ async fn persist(
     .execute(&mut **tx)
     .await?;
 
+    let (identities, editions): (Vec<String>, Vec<i32>) = closure
+        .case_declarations
+        .iter()
+        .map(|case| (case.identity.clone(), case.edition))
+        .unzip();
+    sqlx::query!(
+        "INSERT INTO l1_epoch_case_declarations (epoch, identity, edition)
+         SELECT $1, * FROM UNNEST($2::TEXT[], $3::INTEGER[])",
+        epoch,
+        &identities,
+        &editions,
+    )
+    .execute(&mut **tx)
+    .await?;
+
     Ok(asserted_at)
 }
 
@@ -861,7 +975,8 @@ pub(crate) async fn epochs_since(
                 marker_policy, marker_edition,
                 wall_num, wall_den, width_num, width_den, rung_num, rung_den,
                 proposal_num, proposal_den, delivered_num, delivered_den,
-                theta_next_micro, target_acts, min_duration_secs, max_duration_secs
+                theta_next_micro, target_acts, min_duration_secs, max_duration_secs,
+                approval_form
          FROM l1_epochs WHERE epoch > $1 ORDER BY epoch",
         after,
     )
@@ -920,7 +1035,29 @@ pub(crate) async fn epochs_since(
             identity: e.marker_policy,
             edition: e.marker_edition,
         };
+        package.closure.approval_form =
+            ApprovalForm::from_number(e.approval_form).ok_or_else(|| {
+                StandInError::Host(format!("stored approval form {} unknown", e.approval_form))
+            })?;
         packages.push(package);
+    }
+    let epochs: Vec<i64> = packages.iter().map(|p| p.epoch).collect();
+    let mut cases: HashMap<i64, Vec<CaseDeclaration>> = HashMap::new();
+    for case in sqlx::query!(
+        r#"SELECT epoch, identity, edition FROM l1_epoch_case_declarations
+           WHERE epoch = ANY($1) ORDER BY epoch, identity COLLATE "C""#,
+        &epochs,
+    )
+    .fetch_all(&mut *conn)
+    .await?
+    {
+        cases.entry(case.epoch).or_default().push(CaseDeclaration {
+            identity: case.identity,
+            edition: case.edition,
+        });
+    }
+    for package in &mut packages {
+        package.closure.case_declarations = cases.remove(&package.epoch).unwrap_or_default();
     }
     Ok(packages)
 }
@@ -941,9 +1078,11 @@ async fn load_epoch(
     asserted_at: chrono::DateTime<chrono::Utc>,
 ) -> Result<EpochPackage, StandInError> {
     let rows = sqlx::query!(
-        r#"SELECT act_id, author, family, act_time AS "act_time!",
-                  position AS "position!", content_commitment,
-                  asserted_parents, settlement_ref
+        r#"SELECT act_id, author, seq, family, middle, target, p_d, p_i,
+                  settlement_ref, license, asserted_parents,
+                  act_time AS "act_time!", position AS "position!",
+                  content_commitment, author_pubkey, pre_commitment, pre_signature,
+                  deps_commitment, host_seal, approval_signature AS "approval_signature!"
            FROM l1_acts WHERE epoch = $1 AND status = 'accepted'
            ORDER BY position"#,
         epoch,
@@ -1001,7 +1140,18 @@ async fn load_epoch(
 
     let mut records = Vec::with_capacity(rows.len());
     for row in rows {
+        let body = stored_body!(row).to_body()?;
+        let sealed = SealedParts {
+            author_pubkey: row.author_pubkey,
+            pre_commitment: row.pre_commitment,
+            pre_signature: row.pre_signature,
+            dependency_commitment: row.deps_commitment,
+            host_seal: row.host_seal,
+            approval_signature: row.approval_signature,
+        };
         records.push(PublishedRecord {
+            approval: sealed.approval(&body),
+            attestation: sealed.attestation(),
             act_id: common::l1::ActId::parse(&row.act_id)
                 .map_err(|e| StandInError::Formation(e.to_string()))?,
             legs: legs_by_act.remove(&row.act_id).unwrap_or_default(),
@@ -1053,6 +1203,7 @@ mod tests {
             author: author.to_string(),
             body,
             payload_witness: vec![],
+            sealed: SealedParts::default(),
             prerequisites: prerequisites.iter().map(|p| p.to_string()).collect(),
             parents: vec![],
         }
@@ -1313,6 +1464,7 @@ mod tests {
             author: "alice".to_string(),
             body,
             payload_witness: vec![],
+            sealed: SealedParts::default(),
             prerequisites: vec![],
             parents: vec![],
         };
@@ -1545,6 +1697,7 @@ mod tests {
                     author: AUTHORS[s.author].to_string(),
                     body,
                     payload_witness: vec![],
+                    sealed: SealedParts::default(),
                     prerequisites,
                     parents: vec![],
                 }

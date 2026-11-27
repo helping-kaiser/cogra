@@ -337,7 +337,8 @@ steps:
    editions, the content commitment over the content pre-digest it
    recomputes from its own payload and content nonce, and the
    dependency commitment over the dependency list, then signs the
-   **approval witness** over the verified act and its seal — only then is
+   **approval witness** over the act alone — its body and both
+   commitments, not the seal — only then is
    the act orderable. The backend relays the approval and drives
    retries across epoch boundaries. It records on the staged write
    that an approval is being sent before it calls the host, and only
@@ -405,8 +406,13 @@ Who funds the debits is economics
 
 Per epoch, the backend ingests the accepted ordered act sequence
 `𝒬_k` through the L1 boundary and appends it to the mirror
-tables — each record with its key of record (epoch, position) and
-the act time it carries, each epoch with its asserted boundary timestamp
+tables — each record with its key of record (epoch, position), the
+act time it carries and its replay floor (the act's approval — the
+approved body, both commitments, the public key the record maps both
+signatures to and the approval witness — and the seal attestation
+beside it — the signed pre-commitment, the formation editions, the
+frame version and the host seal), each epoch with its approval form
+and its asserted boundary timestamp
 (the host's assertion, checkable only for consistency with the
 published duration bounds) —
 advancing a stored epoch cursor. The contract is

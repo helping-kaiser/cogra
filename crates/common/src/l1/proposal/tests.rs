@@ -664,10 +664,15 @@ fn approval_refuses_what_the_device_cannot_recompute() {
     );
 }
 
-/// The approval witness signs the encoded verified act and its seal together, and the reference host seal covers the same encoding the earlier handshake's seal covered.
-/// ´claim:proposal:the-approval-signs-the-verified-act-and-its-seal´
+/// The approval witness signs the act alone — its body and both
+/// commitments under the approval tag — so a second seal over the same act,
+/// or other edition integers beside it, leave the approval valid, while a
+/// changed commitment or body does not.
+///
+/// The approval witness signs the act alone: a re-seal keeps it, a changed commitment or body breaks it.
+/// ´claim:proposal:the-approval-signs-the-act-alone´
 #[test]
-fn the_approval_signs_the_verified_act_and_its_seal() {
+fn the_approval_signs_the_act_alone() {
     let actor = ActorKey::from_seed([7u8; 32]);
     let host = SigningKey::generate(&mut OsRng);
     let pre = pre_signed(&actor, b"hello");
@@ -679,12 +684,25 @@ fn the_approval_signs_the_verified_act_and_its_seal() {
     assert!(sealed.verify_approval(&pre.author_pubkey, &witness));
     let mut reseal = sealed.clone();
     reseal.host_seal = crypto::sign(&host, b"another seal", &sealed.act.seal_message());
-    assert!(!reseal.verify_approval(&pre.author_pubkey, &witness));
+    assert!(reseal.verify_approval(&pre.author_pubkey, &witness));
+    let mut other_edition = sealed.clone();
+    other_edition.act.content_edition += 1;
+    assert!(other_edition.verify_approval(&pre.author_pubkey, &witness));
+    let mut other_commitment = sealed.clone();
+    other_commitment.act.dependency_commitment[0] ^= 1;
+    assert!(!other_commitment.verify_approval(&pre.author_pubkey, &witness));
+    let mut other_body = sealed.clone();
+    other_body.act.body.p_i = 0.75;
+    assert!(!other_body.verify_approval(&pre.author_pubkey, &witness));
     assert_eq!(
         sealed.approval_digest(),
         crypto::sha256_tagged(
             crypto::tags::APPROVAL,
-            &[&sealed.act.seal_message(), &sealed.host_seal]
+            &[&handshake::act_approval_message(
+                &sealed.act.body,
+                &sealed.act.content_commitment,
+                &sealed.act.dependency_commitment,
+            )]
         )
     );
 }

@@ -5,7 +5,8 @@
 use common::l1::Family;
 use common::l1::census::LegRole;
 use common::l1::handshake::{
-    EpochPackage, Proposal, PublishedLeg, PublishedRecord, StructuralBody,
+    ActApproval, EpochPackage, Proposal, PublishedLeg, PublishedRecord, SealAttestation,
+    StructuralBody,
 };
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::proposal::{CONTENT_EDITION, DEPENDENCY_EDITION, SealedAct, VerifiedAct};
@@ -84,6 +85,8 @@ fn sealed_act(p: &Proposal) -> SealedAct {
 fn published(author: &str, seq: u64, family: Family, epoch: i64, position: i64) -> PublishedRecord {
     PublishedRecord {
         act_id: ActId::new(author, seq, family).expect("ok"),
+        attestation: SealAttestation::default(),
+        approval: ActApproval::unverified(&ActId::new(author, seq, family).expect("ok")),
         author: author.to_string(),
         family,
         epoch,

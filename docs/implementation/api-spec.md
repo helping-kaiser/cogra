@@ -385,8 +385,9 @@ later call pinned there reproduces it and no cursor ever re-ranks.
 
 Every graph write is an L1 act signed **twice** by the acting
 actor's own key, on their device — the pre-commitment over the
-proposal, then the approval witness over the exact host-sealed
-verified act; the backend cannot author, alter, or sign one
+proposal, then the approval witness over the exact act the host
+sealed — its body and both commitments; the backend cannot author,
+alter, or sign one
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
 The mutation surface therefore has three legs:
 
@@ -3656,7 +3657,7 @@ host-sealed verified act, it verifies the seal, the exact body and
 pre-commitment, the editions, the content commitment over its own
 content pre-digest and the dependency commitment over the
 dependency list before signing the approval witness over the act
-and its seal — **the
+alone, not its seal — **the
 user never signs blind bytes, at either step**
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
 `approveActs` relays the approvals; `stagedWrite` (and
@@ -3758,7 +3759,8 @@ type StagedWrite {
    with both salts. It carries neither the payload nor a nonce: the
    device checks the seal, equality with what it pre-signed, and
    both commitments against what it holds itself, then signs the
-   approval witness over it. Null in earlier states."
+   approval witness over the act it names — the body and both
+   commitments. Null in earlier states."
   verifiedAct: String
   "The accepted record once LANDED; null before."
   record: Record

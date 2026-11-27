@@ -52,7 +52,8 @@ at key creation (encrypt locally, upload only ciphertext — the
 sealed blob uploads immediately after the attach;
 [auth.md "Key recovery"](auth.md#key-recovery)), and signs both
 steps of every write — the proposal pre-commitment, then the
-approval witness over the host-sealed verified act
+approval witness over the act the host sealed — its body and both
+commitments, not the seal
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
 The key leaves the device only when its holder asks it to — the
 `KeyExport` screen, gated on `BiometricPrompt` with the device
@@ -79,8 +80,8 @@ commitment recomputes over the act identifier, that
 pre-commitment and the content pre-digest the device forms from
 its own payload and content nonce; and the dependency commitment
 recomputes over the act identifier, that pre-commitment and the
-dependency list the device holds. The approval then signs the
-verified act together with its host seal. The payload is opaque
+dependency list the device holds. The approval then signs the act
+alone — its body and both commitments, not the host seal. The payload is opaque
 bytes to these checks, so what they establish is that
 the host returned the act this device signed — not that the
 envelope encodes what the user typed

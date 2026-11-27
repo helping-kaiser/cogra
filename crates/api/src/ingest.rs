@@ -251,6 +251,7 @@ pub async fn ingest_pass<B: L1Boundary>(
 ) -> Result<IngestOutcome, IngestError> {
     let cursor = mirror::last_ingested_epoch(pool).await?;
     repair_instants(boundary, pool, cursor).await?;
+    repair_floor(boundary, pool, cursor).await?;
     let packages = boundary.epochs_since(cursor).await?;
     let mut outcome = IngestOutcome::default();
     for package in &packages {
@@ -332,7 +333,13 @@ async fn repair_instants<B: L1Boundary>(
         .await?
         .into_iter()
         .filter(|package| package.epoch <= cursor)
-        .map(|package| (package.epoch, package.asserted_at))
+        .map(|package| {
+            (
+                package.epoch,
+                package.asserted_at,
+                package.closure.approval_form,
+            )
+        })
         .collect();
     let repaired = mirror::record_instants(pool, &instants).await?;
     tracing::info!(
@@ -340,6 +347,46 @@ async fn repair_instants<B: L1Boundary>(
         repaired,
         "mirror epoch instants filled from the published sequence"
     );
+    Ok(())
+}
+
+/// Fills the replay-floor columns of every mirrored record that lacks them
+/// — the records a mirror took in before the published record carried its
+/// authentication — from their published packages, read back through the
+/// seam. A complete mirror costs one index probe; the repair reads the
+/// sequence from the oldest such epoch once. No record is verified here:
+/// the mirror stores what the record holds.
+async fn repair_floor<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    cursor: i64,
+) -> Result<(), IngestError> {
+    let Some(from) = mirror::first_epoch_without_floor(pool).await? else {
+        return Ok(());
+    };
+    let records: Vec<_> = boundary
+        .epochs_since(from - 1)
+        .await?
+        .into_iter()
+        .filter(|package| package.epoch <= cursor)
+        .flat_map(|package| package.records)
+        .collect();
+    let repaired = mirror::record_floor(pool, &records).await?;
+    let left = mirror::first_epoch_without_floor(pool).await?;
+    if let Some(epoch) = left {
+        tracing::error!(
+            from,
+            repaired,
+            epoch,
+            "mirrored records the published sequence does not carry; their replay floor stays empty"
+        );
+    } else {
+        tracing::info!(
+            from,
+            repaired,
+            "mirror replay floor filled from the published sequence"
+        );
+    }
     Ok(())
 }
 

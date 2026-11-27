@@ -23,7 +23,7 @@ object Tags {
     const val COMMIT_CONTENT = "cogra-l1:commitment:content:v3"
     const val COMMIT_DEPS = "cogra-l1:commitment:deps:v3"
     const val HOST_SEAL = "cogra-l1:host-seal:v2"
-    const val APPROVAL = "cogra-l1:approval:v2"
+    const val APPROVAL = "cogra-l1:approval:v3"
 }
 
 /** Salt / nonce length — the published entropy floor of the stand-in. */

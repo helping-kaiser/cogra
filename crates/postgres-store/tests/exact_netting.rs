@@ -10,7 +10,9 @@
 use common::l1::Family;
 use common::l1::census::LegRole;
 use common::l1::fold::{BundleSum, Standing};
-use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{
+    ActApproval, EpochPackage, PublishedLeg, PublishedRecord, SealAttestation,
+};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::mirror;
 use postgres_store::stance::{self, BundleView};
@@ -24,6 +26,10 @@ const AUTHOR: &str = "ada";
 async fn land(pool: &PgPool, epoch: i64, seq: u64, person: &str, (p_d, p_i): (f64, f64)) {
     let record = PublishedRecord {
         act_id: ActId::new(AUTHOR, seq, Family::Opinion).expect("valid act id"),
+        attestation: SealAttestation::default(),
+        approval: ActApproval::unverified(
+            &ActId::new(AUTHOR, seq, Family::Opinion).expect("valid act id"),
+        ),
         author: AUTHOR.to_string(),
         family: Family::Opinion,
         epoch,

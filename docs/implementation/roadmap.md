@@ -223,10 +223,25 @@ interim wall controller (layer1-interface.md §11.8); with no standing
 solve its width input is the constant 1, so θ sits at the reference,
 50_186 µ — q(1) on the stand-in's micro-unit grid, rounded up. The
 deployment declares the structural floor 3/37, and its marker policy
-is the epoch close itself. Each epoch package carries, beside its
-records, the closure outputs the stand-in computes: the dependent-set
-partition, the closure cause, the final ledger with its debit vintage,
-the controller step and the marker policy. Epochs closed before the
+is the epoch close itself; it declares no verification case. Each
+accepted act is published at the replay floor: its record carries the
+act — the approved body, both commitments, the public key it maps
+both signatures to and the approval witness over the act alone — and
+beside it the seal attestation — the signed pre-commitment, the
+formation edition each commitment names, the frame version and the
+host seal — so that each signature verifies under that key, the seal
+under the host key, and the act's formation, all from the record
+alone — and never an opening
+(layer1-interface.md §13.3, "Published Epoch Replay Floor"; §8.4, "Act
+envelope"). No record check relates the key to the stated Actor. Each
+epoch package carries, beside its records, the closure
+outputs the stand-in computes: the dependent-set partition, the closure
+cause, the final ledger with its debit vintage, the controller step,
+the marker policy, the verification-case declarations in force —
+the empty set — and the approval form its witnesses verify in. Epochs
+closed before the approval covered the act alone keep the form over
+the verified act and its host seal, and an act approved in that form
+lands in an epoch of that form. Epochs closed before the
 controller keep the debit they were charged, and the next close
 charges the declared initialization.
 

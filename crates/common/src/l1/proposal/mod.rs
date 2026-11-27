@@ -13,7 +13,7 @@
 //! Reused unchanged from [`super::handshake`]: the structural body and its
 //! canonical bytes, the canonical dependency encoding, the proposal the
 //! device signs (body, payload, dependencies), the encoded verified act the
-//! host seal covers, and the approval witness over it. Bare section
+//! host seal covers, and the approval witness over the act. Bare section
 //! references below are layer1-interface.md's.
 
 use std::fmt;
@@ -35,9 +35,10 @@ pub mod domain_tags {
     //! Domain-separation tags of the formulas this module owns. The rule of
     //! [`crate::l1::crypto::tags`] holds: a tag's version names its formula,
     //! so no artifact formed under one nonce shared by both projections
-    //! verifies here. The host seal and the approval cover the encoded
-    //! verified act of [`crate::l1::handshake::seal_message`], whose shape
-    //! these formulas leave alone, so they keep
+    //! verifies here. The host seal covers the encoded verified act of
+    //! [`crate::l1::handshake::seal_message`] and the approval covers
+    //! [`crate::l1::handshake::act_approval_message`], whose shapes these
+    //! formulas leave alone, so they keep
     //! [`crate::l1::crypto::tags::HOST_SEAL`] and
     //! [`crate::l1::crypto::tags::APPROVAL`].
     pub const PRE_DIGEST_CONTENT: &[u8] = b"cogra-l1:pre-digest:content:v3";
@@ -411,9 +412,9 @@ impl VerifiedAct {
         self.body.act_id()
     }
 
-    /// The encoded verified act the host seal covers.
-    pub fn seal_message(&self) -> Vec<u8> {
-        handshake::seal_message(&SealFrame {
+    /// The parts of this act its encodings are formed from.
+    pub fn frame(&self) -> SealFrame<'_> {
+        SealFrame {
             body: &self.body,
             pre_commitment: &self.pre_commitment,
             pre_signature: &self.pre_signature,
@@ -421,7 +422,13 @@ impl VerifiedAct {
             deps_commitment: &self.dependency_commitment,
             content_edition: self.content_edition,
             deps_edition: self.dependency_edition,
-        })
+            version: handshake::SEAL_FRAME_VERSION,
+        }
+    }
+
+    /// The encoded verified act the host seal covers.
+    pub fn seal_message(&self) -> Vec<u8> {
+        handshake::seal_message(&self.frame())
     }
 }
 
@@ -449,18 +456,44 @@ impl SealedAct {
         })
     }
 
-    /// The digest the author's approval witness signs: the encoded verified
-    /// act together with its host seal.
+    /// The digest the author's approval witness signs, in the current form:
+    /// the act alone — its body and both commitments — and not the seal.
     pub fn approval_digest(&self) -> [u8; 32] {
-        handshake::approval_digest(&self.act.seal_message(), &self.host_seal)
+        handshake::approval_digest(
+            handshake::ApprovalForm::CURRENT,
+            &self.act.frame(),
+            &self.host_seal,
+        )
     }
 
-    /// Whether `witness` is the author's approval of this exact sealed act.
+    /// Whether `witness` is the author's approval of this exact act, in the
+    /// current form.
     pub fn verify_approval(&self, author_pubkey: &[u8], witness: &ApprovalWitness) -> bool {
-        witness.act_id == self.act.act_id()
-            && crypto::verifying_key_from_bytes(author_pubkey).is_some_and(|key| {
-                crypto::verify_digest(&key, &self.approval_digest(), &witness.approval_signature)
-            })
+        self.approval_form_of(author_pubkey, witness, false)
+            == Some(handshake::ApprovalForm::CURRENT)
+    }
+
+    /// The form `witness` approves this exact act in, under the host's rule
+    /// ([`handshake::approval_form_of`]): the current form, or — for an act
+    /// sealed before the approval covered the act alone — the sealed-act
+    /// form. `None` when it approves it in neither.
+    pub fn approval_form_of(
+        &self,
+        author_pubkey: &[u8],
+        witness: &ApprovalWitness,
+        sealed_before_switch: bool,
+    ) -> Option<handshake::ApprovalForm> {
+        if witness.act_id != self.act.act_id() {
+            return None;
+        }
+        let key = crypto::verifying_key_from_bytes(author_pubkey)?;
+        handshake::approval_form_of(
+            &self.act.frame(),
+            &self.host_seal,
+            &key,
+            &witness.approval_signature,
+            sealed_before_switch,
+        )
     }
 }
 

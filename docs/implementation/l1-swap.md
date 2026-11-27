@@ -71,10 +71,10 @@ seam ([architecture.md §5](architecture.md#5-the-seam-is-one-boundary)).
 |---|---|---|---|
 | `seal(Submission)` | Relay leg 1: body, dependency list and dependency nonce, content pre-digest, pre-commitment and pre-signature, plus the author's public key; never the content pair. Returns the sealed verified act with both host salts. | Formation against the census, dependency bounds, the address check (§3.1), pre-commitment recomputation, salts, seal; stores the row (`seal.rs:94-221`). | The network's admission endpoint in its declared transcript (§3.2). |
 | `approve(ApprovalWitness)` | Relay leg 2: the act becomes orderable. | Verifies the witness under the key stored at sealing (`seal.rs:297-349`). | Same, to the network. |
-| `epochs_since(after)` | Every published epoch after the cursor, in order — ingestion's only input. | Reads its own `l1_epochs`/`l1_acts` (`close.rs:854`). | The network's published packages, mapped into CoGra's types (§3.3). |
+| `epochs_since(after)` | Every published epoch after the cursor, in order — ingestion's only input. | Reads its own `l1_epochs`/`l1_acts` (`close.rs:917`). | The network's published packages, mapped into CoGra's types (§3.3). |
 | `balance(address)` | B_i, the residual balance b_i and the action count N_i, in micro-units. | `l1_accounts`, numbers only. | B_i from the realization's settled snapshot, b_i and N_i from the final ledger (§3.6). |
 | `host_public_key()` | The key clients verify seals under (served as `Query.hostPublicKey`). | A seed minted on first use in `l1_host`. | The network host's key; how it is published and rotated is the network's (§3.10). |
-| `current_theta()` | The θ the next close charges — the prepare pre-check's price. | The wall controller's burn image (`close.rs:592`). | The network's published schedule (§3.6). |
+| `current_theta()` | The θ the next close charges — the prepare pre-check's price. | The wall controller's burn image (`close.rs:639`). | The network's published schedule (§3.6). |
 | `max_payload_bytes()` | M_payload, read by prepare and the carriage checks. | `StandInConfig::max_payload_bytes`, 64 KiB by default. | The network's published constant. |
 | `request_admission_burn(address, amount, key)` | The admission fund's burn to an address, idempotent by key. | Records the burn, settles after `settlement_delay_epochs`. | A burn on the realization, which is not a Layer 1 write (§3.6). |
 | `burn_settlement(ticket)` | Pending, Settled or Failed. | Pending or Settled. | The realization's settlement read. |
@@ -223,8 +223,33 @@ standard's structure and CoGra's own bytes:
 - the pre-commitment hashes the encoded body and both pre-digests
   under `cogra-l1:pre-commitment:v2`; the content and dependency
   editions are 2 (`proposal/mod.rs:43-60`);
-- the seal and the approval cover the eight-element encoded verified
-  act (`handshake.rs:185-204`);
+- the host seal covers the eight-element encoded verified act
+  (`handshake.rs`, `seal_message`); the approval covers the act alone —
+  a four-element array of the encoded body, both commitments and a
+  schema version — under `cogra-l1:approval:v3`
+  (`act_approval_message`, `approval_digest`); the pre-commitment, the
+  pre-signature, the editions, the frame version and the host seal
+  travel beside the act as its seal attestation, which the approval
+  does not cover;
+- the approval form is fixed per epoch, never per act: every package
+  states it, and the epochs closed before the approval covered the act
+  alone keep the form over the verified act and its host seal
+  (`cogra-l1:approval:v2`); the stand-in orders acts of one form into
+  an epoch, so an act approved in the earlier form keeps its approval
+  and lands in an epoch of that form (`l1-standin/src/close.rs`,
+  `close_epoch`). An act the host sealed before the switch also takes
+  a witness in the earlier form — a held admission approval signed
+  before it among them — and the host records which form verified; an
+  act sealed after it takes the current form only. The host and the
+  relay's check before holding apply the one rule
+  (`handshake::approval_form_of`), each with its own mark of a
+  pre-switch act (`l1_acts.sealed_before_switch`,
+  `staged_writes.sealed_before_switch`). An earlier-form epoch can
+  follow a current-form one, when an earlier-form act becomes orderable
+  only later; there is at most one such epoch per earlier-form act, as
+  no new one arises, and its staged write expires with the GC after
+  `gc_after_epochs` epochs (1,200 by default) like any write that does
+  not land;
 - the tags live in `crypto.rs:14-32`, `proposal/mod.rs:32-48`,
   `web/src/lib/crypto/hashing.ts:15-21` and
   `android/core/crypto/.../Hashing.kt:20-26`; "the `PN-*` strings
@@ -289,20 +314,32 @@ The host publishes the seven parts of ``post:network:host-contract``
 **CoGra today.**
 
 - `PublishedRecord` carries the act identifier, author, family, epoch,
-  act time, position, the payload witness and the legs with their
-  parameters and τ (`handshake.rs:218-245`). It carries no body
-  fields beyond the legs, no pre-commitment, no signature, no key, no
-  seal, no dependency commitment and no edition. The stand-in stores
-  all of them in `l1_acts` (`seal.rs:172-201`) and publishes none.
+  act time, position, the payload witness, the legs with their
+  parameters and τ, and the replay floor in two members
+  (`handshake.rs`, `PublishedRecord`): the act's approval — the
+  approved body, the dependency commitment, the one public key the
+  record maps both the proposal signature and the approval signature
+  to, and the approval witness (`ActApproval`) — and, beside the act,
+  its seal attestation — the pre-commitment and its signature, the
+  formation edition each commitment names, the frame version and the
+  host seal (`SealAttestation`). It carries no opening and no
+  pre-digest. The stand-in publishes them from what it stores in
+  `l1_acts` (`seal.rs:172-201`).
 - `EpochClosure` carries the closure cause, the boundary triple, the
-  dependent-set partition, the final ledger, θ charged, the wall step
-  and the marker policy (`handshake.rs:486-501`). It binds no
-  case-declaration set, and none of host-contract parts (iii)–(v) and
-  (vii), which the stand-in does not compute (§3.7).
+  dependent-set partition, the final ledger, θ charged, the wall step,
+  the marker policy, the verification-case declarations in force and
+  the approval form every witness of the epoch verifies in
+  (`handshake.rs`, `EpochClosure`). The stand-in declares no case, so every
+  package binds the empty set. The closure binds none of
+  host-contract parts (iii)–(v) and (vii), which the stand-in does not
+  compute (§3.7).
 - Ingestion checks the order of record (`EpochPackage::check_order_of_record`,
-  `handshake.rs:543`) and that the epoch follows the cursor
-  (`postgres-store/src/mirror.rs:168-181`), then stores records, legs
-  and the epoch instant. It verifies no signature, seal or commitment.
+  `handshake.rs:647`) and that the epoch follows the cursor
+  (`postgres-store/src/mirror.rs:220-233`), then stores records, legs,
+  each record's replay floor and the epoch instant. A record mirrored
+  before the record carried the floor is filled by the next pass from
+  the published packages, through the seam (`ingest.rs:165-203`). It
+  verifies no signature, seal or commitment.
 - The mirror computes domain, mask and tier per leg from CoGra's copy
   of the census (`common::l1::census`); prepare runs formation against
   the same copy (`prepare.rs:296-298`).
@@ -437,7 +474,7 @@ configurable number of epochs (`lib.rs:6-10`). θ sits at the reference
 50_186 µ — q(1) on the stand-in's micro-unit grid — because the
 controller's width input is 1
 ([roadmap.md](roadmap.md#the-stand-in-and-the-swap)). Prepare decides
-W1 on exact integers (`Micro`, `handshake.rs:575-596`). An admission
+W1 on exact integers (`Micro`, `handshake.rs:679-700`). An admission
 Registration's approval is held until its funding settles
 (`relay.rs:264-312`), and an unchained Registration's pre-check reads
 its funding row, not B_i (`prepare.rs:338-354`). The CGT rail is
@@ -504,7 +541,7 @@ publishing its boundary triple: the act budget, minimum 0, maximum the
 clock (`lib.rs:105-119`). Production sets a three-second clock
 ([deployment.md](deployment.md)), 28 800 epochs a day
 ([development.md](development.md)). The marker policy is
-`stand-in: the epoch close`, edition 1 (`wall.rs:282-283`). CoGra's numbering,
+`stand-in: the epoch close`, edition 1 (`wall.rs:302-303`). CoGra's numbering,
 key-of-record ordering and act-time reading already follow Layer 1's
 ([data-model.md "The record mirror"](data-model.md#the-record-mirror)).
 The staged-write GC counts epochs: 1 200 by default, "about one hour at
@@ -576,7 +613,7 @@ any ([§13](../primitive/layer1-interface.md#13-deployment-invariants-appdeploym
 Transparency of constants: no change without clients being able to
 detect it before it applies.
 
-**CoGra today.** The stand-in's `DECLARATION` (`crates/l1-standin/src/wall.rs:267-290`)
+**CoGra today.** The stand-in's `DECLARATION` (`crates/l1-standin/src/wall.rs:287-307`)
 declares the floor 3/37, the controller edition, the marker policy and
 the payload encoding — the stand-in plays the deployment. Its host
 key is a seed in `l1_host`. Configuration is the `L1_*` variables

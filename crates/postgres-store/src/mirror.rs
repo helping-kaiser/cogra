@@ -9,7 +9,9 @@
 //! no row is ever precious.
 
 use common::l1::census::Family;
-use common::l1::handshake::{EMPTY_BOUNDARY, EpochPackage, MalformedOrder};
+use common::l1::handshake::{
+    ApprovalForm, EMPTY_BOUNDARY, EpochPackage, MalformedOrder, PublishedRecord,
+};
 
 use sqlx::PgPool;
 
@@ -24,6 +26,13 @@ pub enum MirrorError {
     /// rather than mirror a malformed certificate.
     #[error("epoch package refused: {0}")]
     Unordered(#[from] MalformedOrder),
+    /// A record names a formation edition or frame version the mirror's integer column
+    /// cannot hold; refused before anything is written rather than stored
+    /// as another number.
+    #[error(
+        "record {record} names formation edition or frame version {edition}, beyond the stored range"
+    )]
+    EditionOutOfRange { record: String, edition: u64 },
     #[error(transparent)]
     Storage(#[from] sqlx::Error),
 }
@@ -81,6 +90,7 @@ struct PackageRows {
     act_time: Vec<i64>,
     position: Vec<i64>,
     payload_witness: Vec<Vec<u8>>,
+    floor: FloorRows,
     leg_record_id: Vec<String>,
     leg_role: Vec<String>,
     leg_source: Vec<String>,
@@ -101,8 +111,58 @@ struct PackageRows {
     leg_census_unknown: Vec<bool>,
 }
 
+/// The replay-floor columns of a set of records (data-model.md "The record
+/// mirror"), as parallel arrays: both members of each published record —
+/// the act's approval and the seal attestation beside it — everything it
+/// holds so that its signatures and its formation verify, beside the
+/// content commitment.
+#[derive(Default)]
+struct FloorRows {
+    record_id: Vec<String>,
+    body: Vec<Vec<u8>>,
+    author_pubkey: Vec<Vec<u8>>,
+    pre_commitment: Vec<Vec<u8>>,
+    pre_signature: Vec<Vec<u8>>,
+    dependency_commitment: Vec<Vec<u8>>,
+    content_edition: Vec<i64>,
+    dependency_edition: Vec<i64>,
+    seal_version: Vec<i64>,
+    host_seal: Vec<Vec<u8>>,
+    approval_signature: Vec<Vec<u8>>,
+}
+
+impl FloorRows {
+    fn push(&mut self, record: &PublishedRecord) -> Result<(), MirrorError> {
+        let approval = &record.approval;
+        let attestation = &record.attestation;
+        let edition = |edition: u64| {
+            i64::try_from(edition).map_err(|_| MirrorError::EditionOutOfRange {
+                record: record.act_id.to_string(),
+                edition,
+            })
+        };
+        let content_edition = edition(attestation.content_edition)?;
+        let dependency_edition = edition(attestation.dependency_edition)?;
+        let seal_version = edition(attestation.seal_version)?;
+        self.record_id.push(record.act_id.to_string());
+        self.body.push(approval.body.canonical_bytes());
+        self.author_pubkey.push(approval.author_pubkey.clone());
+        self.pre_commitment.push(attestation.pre_commitment.clone());
+        self.pre_signature.push(attestation.pre_signature.clone());
+        self.dependency_commitment
+            .push(approval.dependency_commitment.clone());
+        self.content_edition.push(content_edition);
+        self.dependency_edition.push(dependency_edition);
+        self.seal_version.push(seal_version);
+        self.host_seal.push(attestation.host_seal.clone());
+        self.approval_signature
+            .push(approval.approval_signature.clone());
+        Ok(())
+    }
+}
+
 impl PackageRows {
-    fn build(package: &EpochPackage) -> Self {
+    fn build(package: &EpochPackage) -> Result<Self, MirrorError> {
         let mut rows = Self::default();
         for record in &package.records {
             let act_id = record.act_id.to_string();
@@ -113,6 +173,7 @@ impl PackageRows {
             rows.act_time.push(record.act_time);
             rows.position.push(record.position);
             rows.payload_witness.push(record.payload_witness.clone());
+            rows.floor.push(record)?;
             for leg in &record.legs {
                 let spec = record
                     .family
@@ -152,7 +213,7 @@ impl PackageRows {
                 rows.leg_census_unknown.push(census_unknown);
             }
         }
-        rows
+        Ok(rows)
     }
 }
 
@@ -179,18 +240,30 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
             cursor,
         });
     }
-    let rows = PackageRows::build(package);
+    let rows = PackageRows::build(package)?;
     crate::content::promote_staged_carriage(&mut tx, &rows.record_id).await?;
+    let floor = &rows.floor;
     sqlx::query!(
         "INSERT INTO mirror_records
              (record_id, family, author, epoch, act_time, position,
-              payload_marked, payload_witness)
+              payload_marked, payload_witness,
+              body, author_pubkey, pre_commitment, pre_signature, dependency_commitment,
+              content_edition, dependency_edition, seal_version, host_seal,
+              approval_signature)
          SELECT r.record_id, r.family, r.author, r.epoch, r.act_time, r.position,
                 EXISTS (SELECT 1 FROM act_payloads c WHERE c.act_id = r.record_id),
-                r.payload_witness
+                r.payload_witness,
+                r.body, r.author_pubkey, r.pre_commitment, r.pre_signature,
+                r.dependency_commitment, r.content_edition, r.dependency_edition,
+                r.seal_version, r.host_seal, r.approval_signature
          FROM unnest($1::text[], $2::text[], $3::text[], $4::bigint[],
-                     $5::bigint[], $6::bigint[], $7::bytea[])
-              AS r(record_id, family, author, epoch, act_time, position, payload_witness)",
+                     $5::bigint[], $6::bigint[], $7::bytea[],
+                     $8::bytea[], $9::bytea[], $10::bytea[], $11::bytea[], $12::bytea[],
+                     $13::bigint[], $14::bigint[], $15::bigint[], $16::bytea[], $17::bytea[])
+              AS r(record_id, family, author, epoch, act_time, position, payload_witness,
+                   body, author_pubkey, pre_commitment, pre_signature, dependency_commitment,
+                   content_edition, dependency_edition, seal_version, host_seal,
+                   approval_signature)",
         &rows.record_id,
         &rows.family,
         &rows.author,
@@ -198,6 +271,16 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
         &rows.act_time,
         &rows.position,
         &rows.payload_witness,
+        &floor.body,
+        &floor.author_pubkey,
+        &floor.pre_commitment,
+        &floor.pre_signature,
+        &floor.dependency_commitment,
+        &floor.content_edition,
+        &floor.dependency_edition,
+        &floor.seal_version,
+        &floor.host_seal,
+        &floor.approval_signature,
     )
     .execute(&mut *tx)
     .await?;
@@ -234,9 +317,10 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
     .execute(&mut *tx)
     .await?;
     sqlx::query!(
-        "INSERT INTO mirror_epochs (epoch, asserted_at) VALUES ($1, $2)",
+        "INSERT INTO mirror_epochs (epoch, asserted_at, approval_form) VALUES ($1, $2, $3)",
         package.epoch,
         package.asserted_at,
+        package.closure.approval_form.number(),
     )
     .execute(&mut *tx)
     .await?;
@@ -643,20 +727,75 @@ pub async fn first_epoch_without_instant(pool: &PgPool) -> Result<Option<i64>, M
     .await?)
 }
 
-/// Records the asserted instants of already-ingested epochs, read back
-/// from their published packages. An epoch that already has one keeps it.
+/// Records the asserted instants of already-ingested epochs, with the
+/// approval form each states, read back from their published packages. An
+/// epoch that already has one keeps it.
 pub async fn record_instants(
     pool: &PgPool,
-    instants: &[(i64, chrono::DateTime<chrono::Utc>)],
+    instants: &[(i64, chrono::DateTime<chrono::Utc>, ApprovalForm)],
 ) -> Result<u64, MirrorError> {
-    let epochs: Vec<i64> = instants.iter().map(|(epoch, _)| *epoch).collect();
-    let at: Vec<chrono::DateTime<chrono::Utc>> = instants.iter().map(|(_, at)| *at).collect();
+    let epochs: Vec<i64> = instants.iter().map(|(epoch, _, _)| *epoch).collect();
+    let at: Vec<chrono::DateTime<chrono::Utc>> = instants.iter().map(|(_, at, _)| *at).collect();
+    let forms: Vec<i16> = instants.iter().map(|(_, _, form)| form.number()).collect();
     Ok(sqlx::query!(
-        "INSERT INTO mirror_epochs (epoch, asserted_at)
-         SELECT * FROM unnest($1::bigint[], $2::timestamptz[])
+        "INSERT INTO mirror_epochs (epoch, asserted_at, approval_form)
+         SELECT * FROM unnest($1::bigint[], $2::timestamptz[], $3::smallint[])
          ON CONFLICT (epoch) DO NOTHING",
         &epochs,
         &at,
+        &forms,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected())
+}
+
+/// The oldest epoch holding a mirrored record without its replay-floor
+/// columns, if any — a record mirrored before the package carried them.
+/// A complete mirror answers from the partial index without a scan.
+pub async fn first_epoch_without_floor(pool: &PgPool) -> Result<Option<i64>, MirrorError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT MIN(epoch) AS "epoch" FROM mirror_records WHERE body IS NULL"#
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
+/// Fills the replay-floor columns of already-mirrored records from their
+/// published records, read back through the seam. A record already
+/// holding them keeps them, and a published record the mirror does not
+/// hold writes nothing. Returns how many records it filled.
+pub async fn record_floor(pool: &PgPool, records: &[PublishedRecord]) -> Result<u64, MirrorError> {
+    let mut floor = FloorRows::default();
+    for record in records {
+        floor.push(record)?;
+    }
+    Ok(sqlx::query!(
+        "UPDATE mirror_records m
+            SET body = r.body, author_pubkey = r.author_pubkey,
+                pre_commitment = r.pre_commitment, pre_signature = r.pre_signature,
+                dependency_commitment = r.dependency_commitment,
+                content_edition = r.content_edition, dependency_edition = r.dependency_edition,
+                seal_version = r.seal_version,
+                host_seal = r.host_seal, approval_signature = r.approval_signature
+           FROM unnest($1::text[], $2::bytea[], $3::bytea[], $4::bytea[], $5::bytea[],
+                       $6::bytea[], $7::bigint[], $8::bigint[], $9::bigint[], $10::bytea[],
+                       $11::bytea[])
+                AS r(record_id, body, author_pubkey, pre_commitment, pre_signature,
+                     dependency_commitment, content_edition, dependency_edition,
+                     seal_version, host_seal, approval_signature)
+          WHERE m.record_id = r.record_id AND m.body IS NULL",
+        &floor.record_id,
+        &floor.body,
+        &floor.author_pubkey,
+        &floor.pre_commitment,
+        &floor.pre_signature,
+        &floor.dependency_commitment,
+        &floor.content_edition,
+        &floor.dependency_edition,
+        &floor.seal_version,
+        &floor.host_seal,
+        &floor.approval_signature,
     )
     .execute(pool)
     .await?

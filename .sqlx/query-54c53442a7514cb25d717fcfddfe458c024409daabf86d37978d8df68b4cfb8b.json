@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, actor_id, act_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, content_nonce,\n                dependency_nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch, node_id, pre_signed_at, carried,\n                payload_reaped_at, payload_custodied_at,\n                kept_at IS NOT NULL AS \"kept!\"\n         FROM staged_writes WHERE id = $1",
+  "query": "SELECT id, actor_id, act_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, content_nonce,\n                dependency_nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, sealed_before_switch, prepared_epoch, node_id, pre_signed_at, carried,\n                payload_reaped_at, payload_custodied_at,\n                kept_at IS NOT NULL AS \"kept!\"\n         FROM staged_writes WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -130,36 +130,41 @@
       },
       {
         "ordinal": 25,
+        "name": "sealed_before_switch",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 26,
         "name": "prepared_epoch",
         "type_info": "Int8"
       },
       {
-        "ordinal": 26,
+        "ordinal": 27,
         "name": "node_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 27,
+        "ordinal": 28,
         "name": "pre_signed_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 28,
+        "ordinal": 29,
         "name": "carried",
         "type_info": "Bool"
       },
       {
-        "ordinal": 29,
+        "ordinal": 30,
         "name": "payload_reaped_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 30,
+        "ordinal": 31,
         "name": "payload_custodied_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 31,
+        "ordinal": 32,
         "name": "kept!",
         "type_info": "Bool"
       }
@@ -196,6 +201,7 @@
       true,
       true,
       false,
+      false,
       true,
       true,
       false,
@@ -204,5 +210,5 @@
       null
     ]
   },
-  "hash": "50b10ac7eb59086086075812b29c4c44921f373030ad35e88b465e6336aaaae2"
+  "hash": "54c53442a7514cb25d717fcfddfe458c024409daabf86d37978d8df68b4cfb8b"
 }
