@@ -63,6 +63,18 @@ sealed interface ProfileImageState {
 
     data class Failed(val uri: String, val message: String) : ProfileImageState
 
+    /**
+     * The form has staged something about the picture: a new one, on its way or
+     * up, or the removal. [Held] is the picture as it stood. A [Failed] upload
+     * stages nothing: this seal has no upload gate to wait on it
+     * (ProfileEditSeal.md:23-29, not built), so a seal over it would name a
+     * picture its commit cannot sign.
+     */
+    val staged: Boolean get() = this is Cleared || isNewPicture
+
+    /** A new picture is staged, which the seal's row names `picture`. */
+    val isNewPicture: Boolean get() = this is Picked || this is Uploaded
+
     /** What the header should draw right now, or null for the monogram. */
     val previewUrl: Any?
         get() = when (this) {
@@ -95,6 +107,9 @@ enum class ProfileEditStage { Form, Seal }
  */
 enum class ProfileSealFault { Offline, WriteRule, Bug, KeyAbsent }
 
+/** The edit's three fields, in the edit's order — what a typed change stages. */
+enum class ProfileField { DisplayName, Bio, Website }
+
 data class ProfileEditUiState(
     /** The account's own id: the node a profile payload binds to. */
     val profileId: String = "",
@@ -105,10 +120,13 @@ data class ProfileEditUiState(
     val bio: String = "",
     val websiteUrl: String = "",
     val avatar: ProfileImageState = ProfileImageState.Held(null),
-    /** The fields as read, which the seal's row names the change against. */
-    val readDisplayName: String = "",
-    val readBio: String = "",
-    val readWebsiteUrl: String = "",
+    /**
+     * The fields a change was typed into since the edit opened. A field stays
+     * staged when its words are typed back: the edit signs what is staged,
+     * never by comparing the fields' bytes (ProfileEdit.md:39; design/readme.md,
+     * the unchanged-edit guard).
+     */
+    val staged: Set<ProfileField> = emptySet(),
     val stage: ProfileEditStage = ProfileEditStage.Form,
     /** `Sign the change` was pressed and has not answered. */
     val signing: Boolean = false,
@@ -127,18 +145,26 @@ data class ProfileEditUiState(
     val bioTooLong: Boolean get() = isBioTooLong(bio)
     val websiteUrlTooLong: Boolean get() = isWebsiteUrlTooLong(websiteUrl)
 
-    /** Save may open the seal: nothing pending, and no field is over its ruled cap. */
-    val canSubmit: Boolean
-        get() = !imagesPending && !displayNameTooLong && !bioTooLong && !websiteUrlTooLong
+    /**
+     * A change is staged: a field typed into, or the picture changed or removed.
+     * Without one Save stays visible and inert under `Nothing to sign yet`, and
+     * the seal never opens (ProfileEdit.md:39-49).
+     */
+    val anythingStaged: Boolean
+        get() = staged.isNotEmpty() || avatar.staged
 
-    /** The seal's one acts row: what the change holds (ProfileEditSeal.md:5-9). */
+    /** Save may open the seal: a change staged, nothing pending, and no field over its ruled cap. */
+    val canSubmit: Boolean
+        get() = anythingStaged && !imagesPending && !displayNameTooLong && !bioTooLong && !websiteUrlTooLong
+
+    /** The seal's one acts row: the staged parts (ProfileEditSeal.md:5-9). */
     val changeSummary: String
         get() = profileChangeSummary(
             renewed = listOfNotNull(
-                "picture".takeIf { avatar is ProfileImageState.Uploaded },
-                "display name".takeIf { displayName.trim() != readDisplayName.trim() },
-                "bio".takeIf { bio.trim() != readBio.trim() },
-                "website".takeIf { websiteUrl.trim() != readWebsiteUrl.trim() },
+                "picture".takeIf { avatar.isNewPicture },
+                "display name".takeIf { ProfileField.DisplayName in staged },
+                "bio".takeIf { ProfileField.Bio in staged },
+                "website".takeIf { ProfileField.Website in staged },
             ),
             removed = avatar == ProfileImageState.Cleared,
         )
@@ -148,21 +174,15 @@ data class ProfileEditUiState(
  * The Profile row's words (ProfileEditSeal.md:5-9; copy-voice, *The profile's
  * seal*): `A new` and the changed parts in the edit's order, joined `, ` and a
  * last ` and `; `The picture removed` alone, `, the picture removed` after the
- * others. web's twin is `web/src/app/profile/edit/change-summary.ts`, whose
- * `Nothing changed` this shares for a Save that changes nothing.
+ * others. The seal opens only over a staged change, so the row is never empty.
  */
-internal fun profileChangeSummary(renewed: List<String>, removed: Boolean): String {
-    val said = buildList {
-        if (renewed.isNotEmpty()) add("A new ${listed(renewed)}")
-        if (removed) add(if (isEmpty()) "The picture removed" else "the picture removed")
-    }
-    return if (said.isEmpty()) NOTHING_CHANGED else said.joinToString(", ")
-}
+internal fun profileChangeSummary(renewed: List<String>, removed: Boolean): String = buildList {
+    if (renewed.isNotEmpty()) add("A new ${listed(renewed)}")
+    if (removed) add(if (isEmpty()) "The picture removed" else "the picture removed")
+}.joinToString(", ")
 
 private fun listed(parts: List<String>): String =
     if (parts.size <= 1) parts.joinToString("") else "${parts.dropLast(1).joinToString(", ")} and ${parts.last()}"
-
-internal const val NOTHING_CHANGED = "Nothing changed"
 
 /**
  * The profile edit form: pre-filled from the current version, saved as
@@ -204,9 +224,6 @@ class ProfileEditViewModel @Inject constructor(
                                 displayName = profile.displayName.value.orEmpty(),
                                 bio = profile.bio.value.orEmpty(),
                                 websiteUrl = profile.websiteUrl.value.orEmpty(),
-                                readDisplayName = profile.displayName.value.orEmpty(),
-                                readBio = profile.bio.value.orEmpty(),
-                                readWebsiteUrl = profile.websiteUrl.value.orEmpty(),
                                 // A picture the author has already touched
                                 // outranks the one the server holds: a
                                 // reload reached from the retry button
@@ -223,9 +240,20 @@ class ProfileEditViewModel @Inject constructor(
         }
     }
 
-    fun onDisplayNameChange(v: String) = _state.update { it.copy(displayName = v, emptyName = false) }
-    fun onBioChange(v: String) = _state.update { it.copy(bio = v) }
-    fun onWebsiteChange(v: String) = _state.update { it.copy(websiteUrl = v) }
+    // A field typed into stages its change (ProfileEdit.md:47); a value that
+    // did not move — a focus or selection event — stages nothing.
+    fun onDisplayNameChange(v: String) = _state.update {
+        it.copy(displayName = v, emptyName = false, staged = it.staging(ProfileField.DisplayName, it.displayName != v))
+    }
+
+    fun onBioChange(v: String) = _state.update {
+        it.copy(bio = v, staged = it.staging(ProfileField.Bio, it.bio != v))
+    }
+
+    fun onWebsiteChange(v: String) = _state.update {
+        it.copy(websiteUrl = v, staged = it.staging(ProfileField.Website, it.websiteUrl != v))
+    }
+
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 
     // -- The profile picture (D13) --
@@ -283,7 +311,8 @@ class ProfileEditViewModel @Inject constructor(
      */
     fun onSubmit() {
         val s = _state.value
-        if (s.stage != ProfileEditStage.Form || s.imagesPending) return
+        // Nothing staged: Save is inert and the seal never opens (ProfileEdit.md:45).
+        if (s.stage != ProfileEditStage.Form || s.imagesPending || !s.anythingStaged) return
         // Every real press of Save takes the reserved line away (ProfileEdit.md:85),
         // even one that stops at a guard below.
         _state.update { it.copy(nameReserved = false) }
@@ -378,6 +407,9 @@ class ProfileEditViewModel @Inject constructor(
         const val TRANSPORT = "The upload could not reach the server."
     }
 }
+
+private fun ProfileEditUiState.staging(field: ProfileField, moved: Boolean): Set<ProfileField> =
+    if (moved) staged + field else staged
 
 /** The seal as the signing's answer leaves it. */
 private fun ProfileEditUiState.answered(outcome: ProfileChangeOutcome): ProfileEditUiState = when (outcome) {
