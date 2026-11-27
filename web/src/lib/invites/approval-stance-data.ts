@@ -31,7 +31,7 @@ import {
 } from "@/lib/api/invites-api";
 import { failed, refused, success, type Outcome } from "@/lib/api/outcome";
 import { fetchStagedWrite } from "@/lib/api/writes-api";
-import { askAgain, intentOf } from "@/lib/compose/same-signing";
+import { askAgain, firstIncomplete, intentOf } from "@/lib/compose/same-signing";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { DeviceRefusalError } from "@/lib/signing/device-refusal";
 import type { AuthGuard } from "@/lib/session/guard";
@@ -206,7 +206,8 @@ function approvalData(
 
 /** What a vouch's results say the approval did. */
 function outcomeOf(results: readonly WriteResult[]): Outcome<StanceCommit> {
-  const incomplete = results.find((result) => result.kind !== "done");
+  // An expiry beside a write still undecided is not the vouch's answer.
+  const incomplete = firstIncomplete(results);
   if (incomplete !== undefined && incomplete.kind === "refused") {
     return refused(incomplete.errors);
   }

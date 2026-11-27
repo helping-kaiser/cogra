@@ -209,6 +209,31 @@ describe("the walk-back's Retry asks the same signing again", () => {
     expect(signedAgain.map((call) => call.ids)).toEqual([["s-1", "s-2"]]);
   });
 
+  // K-ASKED-AGAIN-MIXED-EXPIRY: a walk-back with one write expired and one
+  // still unanswered reads as no answer, and its Retry asks the same batch.
+  it("a re-ask with one write expired and one unanswered reads as no answer and keeps the walk-back", async () => {
+    const { batches } = host({ held: false });
+    const mixed: Answer = (id) =>
+      id === "s-1"
+        ? { kind: "refused", id, errors: [{ code: "STAGED_WRITE_EXPIRED", message: "garbage-collected unlanded", field: null }] }
+        : lost(id);
+    const { writes, signedAgain } = signer([lost], [mixed]);
+    const { data, retired } = seam(writes);
+
+    await data.sever(POST, SHOWN);
+    const reasked = await data.sever(POST, SHOWN);
+    const again = await data.sever(POST, SHOWN);
+
+    expect(reasked.kind).toBe("failed");
+    expect(retired).toEqual([]);
+    expect(batches).toEqual([["s-1", "s-2"]]);
+    expect(signedAgain.map((call) => call.ids)).toEqual([
+      ["s-1", "s-2"],
+      ["s-1", "s-2"],
+    ]);
+    expect(again.kind).toBe("success");
+  });
+
   it("a walk-back the device refused is spent: Retry retires it and prepares the walk-back afresh", async () => {
     const { batches } = host({ held: false });
     const { writes } = signer([deviceRefused], [deviceRefused]);

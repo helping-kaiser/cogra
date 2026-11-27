@@ -20,6 +20,7 @@
 
 import { pathIndex } from "@/lib/api/field-errors";
 import type { Outcome, UserError } from "@/lib/api/outcome";
+import { faultReading } from "@/lib/compose/same-signing";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { WriteResult } from "@/lib/signing/write-signer";
 import { answeredFaultLine, NOT_THROUGH_LINE, outcomeFaultLine, wholeActLine } from "@/lib/ui/error-messages";
@@ -65,9 +66,11 @@ export function sealFaultOfFailure(cause: unknown): SealFault {
  * else a failed leg by `sealFaultOfFailure`.
  */
 export function sealFaultOfResults(
-  results: readonly WriteResult[],
+  answered: readonly WriteResult[],
   references: readonly ReferenceDraft[],
 ): SealFault {
+  // An expiry beside a write still undecided is not the batch's answer.
+  const results = faultReading(answered);
   const refused = results.find((result) => result.kind === "refused");
   if (refused !== undefined && refused.kind === "refused") return sealFaultOf(refused.errors, references);
   // The device's own signer refused the bytes: an answer, not through (seam 355).

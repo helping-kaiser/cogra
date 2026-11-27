@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { echoedMedia } from "@/test/media-echo";
+import type { WriteResult } from "@/lib/signing/write-signer";
 import { fakeWriteSigner } from "@/test/registration";
 import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
@@ -2068,6 +2069,106 @@ describe("Retry after a signing that did not answer", () => {
     expect(signer.signAgain).not.toHaveBeenCalled();
     // The first attempt's material is gone: Home's Resume cannot land it.
     expect(await store.handshakeIds()).not.toContain("w1");
+  });
+
+  // K-ASKED-AGAIN-MIXED-EXPIRY: a batch in which one write answers EXPIRED
+  // while another is still undecided has not expired whole — the substrate
+  // decides each act's landing alone (api-spec.md "A prepare may stage a
+  // batch"), so the undecided write may still land. The attempt is kept and
+  // the seal shows what it shows for a signing that did not answer
+  // (SealSigning.md:57), never the expiry notice (ComposeExpired.md:3).
+  const twoWrites = () => {
+    let prepares = 0;
+    const handler = gqlLink.mutation("PreparePost", () => {
+      prepares += 1;
+      const write = (id: string) => ({
+        __typename: "PreparedWrite",
+        id,
+        family: "PUBLISH",
+        canonicalProposal: "AA==",
+        gcAfterEpochs: 3,
+      });
+      return HttpResponse.json({
+        data: {
+          preparePost: {
+            __typename: "PrepareContentPayload",
+            node: `post-${prepares}`,
+            writes: [write(`w${prepares}a`), write(`w${prepares}b`)],
+            userErrors: [],
+          },
+        },
+      });
+    });
+    return { handler, count: () => prepares };
+  };
+  const expiredOne = (id: string) => ({
+    kind: "refused" as const,
+    id,
+    errors: [{ code: "STAGED_WRITE_EXPIRED" as const, message: "garbage-collected unlanded", field: null }],
+  });
+  const lostOne = (id: string) => ({ kind: "failed" as const, id, cause: new TypeError("Failed to fetch") });
+
+  it("a first signing with one write expired and one unanswered keeps the attempt and shows the fault line with Retry", async () => {
+    const prepare = twoWrites();
+    server.use(prepare.handler);
+    const drafts = fakeDrafts();
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => (write.id.endsWith("a") ? expiredOne(write.id) : lostOne(write.id)),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "done" as const, id, state: "RELAYING" as const })),
+      ),
+    });
+    mount(drafts, signer);
+    await signWords("Low tide.");
+
+    expect(await screen.findByTestId("wizard-retry")).toBeInTheDocument();
+    expect(screen.getByTestId("wizard-transport-error")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalledWith("/feed?compose=expired");
+    expect(drafts.held()?.attempt).toEqual(expect.objectContaining({ node: "post-1", writes: ["w1a", "w1b"] }));
+
+    fireEvent.click(screen.getByTestId("wizard-retry"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    expect(signer.signAgain).toHaveBeenCalledWith(["w1a", "w1b"], expect.anything());
+    expect(prepare.count()).toBe(1);
+  });
+
+  it("a re-ask with one write expired and one still unanswered keeps the attempt: the next press asks it again", async () => {
+    const prepare = twoWrites();
+    server.use(prepare.handler);
+    const drafts = fakeDrafts();
+    const answers: ((id: string) => WriteResult)[] = [
+      (id: string) => (id.endsWith("a") ? expiredOne(id) : lostOne(id)),
+      (id: string) => ({ kind: "done" as const, id, state: "RELAYING" as const }),
+    ];
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => lostOne(write.id),
+      signAgain: vi.fn(async (ids: readonly string[]) => ids.map(answers.shift()!)),
+    });
+    mount(drafts, signer);
+    await signWords("Low tide.");
+
+    fireEvent.click(await screen.findByTestId("wizard-retry"));
+    await waitFor(() => expect(signer.signAgain).toHaveBeenCalledTimes(1));
+    expect(await screen.findByTestId("wizard-retry")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalledWith("/feed?compose=expired");
+    expect(drafts.held()?.attempt).toEqual(expect.objectContaining({ writes: ["w1a", "w1b"] }));
+
+    fireEvent.click(screen.getByTestId("wizard-retry"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    expect(signer.signAgain).toHaveBeenCalledTimes(2);
+    expect(prepare.count()).toBe(1);
+  });
+
+  it("a batch every write of which expired still takes the expiry notice, the draft kept without its attempt", async () => {
+    const prepare = twoWrites();
+    server.use(prepare.handler);
+    const drafts = fakeDrafts();
+    mount(drafts, fakeWriteSigner({ signStaged: async (write) => expiredOne(write.id) }));
+    await signWords("Low tide.");
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed?compose=expired"));
+    expect(drafts.held()?.attempt).toBeNull();
+    expect(drafts.held()?.words).toBe("Low tide.");
   });
 
   it("a press after the words changed, over a first attempt already approved, opens that post, prepares nothing, and keeps the new words as the draft", async () => {
