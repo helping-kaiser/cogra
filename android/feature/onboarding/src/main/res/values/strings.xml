@@ -56,5 +56,34 @@
     <string name="backup_decline_cancel">Go back</string>
 
     <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
+    <!-- The intro (OnboardingSteps, OnboardingShape, OnboardingPublic, OnboardingLayers, OnboardingVouch; the frame is _shared.jsx IntroFrame). Words verbatim from the boards. -->
+    <string name="intro_skip">Skip</string>
+    <string name="intro_next">Next</string>
+    <string name="intro_start_reading">Start reading</string>
+    <string name="intro_step">Step %1$d of %2$d</string>
+    <string name="intro_steps_title">Your feed follows your own steps</string>
+    <string name="intro_steps_body">Nothing is picked for you. What reaches you comes along the connections you made, one step at a time.</string>
+    <string name="intro_shape_title">Your opinions have a shape</string>
+    <string name="intro_shape_body">Give one with the pad: how much you are for it, and how much of it you want reaching you.</string>
+    <string name="intro_public_title">Everything here is public</string>
+    <string name="intro_public_body">Posts, comments, opinions — and chats. Anything written on CoGra can be read, and cited, by anyone.</string>
+    <string name="intro_layers_title">Nothing is lost</string>
+    <string name="intro_layers_body">Posts and comments keep every layer they were built from. Pictures added, words changed — the whole history stays readable.</string>
+    <string name="intro_vouch_title">Someone brings you in</string>
+    <string name="intro_vouch_body">You are here because \@%1$s invited you. \@%1$s\'s link is your first way in to everyone else, and theirs to you.</string>
+    <!-- The illustrations' fixture words (the boards' drawn content, not product copy). -->
+    <string name="intro_caption_you">you</string>
+    <string name="intro_caption_a_post">a post</string>
+    <string name="intro_steps_post_title">Low tide at six tomorrow — anyone walking the flats?</string>
+    <string name="intro_steps_post_age">1h</string>
+    <string name="intro_public_pair">\@ada and \@tobias</string>
+    <string name="intro_public_bubble_1">Feels weird chatting where anyone can read it.</string>
+    <string name="intro_public_bubble_2">Nobody here pretends my thumbs have privacy. Meta and TikTok just read quieter.</string>
+    <string name="intro_public_bubble_3">At least our eavesdroppers can say hi.</string>
+    <string name="intro_public_comment_age">2h</string>
+    <string name="intro_public_comment">Hi.</string>
+    <string name="intro_layers_post_age">4h</string>
+    <string name="intro_layers_post_title">Sunday at the tide market</string>
+
     <string name="error_key_in_use">This phone\'s signing key already belongs to another account. Sign in to that account to use it — a key can only ever back one account.</string>
 </resources>
