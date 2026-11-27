@@ -3185,3 +3185,173 @@ async fn a_comment_edit_left_pending_by_an_interrupted_pass_lands_on_the_next(po
     assert!(!row.version_pending, "a version stays pending: {row:?}");
     assert_eq!(row.content, "Later");
 }
+
+/// Expires a signed content write, taking its pending display rows with
+/// it, then runs a pass that marks its late-landing record landed and
+/// stops before the promotion's insert branch writes the rows again.
+/// Returns that pass's landed writes, for an overlapping confirm.
+async fn land_after_expiry_interrupted(
+    rig: &Rig,
+    prepared: &content::PreparedContent,
+    key: &ActorKey,
+) -> Vec<staged::PromotedWrite> {
+    let id = prepared.writes[0].id;
+    rig.sign_and_relay(id, key).await;
+    staged::expire_one(&rig.pool, id, 0)
+        .await
+        .expect("expires");
+    let landed = rig.close_and_mirror_unpromoted().await;
+    assert!(
+        landed.iter().any(|w| w.id == id),
+        "the interrupted pass marked the write landed"
+    );
+    landed
+}
+
+/// Two full passes, then a confirm of `landed` overlapping them — the
+/// dev CLI's pass beside the live loop. None of the three may append.
+async fn heal_twice_and_overlap(rig: &Rig, landed: &[staged::PromotedWrite]) {
+    rig.close_and_ingest().await;
+    rig.close_and_ingest().await;
+    let failures = content::land_promoted(&rig.pool, landed).await;
+    assert!(failures.is_empty(), "the overlap failed: {failures:?}");
+}
+
+/// The version rows one node holds, pending and landed alike.
+async fn version_rows(pool: &PgPool, table: &str, column: &str, node: Uuid) -> i64 {
+    sqlx::query_scalar(&format!(
+        "SELECT COUNT(*) FROM {table} WHERE {column} = $1"
+    ))
+    .bind(node)
+    .fetch_one(pool)
+    .await
+    .expect("counts")
+}
+
+/// A post landing after its pending rows expired is promoted by the
+/// insert branch alone. A pass that marks the write landed and stops
+/// before that insert leaves no display row at all — nothing pending to
+/// retry, and no later pass marks the write landed again — so the record
+/// stands on L1 and in the mirror while the post never shows. The next
+/// pass writes the rows, once.
+///
+/// A post landing after its expiry whose promotion never ran is written by the next pass, once.
+/// ´claim:content:an-unwritten-late-post-is-written-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let prepared = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        PostDraft {
+            title: Some("Late".into()),
+            description: None,
+            content: Some("Body".into()),
+            license: license(),
+            p_directed: 0.1,
+            tags: vec![],
+            references: vec![],
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("prepares post");
+    let landed = land_after_expiry_interrupted(&rig, &prepared, &alice_key).await;
+    assert!(
+        content_store::post(&rig.pool, prepared.node)
+            .await
+            .expect("reads")
+            .is_none(),
+        "expiry took the pending rows"
+    );
+
+    heal_twice_and_overlap(&rig, &landed).await;
+
+    let post = content_store::post(&rig.pool, prepared.node)
+        .await
+        .expect("reads")
+        .expect("the landed post has no display row");
+    assert!(post.order.is_some());
+    assert!(!post.version_pending);
+    assert_eq!(post.title.as_deref(), Some("Late"));
+    assert_eq!(
+        version_rows(&rig.pool, "post_versions", "post_id", prepared.node).await,
+        1
+    );
+}
+
+/// The edit twin: an edit landing after its pending version expired,
+/// whose insert never ran, leaves the post showing the text before it.
+/// The next pass appends the edit's version, once.
+///
+/// A post edit landing after its expiry whose promotion never ran is written by the next pass, once.
+/// ´claim:content:an-unwritten-late-post-edit-is-written-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_edit_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(
+    pool: PgPool,
+) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let edit = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        titled_edit(post_id, "Late"),
+    )
+    .await
+    .expect("prepares the edit");
+    let landed = land_after_expiry_interrupted(&rig, &edit, &alice_key).await;
+
+    heal_twice_and_overlap(&rig, &landed).await;
+
+    let post = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert_eq!(post.title.as_deref(), Some("Late"), "the edit never shows");
+    assert!(!post.version_pending);
+    assert_eq!(
+        version_rows(&rig.pool, "post_versions", "post_id", post_id).await,
+        2
+    );
+}
+
+/// The comment twin of the post case.
+///
+/// A comment landing after its expiry whose promotion never ran is written by the next pass, once.
+/// ´claim:content:an-unwritten-late-comment-is-written-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_comment_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let comment = content::prepare_comment(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        reply(post_id, "Late"),
+    )
+    .await
+    .expect("prepares comment");
+    let landed = land_after_expiry_interrupted(&rig, &comment, &alice_key).await;
+
+    heal_twice_and_overlap(&rig, &landed).await;
+
+    let row = content_store::comment(&rig.pool, comment.node)
+        .await
+        .expect("reads")
+        .expect("the landed comment has no display row");
+    assert!(row.order.is_some());
+    assert_eq!(row.content, "Late");
+    assert_eq!(
+        version_rows(&rig.pool, "comment_versions", "comment_id", comment.node).await,
+        1
+    );
+}

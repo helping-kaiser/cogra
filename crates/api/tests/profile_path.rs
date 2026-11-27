@@ -592,6 +592,51 @@ async fn an_update_landing_after_expiry_still_lands(pool: PgPool) {
     assert_eq!(rig.version_count(actor).await, 2);
 }
 
+/// An update landing after its pending row expired is promoted by the
+/// insert branch alone. A pass that marks the write landed and stops
+/// before that insert leaves no version row at all — nothing pending to
+/// retry, and no later pass marks the write landed again — so the record
+/// stands on L1 and in the mirror while the profile never shows it. The
+/// next pass writes the row, once: a second pass, and a confirm
+/// overlapping it, append nothing.
+///
+/// An update landing after its expiry whose promotion never ran is written by the next pass, once.
+/// ´claim:profile:an-unwritten-late-update-is-written-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_update_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    let prepared = rig
+        .update(actor, draft(Some("Ada L"), None, None))
+        .await
+        .expect("prepares update");
+    rig.sign_and_relay(prepared.id, &key).await;
+    staged::expire_one(&rig.pool, prepared.id, 0)
+        .await
+        .expect("expires");
+    let landed = rig.close_and_mirror_unpromoted().await;
+    assert!(
+        landed.iter().any(|w| w.id == prepared.id),
+        "the interrupted pass marked the write landed"
+    );
+    assert_eq!(rig.version_count(actor).await, 1, "no row stands for it");
+
+    rig.close_and_ingest().await;
+    rig.close_and_ingest().await;
+
+    let shown = current(&rig.pool, actor).await;
+    assert_eq!(shown.display_name, "Ada L", "the update never shows");
+    assert!(!shown.pending);
+    assert_eq!(rig.version_count(actor).await, 2);
+
+    rig.promote_late(&landed).await;
+    assert_eq!(
+        rig.version_count(actor).await,
+        2,
+        "a confirm overlapping the pass appends a second row"
+    );
+}
+
 /// An update carrying no change is refused as the empty gesture it is.
 /// ´claim:profile:an-empty-update-is-refused´
 #[sqlx::test(migrations = "../../migrations")]
