@@ -435,8 +435,9 @@ pub async fn land_stranded(
 /// insert branch is the uncommon path: an update that landed without a
 /// pending row of its own — a mirror rebuild, a write staged before
 /// pending profile rows existed, or one landing after its pending row
-/// expired. The staged row is locked first, as a redaction locks it, so
-/// two passes promoting one write run one after the other; and since
+/// expired. The carriage row and then the staged row are locked, in the
+/// order a redaction takes them (`redaction::reduce_in`), so two passes
+/// promoting one write run one after the other; and since
 /// landed rows are not unique on the authoring instant, the insert first
 /// asks whether a row already carries it — the other pass's — and appends
 /// nothing then.
@@ -538,7 +539,6 @@ async fn land_one(
         .begin()
         .await
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
-    staged::lock_copy(&mut tx, &write.act_id).await?;
     content_store::insert_act_payload(&mut tx, &write.act_id, carried).await?;
     if content_store::lock_act_payload(&mut tx, &write.act_id)
         .await?
@@ -550,6 +550,7 @@ async fn land_one(
             .map_err(|e| ProfileError::Internal(e.to_string()))?;
         return Ok(());
     }
+    staged::lock_copy(&mut tx, &write.act_id).await?;
     if !profile::land_profile_version(&mut tx, write.actor_id, created_at, landing).await?
         && landing_by.inserts()
         && !profile::has_version_at(&mut tx, write.actor_id, created_at).await?
