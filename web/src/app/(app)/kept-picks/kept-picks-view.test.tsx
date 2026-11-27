@@ -445,7 +445,7 @@ describe("the kept picks' seal", () => {
     });
     await waitFor(() => expect(data.batches).toHaveLength(1));
     expect(data.batches[0]!.map((entry) => entry.target)).toEqual(["post-ada"]);
-    expect((await listKeptPicks("u1")).map((k) => k.family)).toEqual(["approval"]);
+    await waitFor(async () => expect((await listKeptPicks("u1")).map((k) => k.family)).toEqual(["approval"]));
   });
 
   it("reads 1 thing, signed and no all-or-nothing line for a single pick", async () => {
@@ -527,6 +527,8 @@ describe("the seal closed while its batch signs", () => {
     expect(screen.getByTestId("keptPicksSeal.foot.back")).not.toBeDisabled();
     expect(screen.getAllByRole("button", { name: "Close" })).toHaveLength(3);
     await held.answer({ kind: "success", value: { records: 3 } });
+    // The landing finishes here, so its drop never reaches the next test's picks.
+    await waitFor(async () => expect(await listKeptPicks("u1")).toEqual([]));
   });
 
   it.each([
