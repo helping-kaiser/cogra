@@ -29,8 +29,9 @@ import com.cogra.domain.ReaderStanding
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.BorrowedStanceRepository
 import com.cogra.domain.repo.StanceRepository
+import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.signing.Expectation
-import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.SameSigning
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.severance
@@ -40,17 +41,23 @@ import com.cogra.domain.stance.KeptFamily
 import com.cogra.domain.stance.KeptPick
 import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StanceAttempts
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceSignals
+import com.cogra.domain.stance.StanceSlot
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.WRITE_RULE_CODES
 import com.cogra.domain.stance.isEmptySign
 import com.cogra.domain.stance.keptFor
 import com.cogra.domain.stance.localLanding
+import com.cogra.domain.stance.severanceIntent
+import com.cogra.domain.stance.stanceIntent
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.TokenStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -237,7 +244,16 @@ class StanceViewModel @Inject constructor(
     private val standing: ReaderStanding,
     /** A guest's faces: the borrowed view's own stance, display only ([GuestFaces]). */
     private val borrowed: BorrowedStanceRepository,
+    /** Whose press it is: a signing runs only for the account that pressed. */
+    tokens: TokenStore,
+    /** The staged writes' states, read when a Retry asks the same signing again. */
+    stagedWrites: WriteRepository,
+    /** Every stance gesture's attempt on this device, per account (`StanceAttempts`). */
+    attempts: StanceAttempts,
 ) : ViewModel() {
+
+    /** Each gesture's slot: a Retry asks the same signing again (`SlottedSigning`). */
+    private val signing = SlottedSigning(signer, SameSigning(signer, stagedWrites, identity), attempts, tokens)
 
     private val _state = MutableStateFlow(StanceUiState())
     val state = _state.asStateFlow()
@@ -640,15 +656,29 @@ class StanceViewModel @Inject constructor(
         if (open.working || open.writeRule) return
         update(target) { it.copy(emptySign = EmptySignState(working = true)) }
         val pick = _state.value.targets[target]?.pick ?: return
-        viewModelScope.launch {
-            when (sign(target, pick)) {
+        // The empty sign is a pick: its Retry asks the pick slot's attempt
+        // (EmptySignConfirm.md:35 "Set it anyway reads Retry").
+        pressed {
+            when (val signed = sign(target, pick, retrying = open.failed)) {
                 Signed.Done -> taken(target, pick)
+                is Signed.Landed -> taken(target, signed.first)
                 // The write rule's no is a notice (EmptySignConfirm.md, round 21):
                 // the act dims and no Retry is offered.
                 Signed.WriteRule -> update(target) { it.copy(emptySign = EmptySignState(writeRule = true)) }
                 is Signed.Failed -> update(target) { it.copy(emptySign = EmptySignState(failed = true)) }
+                Signed.Stood -> update(target) { it.copy(emptySign = it.emptySign?.let { open }) }
             }
         }
+    }
+
+    /**
+     * Runs a signing gesture from the press itself, with no dispatch between
+     * (kotlinx.coroutines `CoroutineStart.UNDISPATCHED`, as the reply and
+     * profile seals start, #680/#704): the account it is pressed as is read
+     * at the press.
+     */
+    private fun pressed(block: suspend () -> Unit) {
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) { block() }
     }
 
     /** The route for the reader who came to sever (design.md §8.5). */
@@ -673,23 +703,36 @@ class StanceViewModel @Inject constructor(
         // up until that one signature answers.
         if (open.fromPick) {
             val pick = _state.value.targets[target]?.pick ?: return
-            viewModelScope.launch {
-                when (sign(target, pick)) {
-                    Signed.Done -> taken(target, pick)
-                    Signed.WriteRule -> severanceWriteRule(target)
-                    is Signed.Failed -> failSeverance(target)
-                }
-            }
+            confirmPickAtZero(target, pick, open)
             return
         }
-        viewModelScope.launch {
+        // The explicit walk-back keeps its own slot: its Retry asks the
+        // walk-back's batch again (SeveranceConfirm.md:33 "Walk it back reads Retry").
+        pressed {
             val quote = open.quote
-            when (signWalkBack(target, quote)) {
+            when (signWalkBack(target, quote, retrying = open.failed)) {
                 Signed.WriteRule -> severanceWriteRule(target)
                 is Signed.Failed -> failSeverance(target)
-                Signed.Done -> walkedBackAll(target, quote.records)
+                Signed.Done, is Signed.Landed -> walkedBackAll(target, quote.records)
+                Signed.Stood -> standSeverance(target, open)
             }
         }
+    }
+
+    /** The walk-back dialog reached by a pick signs that one pick, through the pick's slot. */
+    private fun confirmPickAtZero(target: StanceTarget, pick: StancePair, open: SeveranceState) = pressed {
+        when (val signed = sign(target, pick, retrying = open.failed)) {
+            Signed.Done -> taken(target, pick)
+            is Signed.Landed -> taken(target, signed.first)
+            Signed.WriteRule -> severanceWriteRule(target)
+            is Signed.Failed -> failSeverance(target)
+            Signed.Stood -> standSeverance(target, open)
+        }
+    }
+
+    /** The press stopped before it ran a leg: the dialog stands as it was before the press. */
+    private fun standSeverance(target: StanceTarget, open: SeveranceState) = update(target) {
+        it.copy(severance = it.severance?.let { open })
     }
 
     /** The explicit walk-back taken: the pad closes, and the snackbar counts what it signed. */
@@ -715,32 +758,44 @@ class StanceViewModel @Inject constructor(
      * raw sums shown, in exactly the records its cost stated. The write rule
      * refuses at staging as well as at the signer — a notice, not a fault.
      */
-    private suspend fun signWalkBack(target: StanceTarget, quote: SeveranceQuote): Signed {
-        val graphId = (stances.targetGraphId(target) as? Outcome.Success)?.value
-            ?: return Signed.Failed(needsKey = false)
-        val expected = Expectation(
-            writes = emptyList(),
-            netting = listOf(severance(graphId, quote.raw.pDirected, quote.raw.pInterest, quote.records)),
-        )
-        val prepared = when (val outcome = stances.prepareSeverance(target)) {
-            is Outcome.Success -> outcome.value
-            is Outcome.Refused -> return if (outcome.errors.any { it.code in WRITE_RULE_CODES }) {
-                Signed.WriteRule
-            } else {
-                Signed.Failed(needsKey = false)
+    private suspend fun signWalkBack(target: StanceTarget, quote: SeveranceQuote, retrying: Boolean): Signed {
+        val press = signing.press(retrying) ?: return Signed.Stood
+        val slotted = signing.sign(StanceSlot.WalkBack(target), severanceIntent(target), press) {
+            val graphId = (stances.targetGraphId(target) as? Outcome.Success)?.value
+                ?: return@sign Staging.Unreachable
+            val expected = Expectation(
+                writes = emptyList(),
+                netting = listOf(severance(graphId, quote.raw.pDirected, quote.raw.pInterest, quote.records)),
+            )
+            if (!press.holds()) return@sign Staging.Stood
+            when (val outcome = stances.prepareSeverance(target)) {
+                is Outcome.Success -> Staging.Staged(graphId, outcome.value, expected)
+                is Outcome.Refused -> Staging.Refused(outcome.errors)
+                is Outcome.Failed -> Staging.Unreachable
             }
-            else -> return Signed.Failed(needsKey = false)
         }
-        val results = try {
-            signer.sign(prepared, expected)
-        } catch (_: NoActorKeyException) {
-            return Signed.Failed(needsKey = false)
+        return when (slotted) {
+            is Slotted.Answered -> when {
+                slotted.results.any { it.rateLimited() } -> Signed.WriteRule
+                WriteResult.allDone(slotted.results) -> Signed.Done
+                else -> Signed.Failed(needsKey = false)
+            }
+            is Slotted.Landing -> Signed.Done
+            else -> signedOf(slotted, needsKey = false)
         }
-        return when {
-            results.any { it.rateLimited() } -> Signed.WriteRule
-            results.all { it is WriteResult.Done } -> Signed.Done
-            else -> Signed.Failed(needsKey = false)
+    }
+
+    /** What a gesture that ran no signing pass to its answer came to. */
+    private fun signedOf(slotted: Slotted, needsKey: Boolean): Signed = when (slotted) {
+        // The write rule refuses at staging as well as at the signer.
+        is Slotted.Refused -> if (slotted.errors.any { it.code in WRITE_RULE_CODES }) {
+            Signed.WriteRule
+        } else {
+            Signed.Failed(needsKey = false)
         }
+        Slotted.NoKey -> Signed.Failed(needsKey = needsKey)
+        Slotted.Stood -> Signed.Stood
+        Slotted.Unreachable, is Slotted.Answered, is Slotted.Landing -> Signed.Failed(needsKey = false)
     }
 
     /** Puts the coaching lines on [target]'s open pad and spends them. */
@@ -770,13 +825,22 @@ class StanceViewModel @Inject constructor(
     private fun commit(target: StanceTarget, pick: StancePair) {
         val entry = _state.value.targets[target]
         if (entry?.busy == true) return
+        // A press while the fault stands is its Retry (PadFailed.md:3, RowSigning.md:23).
+        val retrying = entry?.failed == true
         // The act sent, kept for the row's Retry once its pad is gone.
         update(target) { it.copy(busy = true, failed = false, needsKey = false, sent = pick) }
-        viewModelScope.launch {
-            when (val signed = sign(target, pick)) {
+        pressed {
+            when (val signed = sign(target, pick, retrying)) {
                 Signed.Done -> taken(target, pick)
+                // The pick moved after a first signing the server had already
+                // approved: that first pick is what lands. Undrawn, the web's
+                // behaviour (#676); PadFailed.md:15 says Retry signs the pick
+                // the pad shows, which a landing first pick cannot.
+                is Signed.Landed -> taken(target, signed.first)
                 is Signed.Failed -> fail(target, needsKey = signed.needsKey)
                 Signed.WriteRule -> update(target) { it.copy(busy = false, writeRule = true) }
+                // Another account is active: nothing ran, the control stands as it was.
+                Signed.Stood -> update(target) { it.copy(busy = false, failed = retrying) }
             }
         }
     }
@@ -785,42 +849,58 @@ class StanceViewModel @Inject constructor(
     private sealed interface Signed {
         data object Done : Signed
 
+        /** A changed pick found the first one approved: [first] is what lands. */
+        data class Landed(val first: StancePair) : Signed
+
         data class Failed(val needsKey: Boolean) : Signed
 
         /** The write rule refused it — a notice, not a fault. */
         data object WriteRule : Signed
+
+        /** The pressing account is not the active one: nothing ran, nothing is said. */
+        data object Stood : Signed
     }
 
-    /** Signs [pick] as one stance record toward [target] — the record carries the pick verbatim. */
-    private suspend fun sign(target: StanceTarget, pick: StancePair): Signed {
-        // The record must come back as exactly the pick, toward the node
-        // the standing read named (Intent.kt).
+    /**
+     * Signs [pick] as one stance record toward [target] — the record carries
+     * the pick verbatim — through the target's pick slot: after a signing that
+     * did not answer done, the same pick asks that signing again
+     * (PadFailed.md:51, RowSigning.md:23). [retrying] is a press of the
+     * standing fault's Retry, which only that fault's account may press.
+     */
+    private suspend fun sign(target: StanceTarget, pick: StancePair, retrying: Boolean): Signed {
+        val press = signing.press(retrying) ?: return Signed.Stood
+        val slotted = signing.sign(StanceSlot.Pick(target), stanceIntent(target, pick), press, pick) {
+            stagePick(target, pick, press)
+        }
+        return when (slotted) {
+            is Slotted.Answered -> when {
+                WriteResult.allDone(slotted.results) -> Signed.Done
+                slotted.results.any { it.rateLimited() } -> Signed.WriteRule
+                else -> Signed.Failed(needsKey = false)
+            }
+            is Slotted.Landing -> slotted.first.pick?.let { Signed.Landed(it) } ?: Signed.Done
+            // A husk device: the write waits on the reader restoring the key,
+            // not on time passing.
+            else -> signedOf(slotted, needsKey = true)
+        }
+    }
+
+    /**
+     * The pick's one record, staged: it must come back as exactly the pick,
+     * toward the node the standing read named (Intent.kt).
+     */
+    private suspend fun stagePick(target: StanceTarget, pick: StancePair, press: StancePress): Staging {
         val graphId = when (val read = stances.targetGraphId(target)) {
             is Outcome.Success -> read.value
-            else -> return Signed.Failed(needsKey = false)
+            else -> return Staging.Unreachable
         }
         val expected = Expectation(listOf(stanceRecord(graphId, pick.pDirected, pick.pInterest)))
-        val prepared = when (val outcome = stances.prepareStance(target, pick)) {
-            is Outcome.Success -> outcome.value
-            // The write rule refuses at staging as well as at the signer.
-            is Outcome.Refused -> return if (outcome.errors.any { it.code in WRITE_RULE_CODES }) {
-                Signed.WriteRule
-            } else {
-                Signed.Failed(needsKey = false)
-            }
-            else -> return Signed.Failed(needsKey = false)
-        }
-        val results = try {
-            signer.sign(prepared, expected)
-        } catch (_: NoActorKeyException) {
-            // A husk device: the write waits on the reader restoring the
-            // key, not on time passing.
-            return Signed.Failed(needsKey = true)
-        }
-        return when {
-            results.all { it is WriteResult.Done } -> Signed.Done
-            results.any { it.rateLimited() } -> Signed.WriteRule
-            else -> Signed.Failed(needsKey = false)
+        if (!press.holds()) return Staging.Stood
+        return when (val outcome = stances.prepareStance(target, pick)) {
+            is Outcome.Success -> Staging.Staged(graphId, outcome.value, expected)
+            is Outcome.Refused -> Staging.Refused(outcome.errors)
+            is Outcome.Failed -> Staging.Unreachable
         }
     }
 

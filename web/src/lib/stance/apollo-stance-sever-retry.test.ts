@@ -209,6 +209,31 @@ describe("the walk-back's Retry asks the same signing again", () => {
     expect(signedAgain.map((call) => call.ids)).toEqual([["s-1", "s-2"]]);
   });
 
+  // K-ASKED-AGAIN-MIXED-EXPIRY: a walk-back with one write expired and one
+  // still unanswered reads as no answer, and its Retry asks the same batch.
+  it("a re-ask with one write expired and one unanswered reads as no answer and keeps the walk-back", async () => {
+    const { batches } = host({ held: false });
+    const mixed: Answer = (id) =>
+      id === "s-1"
+        ? { kind: "refused", id, errors: [{ code: "STAGED_WRITE_EXPIRED", message: "garbage-collected unlanded", field: null }] }
+        : lost(id);
+    const { writes, signedAgain } = signer([lost], [mixed]);
+    const { data, retired } = seam(writes);
+
+    await data.sever(POST, SHOWN);
+    const reasked = await data.sever(POST, SHOWN);
+    const again = await data.sever(POST, SHOWN);
+
+    expect(reasked.kind).toBe("failed");
+    expect(retired).toEqual([]);
+    expect(batches).toEqual([["s-1", "s-2"]]);
+    expect(signedAgain.map((call) => call.ids)).toEqual([
+      ["s-1", "s-2"],
+      ["s-1", "s-2"],
+    ]);
+    expect(again.kind).toBe("success");
+  });
+
   it("a walk-back the device refused is spent: Retry retires it and prepares the walk-back afresh", async () => {
     const { batches } = host({ held: false });
     const { writes } = signer([deviceRefused], [deviceRefused]);
@@ -223,6 +248,22 @@ describe("the walk-back's Retry asks the same signing again", () => {
       ["s-3", "s-4"],
     ]);
     expect(retried.kind).toBe("success");
+  });
+
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same walk-back, its re-ask
+  // refused by the device's intent check, over a first walk-back whose
+  // approvals went out with their answer lost.
+  it("a re-ask the device refuses reads the states first: a walk-back already relaying is landing", async () => {
+    const { batches } = host({ held: true, states: { "s-1": "RELAYING", "s-2": "RELAYING" } });
+    const { writes } = signer([lost], [deviceRefused]);
+    const { data, retired } = seam(writes);
+
+    await data.sever(POST, SHOWN);
+    const retried = await data.sever(POST, SHOWN);
+
+    expect(batches).toEqual([["s-1", "s-2"]]);
+    expect(retired).toEqual([]);
+    expect(retried).toEqual({ kind: "success", value: { records: 2 } });
   });
 
   describe("a pick and a walk-back are different gestures: across kinds, main's road", () => {
