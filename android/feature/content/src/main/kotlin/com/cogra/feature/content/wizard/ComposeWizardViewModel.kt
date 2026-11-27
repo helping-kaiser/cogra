@@ -7,7 +7,6 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
-import com.cogra.domain.PreparedContentView
 import com.cogra.domain.WriteState
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
@@ -28,17 +27,13 @@ import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.settings.SettingsRepository
-import com.cogra.domain.signing.AskedAgain
 import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
-import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.SameSigning
 import com.cogra.domain.signing.SentContent
-import com.cogra.domain.signing.SigningAttempt
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.contentExpectation
-import com.cogra.domain.signing.intentOf
 import com.cogra.domain.signing.ledgerFor
 import com.cogra.domain.signing.postExpectation
 import com.cogra.domain.store.IdentityStore
@@ -108,14 +103,14 @@ class ComposeWizardViewModel @Inject constructor(
 
     /**
      * THE SEAL'S RETRY ASKS THE SAME SIGNING AGAIN (SealSigning.md:31 "WHEN
-     * press Retry -> the same signing is asked again"): the batch this seal
-     * prepared, remembered until it answers, and riding the kept draft so a
-     * press after coming back asks it too. A fresh prepare would stage a
-     * second post beside it (`SameSigning`).
+     * press Retry -> the same signing is asked again"): the seal's signing
+     * remembers the batch it prepared until it answers (`PostSealSigning`).
      */
-    private var attempt: SigningAttempt? = null
-
-    private val sameSigning = SameSigning(signer, stagedWrites, identity)
+    private val signing = PostSealSigning(
+        signer = signer,
+        sameSigning = SameSigning(signer, stagedWrites, identity),
+        moves = SealMoves(::stand, ::fail, ::keepDraft, ::settle, ::landed, ::keyAbsent),
+    )
 
     /**
      * The license a new post starts from — the account's default
@@ -294,7 +289,7 @@ class ComposeWizardViewModel @Inject constructor(
         )
         // The draft's unanswered signing comes back with it: its seal's next
         // press asks that signing again.
-        attempt = held.attempt
+        signing.attempt = held.attempt
         // THE STAGED TAG CROSSES THE RESTORE for the citation's reason: the
         // tag card's act opened this composer, and the draft must not undo it.
         prefillTag(prefilledTag)
@@ -374,7 +369,7 @@ class ComposeWizardViewModel @Inject constructor(
     }
 
     /** The draft [this] is kept as, carrying the signing its seal still has pending. */
-    private fun ComposeWizardState.kept(): ComposeDraft = toDraft().copy(attempt = attempt)
+    private fun ComposeWizardState.kept(): ComposeDraft = toDraft().copy(attempt = signing.attempt)
 
     private suspend fun write(draft: ComposeDraft) {
         if (draft.isEmpty) drafts.clear() else drafts.save(draft)
@@ -934,12 +929,12 @@ class ComposeWizardViewModel @Inject constructor(
             // account active does nothing, leaving any attempt for its own.
             val owner = tokens.current()?.accountId ?: return@launch stand()
             // A remembered attempt is never asked under another account; it stands for its own.
-            if (attempt?.let { it.owner != owner } == true) return@launch stand()
+            if (signing.attempt?.let { it.owner != owner } == true) return@launch stand()
             val tags = current.tagSection.tags.map { it.toClaim() }
             val references = current.referenceSection.references.map { it.toClaim() }
             val graphIds = citedGraphIds(references) ?: return@launch
             val sent = current.sentContent()
-            val press = Press(
+            val press = PostPress(
                 owner = owner,
                 seal = current,
                 intent = current.postIntent(sent, tags, references),
@@ -947,73 +942,17 @@ class ComposeWizardViewModel @Inject constructor(
                 expectedFor = { node -> expectation(current, node, sent, tags, references, graphIds) },
                 holds = { tokens.current()?.accountId == owner },
             )
-            try {
-                val remembered = attempt
-                if (remembered == null || askedAgain(remembered, press)) signFresh(press)
-            } catch (_: NoActorKeyException) {
-                // `ComposeKeyAbsent`: the write waits on the reader
-                // restoring the key, not on time passing. The draft is
-                // kept so restoring loses nothing.
-                keepDraft()
-                _state.update { it.copy(submitting = false, keyAbsent = true) }
-            }
+            signing.press(press)
         }
-    }
-
-    /**
-     * Asks the remembered attempt again (`SameSigning`), and answers whether a
-     * fresh prepare may run: only once the attempt is retired.
-     */
-    private suspend fun askedAgain(remembered: SigningAttempt, press: Press): Boolean {
-        val asked = sameSigning.askAgain(remembered, press.intent, { press.expectedFor(remembered.node) }, press.holds)
-        when (asked) {
-            AskedAgain.Foreign -> stand()
-            AskedAgain.Unchecked -> Unit
-            is AskedAgain.Unread -> fail(unreadFault(asked.outcome, press.seal))
-            // The FIRST content was approved and is landing, while the reader
-            // has changed the post since. INTERIM, the web's (#655; no drawn
-            // state covers this moment): the first post opens as a success
-            // does, and the changed words stay the working draft with no
-            // signing of their own — never sealed, never cleared, never signed
-            // on top.
-            AskedAgain.Landing -> {
-                attempt = null
-                keepDraft()
-                _state.update { it.copy(submitting = false, outcome = WizardOutcome.Landed(remembered.node)) }
-            }
-            is AskedAgain.Signed -> settle(asked.results, press.seal, remembered.node, remembered.writes)
-            // Retired: nothing of it can land, and the fresh prepare may run.
-            AskedAgain.Fresh -> attempt = null
-        }
-        return asked == AskedAgain.Fresh
-    }
-
-    /** Stages the batch anew and signs it; the attempt is kept with the draft before anything is signed. */
-    private suspend fun signFresh(press: Press) {
-        if (!press.holds()) return stand()
-        val current = press.seal
-        val prepared = when (val outcome = press.prepare()) {
-            is Outcome.Success -> outcome.value
-            is Outcome.Refused -> return fail(sealFaultOf(outcome.errors, current.referenceSection.references))
-            is Outcome.Failed -> return fail(SealFault.Offline)
-        }
-        val expected = press.expectedFor(prepared.node) ?: return
-        val writes = prepared.writes.map { it.id }
-        // The attempt rides the draft BEFORE anything is signed, so a press
-        // after a process death in the middle of the signing still asks this
-        // one again (web #655, awaited for the same reason).
-        attempt = SigningAttempt(press.owner, prepared.node, writes, press.intent)
-        keepDraft()
-        if (!press.holds()) return stand()
-        val results = signer.sign(prepared.writes, expected)
-        // Answered after a switch: nothing is settled into the other
-        // account's draft; the attempt waits in its own, asked at its next press.
-        if (!press.holds()) return stand()
-        settle(results, current, prepared.node, writes)
     }
 
     /** The press stopped before it ran a leg: the seal stands as it was, nothing said. */
     private fun stand() = _state.update { it.copy(submitting = false) }
+
+    private fun landed(id: String) = _state.update { it.copy(submitting = false, outcome = WizardOutcome.Landed(id)) }
+
+    /** `ComposeKeyAbsent`: the write waits on the reader restoring the key, not on time passing. */
+    private fun keyAbsent() = _state.update { it.copy(submitting = false, keyAbsent = true) }
 
     /** What the signing's answer makes of the seal: the post, the expiry notice, or a fault. */
     private suspend fun settle(
@@ -1033,7 +972,7 @@ class ComposeWizardViewModel @Inject constructor(
                 // its draft should be gone").
                 armed = false
                 draftSaveJob?.cancel()
-                attempt = null
+                signing.attempt = null
                 retireDraft(current.toDraft(), node, writes, results)
                 _state.update { it.copy(submitting = false, outcome = WizardOutcome.Landed(node)) }
             }
@@ -1041,7 +980,7 @@ class ComposeWizardViewModel @Inject constructor(
             // and the draft is what the notice promises.
             results.any { it.expired() } -> {
                 // An expired batch is no signing to ask again: the kept draft carries none.
-                attempt = null
+                signing.attempt = null
                 keepDraft()
                 _state.update { it.copy(submitting = false, outcome = WizardOutcome.Expired(it.draftLabel())) }
             }
@@ -1207,52 +1146,3 @@ internal fun ComposeWizardState.taking(uri: String, read: PickRead): ComposeWiza
     sourceRatio = if (read.isClip) read.header?.aspectRatio else read.known?.aspectRatio,
     durationMs = if (read.isClip) read.known?.durationMs ?: read.header?.durationMs ?: 0 else null,
 )
-
-/** One press of the post seal's commit: who pressed, the seal as it stood, and what it orders. */
-private class Press(
-    val owner: String,
-    val seal: ComposeWizardState,
-    /** The prepare's request as the attempt's key ([postIntent]). */
-    val intent: String,
-    val prepare: suspend () -> Outcome<PreparedContentView>,
-    val expectedFor: suspend (node: String) -> Expectation?,
-    /** Whether the account that pressed is still the active one. */
-    val holds: suspend () -> Boolean,
-)
-
-/** The post's prepare: the request the seal sends, staged as one batch. */
-private suspend fun ContentRepository.preparePostFrom(
-    current: ComposeWizardState,
-    sent: SentContent,
-    tags: List<TagClaim>,
-    references: List<ReferenceClaim>,
-): Outcome<PreparedContentView> = preparePost(
-    title = sent.title,
-    description = sent.description,
-    content = sent.content,
-    license = current.license,
-    tags = tags,
-    references = references,
-    attachments = sent.attachments,
-    sensitive = sent.sensitive,
-    sensitiveReason = sent.sensitiveReason,
-    pDirected = current.pDirected,
-)
-
-/** A Retry's state read that did not answer reads as the prepare's own did: by its codes, or no answer. */
-private fun unreadFault(outcome: Outcome<*>, seal: ComposeWizardState): SealFault = when (outcome) {
-    is Outcome.Refused -> sealFaultOf(outcome.errors, seal.referenceSection.references)
-    else -> SealFault.Offline
-}
-
-/**
- * The post's prepare request as its attempt's key (`intentOf`): every field
- * `preparePost` is sent, and so everything the post's expectation is built
- * from but the server's own facts about those fields (the cited nodes' L1 ids,
- * the gallery's digests per media id).
- */
-internal fun ComposeWizardState.postIntent(
-    sent: SentContent,
-    tags: List<TagClaim>,
-    references: List<ReferenceClaim>,
-): String = intentOf(sent, license, tags, references, pDirected)
