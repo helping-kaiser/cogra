@@ -35,6 +35,7 @@ class AvatarSealScreenTest {
     private var retries = 0
     private var notNows = 0
     private var restores = 0
+    private var reports = 0
 
     private val atRest = AvatarFlowState(
         step = AvatarStep.Seal,
@@ -54,6 +55,7 @@ class AvatarSealScreenTest {
                 onRetryUpload = { retries += 1 },
                 onNotNow = { notNows += 1 },
                 onRestoreKey = { restores += 1 },
+                onReport = { reports += 1 },
             )
         }
     }
@@ -166,9 +168,12 @@ class AvatarSealScreenTest {
         compose.onNodeWithText("This shouldn't have happened").assertExists()
         compose.onNodeWithTag("avatar_seal_try_again").performScrollTo().performClick()
         compose.onNodeWithTag("avatar_seal_report").assert(hasText("Report a problem"))
+            .performScrollTo().performClick()
         compose.onNodeWithTag("avatar_seal_not_now").performScrollTo().performClick()
         assertThat(signs).isEqualTo(1)
         assertThat(notNows).isEqualTo(1)
+        // The notice's Report a problem opens the report page (ReportProblem.md:3).
+        assertThat(reports).isEqualTo(1)
     }
 
     /** The device's own refusal reads as an answered refusal (copy-voice:1611-1613), never the bug notice. */

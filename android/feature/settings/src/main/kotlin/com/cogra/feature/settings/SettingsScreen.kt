@@ -79,6 +79,8 @@ data class SettingsDoors(
     val onOpenAbout: () -> Unit = {},
     /** The release chronicle (WhatsNew.md). */
     val onOpenWhatsNew: () -> Unit = {},
+    /** Report a problem (ReportProblem.md): the report page, the one a seal's bug notice opens too. */
+    val onOpenReport: () -> Unit = {},
     /** The reader's own mail, addressed to the contact address — never the report. */
     val onContact: () -> Unit = {},
     /** The Delete account row's two doors: the request screen, or the grace page. */
@@ -838,8 +840,7 @@ private fun AboutGroup(versionName: String, doors: SettingsDoors) {
             row(R.string.settings_about_intro, "intro") {},
             row(R.string.settings_about_cogra, "aboutCogra", onClick = doors.onOpenAbout),
             row(R.string.settings_about_whats_new, "whatsNew", value = versionName, onClick = doors.onOpenWhatsNew),
-            // DRIFT (the report-a-problem packet): the report is not built.
-            row(R.string.settings_about_report, "report") {},
+            row(R.string.settings_about_report, "report", onClick = doors.onOpenReport),
             row(
                 R.string.settings_about_contact,
                 "contact",

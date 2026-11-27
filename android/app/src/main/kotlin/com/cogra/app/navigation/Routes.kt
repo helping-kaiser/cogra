@@ -247,6 +247,13 @@ data object KeyExport
 @Serializable
 data object WhatsNew
 
+/**
+ * Report a problem (ReportProblem.md): one page whether Settings' row or a
+ * seal's bug notice opened it, so the route carries nothing about the opener.
+ */
+@Serializable
+data object ReportProblem
+
 /** The interim recovery-code route (DRIFT: the SettingsBackup* boards are the backup-replacement packet's). */
 @Serializable
 data object SettingsBackup

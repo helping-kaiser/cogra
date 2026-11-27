@@ -26,6 +26,8 @@ fun AvatarFlowRoute(
     onFramed: ((CropWindow?) -> Unit)? = null,
     /** The seal's key-absent notice opens the app's restore route (AvatarSeal.md:53). */
     onRestoreKey: () -> Unit = {},
+    /** The seal's bug notice `Report a problem`: the report opens over the seal. */
+    onReportProblem: () -> Unit = {},
     viewModel: AvatarFlowViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -59,5 +61,6 @@ fun AvatarFlowRoute(
         onRetryUpload = viewModel.seal::onRetryUpload,
         onNotNow = viewModel.seal::onNotNow,
         onRestoreKey = onRestoreKey,
+        onReport = onReportProblem,
     )
 }
