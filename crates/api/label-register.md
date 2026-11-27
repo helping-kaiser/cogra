@@ -135,6 +135,7 @@ label.
 | `test:integration:a-handle-scoped-query-returns-the-tags-they-tagged-with`                                     | a_handle_scoped_query_returns_the_tags_they_tagged_with                                     |
 | `test:integration:a-hashtag-carries-no-node-fields`                                                            | a_hashtag_carries_no_node_fields                                                            |
 | `test:integration:a-held-approval-is-verified-before-it-is-held`                                               | a_held_approval_is_verified_before_it_is_held                                               |
+| `test:integration:a-held-pre-switch-approval-lands-in-an-old-form-epoch`                                       | a_held_pre_switch_approval_lands_in_an_old_form_epoch                                       |
 | `test:integration:a-held-topics-pair-is-the-netted-bundle-not-the-newest-record`                               | a_held_topics_pair_is_the_netted_bundle_not_the_newest_record                               |
 | `test:integration:a-hidden-actors-kept-things-stay-in-saved`                                                   | a_hidden_actors_kept_things_stay_in_saved                                                   |
 | `test:integration:a-hidden-actors-profile-stays-in-history`                                                    | a_hidden_actors_profile_stays_in_history                                                    |
