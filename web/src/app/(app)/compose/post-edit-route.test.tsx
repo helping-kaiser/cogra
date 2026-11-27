@@ -1681,6 +1681,50 @@ describe("PostEditRoute — Retry after a signing that did not answer", () => {
     expect(signer.signAgain).toHaveBeenCalledWith(["w0"], expect.anything());
   });
 
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same edit, its re-ask refused
+  // by the device's intent check, over a first edit whose approval went out
+  // with its answer lost: it is landing, and nothing is prepared again.
+  it("a re-ask the device refuses reads the states first: an edit already relaying finishes as taken", async () => {
+    let prepares = 0;
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () => {
+        prepares += 1;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+      gqlLink.query("StagedWrite", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            stagedWrite: {
+              __typename: "StagedWrite",
+              id: variables.id,
+              state: "RELAYING",
+              carried: false,
+              family: "PUBLISH",
+              canonicalProposal: "AA==",
+              verifiedAct: null,
+              record: null,
+            },
+          },
+        }),
+      ),
+    );
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => ({ kind: "failed", id: write.id, cause: new Error("no answer") }),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "rejectedByDevice" as const, id, reason: "intent mismatch" })),
+      ),
+    });
+    draw({ signer });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    fireEvent.click(await screen.findByTestId("post-edit-retry"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(signer.signAgain).toHaveBeenCalledWith(["w0"], expect.anything());
+    expect(prepares).toBe(1);
+  });
+
   it("a refused edit record stages nothing else: no tag is prepared for it", async () => {
     let tagPrepares = 0;
     serve(editablePost());
