@@ -14,7 +14,8 @@
 //   continue on their stored material. Only an attempt NO write of which can
 //   still be, or become, approved is retired ([retirable]), and only then is a
 //   fresh prepare allowed: one write without an answer, or one already done,
-//   keeps the whole attempt, since a second act would sit beside it.
+//   keeps the whole attempt, since a second act would sit beside it. A batch
+//   the device itself refused is first read the way a changed gesture's is.
 // - The reader changed what would be signed → an attempt this device already
 //   approved is landing with its first content, and the surface finishes as if
 //   it had answered; any other attempt is retired first, so it can never land
@@ -67,7 +68,7 @@ sealed interface AskedAgain {
     /** The same batch was signed again; the results read as a [WriteSigner.sign]'s. */
     data class Signed(val results: List<WriteResult>) : AskedAgain
 
-    /** The reader changed the gesture, but the first attempt was approved: it is landing. */
+    /** The first attempt was approved — read so after a changed gesture or a device refusal: it is landing. */
     data object Landing : AskedAgain
 
     /** The attempt is retired; a fresh prepare may run. */
@@ -85,7 +86,7 @@ sealed interface AskedAgain {
 
 /**
  * Asks attempts again — [WriteSigner.signAgain] for an unchanged gesture, the
- * staged writes' states for a changed one, and [IdentityStore.clearHandshake]
+ * staged writes' states for a changed one or a device refusal, and [IdentityStore.clearHandshake]
  * to retire. The legs are functions so the rule tests against scripted answers;
  * a surface builds it from the three it already holds.
  */
@@ -119,8 +120,27 @@ class SameSigning(
             if (!stillPressing()) return AskedAgain.Foreign
             // Anything undecided or approved keeps the attempt: the surface
             // shows its fault, and the next Retry asks this same signing again.
-            return if (retirable(results)) retireAll(attempt, stillPressing) else AskedAgain.Signed(results)
+            if (!retirable(results)) return AskedAgain.Signed(results)
+            // A DEVICE REFUSAL SAYS NOTHING OF THE FIRST PRESS. The intent check
+            // refuses the whole re-asked batch when the expectation rebuilt for
+            // the same gesture no longer matches the staged proposal — the
+            // server's facts keyed by the gesture's parts moved between the
+            // presses — while the first press's approval may have gone out with
+            // its answer lost. So the states are read, as for a changed gesture.
+            return if (results.any { it is WriteResult.RejectedByDevice }) {
+                readThenRetire(attempt, stillPressing)
+            } else {
+                retireAll(attempt, stillPressing)
+            }
         }
+        return readThenRetire(attempt, stillPressing)
+    }
+
+    /**
+     * What the server holds decides it: an attempt already approved is
+     * landing, and only one no write of which is relaying or landed is retired.
+     */
+    private suspend fun readThenRetire(attempt: SigningAttempt, stillPressing: suspend () -> Boolean): AskedAgain {
         for (id in attempt.writes) {
             if (!stillPressing()) return AskedAgain.Foreign
             val outcome = read(id)
