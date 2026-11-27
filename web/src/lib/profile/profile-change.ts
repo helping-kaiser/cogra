@@ -43,7 +43,14 @@ export type ProfileChangeOutcome =
   | { readonly kind: "offline" }
   | { readonly kind: "notThrough"; readonly line: string }
   | { readonly kind: "writeRule" }
-  | { readonly kind: "bug" };
+  | { readonly kind: "bug" }
+  /**
+   * A press held at the upload gate whose upload then failed: the press drops
+   * and nothing is signed (AvatarSeal.md:21). On an open seal the commit is
+   * back at rest under the gate's fault; on a closed one it is the head's
+   * failed line, as any change that did not go through.
+   */
+  | { readonly kind: "dropped" };
 
 /**
  * What one signing came to, for the seals' states: every write taken is the
@@ -56,14 +63,27 @@ export type ProfileChangeOutcome =
 export function outcomeOf(results: readonly WriteResult[]): ProfileChangeOutcome {
   if (results.every((result) => result.kind === "done" || result.kind === "carried")) return { kind: "taken" };
   const refused = results.flatMap((result) => (result.kind === "refused" ? result.errors : []));
-  if (refused.length > 0) {
-    const fault = sealFaultOf(refused, []);
-    if (fault.kind === "writeRule" || fault.kind === "notThrough") return fault;
-    return { kind: "bug" };
-  }
+  if (refused.length > 0) return refusalOutcomeOf(refused);
   const failed = sealFaultOfResults(results, []);
   return failed.kind === "notThrough" ? failed : { kind: "offline" };
 }
+
+/**
+ * A refused change, by the failure pack: the write rule, an answered fault of
+ * the whole act, else a bug — for a refused signing and a refused prepare alike.
+ */
+export function refusalOutcomeOf(errors: Parameters<typeof sealFaultOf>[0]): ProfileChangeOutcome {
+  const fault = sealFaultOf(errors, []);
+  if (fault.kind === "writeRule" || fault.kind === "notThrough") return fault;
+  return { kind: "bug" };
+}
+
+/**
+ * What a taken change sets, for the head to wear — or a reading of it once the
+ * run has answered, where the run itself learns it (a picture that went up
+ * behind the seal's gate only has its asset once it is up).
+ */
+export type SignedChange = SignedProfileChange | (() => SignedProfileChange | undefined);
 
 /** What the profile's head reads. */
 export type ProfileChangeState =
@@ -108,7 +128,7 @@ function subscribe(listener: () => void): () => void {
  */
 export async function signProfileChange(
   run: () => Promise<ProfileChangeOutcome>,
-  { fromHead = false, signed }: { fromHead?: boolean; signed?: SignedProfileChange } = {},
+  { fromHead = false, signed }: { fromHead?: boolean; signed?: SignedChange } = {},
 ): Promise<ProfileChangeOutcome> {
   return signFor(tokenStore.activeAccountId(), run, fromHead, signed);
 }
@@ -120,7 +140,7 @@ export async function signProfileChange(
 export function signProfileChangeFor(
   by: string | null,
   run: () => Promise<ProfileChangeOutcome>,
-  { signed }: { signed?: SignedProfileChange } = {},
+  { signed }: { signed?: SignedChange } = {},
 ): Promise<ProfileChangeOutcome> {
   return signFor(by, run, true, signed);
 }
@@ -129,7 +149,7 @@ async function signFor(
   by: string | null,
   run: () => Promise<ProfileChangeOutcome>,
   fromHead: boolean,
-  signed: SignedProfileChange | undefined,
+  signed: SignedChange | undefined,
 ): Promise<ProfileChangeOutcome> {
   // A Retry under the head has no seal to answer to.
   closed = fromHead;
@@ -147,8 +167,9 @@ async function signFor(
   // head wears what was signed until a read asked after it answers — laid
   // only while the tab is still the signing account's, whichever seal or
   // head is listening, and in the order the changes were signed.
-  if (outcome.kind === "taken" && signed !== undefined && by !== null && tokenStore.activeAccountId() === by) {
-    laySignedProfile(by, signed, mine);
+  const worn = typeof signed === "function" ? signed() : signed;
+  if (outcome.kind === "taken" && worn !== undefined && by !== null && tokenStore.activeAccountId() === by) {
+    laySignedProfile(by, worn, mine);
   }
   // A later change was pressed meanwhile — another account's, it may be:
   // the slot is that change's now.

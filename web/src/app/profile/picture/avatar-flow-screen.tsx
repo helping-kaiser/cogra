@@ -7,44 +7,63 @@
 // (ProfileHeader.jsx, jakob 2026-09-01), so it is its own signed act — the
 // picture alone, never the profile's other fields.
 //
-// NEXT STAGES THE CHANGE, THE SEAL SIGNS IT. Next uploads the framed picture
-// and PREPARES the change — staging, never signing — the edit's own order
-// (ProfileEdit.md:15; seam 325, G-A4), so a refusal of the picture says
-// itself on the crop that framed it, where the edit says its own on the edit.
-// The prepare is picture-only (`prepareAvatarChange`): the text fields are
-// omitted, which the contract reads as untouched, so nothing the reader did
-// not see here is restated or cleared by it.
+// NEXT OPENS THE SEAL AT ONCE, THE UPLOAD RUNNING BEHIND ITS GATE
+// (AvatarCrop.md:23, AvatarSeal.md:13-23). Next encodes the framed picture —
+// the device's own leg, so a picture this browser cannot read or one over the
+// cap is refused on the crop that framed it (AvatarCrop.md:43-57) — then
+// opens the seal and starts the upload. The seal reads `Uploading 0 of 1 —
+// signing waits for the picture.` with `Sign the change` live; a press while
+// it runs is the act: it waits for the picture, then prepares and signs. A
+// failed upload reads the gate's fault with Retry and drops a held press; a
+// refused one reads the fact alone, Back the way out to the crop.
 //
-// THE PICTURE'S REFUSALS ARE HELD AT DESIGN (round 50 is redrawing the upload
-// failure and the refused / too-big picture). Until then they read today's
-// lines, the edit's words in the edit's place (over the commit), and nothing
-// more is built for them here.
+// THE PREPARE RIDES THE PRESS. The change is prepared once its picture is up
+// and the reader has pressed — picture-only (`prepareAvatarChange`): the text
+// fields are omitted, which the contract reads as untouched, so nothing the
+// reader did not see here is restated or cleared by it.
+//
+// THE ACT IS THE PRESSING ACCOUNT'S (#679, #692): the owner guard in
+// `profile-change.ts` stops a change whose account is no longer active before
+// it runs, and this flow checks again before each of its legs — the prepare
+// and the signing — and that the picture went up under that same account.
 //
 // THE WAYS OUT: the crop's arrow returns to its opener, the profile (seam
-// 335, 325-2); the seal's arrow returns to the crop as it was framed
-// (AvatarSeal.md:41-43); either X leaves, nothing signed; a change closed on
-// while it signs goes on and lands under the profile's head (`ChangeSeal`).
+// 335, 325-2); the seal's arrow returns to the crop as it was framed; either X
+// leaves, nothing signed; a change closed on while it signs — its upload
+// included (design/readme.md, "A press held at the upload gate is the act") —
+// goes on and lands under the profile's head (`ChangeSeal`).
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
-import { fetchMyProfile, prepareAvatarChange, type MediaSelection } from "@/lib/api/profile-api";
-import type { StagedWriteView } from "@/lib/api/writes-api";
-import { avatarExpectation, type MediaLedger } from "@/lib/compose/payload-expectation";
+import { fetchMyProfile, prepareAvatarChange } from "@/lib/api/profile-api";
+import { avatarExpectation } from "@/lib/compose/payload-expectation";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
-import { uploadProfilePicture } from "@/lib/profile/avatar-upload";
+import {
+  encodeProfilePicture,
+  uploadEncodedPicture,
+  type EncodedPicture,
+  type PictureUpload,
+} from "@/lib/profile/avatar-upload";
 import { heldPicture, releaseHeldPicture } from "@/lib/profile/held-picture";
-import { outcomeOf, PROFILE_SIGNED } from "@/lib/profile/profile-change";
+import {
+  outcomeOf,
+  PROFILE_SIGNED,
+  refusalOutcomeOf,
+  type ProfileChangeOutcome,
+} from "@/lib/profile/profile-change";
+import type { SignedProfileChange } from "@/lib/profile/signed-profile";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useAuthPhase } from "@/lib/session/provider";
+import { tokenStore } from "@/lib/session/token-store";
 import { expectation, profileUpdate } from "@/lib/signing/intent";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
-import { answeredFaultLine, firstRefusalMessage } from "@/lib/ui/error-messages";
-import { TransportError } from "@/lib/ui/transport-error";
+import { answeredFaultLine } from "@/lib/ui/error-messages";
 import { CENTERED, type Crop } from "@/lib/ui2/media/crop";
+import type { SealGate } from "../change-seal";
 import { AvatarCrop } from "../edit/avatar-crop";
 import { PictureDisc } from "../edit/profile-media-field";
 import { AvatarSeal } from "./avatar-seal";
@@ -52,17 +71,11 @@ import { AvatarSeal } from "./avatar-seal";
 /** Where the flow returns: the profile that opened it. */
 const OPENER = "/profile";
 
-/** The staged change the seal holds and signs. */
-type Staged = {
-  readonly writes: readonly StagedWriteView[];
-  readonly selection: MediaSelection;
-  readonly ledger: MediaLedger;
-  /** The picture as it went up, which the profile's head wears once the change is taken. */
-  readonly picture: { readonly id: string; readonly url: string };
-};
+/** One upload of the framed picture, and the account it went up under. */
+type Upload = { readonly by: string | null; readonly answer: Promise<PictureUpload> };
 
-/** What stopped Next: a line in today's words, or no answer at all. */
-type Problem = { readonly kind: "line"; readonly message: string } | { readonly kind: "unreachable" };
+/** What the gate reads of the upload, or null once the picture is up. */
+type GateReading = SealGate["reading"] | null;
 
 export function AvatarFlowScreen({ store = identityStore }: { store?: IdentityStore }) {
   const phase = useAuthPhase();
@@ -77,9 +90,16 @@ export function AvatarFlowScreen({ store = identityStore }: { store?: IdentitySt
   // The account's own id: the node a profile payload binds to.
   const [profileNode, setProfileNode] = useState<string | null>(null);
   const [name, setName] = useState("");
-  const [staging, setStaging] = useState(false);
-  const [problem, setProblem] = useState<Problem | null>(null);
-  const [staged, setStaged] = useState<Staged | null>(null);
+  const [encoding, setEncoding] = useState(false);
+  // A picture the device itself refused, on the crop that framed it.
+  const [refusal, setRefusal] = useState<string | null>(null);
+  // The framed picture's bytes once Next encoded them: the seal is open.
+  const [encoded, setEncoded] = useState<EncodedPicture | null>(null);
+  const [gate, setGate] = useState<GateReading>(null);
+  // The upload the seal waits on; a Retry or a fresh Next replaces it.
+  const upload = useRef<Upload | null>(null);
+  // What the change sets once its picture is up: the asset is known only then.
+  const signedRef = useRef<SignedProfileChange | undefined>(undefined);
 
   const src = useMemo(() => (file === null ? null : URL.createObjectURL(file)), [file]);
   useEffect(() => {
@@ -115,60 +135,89 @@ export function AvatarFlowScreen({ store = identityStore }: { store?: IdentitySt
     router.push(OPENER);
   };
 
-  const next = async () => {
-    // Next refuses a second press while the change is being staged.
-    if (staging) return;
-    setStaging(true);
-    setProblem(null);
-    // The picture goes up BEFORE the change is prepared: an update naming an
-    // asset that does not exist yet would be refused.
-    const uploaded = await uploadProfilePicture(client, guard, { file, crop });
-    if (uploaded.kind === "problem") {
-      setStaging(false);
-      setProblem({ kind: "line", message: uploaded.message });
-      return;
-    }
-    const prepared = await guard.run(() => prepareAvatarChange(client, uploaded.selection));
-    setStaging(false);
-    if (prepared.kind === "refused") {
-      setProblem({ kind: "line", message: firstRefusalMessage(prepared.errors, "The server refused this update.") });
-      return;
-    }
-    if (prepared.kind === "failed") {
-      // An INTERNAL is an answer: the not-through line, never the
-      // unreachable one (NetworkError.md:13).
-      const answered = answeredFaultLine(prepared.cause);
-      setProblem(answered === null ? { kind: "unreachable" } : { kind: "line", message: answered });
-      return;
-    }
-    // AvatarCrop.md:17: from the badge, Next opens the picture's own seal.
-    setStaged({
-      writes: prepared.value,
-      selection: uploaded.selection,
-      ledger: uploaded.ledger,
-      picture: uploaded.picture,
+  /** Starts the picture's upload behind the gate (AvatarSeal.md:13, :23). */
+  const startUpload = (bytes: EncodedPicture) => {
+    const mine: Upload = { by: tokenStore.activeAccountId(), answer: uploadEncodedPicture(client, guard, bytes) };
+    upload.current = mine;
+    setGate("uploading");
+    void mine.answer.then((answer) => {
+      // Only the latest upload speaks for the gate.
+      if (upload.current !== mine) return;
+      setGate(answer.kind === "uploaded" ? null : answer.refused ? "upload-refused" : "upload-failed");
     });
   };
 
-  if (staged !== null) {
-    // One profile update on this device's own profile, its payload held to
-    // the avatar this device uploaded and no other field. Without the
-    // profile's own id there is nothing to bind it to, and the batch is
-    // refused rather than signed.
-    const expected = expectation([profileUpdate(avatarExpectation(profileNode ?? "", staged.selection, staged.ledger))]);
+  const next = async () => {
+    // Next refuses a second press while the picture is being encoded.
+    if (encoding) return;
+    setEncoding(true);
+    setRefusal(null);
+    const bytes = await encodeProfilePicture({ file, crop });
+    setEncoding(false);
+    if (bytes.kind === "problem") {
+      setRefusal(bytes.message);
+      return;
+    }
+    // AvatarCrop.md:23: from the badge, Next opens the picture's own seal —
+    // at once, the upload running behind its gate.
+    setEncoded(bytes);
+    startUpload(bytes);
+  };
+
+  if (encoded !== null) {
+    const held = upload.current;
+    // The change, signed: the picture once it is up, prepared and signed for
+    // the account that pressed — checked again before every leg.
+    const run = async (): Promise<ProfileChangeOutcome> => {
+      // `signProfileChange` runs this only while the pressing account — the
+      // change's owner, a Retry's included — is the active one.
+      const owner = tokenStore.activeAccountId();
+      const ownersStill = () => tokenStore.activeAccountId() === owner;
+      const current = held;
+      if (current === null) return { kind: "dropped" };
+      const answer = await current.answer;
+      // AvatarSeal.md:21: an upload failing under a held press drops it.
+      if (answer.kind !== "uploaded") return { kind: "dropped" };
+      if (current.by !== owner || !ownersStill()) return { kind: "offline" };
+      const prepared = await guard.run(() => prepareAvatarChange(client, answer.selection));
+      if (prepared.kind === "refused") return refusalOutcomeOf(prepared.errors);
+      if (prepared.kind === "failed") {
+        // An INTERNAL is an answer: the not-through line, never the
+        // unreachable one (NetworkError.md:13).
+        const answered = answeredFaultLine(prepared.cause);
+        return answered === null ? { kind: "offline" } : { kind: "notThrough", line: answered };
+      }
+      if (!ownersStill()) return { kind: "offline" };
+      // One profile update on this device's own profile, its payload held to
+      // the avatar this device uploaded and no other field. Without the
+      // profile's own id there is nothing to bind it to, and the batch is
+      // refused rather than signed.
+      const expected = expectation([profileUpdate(avatarExpectation(profileNode ?? "", answer.selection, answer.ledger))]);
+      signedRef.current = { profileId: profileNode, fields: { avatar: answer.picture } };
+      return outcomeOf(await signer.sign(prepared.value, expected));
+    };
     return (
       <AvatarSeal
         avatar={
           <PictureDisc name={name} currentUrl={null} choice={{ kind: "picked", file, crop }} testId="avatar-seal-avatar" />
         }
+        gate={
+          gate === null
+            ? null
+            : { reading: gate, onRetry: () => startUpload(encoded), node: "avatarSeal.gate" }
+        }
         hasKey={async () => keyOnDevice !== false && (await store.actorKey()) !== null}
-        sign={async () => outcomeOf(await signer.sign(staged.writes, expected))}
-        signed={{ profileId: profileNode, fields: { avatar: staged.picture } }}
+        sign={run}
+        signed={() => signedRef.current}
         onTaken={() => {
           carrySnackbar(PROFILE_SIGNED);
           leave();
         }}
-        onBack={() => setStaged(null)}
+        onBack={() => {
+          upload.current = null;
+          setGate(null);
+          setEncoded(null);
+        }}
         onLeave={leave}
         onClosed={leave}
       />
@@ -184,11 +233,9 @@ export function AvatarFlowScreen({ store = identityStore }: { store?: IdentitySt
       onBack={leave}
       onLeave={leave}
       problem={
-        problem === null ? null : problem.kind === "unreachable" ? (
-          <TransportError testId="avatar-crop-transport" />
-        ) : (
+        refusal === null ? null : (
           <p role="alert" data-testid="avatar-crop-refused" className="m-0 text-body-small text-error">
-            {problem.message}
+            {refusal}
           </p>
         )
       }

@@ -30,6 +30,12 @@
 //    again`, `Report a problem` and `Not now`, which goes one stage back.
 //  · The key not on this browser: the key-absent notice and `Restore the
 //    key`, `Not now` back to the seal at rest; nothing kept or signed.
+//  · THE UPLOAD GATE (AvatarSeal.md:13-23), where the seal opens with its
+//    picture still going up: `Uploading 0 of 1 — signing waits for the
+//    picture.` over the foot with the commit live, a press held until the
+//    picture is up; a failed upload reads the gate's fault with `Retry` and
+//    disables the commit, a held press dropping back to rest; a refused one
+//    reads the fact alone, no Retry, the commit disabled and Back the way out.
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
@@ -44,13 +50,15 @@ import { ActsCard, actsTotal, SLOW_SIGNING_LINE } from "@/lib/ui2/compose/acts-c
 import { useSlowAnswer, useWaitedPast, SLOW_NETWORK_MS } from "@/lib/ui2/waiting-commit";
 import { PINNED_PAGE } from "@/lib/ui2/screen-layer";
 import { TransportError } from "@/lib/ui/transport-error";
+import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
+import type { DataNode } from "@/lib/ui/data-node";
 import { KEY_ABSENT_TITLE } from "@/lib/ui/key-absent-notice";
 import {
   closeProfileChangeSeal,
   signProfileChange,
   type ProfileChangeOutcome,
+  type SignedChange,
 } from "@/lib/profile/profile-change";
-import type { SignedProfileChange } from "@/lib/profile/signed-profile";
 
 export const SEAL_TITLE = "What you sign";
 export const SEAL_LEAVE = "Leave";
@@ -76,6 +84,15 @@ type Foot =
   | { readonly kind: "bug" }
   | { readonly kind: "keyAbsent" };
 
+/** The upload gate's reading, where the seal waits on its picture. */
+export type SealGate = {
+  readonly reading: "uploading" | "upload-failed" | "upload-refused";
+  /** The failed reading's Retry: the upload starts again. */
+  readonly onRetry: () => void;
+  /** The registered gate (`avatarSeal.gate`), keyed by the reading. */
+  readonly node?: string;
+};
+
 /** What one of the profile's seals reads back; the rest is the drawing both share. */
 export type ChangeSealReading = {
   /** The test-id stem every part of this seal is named under. */
@@ -98,10 +115,13 @@ export function ChangeSeal({
   onBack,
   onLeave,
   onClosed,
+  gate = null,
 }: {
   reading: ChangeSealReading;
+  /** The upload gate, while the change's picture is not up yet; null once it is. */
+  gate?: SealGate | null;
   /** What the change sets, for the head to wear once it is taken (`signed-profile.ts`). */
-  signed?: SignedProfileChange;
+  signed?: SignedChange;
   /** The head row's picture, as the change will set it. */
   avatar: ReactNode;
   /** Whether the signing key is on this browser, asked at the press. */
@@ -124,9 +144,12 @@ export function ChangeSeal({
   const slowAnswer = useSlowAnswer(signing);
   const slowNetwork = useWaitedPast(signing, SLOW_NETWORK_MS);
 
+  // A failed or refused upload is the one thing that disables the commit.
+  const gateShut = gate !== null && gate.reading !== "uploading";
+
   const press = async () => {
     // Refuses a second press until the signing answers; never dims.
-    if (signing) return;
+    if (signing || gateShut) return;
     if (!(await hasKey())) {
       setFoot({ kind: "keyAbsent" });
       return;
@@ -134,6 +157,9 @@ export function ChangeSeal({
     setFoot({ kind: "signing" });
     const outcome = await signProfileChange(sign, { signed });
     if (outcome.kind === "taken") onTaken();
+    // The held press dropped with its upload: the commit and Back read as
+    // before the press, nothing signed (AvatarSeal.md:21).
+    else if (outcome.kind === "dropped") setFoot({ kind: "rest" });
     else setFoot(outcome);
   };
 
@@ -235,14 +261,18 @@ export function ChangeSeal({
             </div>
           </>
         ) : (
+          <>
+          {/* The gate stands over the foot, the column's 16 between them (AvatarSeal.jsx). */}
+          {gate !== null && <Gate gate={gate} testId={`${id}-gate`} />}
           <div className="flex flex-col gap-2">
-            <PillButton testId={`${id}-sign`} full onClick={() => void press()}>
+            <PillButton testId={`${id}-sign`} full disabled={gateShut} onClick={() => void press()}>
               {signing && slowAnswer ? SIGNING_THE_CHANGE : SIGN_THE_CHANGE}
             </PillButton>
             <PillButton testId={`${id}-back`} variant="text" full onClick={back}>
               {signing ? "Close" : "Back"}
             </PillButton>
           </div>
+          </>
         )}
       </div>
 
@@ -254,4 +284,14 @@ export function ChangeSeal({
       />
     </main>
   );
+}
+
+/** The gate over the foot, in its reading (UploadNotice.jsx `UploadStatusLine`). */
+function Gate({ gate, testId }: { gate: SealGate; testId: string }) {
+  const node: DataNode | undefined = gate.node === undefined ? undefined : { path: gate.node, key: gate.reading };
+  if (gate.reading === "upload-refused") return <UploadStatusLine done={0} total={1} refused testId={testId} node={node} />;
+  if (gate.reading === "upload-failed") {
+    return <UploadStatusLine done={0} total={1} failed onRetry={gate.onRetry} testId={testId} node={node} />;
+  }
+  return <UploadStatusLine done={0} total={1} media="pictures" testId={testId} node={node} />;
 }

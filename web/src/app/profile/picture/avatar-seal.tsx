@@ -12,9 +12,8 @@
 
 import type { ReactNode } from "react";
 
-import type { ProfileChangeOutcome } from "@/lib/profile/profile-change";
-import type { SignedProfileChange } from "@/lib/profile/signed-profile";
-import { ChangeSeal, type ChangeSealReading } from "../change-seal";
+import type { ProfileChangeOutcome, SignedChange } from "@/lib/profile/profile-change";
+import { ChangeSeal, type ChangeSealReading, type SealGate } from "../change-seal";
 
 export const AVATAR_SEAL_HEAD = "Your profile picture";
 export const AVATAR_SEAL_ROW = { label: "Picture", value: "A new profile picture", countNoun: "picture" } as const;
@@ -32,12 +31,14 @@ export function AvatarSeal(props: {
   hasKey: () => Promise<boolean>;
   sign: () => Promise<ProfileChangeOutcome>;
   /** The new picture, for the profile's head once the change is taken. */
-  signed?: SignedProfileChange;
+  signed?: SignedChange;
   onTaken: () => void;
   /** One stage back: the crop, the picture as it was framed. */
   onBack: () => void;
   onLeave: () => void;
   onClosed: () => void;
+  /** The upload gate while the new picture is still going up (AvatarSeal.md:13-23). */
+  gate?: SealGate | null;
 }) {
   return <ChangeSeal reading={READING} {...props} />;
 }

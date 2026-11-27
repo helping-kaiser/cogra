@@ -42,6 +42,7 @@ export function UploadStatusLine({
   progress,
   media = "pictures",
   failed = false,
+  refused = false,
   message = "One picture didn't upload.",
   failedCount = 1,
   onRetry,
@@ -58,6 +59,12 @@ export function UploadStatusLine({
    * why and offers Retry (`UploadNotice.jsx`'s failed form).
    */
   failed?: boolean;
+  /**
+   * An upload the server refused: it will never land, so the line keeps the
+   * fact alone in the error ink — no `Signing waits for it.`, no `Retry`
+   * (`UploadNotice.jsx`'s refused reading, round 51).
+   */
+  refused?: boolean;
   message?: string;
   /** How many failed: past one the gate says signing waits for THEM (round 22). */
   failedCount?: number;
@@ -70,6 +77,15 @@ export function UploadStatusLine({
    */
   node?: DataNode;
 }) {
+  if (refused) {
+    return (
+      <p {...testAttributes(node, testId)} role="status" className="m-0 text-center text-body-medium">
+        <span className="text-error" {...testAttributes(part(node, "message"))}>
+          {message}
+        </span>
+      </p>
+    );
+  }
   if (failed) {
     return (
       <p {...testAttributes(node, testId)} role="status" className="m-0 text-center text-body-medium">
