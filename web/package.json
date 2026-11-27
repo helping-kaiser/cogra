@@ -21,11 +21,11 @@
     "@apollo/client-integration-nextjs": "^0.14.5",
     "apollo-upload-client": "^20.0.0",
     "graphql": "^17.1.0",
-    "mediabunny": "1.65.2",
-    "next": "16.4.5",
+    "mediabunny": "1.66.3",
+    "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "react-easy-crop": "6.2.4",
+    "react-easy-crop": "6.2.5",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
@@ -39,15 +39,15 @@
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^6.2.1",
+    "@vitejs/plugin-react": "^6.3.0",
     "eslint": "^9",
-    "eslint-config-next": "16.4.5",
-    "fake-indexeddb": "^6.2.7",
-    "jsdom": "^31.0.0",
-    "msw": "^3.0.4",
+    "eslint-config-next": "16.4.6",
+    "fake-indexeddb": "^6.2.8",
+    "jsdom": "^31.0.1",
+    "msw": "^3.0.7",
     "tailwindcss": "^4",
     "typescript": "^6",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   }
 }
