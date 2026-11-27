@@ -116,6 +116,17 @@ function mount(
 
 const control = () => screen.getByTestId(PREFIX);
 
+/**
+ * The hold's ring stands CLOSED around the face (RowSigning.md:5): drawn
+ * whole — no dash left to fill — and still, never filling again.
+ */
+function expectClosedRing() {
+  const ring = screen.getByTestId(`${PREFIX}-hold-ring`);
+  const circle = ring.querySelector("circle");
+  expect(circle).toHaveAttribute("stroke-dashoffset", "0");
+  expect(ring.querySelector("animate")).toBeNull();
+}
+
 /** Rebuilds the target prop on every render, the way the real hosts do. */
 function Host() {
   const [, setTick] = useState(0);
@@ -822,7 +833,11 @@ describe("the hold", () => {
     expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
   });
 
-  it("says Signing… under the face past 200ms, and never before", async () => {
+  // RowSigning.md:5: "WHEN the hold's signing runs -> the ring that filled
+  // during the hold stays closed around the face AND NEVER a line stands under
+  // the face for the wait"; :9: "a visually hidden status speaks Signing… AND
+  // NEVER Signing… is drawn"; :11: never within 200ms; :13: taken, the ring goes.
+  it("keeps the ring closed around the face while the hold signs, and speaks Signing… unseen past 200ms", async () => {
     const data = mount();
     await settle();
     const commit = data.commit;
@@ -833,17 +848,143 @@ describe("the hold", () => {
       });
     fireEvent.pointerDown(control(), { pointerId: 1, clientX: 0, clientY: 0 });
     await settle(LONG_PRESS_MS + 1);
-    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
-    // Inert at once, and saying so only past the wait.
+    await act(async () => {
+      fireEvent.pointerUp(control(), { pointerId: 1 });
+      fireEvent.click(control());
+    });
+    // The lift does not clear it: the ring stands, closed and still.
+    expectClosedRing();
+    expect(screen.queryByTestId(`${PREFIX}-signing`)).toBeNull();
     expect(control()).toHaveAttribute("aria-busy", "true");
     await settle(SETTING_AFTER_MS);
-    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("Signing…");
-    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveAttribute("role", "status");
+    const status = screen.getByTestId(`${PREFIX}-signing`);
+    expect(status).toHaveTextContent("Signing…");
+    expect(status).toHaveAttribute("role", "status");
+    expect(status).toHaveClass("sr-only");
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+    expectClosedRing();
     await act(async () => {
       for (const open of held) open();
     });
     await settle();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-signing`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent("+0.10 / +0.10");
+  });
+
+  // RowSigning.md:35: "WHEN the hold reaches 500ms -> the ring stays closed AND
+  // the signing begins" — even while the key's answer is still coming, and
+  // whatever the lift does meanwhile.
+  it("keeps the ring closed from 500ms while the key is asked, the finger lifted", async () => {
+    const data = mount();
+    await settle();
+    let keyAnswer: (present: boolean) => void = () => {};
+    data.keyOnDevice = () => new Promise((resolve) => (keyAnswer = resolve));
+    data.commit = () => new Promise(() => {});
+    fireEvent.pointerDown(control(), { pointerId: 1, clientX: 0, clientY: 0 });
+    await settle(LONG_PRESS_MS + 1);
+    await act(async () => {
+      fireEvent.pointerUp(control(), { pointerId: 1 });
+      fireEvent.click(control());
+    });
+    expectClosedRing();
+    await act(async () => keyAnswer(true));
+    await settle();
+    expectClosedRing();
+    expect(control()).toHaveAttribute("aria-busy", "true");
+  });
+
+  // RowSigning.md:15: not taken, "the ring goes"; :23: Retry -> "the closed
+  // ring stands around the face while it signs, as after the hold".
+  it("takes the ring away when the hold does not sign, and closes it again around the Retry's signing", async () => {
+    const data = mount();
+    await settle();
+    const commit = data.commit;
+    const held: ((taken: boolean) => void)[] = [];
+    data.commit = (target, pick) =>
+      new Promise((resolve) => {
+        held.push((taken) =>
+          resolve(taken ? commit(target, pick) : createStubStanceData({ offline: true }).commit(target, pick)),
+        );
+      });
+    await hold();
+    expectClosedRing();
+    await act(async () => held[0](false));
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("That didn't sign.");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    await settle();
+    expectClosedRing();
     expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+    await act(async () => held[1](true));
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+  });
+
+  // PadFailed.md:41: "WHEN tap Close GIVEN Set is waiting on its signing -> the
+  // pad closes AND the act goes on AND the ring stands closed around the
+  // target's face while it signs, as after a hold".
+  it("closes the ring around the face when the pad is closed while Set signs", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    const commit = data.commit;
+    const held: (() => void)[] = [];
+    data.commit = (target, pick) =>
+      new Promise((resolve) => {
+        held.push(() => resolve(commit(target, pick)));
+      });
+    await pressSet();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-cancel`));
+    });
+    expectClosedRing();
+    await settle(SETTING_AFTER_MS);
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveClass("sr-only");
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+    await act(async () => held[0]());
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+  });
+
+  // SeveranceConfirm.md:53: "its wait carried by the closed ring around the
+  // target's face, Signing… spoken from a visually hidden status and never drawn".
+  it("closes the ring around the face when the walk-back's dialog is closed while it signs", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } });
+    await settle();
+    await openPad();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    data.sever = () => new Promise(() => {});
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-cancel"));
+    });
+    expectClosedRing();
+    await settle(SETTING_AFTER_MS);
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveClass("sr-only");
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+  });
+
+  it("never rings B's face for A's hold, and rings it again under A", async () => {
+    const store = signedInStore();
+    const data = createStubStanceData();
+    data.commit = () => new Promise(() => {});
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    await hold();
+    expectClosedRing();
+    act(() => store.save({ accessToken: "access-u2", refreshToken: "refresh-u2", accountId: "u2" }));
+    expect(screen.queryByTestId(`${PREFIX}-hold-ring`)).toBeNull();
+    act(() => store.save({ accessToken: "access-u1", refreshToken: "refresh-u1", accountId: "u1" }));
+    expectClosedRing();
   });
 
   it("rings the face while held, and clears the ring when the press lifts early", async () => {
@@ -976,6 +1117,50 @@ describe("the hold", () => {
 // pressed, another act is made on the same anchor, or the surface's next fresh
 // load" — an account change is none of these, so the line is HIDDEN under
 // another account, never erased, the way #679 keeps a profile change's line).
+// EACH SURFACE'S COMMITS ARE ITS OWN (stance-attempts.ts `claim`): the seam
+// asks a Retry's own attempt only if the control names itself the same way on
+// every commit, and two controls showing one target never alike.
+describe("a control names itself as its commits' source", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  it("names the same source on its Retry as on the hold, and another control's apart", async () => {
+    const data = createStubStanceData();
+    const offline = createStubStanceData({ offline: true });
+    const commit = vi.fn(offline.commit);
+    data.commit = commit;
+    renderWithProviders(
+      <>
+        <StanceControl target={TARGET} testIdPrefix={PREFIX} />
+        <StanceControl target={TARGET} testIdPrefix="stance-other" />
+      </>,
+      { store: signedInStore(), stanceData: data },
+    );
+    await settle();
+    await hold();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    await settle();
+    const other = screen.getByTestId("stance-other");
+    fireEvent.pointerDown(other, { pointerId: 2, clientX: 0, clientY: 0 });
+    await settle(LONG_PRESS_MS + 1);
+    await act(async () => {
+      fireEvent.pointerUp(other, { pointerId: 2 });
+      fireEvent.click(other);
+    });
+    await settle();
+
+    expect(commit).toHaveBeenCalledTimes(3);
+    const [held, retried, elsewhere] = commit.mock.calls.map((call) => call[2]?.source);
+    expect(held).toBeDefined();
+    expect(retried).toBe(held);
+    expect(elsewhere).toBeDefined();
+    expect(elsewhere).not.toBe(held);
+  });
+});
+
 describe("a failed row line keeps the account that pressed it", () => {
   beforeEach(() => {
     alreadyTaught();
@@ -1073,7 +1258,7 @@ describe("an act in flight and a taken act keep the account that pressed", () =>
   });
 
   const SEEDED = { seed: { "post-1": { records: [{ pDirected: 0.45, pInterest: 0.1 }] } } };
-  const line = () => screen.queryByTestId(`${PREFIX}-row-line`);
+  const line = () => screen.queryByTestId(`${PREFIX}-signing`);
   const exact = () => screen.getByTestId(`${PREFIX}-resting-exact`);
 
   function signInAs(store: ReturnType<typeof createTokenStore>, account: string) {
@@ -1232,6 +1417,270 @@ describe("the control's own read follows the account", () => {
     expect(exact()).not.toContain("−0.30 / +0.20");
     await settle();
     expect(exact()).toContain("+0.45 / +0.10");
+  });
+});
+
+// A DIALOG CLOSED WHILE ITS ACT SIGNS (SeveranceConfirm.md:47-55,
+// EmptySignConfirm.md:45-53, RowSigning.md:7, PadFailed.md:47-51): Close —
+// `Keep it`'s place from the press — the scrim, Back or Escape close the
+// dialog AND the pad beneath it, the act goes on, its wait carried by the
+// target's row, and it ends there as a hold's does: taken, the face moves
+// and the snackbar confirms; not, the row says `That didn't sign.` with a
+// Retry that asks the same act again.
+describe("a dialog closed while its act signs", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  const STANDING = { seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } };
+  const line = () => screen.queryByTestId(`${PREFIX}-row-line`);
+  const exact = () => screen.getByTestId(`${PREFIX}-resting-exact`);
+
+  type Answer = "taken" | "offline" | "writeRule";
+  type Asked = {
+    kind: "sever" | "commit";
+    pick?: { pDirected: number; pInterest: number };
+    shown?: unknown;
+    source?: unknown;
+  };
+
+  /**
+   * From here on the seam's `sever` and `commit` wait for `answer`; each call
+   * is noted with what it was asked and the source it was pressed on.
+   */
+  function gateSeam(data: ReturnType<typeof mount>) {
+    const { sever, commit } = data;
+    const gate: { asked: Asked[]; answer: (how: Answer) => void } = { asked: [], answer: () => {} };
+    const fault = (how: Answer) =>
+      createStubStanceData(how === "writeRule" ? { refuse: "WRITE_RULE_FAILED" } : { offline: true });
+    data.sever = (target, shown, options) => {
+      gate.asked.push({ kind: "sever", shown, source: options?.source });
+      return new Promise((resolve) => {
+        gate.answer = (how) =>
+          resolve(how === "taken" ? sever(target, shown, options) : fault(how).sever(target, shown));
+      });
+    };
+    data.commit = (target, pick, options) => {
+      gate.asked.push({ kind: "commit", pick, source: options?.source });
+      return new Promise((resolve) => {
+        gate.answer = (how) =>
+          resolve(how === "taken" ? commit(target, pick, options) : fault(how).commit(target, pick));
+      });
+    };
+    return gate;
+  }
+
+  /** The pad's Walk it back, its dialog's Walk it back pressed — the seam gated. */
+  async function walkBackPressed(options: StubStanceOptions = STANDING) {
+    const data = mount(options);
+    await settle();
+    await openPad();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    const gate = gateSeam(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    return { data, gate };
+  }
+
+  /** A pick landing (0, 0) over nothing standing, its ask's Set it anyway pressed. */
+  async function emptySignPressed() {
+    const data = mount();
+    await settle();
+    await openPad();
+    await dragAndSet(-0.1 * HALF, 0.1 * HALF);
+    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    const gate = gateSeam(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-proceed"));
+    });
+    return { data, gate };
+  }
+
+  const closeWalkBack = async () => {
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-cancel"));
+    });
+  };
+
+  it("closes the walk-back's dialog and the pad beneath on Close, and the walk-back goes on, carried by the row", async () => {
+    const { data, gate } = await walkBackPressed();
+    expect(screen.getByTestId("severance-cancel")).toHaveTextContent("Close");
+    await closeWalkBack();
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    // Nothing cancels it: the one walk-back is still asking, the anchor
+    // refuses a second hold, and the face waits for the signature.
+    expect(gate.asked).toHaveLength(1);
+    expect(control()).toHaveAttribute("aria-busy", "true");
+    expect(exact()).toHaveTextContent("+0.50 / +0.50");
+    await settle(SETTING_AFTER_MS);
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveTextContent("Signing…");
+
+    await act(async () => gate.answer("taken"));
+    await settle();
+    expect(data.severed).toEqual(["post-1"]);
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("You've walked this post back to nothing.");
+    expect(control()).not.toHaveAttribute("aria-busy");
+    expect(line()).toBeNull();
+  });
+
+  it("closes both on the scrim, Back or Escape too, even under 200ms after the press", async () => {
+    const { gate } = await walkBackPressed();
+    await act(async () => {
+      fireEvent(screen.getByTestId("severance-confirm"), new Event("cancel", { cancelable: true }));
+    });
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(gate.asked).toHaveLength(1);
+    expect(control()).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("says That didn't sign. on the row when the walk-back fails after its close, and Retry asks the same walk-back", async () => {
+    const { data, gate } = await walkBackPressed();
+    await closeWalkBack();
+    await act(async () => gate.answer("offline"));
+    await settle();
+    expect(line()).toHaveTextContent("That didn't sign.");
+    expect(line()).toHaveAttribute("role", "alert");
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-signed`)).toBeNull();
+    expect(exact()).toHaveTextContent("+0.50 / +0.50");
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    // The same walk-back — the batch over the standing the reader confirmed,
+    // from the same surface — never a pick, never the hold's default.
+    expect(gate.asked).toHaveLength(2);
+    expect(gate.asked[1].kind).toBe("sever");
+    expect(gate.asked[1].shown).toEqual(gate.asked[0].shown);
+    expect(gate.asked[1].source).toBe(gate.asked[0].source);
+    expect(line()).toBeNull();
+    expect(control()).toHaveAttribute("aria-busy", "true");
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+
+    await act(async () => gate.answer("taken"));
+    await settle();
+    expect(data.severed).toEqual(["post-1"]);
+    expect(data.sent).toEqual([]);
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("You've walked this post back to nothing.");
+  });
+
+  it("asks the same pick again from the row when a pick's walk-back fails after its close", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 1, pInterest: 1 }] } } });
+    await settle();
+    await openPad();
+    await dragAndSet(-500, 700);
+    expect(screen.getByTestId("severance-pick")).toBeInTheDocument();
+    const gate = gateSeam(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    await closeWalkBack();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    await act(async () => gate.answer("offline"));
+    await settle();
+    expect(line()).toHaveTextContent("That didn't sign.");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    expect(gate.asked.map((asked) => asked.kind)).toEqual(["commit", "commit"]);
+    expect(gate.asked[1].pick).toEqual({ pDirected: -1, pInterest: -1 });
+    expect(gate.asked[1].source).toBe(gate.asked[0].source);
+    // Confirmed once: the Retry signs, it never asks the dialog again.
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    await act(async () => gate.answer("taken"));
+    await settle();
+    expect(data.sent).toEqual([{ target: "post-1", pick: { pDirected: -1, pInterest: -1 } }]);
+  });
+
+  it("says the write rule's quiet line on the row when it refuses the walk-back after its close", async () => {
+    const { gate } = await walkBackPressed();
+    await closeWalkBack();
+    await act(async () => gate.answer("writeRule"));
+    await settle();
+    expect(line()).toHaveTextContent("You can't sign right now.");
+    expect(line()).toHaveAttribute("role", "status");
+    expect(screen.queryByTestId(`${PREFIX}-row-line-retry`)).toBeNull();
+  });
+
+  it("closes the empty sign's ask and the pad on Close, and the act goes on to the ordinary snackbar", async () => {
+    const { gate } = await emptySignPressed();
+    expect(screen.getByTestId("empty-sign-keep")).toHaveTextContent("Close");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-keep"));
+    });
+    expect(screen.queryByTestId("empty-sign-confirm")).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(control()).toHaveAttribute("aria-busy", "true");
+    await settle(SETTING_AFTER_MS);
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveTextContent("Signing…");
+    await act(async () => gate.answer("taken"));
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("Signed, still settling.");
+    expect(line()).toBeNull();
+  });
+
+  it("says That didn't sign. on the row when the empty sign fails after its close, and Retry asks the same pick", async () => {
+    const { data, gate } = await emptySignPressed();
+    await act(async () => {
+      fireEvent(screen.getByTestId("empty-sign-confirm"), new Event("cancel", { cancelable: true }));
+    });
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    await act(async () => gate.answer("offline"));
+    await settle();
+    expect(line()).toHaveTextContent("That didn't sign.");
+    expect(screen.queryByTestId("empty-sign-confirm")).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    expect(gate.asked).toHaveLength(2);
+    expect(gate.asked[1].kind).toBe("commit");
+    expect(gate.asked[1].pick).toEqual(gate.asked[0].pick);
+    expect(gate.asked[1].pick).not.toEqual(TAP_DEFAULT);
+    expect(gate.asked[1].source).toBe(gate.asked[0].source);
+    expect(screen.queryByTestId("empty-sign-confirm")).toBeNull();
+    await act(async () => gate.answer("taken"));
+    await settle();
+    expect(data.sent).toHaveLength(1);
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("Signed, still settling.");
+  });
+
+  it("keeps the dialog up with its own fault when the act fails before any close", async () => {
+    const { gate } = await walkBackPressed();
+    await act(async () => gate.answer("offline"));
+    await settle();
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    expect(screen.getByTestId("severance-cancel")).toHaveTextContent("Keep it");
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    expect(line()).toBeNull();
+  });
+
+  it("lays a walk-back that fails after the account changed on its own account's row only", async () => {
+    // The account change closes the dialog as Close closes it (#703), so its
+    // failure is A's row line — hidden under B, standing again under A.
+    const store = signedInStore();
+    const data = createStubStanceData(STANDING);
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    await openPad();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    const gate = gateSeam(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    act(() => store.save({ accessToken: "access-u2", refreshToken: "refresh-u2", accountId: "u2" }));
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    await act(async () => gate.answer("offline"));
+    await settle();
+    expect(line()).toBeNull();
+    act(() => store.save({ accessToken: "access-u1", refreshToken: "refresh-u1", accountId: "u1" }));
+    expect(line()).toHaveTextContent("That didn't sign.");
   });
 });
 
@@ -3127,7 +3576,9 @@ describe("the empty sign", () => {
     expect(screen.getByTestId<HTMLDialogElement>("empty-sign-confirm").open).toBe(true);
   });
 
-  it("reads Setting… past 200ms and locks its ways out while it signs", async () => {
+  // EmptySignConfirm.md:47-51: Keep it reads Close from the press, and Close
+  // leaves while the act goes on.
+  it("reads Setting… past 200ms, and its Close leaves while the act goes on", async () => {
     const data = mount();
     await settle();
     await openPad();
@@ -3143,14 +3594,17 @@ describe("the empty sign", () => {
     });
     await settle(SETTING_AFTER_MS + 1);
     expect(screen.getByTestId("empty-sign-proceed")).toHaveTextContent("Setting…");
+    expect(screen.getByTestId("empty-sign-keep")).toHaveTextContent("Close");
     await act(async () => {
       fireEvent.click(screen.getByTestId("empty-sign-keep"));
     });
-    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-sign-confirm")).not.toBeInTheDocument();
+    expect(data.sent).toEqual([]);
     await act(async () => {
       gate.answer?.();
     });
     await settle();
+    expect(data.sent).toHaveLength(1);
     expect(screen.queryByTestId("empty-sign-confirm")).not.toBeInTheDocument();
   });
 });
@@ -3612,7 +4066,7 @@ describe("round 21's waits, write rule and typed input", () => {
       fireEvent.click(screen.getByTestId("stance-alt-cancel"));
     });
     expect(screen.queryByTestId("stance-alternates")).toBeNull();
-    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("Signing…");
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveTextContent("Signing…");
     await act(async () => {
       gate.answer?.(true);
     });
@@ -3716,7 +4170,7 @@ describe("round 21's waits, write rule and typed input", () => {
       fireEvent.click(screen.getByTestId(`${PREFIX}-cancel`));
     });
     expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
-    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("Signing…");
+    expect(screen.getByTestId(`${PREFIX}-signing`)).toHaveTextContent("Signing…");
     expect(control()).toHaveAttribute("aria-busy", "true");
     const sentPick = gate.picks[0];
     expect(sentPick).not.toEqual(TAP_DEFAULT);

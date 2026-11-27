@@ -18,10 +18,10 @@
 // first line becomes the vouch-in warning, and `Set it anyway` still counts
 // as the act.
 //
-// The signing waits and says so (the failure pack): in flight the ways out
-// are locked, past 200ms the act reads `Setting…` and goes inert, never
-// dimmed; a signing that did not go through keeps the dialog up with the
-// fault line, and the act's slot reads `Retry`.
+// The signing waits and says so (the failure pack): in flight the act is
+// inert and `Keep it` reads `Close`, live; past 200ms the act reads
+// `Setting…`, never dimmed; a signing that did not go through keeps the
+// dialog up with the fault line, and the act's slot reads `Retry`.
 
 import { buttonClassName } from "@/lib/ui/button";
 import { WRITE_RULE_WORDS } from "@/lib/ui/stance-readout";
@@ -38,6 +38,7 @@ export const EMPTY_SIGN_WORDS = {
   confirm: "Set it anyway",
   busy: "Setting…",
   keep: "Keep it",
+  close: "Close",
 } as const;
 
 export function EmptySignConfirm({
@@ -55,7 +56,7 @@ export function EmptySignConfirm({
   targetLabel: string;
   /** The opinion vouches its target in: the first line warns they start cut off. */
   vouchIn?: boolean;
-  /** The signing is in flight: the act and the ways out are inert. */
+  /** The signing is in flight: the act is inert, and `Keep it` reads `Close`. */
   busy?: boolean;
   /** …and has waited past 200ms: the act says what is happening. */
   slow?: boolean;
@@ -72,14 +73,13 @@ export function EmptySignConfirm({
   writeRule?: boolean;
   /** `Set it anyway` — signs the one empty record. */
   onConfirm: () => void;
-  /** `Keep it`, the scrim, Escape and Back — the pad beneath keeps its pick. */
+  /** `Keep it`, the scrim, Escape and Back — the pad beneath keeps its pick; while `busy`, `Close`, which closes the pad too. */
   onCancel: () => void;
 }) {
   const words = EMPTY_SIGN_WORDS;
   return (
     <DialogSurface
       title={words.title}
-      locked={busy}
       onDismiss={onCancel}
       testId="empty-sign-confirm"
       body={[
@@ -119,16 +119,18 @@ export function EmptySignConfirm({
           >
             {slow ? words.busy : failed ? "Retry" : words.confirm}
           </button>
+          {/* ONCE `Set it anyway` IS PRESSED NOTHING CANCELS IT
+              (EmptySignConfirm.md:45-53): from the press itself `Keep it`
+              reads `Close`, filled and live, and it — the scrim, Escape and
+              Back too — leaves; the host closes the pad beneath and the act
+              goes on, carried by the target's row. */}
           <button
             type="button"
             data-testid="empty-sign-keep"
-            aria-disabled={busy || undefined}
-            onClick={() => {
-              if (!busy) onCancel();
-            }}
+            onClick={onCancel}
             className={buttonClassName({ variant: "primary" })}
           >
-            {words.keep}
+            {busy ? words.close : words.keep}
           </button>
         </>
       }
