@@ -265,4 +265,30 @@ class ReplyRetrySameSigningTest {
         assertThat(host.approved).isEqualTo(first)
         assertThat(vm.state.value.outcome).isEqualTo(ReplyOutcome.Signed(TEST_NODE_ID))
     }
+
+    /** The reply's attempt key, as the post's: stable for equal presses, printed by value. */
+    @Test
+    fun theIntentOfAFullPressIsStableAndPrintsByValue() {
+        fun press(): String {
+            val seal = ReplyWizardState(
+                body = "Well answered",
+                license = LicenseChoice(0.5, 1.0),
+                pDirected = 0.4,
+                pInterest = -0.2,
+            )
+            val sent = SentContent(
+                content = "Well answered",
+                attachments = listOf(AttachmentClaim("m1", altText = "a chart")),
+                sensitive = true,
+                sensitiveReason = "a graphic chart",
+            )
+            val tags = listOf(TagClaim("coast", 0.4, 0.6))
+            return replyIntent("p1", seal, sent, tags, listOf(ReferenceClaim("p2", 0.2, 0.1)))
+        }
+
+        val first = press()
+        assertThat(press()).isEqualTo(first)
+        assertThat(first).doesNotContainMatch("@[0-9a-f]{4,}")
+        assertThat(first).contains("a graphic chart")
+    }
 }

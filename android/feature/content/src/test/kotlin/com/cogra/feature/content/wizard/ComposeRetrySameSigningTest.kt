@@ -340,4 +340,32 @@ class ComposeRetrySameSigningTest {
         assertThat(content.calls).isEqualTo(0)
         assertThat(vm.state.value.submitting).isFalse()
     }
+
+    /**
+     * The attempt's key survives a process death only if every part prints by
+     * value: two separately built equal presses give the same key, and no part
+     * prints as an identity hash (`Name@1b6d3586`), which would read as
+     * "changed" after a restart.
+     */
+    @Test
+    fun theIntentOfAFullPressIsStableAndPrintsByValue() {
+        fun press(): String {
+            val seal = ComposeWizardState(license = LicenseChoice(1.0, 0.5), pDirected = 0.3)
+            val sent = SentContent(
+                title = "Salt maps",
+                description = "Three weekends at low tide",
+                content = null,
+                attachments = listOf(AttachmentClaim("m1", altText = "a gull", coverMediaId = "c1", coverTaken = true)),
+                sensitive = true,
+                sensitiveReason = "a dead gull",
+            )
+            return seal.postIntent(sent, listOf(TagClaim("coast", 0.4, 0.6)), listOf(ReferenceClaim("p1", 0.2, 0.1)))
+        }
+
+        val first = press()
+        assertThat(press()).isEqualTo(first)
+        assertThat(first).doesNotContainMatch("@[0-9a-f]{4,}")
+        assertThat(first).contains("a dead gull")
+        assertThat(first).contains("coverMediaId=c1")
+    }
 }

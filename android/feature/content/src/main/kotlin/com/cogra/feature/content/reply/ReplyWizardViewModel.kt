@@ -718,16 +718,7 @@ class ReplyWizardViewModel @Inject constructor(
             val parentGraphId = graphIds.getValue(target.id)
             val press = Press(
                 owner = owner,
-                intent = intentOf(
-                    target.id,
-                    current.body,
-                    current.license,
-                    tags,
-                    references,
-                    sent,
-                    current.pDirected,
-                    current.pInterest,
-                ),
+                intent = replyIntent(target.id, current, sent, tags, references),
                 prepare = { prepareReply(current, target.id, sent, tags, references) },
                 expectedFor = { node -> expectation(current, node, sent, parentGraphId, tags, references, graphIds) },
                 holds = { tokens.current()?.accountId == owner },
@@ -935,3 +926,18 @@ class ReplyWizardViewModel @Inject constructor(
         const val COVER_FRAME_COUNT = 4
     }
 }
+
+/**
+ * The reply's prepare request as its attempt's key (`intentOf`): every field
+ * `prepareComment` is sent, and so everything the reply's expectation is built
+ * from but the server's own facts about those fields (the cited nodes' L1 ids,
+ * the gallery's digests per media id).
+ */
+internal fun replyIntent(
+    target: String,
+    current: ReplyWizardState,
+    sent: SentContent,
+    tags: List<TagClaim>,
+    references: List<ReferenceClaim>,
+): String =
+    intentOf(target, current.body, current.license, tags, references, sent, current.pDirected, current.pInterest)

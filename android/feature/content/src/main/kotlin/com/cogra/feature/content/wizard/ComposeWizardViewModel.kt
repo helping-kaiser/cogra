@@ -942,7 +942,7 @@ class ComposeWizardViewModel @Inject constructor(
             val press = Press(
                 owner = owner,
                 seal = current,
-                intent = intentOf(sent, current.license, tags, references, current.pDirected),
+                intent = current.postIntent(sent, tags, references),
                 expectedFor = { node -> expectation(current, node, sent, tags, references, graphIds) },
                 holds = holds,
             )
@@ -1240,3 +1240,15 @@ internal fun ComposeWizardState.taking(uri: String, read: PickRead): ComposeWiza
     sourceRatio = if (read.isClip) read.header?.aspectRatio else read.known?.aspectRatio,
     durationMs = if (read.isClip) read.known?.durationMs ?: read.header?.durationMs ?: 0 else null,
 )
+
+/**
+ * The post's prepare request as its attempt's key (`intentOf`): every field
+ * `preparePost` is sent, and so everything the post's expectation is built
+ * from but the server's own facts about those fields (the cited nodes' L1 ids,
+ * the gallery's digests per media id).
+ */
+internal fun ComposeWizardState.postIntent(
+    sent: SentContent,
+    tags: List<TagClaim>,
+    references: List<ReferenceClaim>,
+): String = intentOf(sent, license, tags, references, pDirected)
