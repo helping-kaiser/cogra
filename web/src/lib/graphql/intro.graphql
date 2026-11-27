@@ -8,31 +8,35 @@
 query IntroAccount {
   me {
     id
-    accountState
     preferences {
       hasSeenOnboarding
     }
     invitedBy {
-      ...IntroInviterFields
+      id
+      handle
+      displayName {
+        value
+      }
+      ... on User {
+        avatar {
+          url
+        }
+      }
     }
     application {
       id
       approver {
-        ...IntroInviterFields
+        id
+        handle
+        displayName {
+          value
+        }
+        ... on User {
+          avatar {
+            url
+          }
+        }
       }
-    }
-  }
-}
-
-fragment IntroInviterFields on Actor {
-  id
-  handle
-  displayName {
-    value
-  }
-  ... on User {
-    avatar {
-      url
     }
   }
 }
