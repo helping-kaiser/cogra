@@ -154,19 +154,6 @@ describe("the kept picks' Retry asks the same batch again", () => {
     expect(retried).toEqual({ kind: "success", value: { records: 2 } });
   });
 
-  it("a batch the device refused is spent: Retry retires it and prepares the batch afresh", async () => {
-    const prepares = host();
-    const { writes } = signer([deviceRefused], [deviceRefused]);
-    const { data, retired } = seam(writes);
-
-    await data.commitBatch(BATCH);
-    const retried = await data.commitBatch(BATCH);
-
-    expect(retired).toEqual(["w-1", "w-2"]);
-    expect(prepares).toHaveLength(4);
-    expect(retried.kind).toBe("success");
-  });
-
   // K-ASKED-AGAIN-MIXED-EXPIRY: one pick's write expired while another's is
   // still unanswered has not expired whole: the batch reads as no answer —
   // the Settings row's `That didn't sign.` with Retry (KeptPicksSeal.md:63) —
@@ -193,6 +180,19 @@ describe("the kept picks' Retry asks the same batch again", () => {
       ["w-1", "w-2"],
     ]);
     expect(again).toEqual({ kind: "success", value: { records: 2 } });
+  });
+
+  it("a batch the device refused is spent: Retry retires it and prepares the batch afresh", async () => {
+    const prepares = host();
+    const { writes } = signer([deviceRefused], [deviceRefused]);
+    const { data, retired } = seam(writes);
+
+    await data.commitBatch(BATCH);
+    const retried = await data.commitBatch(BATCH);
+
+    expect(retired).toEqual(["w-1", "w-2"]);
+    expect(prepares).toHaveLength(4);
+    expect(retried.kind).toBe("success");
   });
 
   it("a batch whose picks changed retires an unapproved first batch, then signs the new one alone", async () => {

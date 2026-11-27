@@ -2071,29 +2071,6 @@ describe("Retry after a signing that did not answer", () => {
     expect(await store.handshakeIds()).not.toContain("w1");
   });
 
-  it("a press after the words changed, over a first attempt already approved, opens that post, prepares nothing, and keeps the new words as the draft", async () => {
-    const prepare = counting();
-    server.use(prepare.handler, stagedAt("RELAYING"));
-    const signer = failedOnce();
-    const drafts = fakeDrafts();
-    mount(drafts, signer);
-    await signWords("Low tide.");
-    await screen.findByTestId("wizard-retry");
-
-    await backToTheWords();
-    fireEvent.change(await screen.findByTestId("wizard-words"), { target: { value: "High tide." } });
-    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
-    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
-    fireEvent.click(await screen.findByTestId("wizard-sign"));
-
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
-    expect(prepare.count()).toBe(1);
-    // Nothing the reader wrote is lost: the changed words stay the working
-    // draft, with no signing of their own, neither sealed nor cleared.
-    await waitFor(() => expect(drafts.held()?.words).toBe("High tide."));
-    expect(drafts.held()?.attempt).toBeNull();
-  });
-
   // K-ASKED-AGAIN-MIXED-EXPIRY: a batch in which one write answers EXPIRED
   // while another is still undecided has not expired whole — the substrate
   // decides each act's landing alone (api-spec.md "A prepare may stage a
@@ -2192,6 +2169,29 @@ describe("Retry after a signing that did not answer", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/feed?compose=expired"));
     expect(drafts.held()?.attempt).toBeNull();
     expect(drafts.held()?.words).toBe("Low tide.");
+  });
+
+  it("a press after the words changed, over a first attempt already approved, opens that post, prepares nothing, and keeps the new words as the draft", async () => {
+    const prepare = counting();
+    server.use(prepare.handler, stagedAt("RELAYING"));
+    const signer = failedOnce();
+    const drafts = fakeDrafts();
+    mount(drafts, signer);
+    await signWords("Low tide.");
+    await screen.findByTestId("wizard-retry");
+
+    await backToTheWords();
+    fireEvent.change(await screen.findByTestId("wizard-words"), { target: { value: "High tide." } });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+    fireEvent.click(await screen.findByTestId("wizard-sign"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    expect(prepare.count()).toBe(1);
+    // Nothing the reader wrote is lost: the changed words stay the working
+    // draft, with no signing of their own, neither sealed nor cleared.
+    await waitFor(() => expect(drafts.held()?.words).toBe("High tide."));
+    expect(drafts.held()?.attempt).toBeNull();
   });
 
   it("puts the attempt on the draft before the first pre-signature: a late save holds the signing back", async () => {

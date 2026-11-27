@@ -209,22 +209,6 @@ describe("the walk-back's Retry asks the same signing again", () => {
     expect(signedAgain.map((call) => call.ids)).toEqual([["s-1", "s-2"]]);
   });
 
-  it("a walk-back the device refused is spent: Retry retires it and prepares the walk-back afresh", async () => {
-    const { batches } = host({ held: false });
-    const { writes } = signer([deviceRefused], [deviceRefused]);
-    const { data, retired } = seam(writes);
-
-    await data.sever(POST, SHOWN);
-    const retried = await data.sever(POST, SHOWN);
-
-    expect(retired).toEqual(["s-1", "s-2"]);
-    expect(batches).toEqual([
-      ["s-1", "s-2"],
-      ["s-3", "s-4"],
-    ]);
-    expect(retried.kind).toBe("success");
-  });
-
   // K-ASKED-AGAIN-MIXED-EXPIRY: a walk-back with one write expired and one
   // still unanswered reads as no answer, and its Retry asks the same batch.
   it("a re-ask with one write expired and one unanswered reads as no answer and keeps the walk-back", async () => {
@@ -248,6 +232,22 @@ describe("the walk-back's Retry asks the same signing again", () => {
       ["s-1", "s-2"],
     ]);
     expect(again.kind).toBe("success");
+  });
+
+  it("a walk-back the device refused is spent: Retry retires it and prepares the walk-back afresh", async () => {
+    const { batches } = host({ held: false });
+    const { writes } = signer([deviceRefused], [deviceRefused]);
+    const { data, retired } = seam(writes);
+
+    await data.sever(POST, SHOWN);
+    const retried = await data.sever(POST, SHOWN);
+
+    expect(retired).toEqual(["s-1", "s-2"]);
+    expect(batches).toEqual([
+      ["s-1", "s-2"],
+      ["s-3", "s-4"],
+    ]);
+    expect(retried.kind).toBe("success");
   });
 
   describe("a pick and a walk-back are different gestures: across kinds, main's road", () => {
