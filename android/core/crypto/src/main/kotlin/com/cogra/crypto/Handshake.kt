@@ -220,6 +220,12 @@ class PreSignedProposal(
 private const val VERIFIED_ACT_FRAME_ITEMS = 8UL
 
 /**
+ * Items in the approval message: body, both commitments, and the
+ * schema version.
+ */
+private const val APPROVAL_FRAME_ITEMS = 4UL
+
+/**
  * The verified act: the header the host seals — body, P, pre-signature,
  * both commitments and both edition tags. No payload, no nonce, no host
  * order field.
@@ -236,8 +242,7 @@ class VerifiedAct(
     fun actId(): ActId = body.actId()
 
     /**
-     * The encoded verified act — the message the host seal covers, and
-     * with the seal the message the approval witness covers.
+     * The encoded verified act — the message the host seal covers.
      */
     fun sealMsg(): ByteArray {
         val e = CborEncoder()
@@ -250,6 +255,22 @@ class VerifiedAct(
         e.uint(contentEdition)
         e.uint(dependencyEdition)
         // Trailing schema version for forward evolution of the frame shape.
+        e.uint(1u)
+        return e.finish()
+    }
+
+    /**
+     * The message the author's approval covers: the act alone — the
+     * body's canonical bytes and both commitments, with the trailing
+     * schema version. The pre-commitment, the pre-signature, the
+     * editions and the host seal are not part of it.
+     */
+    fun approvalMsg(): ByteArray {
+        val e = CborEncoder()
+        e.array(APPROVAL_FRAME_ITEMS)
+        e.bytes(body.canonicalBytes())
+        e.bytes(contentCommitment)
+        e.bytes(dependencyCommitment)
         e.uint(1u)
         return e.finish()
     }
@@ -290,10 +311,10 @@ class SealedAct(
     fun verifySeal(hostPubkey: ByteArray): Boolean = verify(hostPubkey, Tags.HOST_SEAL, act.sealMsg(), hostSeal)
 
     /**
-     * The digest the author's approval witness signs: the encoded
-     * verified act and its host seal, together.
+     * The digest the author's approval witness signs: the approval
+     * message over the act alone.
      */
-    fun approvalDigest(): ByteArray = sha256Tagged(Tags.APPROVAL, listOf(act.sealMsg(), hostSeal))
+    fun approvalDigest(): ByteArray = sha256Tagged(Tags.APPROVAL, listOf(act.approvalMsg()))
 
     /**
      * Content equality, like every Rust counterpart derives: a decoder
