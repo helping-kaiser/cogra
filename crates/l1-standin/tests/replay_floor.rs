@@ -677,10 +677,15 @@ fn verifies_in_its_form_only(package: &EpochPackage, host_key: &[u8]) {
 /// world holds a closed epoch that accepted an act approved over the
 /// verified act and its seal; an act approved that way that no epoch has
 /// accepted yet (bob); one approved that way whose declared dependency is
-/// still only sealed (dave, after carol); and that sealed act. After it the
-/// closed epoch states form 1 and still verifies in it. Bob lands in an
-/// epoch of form 1 of his own, while carol and erin — approved in form 2
-/// after the migration, erin depending on bob — wait; dave's form-1 attempt
+/// still only sealed (dave, after carol); that sealed act; and an act
+/// sealed and not yet approved (frank — a held approval's act). After it
+/// the closed epoch states form 1 and still verifies in it. Frank's act,
+/// sealed before the switch, takes the witness his device signed then, over
+/// the verified act and its seal; erin's act, sealed after it, refuses
+/// that form and takes the current one, and the host records which form
+/// verified. Bob and frank land in an epoch of form 1, while carol and
+/// erin — approved in form 2 after the migration, erin depending on bob —
+/// wait; dave's form-1 attempt
 /// orders nothing while carol is out of history, so the next epoch is of
 /// form 2 and lands carol and erin, erin after bob; dave then lands in an
 /// epoch of form 1, and the close after that is of form 2 again. Every
@@ -699,11 +704,13 @@ async fn a_populated_world_migrates_with_one_approval_form_per_epoch(pool: PgPoo
     let carol = funded_actor(&host).await;
     let dave = funded_actor(&host).await;
     let erin = funded_actor(&host).await;
+    let frank = funded_actor(&host).await;
     let (accepted, accepted_sealed) = sealed_only(&host, &alice, registration(&alice), 21).await;
     let (bob_act, bob_sealed) = sealed_only(&host, &bob, registration(&bob), 23).await;
     let (carol_act, _) = sealed_only(&host, &carol, registration(&carol), 25).await;
     let (dave_act, dave_sealed) =
         sealed_only(&host, &dave, opinion_after(&dave, &carol, &carol_act), 27).await;
+    let (frank_act, frank_sealed) = sealed_only(&host, &frank, registration(&frank), 31).await;
 
     sqlx::query(
         "INSERT INTO l1_epochs (epoch, act_count, theta_charged_micro, closure_cause,
@@ -765,7 +772,41 @@ async fn a_populated_world_migrates_with_one_approval_form_per_epoch(pool: PgPoo
         .approve(&carol, &carol_stored, &host_key)
         .expect("approves");
     host.approve(witness).await.expect("taken in form 2");
-    let (erin_act, _, _) = land(&host, &erin, opinion_after(&erin, &bob, &bob_act), 29).await;
+    host.approve(ApprovalWitness {
+        act_id: frank_act.act_id(),
+        approval_signature: sealed_act_approval(&frank, &frank_sealed),
+    })
+    .await
+    .expect("an act sealed before the switch takes a sealed-act witness");
+    let (erin_act, erin_sealed) =
+        sealed_only(&host, &erin, opinion_after(&erin, &bob, &bob_act), 29).await;
+    assert!(
+        host.approve(ApprovalWitness {
+            act_id: erin_act.act_id(),
+            approval_signature: sealed_act_approval(&erin, &erin_sealed),
+        })
+        .await
+        .is_err(),
+        "an act sealed after the switch takes the current form only"
+    );
+    let witness = erin_act
+        .approve(&erin, &erin_sealed, &host_key)
+        .expect("approves");
+    host.approve(witness).await.expect("taken in form 2");
+    let forms: Vec<(String, i16)> =
+        sqlx::query_as("SELECT act_id, approval_form FROM l1_acts WHERE act_id = ANY($1)")
+            .bind(ids(&[&frank_act, &erin_act]))
+            .fetch_all(&pool)
+            .await
+            .expect("forms");
+    let mut forms = forms;
+    forms.sort();
+    let mut expected = vec![
+        (frank_act.act_id().to_string(), ApprovalForm::ActAndSeal.number()),
+        (erin_act.act_id().to_string(), ApprovalForm::Act.number()),
+    ];
+    expected.sort();
+    assert_eq!(forms, expected, "the host records the form that verified");
 
     let mut epochs = Vec::new();
     for _ in 0..4 {
@@ -781,7 +822,7 @@ async fn a_populated_world_migrates_with_one_approval_form_per_epoch(pool: PgPoo
             ApprovalForm::Act,
         ]
     );
-    assert_eq!(published(&epochs[0]), ids(&[&bob_act]));
+    assert_eq!(published(&epochs[0]), ids(&[&bob_act, &frank_act]));
     assert_eq!(published(&epochs[1]), ids(&[&carol_act, &erin_act]));
     assert_eq!(published(&epochs[2]), ids(&[&dave_act]));
     assert!(epochs[3].records.is_empty());

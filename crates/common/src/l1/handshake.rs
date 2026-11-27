@@ -261,6 +261,33 @@ impl ApprovalForm {
     }
 }
 
+/// The form an approval witness verifies in, under the rule the host and
+/// CoGra's relay both apply: an act takes an approval in the current form;
+/// an act the host sealed before the approval covered the act alone also
+/// takes one in the sealed-act form, so a witness its author signed before
+/// that switch stays good and the act lands in an epoch of that form.
+/// `None` when the witness verifies in no form the act takes.
+pub fn approval_form_of(
+    frame: &SealFrame<'_>,
+    host_seal: &[u8],
+    author_key: &ed25519_dalek::VerifyingKey,
+    approval_signature: &[u8],
+    sealed_before_switch: bool,
+) -> Option<ApprovalForm> {
+    let forms: &[ApprovalForm] = if sealed_before_switch {
+        &[ApprovalForm::CURRENT, ApprovalForm::ActAndSeal]
+    } else {
+        &[ApprovalForm::CURRENT]
+    };
+    forms.iter().copied().find(|form| {
+        crypto::verify_digest(
+            author_key,
+            &approval_digest(*form, frame, host_seal),
+            approval_signature,
+        )
+    })
+}
+
 /// The approval witness's digest under `form`, from the parts of the
 /// verified act and its host seal. Under [`ApprovalForm::Act`] only the
 /// body and the two commitments enter it (§8.2, "Approval witness");
@@ -1253,6 +1280,40 @@ mod tests {
         }
         assert_eq!(ApprovalForm::from_number(0), None);
         assert_eq!(ApprovalForm::from_number(3), None);
+    }
+
+    /// A witness over the act alone verifies, in the current form, for any
+    /// act. A witness over the verified act and its seal verifies, in that
+    /// form, only for an act sealed before the switch; for any other it
+    /// verifies in no form, like a witness over anything else.
+    ///
+    /// An act sealed before the switch also takes a sealed-act witness; any other takes the current form only.
+    /// ´claim:handshake:only-an-act-sealed-before-the-switch-takes-the-sealed-act-form´
+    #[test]
+    fn only_an_act_sealed_before_the_switch_takes_the_sealed_act_form() {
+        let mut record = package(1, &[1]).records.remove(0);
+        record.payload_witness = vec![7; 32];
+        record.approval.dependency_commitment = vec![8; 32];
+        record.attestation.host_seal = vec![3; 64];
+        let key = ed25519_dalek::SigningKey::from_bytes(&[9; 32]);
+        let sign = |form| crypto::sign_digest(&key, &record.approval_digest(form));
+        let form_of = |signature: &[u8], before: bool| {
+            approval_form_of(
+                &record.seal_frame(),
+                &record.attestation.host_seal,
+                &key.verifying_key(),
+                signature,
+                before,
+            )
+        };
+        let current = sign(ApprovalForm::Act);
+        let sealed_act = sign(ApprovalForm::ActAndSeal);
+        for before in [true, false] {
+            assert_eq!(form_of(&current, before), Some(ApprovalForm::Act));
+            assert_eq!(form_of(&[0; 64], before), None);
+        }
+        assert_eq!(form_of(&sealed_act, true), Some(ApprovalForm::ActAndSeal));
+        assert_eq!(form_of(&sealed_act, false), None);
     }
 
     /// A ratio is held in lowest terms with a positive denominator, so

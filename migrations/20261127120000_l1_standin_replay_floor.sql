@@ -22,6 +22,16 @@ ALTER TABLE l1_epochs ALTER COLUMN approval_form DROP DEFAULT;
 ALTER TABLE l1_acts ADD COLUMN approval_form SMALLINT;
 UPDATE l1_acts SET approval_form = 1 WHERE status <> 'sealed';
 
+-- Whether the host sealed the act before the approval covered the act
+-- alone: such an act also takes an approval in form 1, so a witness its
+-- author signed before this migration — a held admission approval among
+-- them — stays good, and the act lands in an epoch of form 1. Every act
+-- in the table now was sealed before; an act sealed later takes form 2
+-- only. CoGra's staged writes carry the same mark
+-- (20261127120002_staged_sealed_before_switch).
+ALTER TABLE l1_acts ADD COLUMN sealed_before_switch BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE l1_acts SET sealed_before_switch = TRUE;
+
 -- An accepted act's published record carries its approval witness, so an
 -- act past approval holds one for good, and the form it was taken in. The
 -- one statement that approves an act writes both with it and nothing

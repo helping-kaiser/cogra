@@ -466,12 +466,33 @@ impl SealedAct {
         )
     }
 
-    /// Whether `witness` is the author's approval of this exact sealed act.
+    /// Whether `witness` is the author's approval of this exact act, in the
+    /// current form.
     pub fn verify_approval(&self, author_pubkey: &[u8], witness: &ApprovalWitness) -> bool {
-        witness.act_id == self.act.act_id()
-            && crypto::verifying_key_from_bytes(author_pubkey).is_some_and(|key| {
-                crypto::verify_digest(&key, &self.approval_digest(), &witness.approval_signature)
-            })
+        self.approval_form_of(author_pubkey, witness, false) == Some(handshake::ApprovalForm::CURRENT)
+    }
+
+    /// The form `witness` approves this exact act in, under the host's rule
+    /// ([`handshake::approval_form_of`]): the current form, or — for an act
+    /// sealed before the approval covered the act alone — the sealed-act
+    /// form. `None` when it approves it in neither.
+    pub fn approval_form_of(
+        &self,
+        author_pubkey: &[u8],
+        witness: &ApprovalWitness,
+        sealed_before_switch: bool,
+    ) -> Option<handshake::ApprovalForm> {
+        if witness.act_id != self.act.act_id() {
+            return None;
+        }
+        let key = crypto::verifying_key_from_bytes(author_pubkey)?;
+        handshake::approval_form_of(
+            &self.act.frame(),
+            &self.host_seal,
+            &key,
+            &witness.approval_signature,
+            sealed_before_switch,
+        )
     }
 }
 

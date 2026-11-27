@@ -14,7 +14,7 @@
 
 use common::l1::census::FamilyKind;
 use common::l1::crypto;
-use common::l1::handshake::{ApprovalForm, ApprovalWitness, approval_digest, is_canonical_dep_list};
+use common::l1::handshake::{ApprovalWitness, approval_form_of, is_canonical_dep_list};
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::proposal::{
     CONTENT_EDITION, DEPENDENCY_EDITION, SealedAct, Submission, SubmissionError, VerifiedAct,
@@ -291,8 +291,8 @@ pub(crate) async fn sealed_act(
     }))
 }
 
-/// Verifies the approval witness over the act, in the current approval
-/// form, and marks it
+/// Verifies the approval witness over the act, in a form the act takes
+/// (`approval_form_of`), and marks it
 /// approved. Idempotent once already approved: a repeat call re-checks
 /// nothing and changes nothing.
 pub(crate) async fn approve(
@@ -304,7 +304,7 @@ pub(crate) async fn approve(
         "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,
                 settlement_ref, license, asserted_parents, pre_signature,
                 pre_commitment, content_commitment, deps_commitment, host_seal,
-                status
+                status, sealed_before_switch
          FROM l1_acts WHERE act_id = $1",
         act_id,
     )
@@ -326,17 +326,22 @@ pub(crate) async fn approve(
     );
     let author_key = crypto::verifying_key_from_bytes(&row.author_pubkey)
         .ok_or_else(|| StandInError::Authentication("stored author key malformed".into()))?;
-    // An act is approved in the current form only, and the form is kept
-    // with it: the close orders acts of one form per epoch (`crate::close`).
-    if !crypto::verify_digest(
+    // An act takes an approval in the current form, and an act sealed
+    // before the approval covered the act alone also one in the sealed-act
+    // form (`approval_form_of`, the one rule the relay applies too). The
+    // form is kept with the act: the close orders acts of one form per
+    // epoch (`crate::close`).
+    let Some(form) = approval_form_of(
+        &header.frame(),
+        &row.host_seal,
         &author_key,
-        &approval_digest(ApprovalForm::CURRENT, &header.frame(), &row.host_seal),
         &witness.approval_signature,
-    ) {
+        row.sealed_before_switch,
+    ) else {
         return Err(StandInError::Authentication(
             "approval witness does not verify over the act".into(),
         ));
-    }
+    };
 
     sqlx::query!(
         "UPDATE l1_acts
@@ -345,7 +350,7 @@ pub(crate) async fn approve(
          WHERE act_id = $1 AND status = 'sealed'",
         act_id,
         &witness.approval_signature,
-        ApprovalForm::CURRENT.number(),
+        form.number(),
     )
     .execute(standin.pool())
     .await?;
