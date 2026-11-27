@@ -269,8 +269,7 @@ pub async fn ingest_pass<B: L1Boundary>(
     let mut failures = crate::onboarding::land_ready_accounts(pool).await;
     failures.extend(crate::content::land_promoted(pool, &outcome.promoted).await);
     failures.extend(crate::profile::land_promoted(pool, &outcome.promoted).await);
-    {
-        let _ = checks;
+    if checks == StrandedChecks::Always || outcome.epochs > 0 {
         outcome.stranded_checked = true;
         match crate::content::land_stranded(pool, &outcome.promoted).await {
             Ok(stranded) => failures.extend(stranded),
