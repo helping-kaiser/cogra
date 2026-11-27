@@ -98,6 +98,8 @@ export function AvatarFlowScreen({ store = identityStore }: { store?: IdentitySt
   const [gate, setGate] = useState<GateReading>(null);
   // The upload the seal waits on; a Retry or a fresh Next replaces it.
   const upload = useRef<Upload | null>(null);
+  // What the change sets once its picture is up: the asset is known only then.
+  const signedRef = useRef<SignedProfileChange | undefined>(undefined);
 
   const src = useMemo(() => (file === null ? null : URL.createObjectURL(file)), [file]);
   useEffect(() => {
@@ -166,12 +168,11 @@ export function AvatarFlowScreen({ store = identityStore }: { store?: IdentitySt
     const held = upload.current;
     // The change, signed: the picture once it is up, prepared and signed for
     // the account that pressed — checked again before every leg.
-    let owner: string | null | undefined;
-    let signed: SignedProfileChange | undefined;
-    const ownersStill = () => tokenStore.activeAccountId() === owner;
     const run = async (): Promise<ProfileChangeOutcome> => {
-      // `signProfileChange` runs this only while the pressing account is active.
-      if (owner === undefined) owner = tokenStore.activeAccountId();
+      // `signProfileChange` runs this only while the pressing account — the
+      // change's owner, a Retry's included — is the active one.
+      const owner = tokenStore.activeAccountId();
+      const ownersStill = () => tokenStore.activeAccountId() === owner;
       const current = held;
       if (current === null) return { kind: "dropped" };
       const answer = await current.answer;
@@ -192,7 +193,7 @@ export function AvatarFlowScreen({ store = identityStore }: { store?: IdentitySt
       // profile's own id there is nothing to bind it to, and the batch is
       // refused rather than signed.
       const expected = expectation([profileUpdate(avatarExpectation(profileNode ?? "", answer.selection, answer.ledger))]);
-      signed = { profileId: profileNode, fields: { avatar: answer.picture } };
+      signedRef.current = { profileId: profileNode, fields: { avatar: answer.picture } };
       return outcomeOf(await signer.sign(prepared.value, expected));
     };
     return (
@@ -207,7 +208,7 @@ export function AvatarFlowScreen({ store = identityStore }: { store?: IdentitySt
         }
         hasKey={async () => keyOnDevice !== false && (await store.actorKey()) !== null}
         sign={run}
-        signed={() => signed}
+        signed={() => signedRef.current}
         onTaken={() => {
           carrySnackbar(PROFILE_SIGNED);
           leave();
