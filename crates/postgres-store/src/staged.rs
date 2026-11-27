@@ -1171,28 +1171,6 @@ pub async fn release_held_approval(
     Ok(())
 }
 
-/// Drops a held witness the host refused as not verifying — only that
-/// witness, so a retry that replaced it in the meantime keeps its own. A
-/// refused witness is never relayed again: the write stays as it is and
-/// the GC expires it ([`expire_due`]) like any handshake that does not
-/// complete. Nothing is marked approved.
-pub async fn drop_refused_hold(
-    pool: &PgPool,
-    id: Uuid,
-    signature: &[u8],
-) -> Result<bool, StagedError> {
-    Ok(sqlx::query!(
-        "UPDATE staged_writes SET held_approval_signature = NULL, updated_at = NOW()
-         WHERE id = $1 AND held_approval_signature = $2",
-        id,
-        signature,
-    )
-    .execute(pool)
-    .await?
-    .rows_affected()
-        == 1)
-}
-
 /// Carries freshly prepared writes with their author's application:
 /// `awaiting_pre_sign` → `carried`. The prepare that made them ran as for
 /// any write; carrying is what holds them back from signing until the

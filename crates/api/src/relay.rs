@@ -386,12 +386,6 @@ fn check_witness(write: &staged::StagedWrite, approval_signature: &[u8]) -> Resu
 /// half of the admission Registration's relay, and the hold's own re-check
 /// when the funding settled under it. Idempotent: the substrate's approve
 /// is, and the hold is cleared only for the witness that was relayed.
-///
-/// A hold the host refuses as not verifying is dropped, not retried: the
-/// relay checked it when it took it, so only a witness formed under an
-/// approval form the host no longer takes reaches this — a hold taken
-/// before the approval covered the act alone. Its write then expires with
-/// the GC like any handshake that does not complete.
 pub async fn relay_held<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
@@ -410,16 +404,6 @@ pub async fn relay_held<B: L1Boundary>(
             tracing::info!(staged = %id, "held admission Registration relayed after its funding settled");
             Ok(())
         }
-        Err(e) => {
-            let refused = matches!(e, BoundaryError::Authentication(_));
-            let error = approval_failed(pool, id, e).await?;
-            if refused && staged::drop_refused_hold(pool, id, &approval_signature).await? {
-                tracing::warn!(
-                    staged = %id,
-                    "held approval refused by the host as not verifying; hold dropped"
-                );
-            }
-            Err(error)
-        }
+        Err(e) => Err(approval_failed(pool, id, e).await?),
     }
 }
