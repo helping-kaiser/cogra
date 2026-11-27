@@ -1183,6 +1183,57 @@ describe("an act in flight and a taken act keep the account that pressed", () =>
   });
 });
 
+// THE CONTROL'S OWN READ IS THE READER'S (auth.md "Multi-account device
+// custody"; StanceControl.prompt.md: the anchor is the reader's own opinion):
+// through another tab's account change on a mounted page, the face reads the
+// new account's standing — never the last account's, not even for a frame.
+describe("the control's own read follows the account", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  function signInAs(store: ReturnType<typeof createTokenStore>, account: string) {
+    store.save({ accessToken: `access-${account}`, refreshToken: `refresh-${account}`, accountId: account });
+  }
+
+  /** A seam whose standing is each account's own, as the server's is per session. */
+  function perAccount(store: ReturnType<typeof createTokenStore>) {
+    const a = createStubStanceData({ seed: { "post-1": { records: [{ pDirected: 0.45, pInterest: 0.1 }] } } });
+    const b = createStubStanceData({ seed: { "post-1": { records: [{ pDirected: -0.3, pInterest: 0.2 }] } } });
+    const reads: string[] = [];
+    const data = {
+      ...a,
+      bundle: (target: Parameters<typeof a.bundle>[0], options?: Parameters<typeof a.bundle>[1]) => {
+        const account = store.activeAccountId() ?? "none";
+        reads.push(account);
+        return (account === "u2" ? b : a).bundle(target, options);
+      },
+    };
+    return { data, reads };
+  }
+
+  const exact = () => screen.queryByTestId(`${PREFIX}-resting-exact`);
+
+  it("reads the next account's standing, and never shows the last one's under it", async () => {
+    const store = signedInStore();
+    const { data, reads } = perAccount(store);
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, { store, stanceData: data });
+    await settle();
+    expect(exact()).toHaveTextContent("+0.45 / +0.10");
+
+    act(() => signInAs(store, "u2"));
+    expect(exact()).not.toHaveTextContent("+0.45 / +0.10");
+    await settle();
+    expect(reads).toContain("u2");
+    expect(exact()).toHaveTextContent("−0.30 / +0.20");
+
+    act(() => signInAs(store, "u1"));
+    expect(exact()).not.toHaveTextContent("−0.30 / +0.20");
+    await settle();
+    expect(exact()).toHaveTextContent("+0.45 / +0.10");
+  });
+});
+
 describe("the pad the tap opens", () => {
   beforeEach(() => {
     alreadyTaught();
