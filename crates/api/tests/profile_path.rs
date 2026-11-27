@@ -635,6 +635,30 @@ async fn an_update_landing_after_expiry_left_unwritten_is_written_by_the_next_pa
             .is_empty(),
         "a written update is chosen again"
     );
+    let act_id = &landed
+        .iter()
+        .find(|w| w.id == prepared.id)
+        .expect("landed")
+        .act_id;
+    let record = mirror::record_meta(&rig.pool, act_id)
+        .await
+        .expect("reads")
+        .expect("mirrored")
+        .landing();
+    let row: (Option<i64>, Option<i64>) = sqlx::query_as(
+        "SELECT landed_epoch, position FROM actor_profile_versions
+         WHERE actor_id = $1 AND created_at = $2",
+    )
+    .bind(actor)
+    .bind(shown.created_at)
+    .fetch_one(&rig.pool)
+    .await
+    .expect("the update's own row");
+    assert_eq!(
+        row,
+        (Some(record.landed_epoch), Some(record.position)),
+        "the written row stands under its record's coordinates"
+    );
 
     rig.promote_late(&landed).await;
     assert_eq!(

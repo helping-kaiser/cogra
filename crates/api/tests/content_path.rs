@@ -3197,9 +3197,7 @@ async fn land_after_expiry_interrupted(
 ) -> Vec<staged::PromotedWrite> {
     let id = prepared.writes[0].id;
     rig.sign_and_relay(id, key).await;
-    staged::expire_one(&rig.pool, id, 0)
-        .await
-        .expect("expires");
+    staged::expire_one(&rig.pool, id, 0).await.expect("expires");
     let landed = rig.close_and_mirror_unpromoted().await;
     assert!(
         landed.iter().any(|w| w.id == id),
@@ -3217,6 +3215,9 @@ async fn heal_twice_and_overlap(
     (table, column, node): (&str, &str, Uuid),
     rows: i64,
 ) {
+    let [write] = landed else {
+        panic!("the interrupted pass landed one write: {landed:?}");
+    };
     rig.close_and_ingest().await;
     rig.close_and_ingest().await;
     assert_eq!(
@@ -3238,17 +3239,49 @@ async fn heal_twice_and_overlap(
             .is_empty(),
         "a written write is chosen again"
     );
+    assert_landed_as_its_record(&rig.pool, (table, column, node), write).await;
+}
+
+/// Asserts the version row `write` owns stands under its own record's
+/// landing coordinates, keyed by its authoring instant, not pending —
+/// the key every read orders versions by.
+async fn assert_landed_as_its_record(
+    pool: &PgPool,
+    (table, column, node): (&str, &str, Uuid),
+    write: &staged::PromotedWrite,
+) {
+    let authored = staged::load(pool, write.id)
+        .await
+        .expect("loads")
+        .pre_signed_at
+        .expect("signed");
+    let record = mirror::record_meta(pool, &write.act_id)
+        .await
+        .expect("reads")
+        .expect("mirrored")
+        .landing();
+    let row: (Option<i64>, Option<i64>, bool) = sqlx::query_as(&format!(
+        "SELECT landed_epoch, position, pending FROM {table} WHERE {column} = $1 AND created_at = $2"
+    ))
+    .bind(node)
+    .bind(authored)
+    .fetch_one(pool)
+    .await
+    .expect("the write's own version row");
+    assert_eq!(
+        row,
+        (Some(record.landed_epoch), Some(record.position), false),
+        "the written row stands under its record's coordinates"
+    );
 }
 
 /// The version rows one node holds, pending and landed alike.
 async fn version_rows(pool: &PgPool, table: &str, column: &str, node: Uuid) -> i64 {
-    sqlx::query_scalar(&format!(
-        "SELECT COUNT(*) FROM {table} WHERE {column} = $1"
-    ))
-    .bind(node)
-    .fetch_one(pool)
-    .await
-    .expect("counts")
+    sqlx::query_scalar(&format!("SELECT COUNT(*) FROM {table} WHERE {column} = $1"))
+        .bind(node)
+        .fetch_one(pool)
+        .await
+        .expect("counts")
 }
 
 /// A post landing after its pending rows expired is promoted by the
@@ -3316,9 +3349,7 @@ async fn a_post_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(
 /// A post edit landing after its expiry whose promotion never ran is written by the next pass, once.
 /// ´claim:content:an-unwritten-late-post-edit-is-written-by-the-next-pass´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_post_edit_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(
-    pool: PgPool,
-) {
+async fn a_post_edit_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (alice, alice_key) = rig.funded_actor("alice").await;
     let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
