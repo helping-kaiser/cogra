@@ -16,14 +16,18 @@
 // gestures, and one never retires or "lands on" the other's attempt. Across
 // kinds each goes main's road, and the server nets what it holds.
 //
-// Memory only, per target, for the tab's active account: a reload forgets it
-// and Home's Resume continues what was parked, and an account boundary lets
-// every attempt go, so no other account ever asks one again.
+// Memory only, per target, kept beside the account that pressed (auth.md
+// "Multi-account device custody": bound "to the account it belongs to, never
+// to a device-global slot"): a reload forgets it and Home's Resume continues
+// what was parked. Several accounts share a tab, so an account boundary hands
+// nothing over — another account never asks one, and its own finds it again
+// when it is back, so its Retry asks the same signing rather than preparing
+// afresh beside stagings the server may still hold. A gesture reads and
+// settles only its own account's attempts (`of`), whichever account is
+// active when it answers.
 
 import { intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
-import { onAccountChange } from "@/lib/session/account-change";
 import type { Expectation } from "@/lib/signing/intent";
-import type { TokenStore } from "@/lib/session/token-store";
 import type { StancePair } from "./model";
 import type { StanceTarget } from "./stance-data";
 
@@ -83,11 +87,27 @@ export function severanceIntent(target: StanceTarget): string {
   return intentOf({ target: keyOf(target), sever: true });
 }
 
-export function createStanceAttempts(
-  accounts?: Pick<TokenStore, "activeAccountId" | "subscribe">,
-): StanceAttempts {
+/** Every account's attempts in the tab, each account's apart. */
+export type AccountStanceAttempts = {
+  /** The attempts of `owner` — the account a gesture was pressed as. */
+  of(owner: string | null): StanceAttempts;
+};
+
+export function createStanceAttempts(): AccountStanceAttempts {
+  const accounts = new Map<string | null, StanceAttempts>();
+  return {
+    of: (owner) => {
+      const known = accounts.get(owner);
+      if (known !== undefined) return known;
+      const fresh = createAccountAttempts();
+      accounts.set(owner, fresh);
+      return fresh;
+    },
+  };
+}
+
+function createAccountAttempts(): StanceAttempts {
   const attempts = new Map<string, { attempt: StanceAttempt | null; asking: boolean }>();
-  onAccountChange(() => attempts.clear(), accounts);
   const held = (slot: Slot) => attempts.get(keyOf(slot));
   return {
     asking: (target) => held(target)?.asking === true,
@@ -102,7 +122,7 @@ export function createStanceAttempts(
     },
     remember: (target, attempt) => {
       const entry = held(target);
-      // An account boundary while it asked let the slot go: nothing is kept.
+      // Only a commit that holds the slot (`begin`) remembers.
       if (entry !== undefined) entry.attempt = attempt;
     },
     settle: (target) => {
