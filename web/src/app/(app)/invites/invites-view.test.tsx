@@ -881,6 +881,29 @@ describe("the approval pad (behavior/ApprovePad.md)", () => {
     expect(screen.getByTestId("invites-snackbar")).toHaveTextContent("Signed, still settling. Current opinion");
   });
 
+  it(":31 from Set's press itself Cancel reads Close in its place", async () => {
+    const { state, pad } = await openPad();
+    const gate: { answer?: () => void } = {};
+    server.use(
+      gqlLink.mutation("ApproveApplicants", async () => {
+        await new Promise<void>((resolve) => {
+          gate.answer = resolve;
+        });
+        state.queue = state.queue.filter((a) => a.handle !== "rafa");
+        return HttpResponse.json(approveAnswer());
+      }),
+    );
+    const cancel = within(pad).getByTestId("invites.application.stance.pad.cancel");
+    expect(cancel).toHaveTextContent(/^Cancel$/);
+    fireEvent.click(within(pad).getByTestId("invites.application.stance.pad.set"));
+    expect(within(pad).getByTestId("invites.application.stance.pad.cancel")).toBe(cancel);
+    expect(cancel).toHaveTextContent(/^Close$/);
+    expect(within(pad).getByTestId("invites.application.stance.pad.set")).toHaveTextContent(/^Set$/);
+    await waitFor(() => expect(gate.answer).toBeDefined());
+    gate.answer?.();
+    await waitFor(() => expect(row("rafa")).toBeUndefined());
+  });
+
   it(":43-:45 Set at exactly (0, 0) asks the empty sign with its vouch-in warning; Set it anyway is the act", async () => {
     let variables: unknown = null;
     const { pad } = await openPad();

@@ -2223,6 +2223,61 @@ describe("the pad as its masters draw it", () => {
     expect(cancel.parentElement!.className).toContain("justify-end");
   });
 
+  // PadFailed.md:37: "WHEN press Set -> Cancel reads Close in the same place
+  // from the press itself ... AND Set keeps its own label".
+  it("reads Close in Cancel's place from Set's press itself, Set keeping its own label", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    const cancel = screen.getByTestId(`${PREFIX}-cancel`);
+    expect(cancel).toHaveTextContent(/^Cancel$/);
+    const commit = data.commit;
+    const held: (() => void)[] = [];
+    data.commit = (target, pick) =>
+      new Promise((resolve) => {
+        held.push(() => resolve(commit(target, pick)));
+      });
+    await pressSet();
+    // The same element, in the same place, before any 200ms pass.
+    expect(screen.getByTestId(`${PREFIX}-cancel`)).toBe(cancel);
+    expect(cancel).toHaveTextContent(/^Close$/);
+    expect(screen.getByRole("button", { name: "Close" })).toBe(cancel);
+    expect(screen.getByTestId(`${PREFIX}-set`)).toHaveTextContent(/^Set$/);
+    await settle(SETTING_AFTER_MS);
+    expect(cancel).toHaveTextContent(/^Close$/);
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(data.sent).toHaveLength(1);
+  });
+
+  // PadFailed.md:35, :45: nothing cancels the act once Set was pressed, a
+  // Close under 200ms after the press included — the read before the
+  // signing among it.
+  it("lets the act go on when Close is pressed while the pick's landing is still being read", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    const project = data.project;
+    const held: (() => void)[] = [];
+    data.project = (target, pick) =>
+      new Promise((resolve) => {
+        held.push(() => resolve(project(target, pick)));
+      });
+    await pressSet();
+    expect(screen.getByTestId(`${PREFIX}-cancel`)).toHaveTextContent("Close");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-cancel`));
+    });
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(data.sent).toHaveLength(1);
+  });
+
   it("keeps the pad open while Set's signing waits, saying Setting… past 200ms", async () => {
     // PadStanding.md: Set refuses a second press, the pad stays open, never
     // dims, and reads Setting… only once 200ms pass unanswered.
@@ -4044,6 +4099,28 @@ describe("round 21's waits, write rule and typed input", () => {
   // PadFailed.md: the alternates' commit reads Signing… past 200ms, refuses a
   // second press, never dims; Cancel stays live and closes the dialog, never
   // the act — the row carries the wait.
+  // PadFailed.md:53: "WHEN press Sign it ... -> Cancel reads Close in the same
+  // place from the press itself AND Sign it keeps its own label".
+  it("reads Close in the alternates' Cancel place from Sign it's press itself", async () => {
+    const data = mount();
+    await settle();
+    await openAlternates();
+    const cancel = screen.getByTestId("stance-alt-cancel");
+    expect(cancel).toHaveTextContent(/^Cancel$/);
+    const gate = holdCommits(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("stance-alt-commit"));
+    });
+    expect(screen.getByTestId("stance-alt-cancel")).toBe(cancel);
+    expect(cancel).toHaveTextContent(/^Close$/);
+    expect(screen.getByTestId("stance-alt-commit")).toHaveTextContent(/^Sign it$/);
+    await act(async () => {
+      gate.answer?.(true);
+    });
+    await settle();
+    expect(data.sent).toHaveLength(1);
+  });
+
   it("lets the alternates' commit wait as Set does, Cancel passing the wait to the row", async () => {
     const data = mount();
     await settle();

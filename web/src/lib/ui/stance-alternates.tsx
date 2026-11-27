@@ -312,7 +312,9 @@ export function StanceAlternates({
           onClick={onCancel}
           className={buttonClassName({ variant: "text", size: "sm" })}
         >
-          Cancel
+          {/* From the press of Sign it, Cancel reads Close in its place and
+              closes the dialog, never the act (PadFailed.md:53, :57). */}
+          {busy ? "Close" : "Cancel"}
         </button>
         {/* THE COMMIT WAITS AS SET DOES: inert from the press, `Signing…`
             past 200ms, never dimmed; a fault turns its slot into the outlined
