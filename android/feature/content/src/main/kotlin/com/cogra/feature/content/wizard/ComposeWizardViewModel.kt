@@ -7,6 +7,7 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
+import com.cogra.domain.PreparedContentView
 import com.cogra.domain.WriteState
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
@@ -934,7 +935,6 @@ class ComposeWizardViewModel @Inject constructor(
             val owner = tokens.current()?.accountId ?: return@launch stand()
             // A remembered attempt is never asked under another account; it stands for its own.
             if (attempt?.let { it.owner != owner } == true) return@launch stand()
-            val holds: suspend () -> Boolean = { tokens.current()?.accountId == owner }
             val tags = current.tagSection.tags.map { it.toClaim() }
             val references = current.referenceSection.references.map { it.toClaim() }
             val graphIds = citedGraphIds(references) ?: return@launch
@@ -943,12 +943,13 @@ class ComposeWizardViewModel @Inject constructor(
                 owner = owner,
                 seal = current,
                 intent = current.postIntent(sent, tags, references),
+                prepare = { content.preparePostFrom(current, sent, tags, references) },
                 expectedFor = { node -> expectation(current, node, sent, tags, references, graphIds) },
-                holds = holds,
+                holds = { tokens.current()?.accountId == owner },
             )
             try {
                 val remembered = attempt
-                if (remembered == null || askedAgain(remembered, press)) signFresh(press, sent, tags, references)
+                if (remembered == null || askedAgain(remembered, press)) signFresh(press)
             } catch (_: NoActorKeyException) {
                 // `ComposeKeyAbsent`: the write waits on the reader
                 // restoring the key, not on time passing. The draft is
@@ -959,17 +960,6 @@ class ComposeWizardViewModel @Inject constructor(
         }
     }
 
-    /** One press of the seal's commit: who pressed, the seal as it stood, and what it orders. */
-    private class Press(
-        val owner: String,
-        val seal: ComposeWizardState,
-        /** The prepare's request as the attempt's key (`intentOf`). */
-        val intent: String,
-        val expectedFor: suspend (node: String) -> Expectation?,
-        /** Whether the account that pressed is still the active one. */
-        val holds: suspend () -> Boolean,
-    )
-
     /**
      * Asks the remembered attempt again (`SameSigning`), and answers whether a
      * fresh prepare may run: only once the attempt is retired.
@@ -979,12 +969,7 @@ class ComposeWizardViewModel @Inject constructor(
         when (asked) {
             AskedAgain.Foreign -> stand()
             AskedAgain.Unchecked -> Unit
-            is AskedAgain.Unread -> fail(
-                when (val read = asked.outcome) {
-                    is Outcome.Refused -> sealFaultOf(read.errors, press.seal.referenceSection.references)
-                    else -> SealFault.Offline
-                },
-            )
+            is AskedAgain.Unread -> fail(unreadFault(asked.outcome, press.seal))
             // The FIRST content was approved and is landing, while the reader
             // has changed the post since. INTERIM, the web's (#655; no drawn
             // state covers this moment): the first post opens as a success
@@ -1004,28 +989,10 @@ class ComposeWizardViewModel @Inject constructor(
     }
 
     /** Stages the batch anew and signs it; the attempt is kept with the draft before anything is signed. */
-    private suspend fun signFresh(
-        press: Press,
-        sent: SentContent,
-        tags: List<TagClaim>,
-        references: List<ReferenceClaim>,
-    ) {
+    private suspend fun signFresh(press: Press) {
         if (!press.holds()) return stand()
         val current = press.seal
-        val prepared = when (
-            val outcome = content.preparePost(
-                title = sent.title,
-                description = sent.description,
-                content = sent.content,
-                license = current.license,
-                tags = tags,
-                references = references,
-                attachments = sent.attachments,
-                sensitive = sent.sensitive,
-                sensitiveReason = sent.sensitiveReason,
-                pDirected = current.pDirected,
-            )
-        ) {
+        val prepared = when (val outcome = press.prepare()) {
             is Outcome.Success -> outcome.value
             is Outcome.Refused -> return fail(sealFaultOf(outcome.errors, current.referenceSection.references))
             is Outcome.Failed -> return fail(SealFault.Offline)
@@ -1240,6 +1207,43 @@ internal fun ComposeWizardState.taking(uri: String, read: PickRead): ComposeWiza
     sourceRatio = if (read.isClip) read.header?.aspectRatio else read.known?.aspectRatio,
     durationMs = if (read.isClip) read.known?.durationMs ?: read.header?.durationMs ?: 0 else null,
 )
+
+/** One press of the post seal's commit: who pressed, the seal as it stood, and what it orders. */
+private class Press(
+    val owner: String,
+    val seal: ComposeWizardState,
+    /** The prepare's request as the attempt's key ([postIntent]). */
+    val intent: String,
+    val prepare: suspend () -> Outcome<PreparedContentView>,
+    val expectedFor: suspend (node: String) -> Expectation?,
+    /** Whether the account that pressed is still the active one. */
+    val holds: suspend () -> Boolean,
+)
+
+/** The post's prepare: the request the seal sends, staged as one batch. */
+private suspend fun ContentRepository.preparePostFrom(
+    current: ComposeWizardState,
+    sent: SentContent,
+    tags: List<TagClaim>,
+    references: List<ReferenceClaim>,
+): Outcome<PreparedContentView> = preparePost(
+    title = sent.title,
+    description = sent.description,
+    content = sent.content,
+    license = current.license,
+    tags = tags,
+    references = references,
+    attachments = sent.attachments,
+    sensitive = sent.sensitive,
+    sensitiveReason = sent.sensitiveReason,
+    pDirected = current.pDirected,
+)
+
+/** A Retry's state read that did not answer reads as the prepare's own did: by its codes, or no answer. */
+private fun unreadFault(outcome: Outcome<*>, seal: ComposeWizardState): SealFault = when (outcome) {
+    is Outcome.Refused -> sealFaultOf(outcome.errors, seal.referenceSection.references)
+    else -> SealFault.Offline
+}
 
 /**
  * The post's prepare request as its attempt's key (`intentOf`): every field
