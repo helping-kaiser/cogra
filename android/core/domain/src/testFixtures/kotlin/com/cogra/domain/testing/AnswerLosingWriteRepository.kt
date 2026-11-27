@@ -5,11 +5,22 @@
 
 package com.cogra.domain.testing
 
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.WriteState
 import com.cogra.domain.repo.WriteRepository
 import java.io.IOException
+
+/** The account a signing surface's tests press as. */
+const val TEST_ACCOUNT_ID = "acct-a"
+
+/**
+ * A session signed in as [account] — a signing surface acts only for the
+ * account that pressed, so its tests need one.
+ */
+fun signedInSession(account: String = TEST_ACCOUNT_ID): FakeTokenStore =
+    FakeTokenStore().apply { tokens.value = AuthTokens("access-$account", "refresh-$account", account) }
 
 /**
  * [inner] with a switch per leg: while [loseSubmits] or [loseApproves] is

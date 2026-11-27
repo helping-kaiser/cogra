@@ -2,6 +2,7 @@ package com.cogra.feature.content.wizard
 
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.AttachmentClaim
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedContentView
@@ -19,6 +20,7 @@ import com.cogra.domain.testing.InMemoryComposeDraftStore
 import com.cogra.domain.testing.InMemorySealedDraftStore
 import com.cogra.domain.testing.ScriptedSearchRepository
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.TEST_ACCOUNT_ID
 import com.cogra.domain.testing.TEST_NODE_ID
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
@@ -27,6 +29,7 @@ import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingSettingsRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
 import com.cogra.domain.testing.faithfulContent
+import com.cogra.domain.testing.signedInSession
 import com.cogra.domain.testing.testGraphIds
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
@@ -58,6 +61,7 @@ class ComposeRetrySameSigningTest {
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val sealer = SealingWriteRepository(actor)
     private val host = AnswerLosingWriteRepository(sealer)
+    private val session = signedInSession()
 
     /** A faithful prepare that counts itself: every call stages a NEW batch. */
     private val content = object : ThrowingContentRepository() {
@@ -113,6 +117,8 @@ class ComposeRetrySameSigningTest {
         stagedWrites = host,
         settings = settings,
         search = ScriptedSearchRepository(),
+        identity = identity,
+        tokens = session,
     )
 
     @Before
@@ -288,5 +294,50 @@ class ComposeRetrySameSigningTest {
         assertThat(content.calls).isEqualTo(1)
         assertThat(host.approved).hasSize(1)
         assertThat(again.state.value.outcome).isEqualTo(WizardOutcome.Landed(TEST_NODE_ID))
+    }
+
+    private fun switchTo(account: String) {
+        session.tokens.value = AuthTokens("access-$account", "refresh-$account", account)
+    }
+
+    /**
+     * (e) Another account active between the press and the Retry: nothing runs
+     * under it — no read, no prepare, no signature — and the attempt is not
+     * erased: under its own account again, the Retry asks it (auth.md
+     * "Multi-account device custody").
+     */
+    @Test
+    fun aRetryUnderAnotherAccountRunsNothingAndTheAttemptStandsForItsOwn() = runTest(dispatcher) {
+        host.loseSubmits = 1
+        val vm = signedOnce()
+        val first = host.submitted.toList()
+        val readsBefore = host.read.size
+        switchTo("acct-b")
+
+        vm.retry()
+
+        assertThat(content.calls).isEqualTo(1)
+        assertThat(host.read).hasSize(readsBefore)
+        assertThat(host.approved).isEmpty()
+        assertThat(identity.handshakes.keys).containsExactlyElementsIn(first)
+        assertThat(vm.state.value.submitting).isFalse()
+        assertThat(vm.state.value.outcome).isNull()
+
+        switchTo(TEST_ACCOUNT_ID)
+        vm.retry()
+
+        assertThat(content.calls).isEqualTo(1)
+        assertThat(host.approved).isEqualTo(first)
+        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed(TEST_NODE_ID))
+    }
+
+    /** (e) A first press with no account active prepares nothing. */
+    @Test
+    fun aPressWithNoSessionPreparesNothing() = runTest(dispatcher) {
+        session.tokens.value = null
+        val vm = signedOnce()
+
+        assertThat(content.calls).isEqualTo(0)
+        assertThat(vm.state.value.submitting).isFalse()
     }
 }
