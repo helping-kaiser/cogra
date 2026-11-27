@@ -5,6 +5,8 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
+
 import { useReportProblem } from "./report-problem-layer";
 import { REPORT_ADDRESS, REPORT_NOTE } from "./report-problem";
 import { ReportProblemView } from "./report-problem-view";
@@ -175,5 +177,36 @@ describe("the report over a bug notice", () => {
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(screen.queryByTestId("reportProblem.layer")).toBeNull();
     expect(screen.getByTestId("opener-state")).toHaveTextContent("1");
+  });
+
+  it("stands as a modal dialog that covers the surface, so a clip beneath stops", () => {
+    render(<Opener />);
+    expect(raisedLayersForTests()).toEqual([]);
+    act(() => fireEvent.click(screen.getByText("Report a problem")));
+    const layer = screen.getByTestId("reportProblem.layer");
+    expect(layer.tagName).toBe("DIALOG");
+    expect((layer as HTMLDialogElement).open).toBe(true);
+    expect(raisedLayersForTests()).toEqual(["suspend"]);
+    fireEvent.click(within(layer).getByRole("button", { name: "Back" }));
+    expect(raisedLayersForTests()).toEqual([]);
+  });
+
+  it("lowers on Escape or the system's Back, the dialog's cancel", () => {
+    render(<Opener />);
+    act(() => fireEvent.click(screen.getByText("Report a problem")));
+    fireEvent(screen.getByTestId("reportProblem.layer"), new Event("cancel", { cancelable: true }));
+    expect(screen.queryByTestId("reportProblem.layer")).toBeNull();
+  });
+
+  it("hands focus back to Report a problem when it lowers", () => {
+    render(<Opener />);
+    const door = screen.getByText("Report a problem");
+    door.focus();
+    act(() => fireEvent.click(door));
+    // showModal() hands focus into the dialog in a browser (the jsdom stub does not).
+    const back = within(screen.getByTestId("reportProblem.layer")).getByRole("button", { name: "Back" });
+    back.focus();
+    fireEvent.click(back);
+    expect(document.activeElement).toBe(door);
   });
 });
