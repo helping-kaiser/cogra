@@ -108,6 +108,8 @@ data class KeptPicksActions(
     val onLeave: () -> Unit = {},
     val onSign: () -> Unit = {},
     val onOpenInvites: () -> Unit = {},
+    /** The bug notice's `Report a problem`: the report page Settings opens too. */
+    val onReport: () -> Unit = {},
 )
 
 /**
@@ -120,6 +122,8 @@ data class KeptPicksActions(
 fun KeptPicksRoute(
     onExit: (String?) -> Unit,
     onOpenInvites: () -> Unit,
+    /** The seal's bug notice `Report a problem`: the report opens over the seal. */
+    onReportProblem: () -> Unit = {},
     viewModel: KeptPicksViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -145,6 +149,7 @@ fun KeptPicksRoute(
             onLeave = viewModel::onLeave,
             onSign = viewModel::onSign,
             onOpenInvites = onOpenInvites,
+            onReport = onReportProblem,
         ),
     )
 }
@@ -596,8 +601,7 @@ private fun BugFoot(actions: KeptPicksActions) {
         )
     }
     Column(Modifier.fillMaxWidth()) {
-        // No report surface exists on the app yet; the word stands as drawn.
-        FootText(KEPT_REPORT, {}, "kept_picks_seal_report")
+        FootText(KEPT_REPORT, actions.onReport, "kept_picks_seal_report")
         FootText(KEPT_NOT_NOW, actions.onBackToReview, "kept_picks_seal_not_now")
     }
 }
