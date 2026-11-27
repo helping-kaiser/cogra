@@ -52,7 +52,7 @@ const LICENSED: Record<string, string> = {
   "lib/ui/node-mark.tsx lineHeight:": "ReferenceRow.jsx NodeMark letter: the tile centres it, no line of its own",
   "lib/intro/intro-stages.tsx fontSize:": "OnboardingShape.jsx EdgeFace: the anchor glyph at fontSize 20",
   "lib/intro/intro-stages.tsx lineHeight:": "OnboardingShape.jsx EdgeFace: the anchor glyph at lineHeight 20px",
-  "lib/ui/stance-control.tsx fontSize:":"StanceControl.jsx resting face over media: --size-face-over-media",
+  "lib/ui/stance-control.tsx fontSize:": "StanceControl.jsx resting face over media: --size-face-over-media",
   "lib/ui2/feed-filter-sheet.tsx fontWeight:": "FeedFilter.jsx sign words: fontWeight chosen ? 500 : 400",
   "lib/ui/profile-header.tsx fontSize:": "ProfileHeader.jsx name: fontSize nameSize, the two-line rule's fitted size",
   "lib/ui/profile-header.tsx lineHeight:": "ProfileHeader.jsx name: lineHeight nameLineHeight, round(size × 28 / 22)",
