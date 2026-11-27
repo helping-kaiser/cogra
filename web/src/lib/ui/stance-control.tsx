@@ -310,13 +310,18 @@ const OVER_MEDIA_ANCHOR: CSSProperties = {
  */
 function useOwned<T>(): readonly [
   ReadonlyMap<string | null, T>,
-  (owner: string | null, value: T | null) => void,
+  (owner: string | null, update: T | null | ((current: T | undefined) => T | null)) => void,
 ] {
   const [owned, setOwned] = useState<ReadonlyMap<string | null, T>>(() => new Map());
   const setOf = useCallback(
-    (owner: string | null, value: T | null) =>
+    (owner: string | null, update: T | null | ((current: T | undefined) => T | null)) =>
       setOwned((current) => {
+        const value =
+          typeof update === "function"
+            ? (update as (current: T | undefined) => T | null)(current.get(owner))
+            : update;
         if (value === null && !current.has(owner)) return current;
+        if (value !== null && current.get(owner) === value) return current;
         const next = new Map(current);
         if (value === null) next.delete(owner);
         else next.set(owner, value);
@@ -514,7 +519,12 @@ export function StanceControl({
    * — and so a control that re-reads after its own write outranks the
    * copy its host read before that write.
    */
-  const [own, setOwn] = useState<{ value: BundleState } | null>(null);
+  //
+  // THE READ IS THE READER'S (`useOwned`): each account's own standing is
+  // kept beside it, so another tab's account change never leaves the last
+  // account's standing on the face, not even until the next read answers.
+  const [owns, setOwnOf] = useOwned<{ value: BundleState }>();
+  const own = owns.get(accountId) ?? null;
   const bundle: BundleState = own !== null ? own.value : suppliedBundle;
 
   // A pad-only host is the opening gesture itself, so the control mounts
@@ -656,7 +666,7 @@ export function StanceControl({
 
   const readBundle = useCallback(
     (options: { fresh?: boolean } = {}) => {
-      if (phase !== "signedIn") return;
+      if (phase !== "signedIn" || accountId === null) return;
       // A supplied bundle is the host's to keep current, except right
       // after this control wrote — then the control has to see its own
       // work rather than the copy the host read before it.
@@ -664,8 +674,9 @@ export function StanceControl({
       // Every signed gesture re-reads; the generation drops an older read
       // that answers after a newer one, so the standing never goes back.
       const generation = ++bundleRead.current;
-      // The read is the session's account's, so it replaces that account's
-      // projection only.
+      // The read is the session's account's — the live one, which a taken
+      // act's re-read may meet changed — so it answers that account's own
+      // standing and projection only.
       const by = sessionStore.activeAccountId();
       void data.bundle(seamTarget, { fresh: options.fresh }).then((outcome) => {
         if (generation !== bundleRead.current) return;
@@ -676,14 +687,16 @@ export function StanceControl({
         if (outcome.kind !== "success") {
           // Never trade a standing that is known for one that is not: a
           // transient fault on a re-read must not blank a good reading.
-          setOwn((current) => current ?? { value: suppliedBundle ?? null });
+          setOwnOf(by, (current) => current ?? { value: suppliedBundle ?? null });
           return;
         }
-        setOwn({ value: outcome.value });
+        setOwnOf(by, { value: outcome.value });
         setPendingOf(by, null);
       });
     },
-    [data, phase, suppliedBundle, seamTarget, sessionStore, setPendingOf],
+    // `accountId`: another tab's account change reads the next account's
+    // standing at once (the effect below re-runs on a new read).
+    [data, phase, accountId, suppliedBundle, seamTarget, sessionStore, setOwnOf, setPendingOf],
   );
 
   useEffect(() => {
