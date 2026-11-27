@@ -109,7 +109,7 @@ import {
 import { EmptySignConfirm } from "@/lib/ui/empty-sign-confirm";
 import { swallowRestOfGesture } from "@/lib/ui/outside-press";
 import { PendingMarker } from "@/lib/ui/pending-marker";
-import { RowLine, type RowLineState } from "@/lib/ui/row-line";
+import { RowLine, SIGNING_ROW, type RowLineState } from "@/lib/ui/row-line";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
@@ -182,6 +182,15 @@ type EmptyAsk = {
   pick: StancePair;
   landing: StanceLanding;
 };
+
+/**
+ * An act a dialog over the pad signs, as it was confirmed — what the row's
+ * Retry asks again once the dialog was closed while it signed: the walk-back
+ * over the standing the reader was shown, or exactly the pick.
+ */
+type DialogAct =
+  | { readonly kind: "walkBack"; readonly shown: StanceBundle }
+  | { readonly kind: "pick"; readonly pick: StancePair; readonly landing: StanceLanding };
 
 /** Where a signed act was made — what re-raises its outcome. */
 type Origin = "pad" | "row" | "confirm" | "empty";
@@ -336,7 +345,11 @@ function useOwned<T>(): readonly [
 const HOLD_RING_PX = 40;
 const HOLD_RING_STROKE_PX = 4;
 
-function HoldRing({ testId }: { testId: string }) {
+/**
+ * The ring: filling over the hold, or — `closed` — standing whole and still
+ * around the face while the row's act signs (the master's `progress={1}`).
+ */
+function HoldRing({ testId, closed = false }: { testId: string; closed?: boolean }) {
   const r = (HOLD_RING_PX - HOLD_RING_STROKE_PX) / 2;
   const circumference = Math.round(2 * Math.PI * r * 1000) / 1000;
   return (
@@ -357,15 +370,17 @@ function HoldRing({ testId }: { testId: string }) {
         strokeWidth={HOLD_RING_STROKE_PX}
         strokeLinecap="round"
         strokeDasharray={circumference}
-        strokeDashoffset={circumference}
+        strokeDashoffset={closed ? 0 : circumference}
       >
-        <animate
-          attributeName="stroke-dashoffset"
-          from={circumference}
-          to="0"
-          dur={`${LONG_PRESS_MS}ms`}
-          fill="freeze"
-        />
+        {!closed && (
+          <animate
+            attributeName="stroke-dashoffset"
+            from={circumference}
+            to="0"
+            dur={`${LONG_PRESS_MS}ms`}
+            fill="freeze"
+          />
+        )}
       </circle>
     </svg>
   );
@@ -561,6 +576,13 @@ export function StanceControl({
   /** The face, ringed while a hold is under way. */
   const [holding, setHolding] = useState(false);
   /**
+   * The hold reached 500ms and its answer — the key's, then the signing's —
+   * is being asked: the ring stays closed (RowSigning.md:35, "the ring stays
+   * closed AND the signing begins"), the lift notwithstanding, until the
+   * row's wait carries it or the hold opens a surface instead.
+   */
+  const [holdReached, setHoldReached] = useState(false);
+  /**
    * Where a TAKEN signing put the standing, as the fold projected it. It
    * holds the resting target until a fresh read replaces it — never before
    * the signature is taken (RowSigning.md: "NEVER the face moves before").
@@ -603,6 +625,13 @@ export function StanceControl({
   useEffect(() => {
     openRef.current = considered;
   }, [considered]);
+  /** A dialog over the pad is up — the walk-back's or the empty sign's. */
+  const dialogUp = confirming !== null || emptyAsk !== null;
+  /** Whether it is up right now — read when the act it sent answers. */
+  const dialogUpRef = useRef(dialogUp);
+  useEffect(() => {
+    dialogUpRef.current = dialogUp;
+  }, [dialogUp]);
 
   // THE OPINION PAD PAUSES, IT DOES NOT SUSPEND (Feed.md:39/41,
   // PostDetailVideo.md:39/41): opening it pauses the playing clip on its
@@ -1000,24 +1029,30 @@ export function StanceControl({
     // re-raise: the target's row carries it, as a hold's would. An account
     // change closed the presser's pad, so a pad open now is another's.
     if (origin === "pad" && openRef.current && stillAs(by)) setPadFault(fault);
-    else
-      // The row draws no not-through form of its own (RowSigning.md), so a
-      // FORBIDDEN on a row reads as a hold's fault does. The line is the
-      // pressing account's, and its Retry asks that account's act again:
-      // pressed once another account is active, it does nothing.
-      setRowLineOf(
-        by,
-        fault === "writeRule"
-          ? { kind: "writeRule" }
-          : {
-              kind: "didntSign",
-              onRetry: () => {
-                if (sessionStore.activeAccountId() !== by) return;
-                void signPick(sent, "row");
-              },
-            },
-      );
+    else raiseRow(fault, by, () => void signPick(sent, "row"));
   };
+
+  /**
+   * The target's row says an act of `by`'s did not go through — a hold's, or
+   * one whose surface was closed while it signed. The row draws no
+   * not-through form of its own (RowSigning.md), so a FORBIDDEN on a row
+   * reads as a hold's fault does. The line is the pressing account's, and its
+   * Retry asks that account's act again (`retry`): pressed once another
+   * account is active, it does nothing.
+   */
+  const raiseRow = (fault: Fault, by: string | null, retry: () => void) =>
+    setRowLineOf(
+      by,
+      fault === "writeRule"
+        ? { kind: "writeRule" }
+        : {
+            kind: "didntSign",
+            onRetry: () => {
+              if (sessionStore.activeAccountId() !== by) return;
+              retry();
+            },
+          },
+    );
 
   /** What a dialog's own signing answered: taken, a fault, or the write rule's no. */
   const answerOf = (
@@ -1097,19 +1132,66 @@ export function StanceControl({
   const onConfirmEmpty = async () => {
     const asked = emptyAsk;
     if (asked === null || busy) return;
-    const by = sessionStore.activeAccountId();
     setEmptyFault(null);
-    const answer = await runInFlight("empty", by, async () =>
-      answerOf(await data.commit(seamTarget, asked.pick, commitSource)),
+    await signDialogAct(
+      { kind: "pick", pick: asked.pick, landing: asked.landing },
+      "empty",
+      sessionStore.activeAccountId(),
     );
-    // An account change closed the ask as `Close` closes it while it signs:
-    // a later ask on this anchor is the next account's own.
+  };
+
+  /**
+   * Signs one act a dialog over the pad asked about — the walk-back over the
+   * standing the reader confirmed (`shown`), or the pick the walk-back's
+   * dialog or the empty sign's ask raised — as `by`, from that dialog or from
+   * the row's Retry.
+   *
+   * A DIALOG CLOSED WHILE ITS ACT SIGNS LEAVES THE ACT TO THE ROW
+   * (SeveranceConfirm.md:53, EmptySignConfirm.md:51, RowSigning.md:7): Close,
+   * the scrim, Back, Escape — or an account change, which closes it as Close
+   * does — and the act ends on the target's row as a hold's does. Taken, the
+   * face moves and the snackbar confirms; not, the row says `That didn't
+   * sign.` with a Retry that asks THIS act again — the same walk-back, the
+   * same pick, from this surface (SigningAfterClose.md:27: "NEVER anything
+   * else is signed"), never the dialog again: it was confirmed once.
+   */
+  const signDialogAct = async (act: DialogAct, from: "confirm" | "empty" | "row", by: string | null) => {
+    if (from === "row") {
+      setSignedOf(by, null);
+      setRowLineOf(by, null);
+    }
+    const answer = await runInFlight(from, by, async () =>
+      answerOf(
+        act.kind === "walkBack"
+          ? await data.sever(seamTarget, act.shown, commitSource)
+          : await data.commit(seamTarget, act.pick, commitSource),
+      ),
+    );
+    const onDialog = from !== "row" && stillAs(by) && dialogUpRef.current;
     if (answer.kind !== "taken") {
-      if (stillAs(by)) setEmptyFault(answer.kind);
+      // On its dialog: a fault with Retry in the act's slot, or the write
+      // rule's quiet line with the act dimmed and no Retry (round 21).
+      if (!onDialog) raiseRow(answer.kind, by, () => void signDialogAct(act, "row", by));
+      else if (from === "confirm") setConfirmFault(answer.kind);
+      else setEmptyFault(answer.kind);
       return;
     }
-    if (stillAs(by)) setEmptyAsk(null);
-    taken(asked.landing, answer.records, by);
+    if (onDialog) {
+      setConfirming(null);
+      setEmptyAsk(null);
+    }
+    if (act.kind === "pick") {
+      taken(act.landing, answer.records, by);
+      return;
+    }
+    announceStanceSigned();
+    readBundle({ fresh: true });
+    if (variant !== undefined) {
+      variant.onTaken(SEVERED.landing);
+      return;
+    }
+    if (stillAs(by)) closeSurfaces();
+    setSignedOf(by, signedLine(SEVERED.landing, answer.records, true, target.label, axes));
   };
 
   /** The explicit walk-back asks over the parked pad, and costs what it stages. */
@@ -1124,38 +1206,22 @@ export function StanceControl({
   const onConfirmSeverance = async () => {
     const asked = confirming;
     if (asked === null || busy) return;
-    const by = sessionStore.activeAccountId();
     setConfirmFault(null);
-    const answer = await runInFlight("confirm", by, async () => {
-      if (asked.pick === null) {
-        // The walk-back is checked against the standing the reader
-        // confirmed; with none known there is nothing to check against.
-        if (bundle === null || bundle === undefined) return { kind: "failed" as const };
-        return answerOf(await data.sever(seamTarget, bundle, commitSource));
-      }
-      return answerOf(await data.commit(seamTarget, asked.pick, commitSource));
-    });
-    if (answer.kind !== "taken") {
-      // The dialog stays up and says so: a fault with Retry in the confirm's
-      // slot, or the write rule's quiet line with the act dimmed and no
-      // Retry (SeveranceConfirm.md, round 21). An account change closed it
-      // as `Close` closes it while it signs.
-      if (stillAs(by)) setConfirmFault(answer.kind);
-      return;
-    }
-    if (stillAs(by)) setConfirming(null);
     if (asked.pick === null) {
-      announceStanceSigned();
-      readBundle({ fresh: true });
-      if (variant !== undefined) {
-        variant.onTaken(SEVERED.landing);
+      // The walk-back is checked against the standing the reader confirmed;
+      // with none known there is nothing to check against.
+      if (bundle === null || bundle === undefined) {
+        setConfirmFault("failed");
         return;
       }
-      if (stillAs(by)) closeSurfaces();
-      setSignedOf(by, signedLine(SEVERED.landing, answer.records, true, target.label, axes));
+      await signDialogAct({ kind: "walkBack", shown: bundle }, "confirm", sessionStore.activeAccountId());
       return;
     }
-    taken(asked.landing, answer.records, by);
+    await signDialogAct(
+      { kind: "pick", pick: asked.pick, landing: asked.landing },
+      "confirm",
+      sessionStore.activeAccountId(),
+    );
   };
 
   /**
@@ -1259,12 +1325,16 @@ export function StanceControl({
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
       setHolding(false);
+      setHoldReached(true);
       suppressClick.current = true;
       // WITH THE KEY ELSEWHERE THE HOLD OPENS THE PAD, as a tap does, and
       // signs nothing (PadKeyAbsent.md) — a held finger cannot spend a
       // signature this device cannot give.
       void data.keyOnDevice().then((present) => {
         setKeyAbsent(!present);
+        // Batched with what follows: a signing's flight takes the ring over
+        // in the same render, so it never flickers open between the two.
+        setHoldReached(false);
         // A KEPT OPINION NEVER SIGNS FROM A HOLD: with the key here the hold
         // opens the review, as the tap does (PadPendingReview.md:15).
         if (present && kept !== null && family === "opinion") {
@@ -1358,11 +1428,19 @@ export function StanceControl({
   const padSetting = inFlight === "pad" && slow;
   // CANCEL MID-SIGNING CLOSES THE SURFACE, NEVER THE SIGNING (PadFailed.md,
   // round 21): the act was sent and cannot be called back, so its wait passes
-  // to the target's row — `Signing…` under the face, the anchor refusing a
-  // second hold — and it ends there as a hold's would.
-  const rowSigning = inFlight === "row" || (inFlight === "pad" && !considered);
-  const rowState: RowLineState | null =
-    (rowSigning && slow && confirming === null) || keptBatchSigning ? { kind: "signing" } : rowLine;
+  // to the target's row, the anchor refusing a second hold — and it ends
+  // there as a hold's would. A dialog closed while its act signs closes the
+  // pad beneath with it, so its wait passes the same way
+  // (SeveranceConfirm.md:53, EmptySignConfirm.md:51).
+  //
+  // THE ROW'S WAIT IS THE CLOSED RING, NEVER A LINE (RowSigning.md:5-9,
+  // PadFailed.md:41; the master's `holdWaiting`): a hold's, a closed pad's, a
+  // closed dialog's — the ring stands closed around the face, and `Signing…`
+  // is spoken from a visually hidden status once 200ms pass, never drawn.
+  // Only the kept picks' batch draws its wait as a line (KeptPicksSeal.md:59).
+  const rowSigning = inFlight === "row" || (inFlight !== null && !considered && !dialogUp);
+  const rowSpeaksSigning = rowSigning && slow;
+  const rowState: RowLineState | null = keptBatchSigning ? { kind: "signing" } : rowLine;
 
   const inset = variant?.padInset ?? (barBeneath ? PAD_ABOVE_BAR_INSET_PX : PAD_PARK_INSET_PX);
 
@@ -1672,7 +1750,9 @@ export function StanceControl({
                   {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
                 </span>
               )}
-              {holding && <HoldRing testId={`${testIdPrefix}-hold-ring`} />}
+              {(holding || holdReached || rowSigning) && (
+                <HoldRing testId={`${testIdPrefix}-hold-ring`} closed={!holding} />
+              )}
             </span>
             {wide && restingPair === null && phase === "signedIn" && (
               // The wide anchor's words — only where there is no pair to show.
@@ -1769,6 +1849,11 @@ export function StanceControl({
       {anchored && !keptShown && settling && (
         <PendingMarker testId={`${testIdPrefix}-settling`} />
       )}
+      {anchored && rowSpeaksSigning && (
+        <span role="status" data-testid={`${testIdPrefix}-signing`} className="sr-only">
+          {SIGNING_ROW}
+        </span>
+      )}
       {anchored && rowState !== null && !overMedia && (
         <RowLine state={rowState} node={lineNode} testId={`${testIdPrefix}-row-line`} />
       )}
@@ -1847,6 +1932,10 @@ export function StanceControl({
           onCancel={() => {
             setConfirming(null);
             setConfirmFault(null);
+            // CLOSE WHILE IT SIGNS CLOSES THE PAD BENEATH TOO, and the whole
+            // walk-back goes on, carried by the target's row
+            // (SeveranceConfirm.md:53, :55); `Keep it` returns to the pick.
+            if (inFlight === "confirm") closeAll();
           }}
           onConfirm={() => void onConfirmSeverance()}
         />
@@ -1866,6 +1955,8 @@ export function StanceControl({
           onCancel={() => {
             setEmptyAsk(null);
             setEmptyFault(null);
+            // The same close while it signs (EmptySignConfirm.md:51, :53).
+            if (inFlight === "empty") closeAll();
           }}
           onConfirm={() => void onConfirmEmpty()}
         />

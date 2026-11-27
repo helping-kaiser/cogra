@@ -5,8 +5,10 @@
 // on one line, because the row is one line of controls by rule.
 //
 // THREE STATES, ONE MASTER:
-// - `signing` — a hold's signature past 200ms: `Signing…`, the pending
-//   marker's quiet register, announced politely;
+// - `signing` — a kept picks' batch still signing after its seal closed
+//   (KeptPicksSeal.md:59): `Signing…`, the pending marker's quiet register,
+//   announced politely. A hold's own wait draws no line: the closed ring is
+//   its sign, `Signing…` spoken unseen (RowSigning.md:5-9, `StanceControl`);
 // - `didntSign` — the hold did not sign: `That didn't sign.` in the failure
 //   voice and `Retry`, which asks the same hold again;
 // - `didntGoThrough` — a read-side comfort (save, unsave, hide, undo,

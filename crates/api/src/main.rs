@@ -100,6 +100,10 @@ async fn main() -> anyhow::Result<()> {
     let standin = StandIn::new(pool.clone(), api::boot::standin_config()?);
     let boundary = StandInBoundary(standin.clone());
     let ingest_interval = api::boot::env_positive_secs("L1_INGEST_INTERVAL_SECS", 2)?;
+    let stranded_check_interval = api::boot::env_positive_secs(
+        "L1_STRANDED_CHECK_INTERVAL_SECS",
+        api::ingest::DEFAULT_STRANDED_CHECK_SECS,
+    )?;
     let gc_after_epochs: i64 = env_or(
         "STAGED_WRITE_GC_EPOCHS",
         &api::ingest::DEFAULT_GC_AFTER_EPOCHS.to_string(),
@@ -112,6 +116,7 @@ async fn main() -> anyhow::Result<()> {
             boundary.clone(),
             pool.clone(),
             ingest_interval,
+            stranded_check_interval,
             gc_after_epochs,
         ),
     );
