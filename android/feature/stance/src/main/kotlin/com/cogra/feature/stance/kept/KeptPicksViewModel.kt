@@ -17,6 +17,9 @@
 //   pick n leaves picks 1…n-1 staged unsigned — named in the PR as the web's
 //   own deviation candidate (KeptPicksSeal.md:29 "nothing is staged or spent").
 // - NOTHING DROPS A PICK but the reader's × or the batch landing.
+// - THE SEAL'S RETRY IS THE SAME BATCH (KeptPicksSeal.md:33, :63): the batch
+//   keeps its own slot (`SlottedSigning`), so a press after a signing that did
+//   not answer done asks that batch again rather than staging every pick twice.
 
 package com.cogra.feature.stance.kept
 
@@ -25,8 +28,9 @@ import androidx.lifecycle.viewModelScope
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.repo.StanceRepository
+import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.signing.Expectation
-import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.SameSigning
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.joinExpectations
@@ -36,13 +40,21 @@ import com.cogra.domain.stance.KeptPick
 import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.KeptPreview
 import com.cogra.domain.stance.KeptPreviewRepository
+import com.cogra.domain.stance.StanceAttempts
 import com.cogra.domain.stance.StanceSignals
+import com.cogra.domain.stance.StanceSlot
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.WRITE_RULE_CODES
 import com.cogra.domain.stance.fallbackPreview
+import com.cogra.domain.stance.keptBatchIntent
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.stance.opinions
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.TokenStore
+import com.cogra.feature.stance.Slotted
+import com.cogra.feature.stance.SlottedSigning
+import com.cogra.feature.stance.Staging
+import com.cogra.feature.stance.StancePress
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -115,7 +127,16 @@ class KeptPicksViewModel @Inject constructor(
     private val signer: WriteSigner,
     private val identity: IdentityStore,
     private val signals: StanceSignals,
+    /** Whose press it is: a batch signs only for the account that pressed. */
+    tokens: TokenStore,
+    /** The staged writes' states, read when a Retry asks the same batch again. */
+    stagedWrites: WriteRepository,
+    /** Every stance gesture's attempt on this device, per account (`StanceAttempts`). */
+    attempts: StanceAttempts,
 ) : ViewModel() {
+
+    /** The batch's slot: the seal's Retry asks the same batch again (`SlottedSigning`). */
+    private val signing = SlottedSigning(signer, SameSigning(signer, stagedWrites, identity), attempts, tokens)
 
     private val _state = MutableStateFlow(KeptPicksUiState())
     val state = _state.asStateFlow()
@@ -237,12 +258,28 @@ class KeptPicksViewModel @Inject constructor(
         if (current.signing || current.rows.isEmpty()) return
         _state.update { it.copy(signing = true, fault = null) }
         val batch = current.rows.map { it.pick }
+        // Dispatched, not UNDISPATCHED as the reply seal starts: `signing` is
+        // set before the launch, so the seal refuses a second press until this
+        // one answers (KeptPicksSeal.md:21) whatever the dispatch; the account
+        // is read on the press's first leg.
         viewModelScope.launch {
-            when (val fault = signBatch(batch)) {
-                null -> taken(batch)
-                else -> _state.update { it.copy(signing = false, fault = fault) }
+            when (val signed = signBatch(batch, retrying = current.fault != null)) {
+                BatchSigned.Taken -> taken(batch)
+                is BatchSigned.Fault -> _state.update { it.copy(signing = false, fault = signed.fault) }
+                // Another account is active: nothing ran, the seal stands as it was.
+                BatchSigned.Stood -> _state.update { it.copy(signing = false, fault = current.fault) }
             }
         }
+    }
+
+    /** How one press of the seal ended. */
+    private sealed interface BatchSigned {
+        data object Taken : BatchSigned
+
+        data class Fault(val fault: KeptSealFault) : BatchSigned
+
+        /** The pressing account is not the active one: nothing ran, nothing is said. */
+        data object Stood : BatchSigned
     }
 
     private suspend fun taken(batch: List<KeptPick>) {
@@ -253,37 +290,72 @@ class KeptPicksViewModel @Inject constructor(
         kept.drop(targets, KeptFamily.OPINION)
     }
 
-    /** Prepares every pick in order, then signs the joined batch once; null when it was taken. */
-    private suspend fun signBatch(batch: List<KeptPick>): KeptSealFault? {
+    /**
+     * Signs the batch through the kept picks' own slot (`SlottedSigning`):
+     * after a signing that did not answer done, the same batch is asked again
+     * (KeptPicksSeal.md:33, :63) — each pick is a record of its own in a bundle
+     * that sums, so a batch prepared afresh beside one the server took would
+     * sum every pick twice. A first press, or one after the first batch was
+     * retired, prepares every pick in order and signs the joined batch once.
+     */
+    private suspend fun signBatch(batch: List<KeptPick>, retrying: Boolean): BatchSigned {
+        val press = signing.press(retrying) ?: return BatchSigned.Stood
+        val intent = keptBatchIntent(batch.map { it.target to it.pick })
+        val slotted = signing.sign(StanceSlot.KeptBatch, intent, press) {
+            stageBatch(batch, press)
+        }
+        val fault = when (slotted) {
+            is Slotted.Answered -> faultOf(slotted.results)
+            // A changed batch found the first one approved: it is what lands.
+            // INTERIM, the web's (#693): the batch as the seal holds it now is
+            // what is dropped and counted.
+            is Slotted.Landing -> null
+            is Slotted.Refused -> if (slotted.errors.any { it.code in WRITE_RULE_CODES }) {
+                KeptSealFault.WRITE_RULE
+            } else {
+                KeptSealFault.BUG
+            }
+            Slotted.Unreachable -> KeptSealFault.OFFLINE
+            Slotted.Stood -> return BatchSigned.Stood
+            Slotted.NoKey -> {
+                // The key left between the review and the press: nothing signed.
+                leave()
+                KeptSealFault.OFFLINE
+            }
+        }
+        return fault?.let { BatchSigned.Fault(it) } ?: BatchSigned.Taken
+    }
+
+    /**
+     * Prepares every pick in order, the account asked before each leg; nothing
+     * is signed until every one is staged.
+     */
+    private suspend fun stageBatch(batch: List<KeptPick>, press: StancePress): Staging {
         val prepared = mutableListOf<PreparedWriteView>()
         val expected = mutableListOf<Expectation>()
+        val nodes = mutableListOf<String>()
         for (pick in batch) {
+            if (!press.holds()) return Staging.Stood
             val graphId = (stances.targetGraphId(pick.target) as? Outcome.Success)?.value
-                ?: return KeptSealFault.OFFLINE
+                ?: return Staging.Unreachable
+            if (!press.holds()) return Staging.Stood
             when (val outcome = stances.prepareStance(pick.target, pick.pick)) {
                 is Outcome.Success -> prepared += outcome.value
-                is Outcome.Refused -> return if (outcome.errors.any { it.code in WRITE_RULE_CODES }) {
-                    KeptSealFault.WRITE_RULE
-                } else {
-                    KeptSealFault.BUG
-                }
-                is Outcome.Failed -> return KeptSealFault.OFFLINE
+                is Outcome.Refused -> return Staging.Refused(outcome.errors)
+                is Outcome.Failed -> return Staging.Unreachable
             }
+            nodes += graphId
             expected += Expectation(listOf(stanceRecord(graphId, pick.pick.pDirected, pick.pick.pInterest)))
         }
-        val results = try {
-            signer.sign(prepared, joinExpectations(expected))
-        } catch (_: NoActorKeyException) {
-            // The key left between the review and the press: nothing signed.
-            leave()
-            return KeptSealFault.OFFLINE
-        }
-        return when {
-            results.all { it is WriteResult.Done } -> null
-            results.any { it is WriteResult.Refused && it.errors.any { e -> e.code in WRITE_RULE_CODES } } ->
-                KeptSealFault.WRITE_RULE
-            results.any { it is WriteResult.Refused || it is WriteResult.RejectedByDevice } -> KeptSealFault.BUG
-            else -> KeptSealFault.OFFLINE
-        }
+        return Staging.Staged(nodes.joinToString(" "), prepared, joinExpectations(expected))
+    }
+
+    /** What a signing pass's answers make of the seal; null when the batch was taken. */
+    private fun faultOf(results: List<WriteResult>): KeptSealFault? = when {
+        WriteResult.allDone(results) -> null
+        results.any { it is WriteResult.Refused && it.errors.any { e -> e.code in WRITE_RULE_CODES } } ->
+            KeptSealFault.WRITE_RULE
+        results.any { it is WriteResult.Refused || it is WriteResult.RejectedByDevice } -> KeptSealFault.BUG
+        else -> KeptSealFault.OFFLINE
     }
 }
