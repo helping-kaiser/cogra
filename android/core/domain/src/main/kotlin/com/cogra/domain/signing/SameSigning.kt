@@ -114,6 +114,9 @@ class SameSigning(
             val expectation = expected() ?: return AskedAgain.Unchecked
             if (!stillPressing()) return AskedAgain.Foreign
             val results = signAgain(attempt.writes, expectation)
+            // Answered after a switch: nothing of it is the active account's
+            // to settle or retire; the attempt is asked again under its own.
+            if (!stillPressing()) return AskedAgain.Foreign
             // Anything undecided or approved keeps the attempt: the surface
             // shows its fault, and the next Retry asks this same signing again.
             return if (retirable(results)) retireAll(attempt, stillPressing) else AskedAgain.Signed(results)
@@ -130,6 +133,8 @@ class SameSigning(
 
     private suspend fun retireAll(attempt: SigningAttempt, stillPressing: suspend () -> Boolean): AskedAgain {
         if (!stillPressing()) return AskedAgain.Foreign
+        // Custody is scoped by the active account, so the check above is what
+        // makes this forget the pressing account's material and no other's.
         for (id in attempt.writes) retire(id)
         return AskedAgain.Fresh
     }
