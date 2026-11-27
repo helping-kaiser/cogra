@@ -167,6 +167,34 @@ describe("the kept picks' Retry asks the same batch again", () => {
     expect(retried.kind).toBe("success");
   });
 
+  // K-ASKED-AGAIN-MIXED-EXPIRY: one pick's write expired while another's is
+  // still unanswered has not expired whole: the batch reads as no answer —
+  // the Settings row's `That didn't sign.` with Retry (KeptPicksSeal.md:63) —
+  // never the bug notice a lone refusal reads as, and its Retry asks the same
+  // batch again.
+  it("a re-ask with one write expired and one unanswered reads as no answer and keeps the batch", async () => {
+    const prepares = host();
+    const mixed: Answer = (id) =>
+      id === "w-1"
+        ? { kind: "refused", id, errors: [{ code: "STAGED_WRITE_EXPIRED", message: "garbage-collected unlanded", field: null }] }
+        : lost(id);
+    const { writes, signedAgain } = signer([lost], [mixed]);
+    const { data, retired } = seam(writes);
+
+    await data.commitBatch(BATCH);
+    const reasked = await data.commitBatch(BATCH);
+    const again = await data.commitBatch(BATCH);
+
+    expect(reasked.kind).toBe("failed");
+    expect(retired).toEqual([]);
+    expect(prepares).toHaveLength(2);
+    expect(signedAgain.map((call) => call.ids)).toEqual([
+      ["w-1", "w-2"],
+      ["w-1", "w-2"],
+    ]);
+    expect(again).toEqual({ kind: "success", value: { records: 2 } });
+  });
+
   it("a batch whose picks changed retires an unapproved first batch, then signs the new one alone", async () => {
     const prepares = host();
     const { writes, signedAgain } = signer([lost]);

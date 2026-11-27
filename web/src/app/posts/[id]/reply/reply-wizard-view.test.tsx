@@ -1341,4 +1341,73 @@ describe("Retry after a signing that did not answer", () => {
     expect(prepares).toBe(1);
     expect(signer.signAgain).toHaveBeenCalledWith(["w1"], expect.anything());
   });
+
+  // K-ASKED-AGAIN-MIXED-EXPIRY: a re-ask with one write expired and one still
+  // unanswered has not expired whole, and the undecided write may still land:
+  // the seal shows the fault line with Retry (ReplySeal.md:19), never the bug
+  // notice an expiry alone would read as, and the next Retry asks it again.
+  it("a re-ask with one write expired and one unanswered shows the fault line with Retry and keeps the attempt", async () => {
+    let prepares = 0;
+    server.use(
+      gqlLink.mutation("PrepareComment", () => {
+        prepares += 1;
+        const write = (id: string) => ({
+          __typename: "PreparedWrite",
+          id,
+          family: "REVIEW",
+          canonicalProposal: "AA==",
+          gcAfterEpochs: 3,
+        });
+        return HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: `comment-${prepares}`,
+              writes: [write(`w${prepares}a`), write(`w${prepares}b`)],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const lostOne = (id: string) => ({ kind: "failed" as const, id, cause: new TypeError("Failed to fetch") });
+    const answers = [
+      (id: string) =>
+        id.endsWith("a")
+          ? {
+              kind: "refused" as const,
+              id,
+              errors: [{ code: "STAGED_WRITE_EXPIRED" as const, message: "garbage-collected unlanded", field: null }],
+            }
+          : lostOne(id),
+      (id: string) => ({ kind: "done" as const, id, state: "RELAYING" as const }),
+    ];
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => lostOne(write.id),
+      signAgain: vi.fn(async (ids: readonly string[]) => ids.map(answers.shift()!)),
+    });
+    const onSigned = vi.fn();
+    renderWithProviders(
+      <ReplyWizard
+        target={POST_TARGET}
+        store={fakeIdentityStore({ keyOnDevice: true })}
+        onLeave={vi.fn()}
+        onSigned={onSigned}
+      />,
+      { store: signedInStore(), writeSigner: signer },
+    );
+    await toSeal("Answering you.");
+    fireEvent.click(screen.getByTestId("reply-sign"));
+    fireEvent.click(await screen.findByTestId("reply-retry"));
+    await waitFor(() => expect(signer.signAgain).toHaveBeenCalledTimes(1));
+
+    expect(await screen.findByTestId("reply-retry")).toBeInTheDocument();
+    expect(screen.getByTestId("reply-transport-error")).toBeInTheDocument();
+    expect(screen.queryByTestId("reply-seal-bug")).toBeNull();
+
+    fireEvent.click(screen.getByTestId("reply-retry"));
+    await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-1"));
+    expect(signer.signAgain).toHaveBeenCalledTimes(2);
+    expect(prepares).toBe(1);
+  });
 });

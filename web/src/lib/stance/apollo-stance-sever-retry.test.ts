@@ -225,6 +225,31 @@ describe("the walk-back's Retry asks the same signing again", () => {
     expect(retried.kind).toBe("success");
   });
 
+  // K-ASKED-AGAIN-MIXED-EXPIRY: a walk-back with one write expired and one
+  // still unanswered reads as no answer, and its Retry asks the same batch.
+  it("a re-ask with one write expired and one unanswered reads as no answer and keeps the walk-back", async () => {
+    const { batches } = host({ held: false });
+    const mixed: Answer = (id) =>
+      id === "s-1"
+        ? { kind: "refused", id, errors: [{ code: "STAGED_WRITE_EXPIRED", message: "garbage-collected unlanded", field: null }] }
+        : lost(id);
+    const { writes, signedAgain } = signer([lost], [mixed]);
+    const { data, retired } = seam(writes);
+
+    await data.sever(POST, SHOWN);
+    const reasked = await data.sever(POST, SHOWN);
+    const again = await data.sever(POST, SHOWN);
+
+    expect(reasked.kind).toBe("failed");
+    expect(retired).toEqual([]);
+    expect(batches).toEqual([["s-1", "s-2"]]);
+    expect(signedAgain.map((call) => call.ids)).toEqual([
+      ["s-1", "s-2"],
+      ["s-1", "s-2"],
+    ]);
+    expect(again.kind).toBe("success");
+  });
+
   describe("a pick and a walk-back are different gestures: across kinds, main's road", () => {
     // This fixes the same-kind Retry only. A gesture of the other kind toward
     // the same target neither retires nor lands on the other's attempt: it
