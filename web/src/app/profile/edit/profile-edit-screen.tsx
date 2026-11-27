@@ -69,7 +69,9 @@ import type { Expectation } from "@/lib/signing/intent";
 import { outcomeOf, PROFILE_SIGNED } from "@/lib/profile/profile-change";
 import type { SignedProfileChange, SignedProfileFields } from "@/lib/profile/signed-profile";
 import { AvatarCrop } from "./avatar-crop";
-import { changeSummary, type ProfileFields } from "./change-summary";
+import { ActsFooter } from "@/lib/ui2/compose/edit-acts";
+import { part, type DataNode } from "@/lib/ui/data-node";
+import { anythingStaged, changeSummary, NOTHING_STAGED, type StagedFields } from "./change-summary";
 import { ProfileEditSeal } from "./profile-edit-seal";
 import {
   PictureDisc,
@@ -81,6 +83,9 @@ import {
 // The Display name field's own line for a reserved name (ProfileEdit.md:81);
 // it stands until the next press of Save (ProfileEdit.md:85), never on typing.
 const NAME_RESERVED_LINE = "That name isn't available.";
+
+/** The registered screen (nodes.json `profileEdit`, ProfileEdit.jsx). */
+const NODE: DataNode = { path: "profileEdit" };
 
 /** The prepared change the seal holds and signs. */
 type Sealing = {
@@ -97,8 +102,9 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
   const guard = useAuthGuard();
   const signer = useWriteSigner();
   const keyOnDevice = useKeyOnDevice(store);
-  // The fields as the profile carried them, to say what the change holds.
-  const [before, setBefore] = useState<ProfileFields>({ displayName: "", bio: "", websiteUrl: "" });
+  // Which fields hold a staged change: a field typed in is staged, even when
+  // typed back (ProfileEdit.md:39 — the staged change, never the bytes).
+  const [staged, setStaged] = useState<StagedFields>(NOTHING_STAGED);
   const [sealing, setSealing] = useState<Sealing | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -142,11 +148,6 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
           setDisplayName(outcome.value.displayName.value ?? "");
           setBio(outcome.value.bio.value ?? "");
           setWebsiteUrl(outcome.value.websiteUrl.value ?? "");
-          setBefore({
-            displayName: outcome.value.displayName.value ?? "",
-            bio: outcome.value.bio.value ?? "",
-            websiteUrl: outcome.value.websiteUrl.value ?? "",
-          });
           setAvatarUrl(outcome.value.avatar?.url ?? null);
         } else {
           setTransportFailed(true);
@@ -180,7 +181,9 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (submitting) return;
+    // ProfileEdit.md:45: nothing staged -> NEVER the seal opens AND NEVER
+    // anything is signed (Save is inert; an Enter in a field lands here too).
+    if (submitting || !anythingStaged(staged, avatar)) return;
     setSubmitting(true);
     setRefusedMessage(null);
     setNameReserved(null);
@@ -233,7 +236,7 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
     setSealing({
       writes: prepared.value,
       expected: expectation([profileUpdate(profile)]),
-      summary: changeSummary(before, { displayName, bio, websiteUrl }, avatar),
+      summary: changeSummary(staged, avatar),
       // What the profile's head wears once the change is taken: the fields as
       // sent, the picture only where the change touched it.
       signed: {
@@ -255,6 +258,10 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
   const displayNameTooLong = displayNameProblem(displayName);
   const bioTooLong = bioProblem(bio);
   const websiteUrlTooLong = websiteUrlProblem(websiteUrl);
+  // ProfileEdit.md:41, :43: with nothing staged Save stays visible and inert
+  // and `Nothing to sign yet` stands on it; the first staged change takes the
+  // line away and Save answers (:47).
+  const atRest = !anythingStaged(staged, avatar);
 
   // THE CHANGE'S SEAL stands in the edit's place; the edit waits as it was
   // left, one stage behind.
@@ -340,7 +347,10 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
               label="Display name"
               optional
               value={displayName}
-              onChange={setDisplayName}
+              onChange={(value) => {
+                setDisplayName(value);
+                setStaged((was) => ({ ...was, displayName: true }));
+              }}
               testId="profile-edit-display-name"
               cap={DISPLAY_NAME_MAX_CHARS}
               error={displayNameTooLong ?? nameReserved ?? undefined}
@@ -349,7 +359,10 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
               label="Bio"
               optional
               value={bio}
-              onChange={setBio}
+              onChange={(value) => {
+                setBio(value);
+                setStaged((was) => ({ ...was, bio: true }));
+              }}
               multiline
               rows={3}
               testId="profile-edit-bio"
@@ -360,7 +373,10 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
               label="Website"
               optional
               value={websiteUrl}
-              onChange={setWebsiteUrl}
+              onChange={(value) => {
+                setWebsiteUrl(value);
+                setStaged((was) => ({ ...was, websiteUrl: true }));
+              }}
               testId="profile-edit-website"
               cap={WEBSITE_URL_MAX_CHARS}
               error={websiteUrlTooLong ?? undefined}
@@ -374,11 +390,14 @@ export function ProfileEditScreen({ store = identityStore }: { store?: IdentityS
             )}
             {transportFailed && displayName !== "" && <TransportError testId="profile-edit-submit-transport" />}
           </div>
+          {atRest && <ActsFooter count={0} onOpen={() => {}} testId="profile-edit-acts" node={part(NODE, "acts")} />}
           <PillButton
             testId="profile-edit-save"
+            node={part(NODE, "save")}
             type="submit"
             full
             disabled={
+              atRest ||
               submitting ||
               displayNameTooLong !== null ||
               bioTooLong !== null ||

@@ -176,7 +176,7 @@ describe("the profile edit as its board draws it", () => {
     expect(screen.getByLabelText("Back")).toBeInTheDocument();
     expect(screen.getAllByText("Optional")).toHaveLength(3);
     // Save is the scrolling column's sibling, never inside it.
-    const save = screen.getByTestId("profile-edit-save");
+    const save = screen.getByTestId("profileEdit.save");
     expect(name.closest(".overflow-y-auto")).not.toBeNull();
     expect(save.closest(".overflow-y-auto")).toBeNull();
     expect(save).toHaveClass("w-full");
@@ -187,6 +187,78 @@ describe("the profile edit as its board draws it", () => {
     renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
     fireEvent.click(await screen.findByLabelText("Back"));
     expect(push).toHaveBeenCalledWith("/profile");
+  });
+});
+
+// ProfileEdit.md:39-49 and ProfileEditSeal.md:5: the edit signs only when a
+// change is STAGED, never by comparing the fields' bytes. Nothing staged ->
+// Save visible and inert under `Nothing to sign yet`, and the seal never
+// opens; a change staged and typed back still signs, the row reading `A new …`
+// for the staged parts. No board draws a `Nothing changed` row.
+describe("the staged change, never the bytes", () => {
+  it("opens with nothing staged: Save inert under Nothing to sign yet", async () => {
+    server.use(myProfileHandler());
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    await screen.findByTestId("profile-edit-display-name");
+    expect(screen.getByTestId("profileEdit.acts.line")).toHaveTextContent("Nothing to sign yet");
+    // The line is a plain span at zero, no button (ActsFooter.jsx).
+    expect(screen.getByTestId("profileEdit.acts.line").tagName).toBe("SPAN");
+    const save = screen.getByTestId("profileEdit.save");
+    expect(save).toBeVisible();
+    expect(save).toBeDisabled();
+  });
+
+  it("never opens the seal from a Save with nothing staged, nor signs anything", async () => {
+    const seen: { input?: Record<string, unknown> } = {};
+    server.use(myProfileHandler(), capturingUpdate(seen));
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    const name = await screen.findByTestId("profile-edit-display-name");
+    fireEvent.click(screen.getByTestId("profileEdit.save"));
+    // An Enter in a field submits the form whatever the button says.
+    fireEvent.submit(name.closest("form") as HTMLFormElement);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(seen.input).toBeUndefined();
+    expect(screen.queryByTestId("profile-edit-seal")).toBeNull();
+    expect(screen.getByTestId("profile-edit")).toBeInTheDocument();
+  });
+
+  it("takes the line away and lets Save answer at the first staged change", async () => {
+    server.use(myProfileHandler());
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    fireEvent.change(await screen.findByTestId("profile-edit-bio"), { target: { value: "Old bio!" } });
+    expect(screen.queryByTestId("profileEdit.acts.line")).toBeNull();
+    expect(screen.getByTestId("profileEdit.save")).toBeEnabled();
+  });
+
+  it("still signs a change staged and typed back, its row naming the staged part", async () => {
+    const seen: { input?: Record<string, unknown> } = {};
+    server.use(myProfileHandler(), capturingUpdate(seen));
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    const name = await screen.findByTestId("profile-edit-display-name");
+    fireEvent.change(name, { target: { value: "Adaa" } });
+    fireEvent.change(name, { target: { value: "Ada" } });
+    expect(screen.queryByTestId("profileEdit.acts.line")).toBeNull();
+    fireEvent.click(screen.getByTestId("profileEdit.save"));
+
+    await waitFor(() => expect(seen.input).toBeDefined());
+    expect(await screen.findByText("A new display name")).toBeInTheDocument();
+    expect(screen.queryByText("Nothing changed")).toBeNull();
+  });
+
+  it("is at rest again when the picture's removal is undone and nothing else is staged", async () => {
+    server.use(myProfileHandler({ avatar: asset("m-old") }));
+    renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    fireEvent.click(await screen.findByTestId("profile-edit-avatar-remove"));
+    expect(screen.queryByTestId("profileEdit.acts.line")).toBeNull();
+    expect(screen.getByTestId("profileEdit.save")).toBeEnabled();
+    fireEvent.click(screen.getByTestId("profile-edit-avatar-remove"));
+    expect(screen.getByTestId("profileEdit.acts.line")).toHaveTextContent("Nothing to sign yet");
+    expect(screen.getByTestId("profileEdit.save")).toBeDisabled();
   });
 });
 
@@ -284,7 +356,7 @@ describe("Change picture and the picture's crop screen", () => {
     renderWithProviders(<ProfileEditPage />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
 
     await pickThroughCrop();
-    fireEvent.click(screen.getByTestId("profile-edit-save"));
+    fireEvent.click(screen.getByTestId("profileEdit.save"));
 
     await waitFor(() => expect(seen.input).toHaveProperty("avatarMediaId", "m-9"));
     expect(drawn).toEqual([[0, 0, 1200, 1200, 0, 0, 1080, 1080]]);
@@ -325,7 +397,7 @@ describe("ProfileEditPage", () => {
     });
     const name = await screen.findByTestId("profile-edit-display-name");
     fireEvent.change(name, { target: { value: "  " } });
-    fireEvent.click(screen.getByTestId("profile-edit-save"));
+    fireEvent.click(screen.getByTestId("profileEdit.save"));
 
     await waitFor(() => expect(seen.input).toBeDefined());
     expect(screen.queryByTestId("profile-edit-empty-name")).toBeNull();
@@ -370,7 +442,7 @@ describe("ProfileEditPage", () => {
     fireEvent.change(screen.getByTestId("profile-edit-website"), {
       target: { value: "https://ada.example" },
     });
-    fireEvent.click(screen.getByTestId("profile-edit-save"));
+    fireEvent.click(screen.getByTestId("profileEdit.save"));
     // ProfileEdit.md:15: Save opens the seal and signs nothing; its commit does.
     fireEvent.click(await screen.findByTestId("profile-edit-seal-sign"));
 
@@ -439,7 +511,7 @@ describe("ProfileEditPage", () => {
 
     const name = (await screen.findByTestId("profile-edit-display-name")) as HTMLInputElement;
     fireEvent.change(name, { target: { value: "CoGra" } });
-    fireEvent.click(screen.getByTestId("profile-edit-save"));
+    fireEvent.click(screen.getByTestId("profileEdit.save"));
 
     const line = await screen.findByText("That name isn't available.");
     expect(line).toHaveAttribute("role", "alert");
@@ -454,9 +526,9 @@ describe("ProfileEditPage", () => {
     // Typing never takes the line away; only the next press of Save does.
     fireEvent.change(name, { target: { value: "CoGra Two" } });
     expect(screen.getByText("That name isn't available.")).toBeInTheDocument();
-    expect(screen.getByTestId("profile-edit-save")).toBeEnabled();
+    expect(screen.getByTestId("profileEdit.save")).toBeEnabled();
 
-    fireEvent.click(screen.getByTestId("profile-edit-save"));
+    fireEvent.click(screen.getByTestId("profileEdit.save"));
     expect(await screen.findByTestId("profile-edit-seal-sign")).toBeInTheDocument();
     expect(screen.queryByText("That name isn't available.")).toBeNull();
   });
@@ -488,7 +560,7 @@ describe("ProfileEditPage", () => {
       fireEvent.change(name, { target: { value: "a".repeat(51) } });
       expect(await screen.findByText("1 over")).toBeInTheDocument();
       expect(screen.getByRole("alert")).toHaveTextContent("Too long — at most 50 characters.");
-      expect(screen.getByTestId("profile-edit-save")).toBeDisabled();
+      expect(screen.getByTestId("profileEdit.save")).toBeDisabled();
     });
 
     it("shows the late counter as bio nears its cap", async () => {
@@ -513,7 +585,7 @@ describe("ProfileEditPage", () => {
       fireEvent.change(bio, { target: { value: "a".repeat(501) } });
       expect(await screen.findByText("1 over")).toBeInTheDocument();
       expect(screen.getByRole("alert")).toHaveTextContent("Too long — at most 500 characters.");
-      expect(screen.getByTestId("profile-edit-save")).toBeDisabled();
+      expect(screen.getByTestId("profileEdit.save")).toBeDisabled();
     });
 
     it("shows the late counter as the website URL nears its cap", async () => {
@@ -538,7 +610,7 @@ describe("ProfileEditPage", () => {
       fireEvent.change(website, { target: { value: "a".repeat(2049) } });
       expect(await screen.findByText("1 over")).toBeInTheDocument();
       expect(screen.getByRole("alert")).toHaveTextContent("Too long — at most 2048 characters.");
-      expect(screen.getByTestId("profile-edit-save")).toBeDisabled();
+      expect(screen.getByTestId("profileEdit.save")).toBeDisabled();
     });
 
     it("never truncates: typing past a cap keeps the full value reachable", async () => {
@@ -582,8 +654,8 @@ describe("ProfileEditPage", () => {
       store: signedInStore(),
       writeSigner: fakeWriteSigner(),
     });
-    await screen.findByTestId("profile-edit-display-name");
-    fireEvent.click(screen.getByTestId("profile-edit-save"));
+    fireEvent.change(await screen.findByTestId("profile-edit-bio"), { target: { value: "A new bio" } });
+    fireEvent.click(screen.getByTestId("profileEdit.save"));
     expect(await screen.findByTestId("profile-edit-refused")).toHaveTextContent(
       "Something in this wasn't accepted",
     );
@@ -605,7 +677,7 @@ describe("ProfileEditPage", () => {
       fireEvent.change(await screen.findByTestId("profile-edit-bio"), {
         target: { value: "A new bio" },
       });
-      fireEvent.click(screen.getByTestId("profile-edit-save"));
+      fireEvent.click(screen.getByTestId("profileEdit.save"));
 
       await waitFor(() => expect(seen.input).toBeDefined());
       expect(seen.input).not.toHaveProperty("avatarMediaId");
@@ -620,7 +692,7 @@ describe("ProfileEditPage", () => {
       });
 
       fireEvent.click(await screen.findByTestId("profile-edit-avatar-remove"));
-      fireEvent.click(screen.getByTestId("profile-edit-save"));
+      fireEvent.click(screen.getByTestId("profileEdit.save"));
 
       await waitFor(() => expect(seen.input).toBeDefined());
       expect(seen.input).toHaveProperty("avatarMediaId", null);
@@ -668,7 +740,7 @@ describe("ProfileEditPage", () => {
       });
 
       await pickThroughCrop();
-      fireEvent.click(screen.getByTestId("profile-edit-save"));
+      fireEvent.click(screen.getByTestId("profileEdit.save"));
 
       await waitFor(() => expect(seen.input).toHaveProperty("avatarMediaId", "m-9"));
       fireEvent.click(await screen.findByTestId("profile-edit-seal-sign"));
@@ -685,7 +757,7 @@ describe("ProfileEditPage", () => {
       });
 
       await pickThroughCrop();
-      fireEvent.click(screen.getByTestId("profile-edit-save"));
+      fireEvent.click(screen.getByTestId("profileEdit.save"));
 
       expect(await screen.findByText("The server couldn't finish that upload.")).toBeInTheDocument();
       expect(seen.input).toBeUndefined();
@@ -727,7 +799,7 @@ describe("ProfileEditPage", () => {
       });
 
       await pickThroughCrop();
-      fireEvent.click(screen.getByTestId("profile-edit-save"));
+      fireEvent.click(screen.getByTestId("profileEdit.save"));
 
       expect(await screen.findByTestId("profile-edit-refused")).toHaveTextContent(
         TOO_BIG_PICTURE,
