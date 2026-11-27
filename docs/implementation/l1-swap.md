@@ -223,8 +223,21 @@ standard's structure and CoGra's own bytes:
 - the pre-commitment hashes the encoded body and both pre-digests
   under `cogra-l1:pre-commitment:v2`; the content and dependency
   editions are 2 (`proposal/mod.rs:43-60`);
-- the seal and the approval cover the eight-element encoded verified
-  act (`handshake.rs:185-204`);
+- the host seal covers the eight-element encoded verified act
+  (`handshake.rs`, `seal_message`); the approval covers the act alone —
+  a four-element array of the encoded body, both commitments and a
+  schema version — under `cogra-l1:approval:v3`
+  (`act_approval_message`, `approval_digest`); the pre-commitment, the
+  pre-signature, the editions, the frame version and the host seal
+  travel beside the act as its seal attestation, which the approval
+  does not cover;
+- the approval form is fixed per epoch, never per act: every package
+  states it, and the epochs closed before the approval covered the act
+  alone keep the form over the verified act and its host seal
+  (`cogra-l1:approval:v2`); the stand-in orders acts of one form into
+  an epoch, so an act approved in the earlier form keeps its approval
+  and lands in an epoch of that form (`l1-standin/src/close.rs`,
+  `close_epoch`);
 - the tags live in `crypto.rs:14-32`, `proposal/mod.rs:32-48`,
   `web/src/lib/crypto/hashing.ts:15-21` and
   `android/core/crypto/.../Hashing.kt:20-26`; "the `PN-*` strings
@@ -290,19 +303,21 @@ The host publishes the seven parts of ``post:network:host-contract``
 
 - `PublishedRecord` carries the act identifier, author, family, epoch,
   act time, position, the payload witness, the legs with their
-  parameters and τ, and the act's authentication at the replay floor
-  (`handshake.rs:219-234`): the approved body, the one public key the
+  parameters and τ, and the replay floor in two members
+  (`handshake.rs`, `PublishedRecord`): the act's approval — the
+  approved body, the dependency commitment, the one public key the
   record maps both the proposal signature and the approval signature
-  to, the pre-commitment and its signature, the dependency
-  commitment, the formation edition each commitment names, the host
-  seal and the approval witness (`ActAuthentication`,
-  `handshake.rs:250-272`). It carries no opening and no pre-digest.
-  The stand-in publishes them from what it stores in `l1_acts`
-  (`seal.rs:172-201`).
+  to, and the approval witness (`ActApproval`) — and, beside the act,
+  its seal attestation — the pre-commitment and its signature, the
+  formation edition each commitment names, the frame version and the
+  host seal (`SealAttestation`). It carries no opening and no
+  pre-digest. The stand-in publishes them from what it stores in
+  `l1_acts` (`seal.rs:172-201`).
 - `EpochClosure` carries the closure cause, the boundary triple, the
   dependent-set partition, the final ledger, θ charged, the wall step,
-  the marker policy and the verification-case declarations in force
-  (`handshake.rs:587-605`). The stand-in declares no case, so every
+  the marker policy, the verification-case declarations in force and
+  the approval form every witness of the epoch verifies in
+  (`handshake.rs`, `EpochClosure`). The stand-in declares no case, so every
   package binds the empty set. The closure binds none of
   host-contract parts (iii)–(v) and (vii), which the stand-in does not
   compute (§3.7).

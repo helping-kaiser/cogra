@@ -3,8 +3,8 @@
 //! Host side of the admission handshake's two relay legs
 //! (layer1-interface.md §8.2). `seal` runs the act checks on a submission,
 //! adds salts, forms the binding commitments, and seals the verified act;
-//! `approve` verifies the approval witness over that exact verified act
-//! and its seal. Ordering admits only a verified act carrying a valid
+//! `approve` verifies the approval witness over that exact act — its body
+//! and both commitments, not the seal. Ordering admits only a verified act carrying a valid
 //! approval witness.
 //!
 //! The submission carries no content pair, and this host never asks for

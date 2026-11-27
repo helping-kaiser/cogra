@@ -205,7 +205,7 @@ person ↔ actor association — identity association is terminal by
 contract — and the carriage stores, nothing more). L1's admission
 handshake requires two author signatures per act — the proposal
 pre-commitment before host salting, and the approval witness over
-the exact host-sealed verified act
+the exact act the host sealed, and nothing beside it
 ([layer1-interface.md §8.2](layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake))
 — so one write runs in five steps:
 
@@ -232,8 +232,9 @@ the exact host-sealed verified act
    content commitment against the content pre-digest it recomputes
    from its own payload and content nonce, and the dependency
    commitment against the dependency list, and signs the **approval
-   witness** over the verified act and its seal — only then is the
-   act orderable. The
+   witness** over the act alone — its body and both commitments; the
+   host seal travels beside the act and is not signed — only then is
+   the act orderable. The
    backend relays the approval and drives retries across epoch
    boundaries; relaying confers nothing: both signatures cover
    the act, so the backend can neither alter it nor author one

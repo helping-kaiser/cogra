@@ -1755,9 +1755,12 @@ handshake below.
    approved body and proposal, and correct formation of both host-added
    commitments under their declared editions; for a hyper-edge, all
    act-level fields agree across both legs. The author signs an approval
-   witness $\sigma^{\text{app}}_q$ over this exact verified act and seal,
-   including its content and dependency commitments, as the accepted
-   realization of the precommitted proposal. A valid witness verifies under
+   witness $\sigma^{\text{app}}_q$ over this exact act — its identifier,
+   author, family, body, public references and both commitments in their
+   exact association — and nothing beside it, as the accepted realization
+   of the precommitted proposal. The host seal and what it seals beyond
+   the act travel as a separate object that names the act; the witness
+   does not cover them. A valid witness verifies under
    the public key the record maps to it over this exact association;
    authority of that key for the stated Actor is separate from signature
    validity. The witness signs no epoch index, position, logical time,
@@ -1967,8 +1970,9 @@ the exact bytes it covers, which include the stated author and act
 identifier; (ii) proposal integrity — a host cannot substitute another body
 or committed value, including opaque signed extension bytes, for the bytes
 the recorded signatures cover without detection; (iii) realization
-transparency — every host-added field of the finalizable act lies within
-the bytes the recorded approval signs; (iv) exact approval — only the exact
+transparency — every host-added field of the finalizable act, its two
+commitments, lies within the bytes the recorded approval signs, and the
+host seal is a separate object outside the act; (iv) exact approval — only the exact
 finalizable act covered by a well-formed recorded approval signature may
 enter the authoritative sequence; (v) hyper-act unity — both projections of
 a hyper-edge resolve to the same approved parent act; (vi)
