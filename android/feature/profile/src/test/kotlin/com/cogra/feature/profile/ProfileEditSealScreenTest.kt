@@ -168,7 +168,7 @@ class ProfileEditSealScreenTest {
 
     @Test
     fun aRemovedPictureReadsTheRemovalAndTheMonogram() {
-        render(atRest.copy(bio = "", websiteUrl = "", avatar = ProfileImageState.Cleared))
+        render(atRest.copy(bio = "", websiteUrl = "", staged = emptySet(), avatar = ProfileImageState.Cleared))
         compose.onNodeWithText("The picture removed").assertExists()
         compose.onNodeWithTag("profile_edit_seal_picture").assertExists()
     }
