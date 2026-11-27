@@ -183,6 +183,16 @@ describe("Intro", () => {
     expect(screen.getByTestId("onboarding.stage.youCaption")).toHaveTextContent("you");
   });
 
+  it("draws an unsized board face as the master's sm disc, 24px (ActorChip.jsx)", () => {
+    renderAt(3);
+    const stage = screen.getByTestId("onboarding.stage");
+    const discs = [...stage.querySelectorAll<HTMLElement>("span.rounded-full")].filter(
+      (disc) => disc.style.width !== "",
+    );
+    // The chat's two faces and the comment's author, as OnboardingPublic.jsx draws them.
+    expect(discs.map((disc) => disc.style.width)).toEqual(["24px", "24px", "24px"]);
+  });
+
   it("covers the page: no bottom bar under it (OnboardingSteps.md:9)", () => {
     renderIntro();
     expect(screen.getByTestId("intro")).toHaveClass("fixed", "inset-x-0", "top-0");

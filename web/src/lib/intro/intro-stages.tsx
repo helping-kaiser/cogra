@@ -44,6 +44,12 @@ const PHOTO = {
 
 const STROKE = "var(--border-field)";
 
+/**
+ * An unsized `MonogramAvatar` on a board is the master's `sm` disc, 24px
+ * (`ActorChip.jsx`: `size = "sm"`) — the author lines' and the chat's faces.
+ */
+const SMALL_DISC = { size: 24, tier: "sm" } as const;
+
 /** The reader the intro introduces: whose face the fifth card wears. */
 export type IntroInviter = {
   readonly handle: string;
@@ -100,7 +106,7 @@ function Photo({ src, style }: { src: string; style: CSSProperties }) {
 function AuthorLine({ name, handle, src, age }: { name: string; handle: string; src?: string; age: string }) {
   return (
     <div className="flex items-center gap-2" style={{ padding: "10px 12px" }}>
-      <MonogramAvatar name={name} src={src} />
+      <MonogramAvatar name={name} src={src} {...SMALL_DISC} />
       <span className="flex-1 text-label-large">@{handle}</span>
       <span className="text-body-small" style={{ color: "var(--text-secondary)" }}>
         {age}
@@ -236,8 +242,8 @@ function PublicStage() {
         style={{ width: 342, boxSizing: "border-box", background: "var(--surface-container)", padding: 12 }}
       >
         <div className="flex items-center gap-2">
-          <MonogramAvatar name="Ada Okonkwo" src={PHOTO.camera} />
-          <MonogramAvatar name="Tobias Lindqvist" />
+          <MonogramAvatar name="Ada Okonkwo" src={PHOTO.camera} {...SMALL_DISC} />
+          <MonogramAvatar name="Tobias Lindqvist" {...SMALL_DISC} />
           <span className="text-label-small" style={{ color: "var(--text-secondary)" }}>
             @ada and @tobias
           </span>
@@ -272,7 +278,7 @@ function PublicStage() {
         style={{ width: 342, boxSizing: "border-box", background: "var(--surface-card)", border: "1px solid var(--border-hairline)", padding: "10px 12px" }}
       >
         <div className="flex items-center gap-2">
-          <MonogramAvatar name="Sol Ferreira" />
+          <MonogramAvatar name="Sol Ferreira" {...SMALL_DISC} />
           <span className="flex-1 text-label-large">@sol</span>
           <span className="text-body-small" style={{ color: "var(--text-secondary)" }}>
             2h
