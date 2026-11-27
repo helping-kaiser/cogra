@@ -756,9 +756,8 @@ class StanceViewModel @Inject constructor(
      * refuses at staging as well as at the signer — a notice, not a fault.
      */
     private suspend fun signWalkBack(target: StanceTarget, quote: SeveranceQuote, retrying: Boolean): Signed {
-        val press = signing.press() ?: return Signed.Stood
-        val slot = StanceSlot.WalkBack(target)
-        val slotted = signing.sign(slot, severanceIntent(target), press, retrying = retrying) {
+        val press = signing.press(retrying) ?: return Signed.Stood
+        val slotted = signing.sign(StanceSlot.WalkBack(target), severanceIntent(target), press) {
             val graphId = (stances.targetGraphId(target) as? Outcome.Success)?.value
                 ?: return@sign Staging.Unreachable
             val expected = Expectation(
@@ -865,9 +864,8 @@ class StanceViewModel @Inject constructor(
      * standing fault's Retry, which only that fault's account may press.
      */
     private suspend fun sign(target: StanceTarget, pick: StancePair, retrying: Boolean): Signed {
-        val press = signing.press() ?: return Signed.Stood
-        val slot = StanceSlot.Pick(target)
-        val slotted = signing.sign(slot, stanceIntent(target, pick), press, pick, retrying) {
+        val press = signing.press(retrying) ?: return Signed.Stood
+        val slotted = signing.sign(StanceSlot.Pick(target), stanceIntent(target, pick), press, pick) {
             // The record must come back as exactly the pick, toward the node
             // the standing read named (Intent.kt).
             val graphId = when (val read = stances.targetGraphId(target)) {

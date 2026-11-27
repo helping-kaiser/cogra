@@ -78,7 +78,12 @@ internal sealed interface Slotted {
 }
 
 /** One press: the account it was pressed as, and whether that account is still the active one. */
-internal class StancePress(val owner: String, val holds: suspend () -> Boolean)
+internal class StancePress(
+    val owner: String,
+    /** The press is the Retry of the fault its holder shows for the slot. */
+    val retrying: Boolean,
+    val holds: suspend () -> Boolean,
+)
 
 internal class SlottedSigning(
     private val signer: WriteSigner,
@@ -87,9 +92,9 @@ internal class SlottedSigning(
     private val tokens: TokenStore,
 ) {
     /** The press, taken as the active account; null with no session — nothing is signed for nobody. */
-    suspend fun press(): StancePress? {
+    suspend fun press(retrying: Boolean = false): StancePress? {
         val owner = tokens.current()?.accountId ?: return null
-        return StancePress(owner) { tokens.current()?.accountId == owner }
+        return StancePress(owner, retrying) { tokens.current()?.accountId == owner }
     }
 
     /**
@@ -102,18 +107,16 @@ internal class SlottedSigning(
     /**
      * Signs [slot]'s gesture [intent] for [press]: asks the slot's answered
      * attempt again, or stages anew with [stage]. [pick] is what a pick's
-     * attempt signs, kept for a landing. [retrying] says the press is the
-     * Retry of the fault the holder shows for [slot].
+     * attempt signs, kept for a landing.
      */
     suspend fun sign(
         slot: StanceSlot,
         intent: String,
         press: StancePress,
         pick: StancePair? = null,
-        retrying: Boolean = false,
         stage: suspend () -> Staging,
     ): Slotted {
-        if (retrying && faultOwners[slot]?.let { it != press.owner } == true) return Slotted.Stood
+        if (press.retrying && faultOwners[slot]?.let { it != press.owner } == true) return Slotted.Stood
         val slotted = try {
             slotted(slot, intent, press, pick, stage)
         } catch (_: NoActorKeyException) {
