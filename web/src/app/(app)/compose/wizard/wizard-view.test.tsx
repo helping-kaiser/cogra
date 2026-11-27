@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { echoedMedia } from "@/test/media-echo";
+import type { WriteResult } from "@/lib/signing/write-signer";
 import { fakeWriteSigner } from "@/test/registration";
 import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
@@ -2158,7 +2159,7 @@ describe("Retry after a signing that did not answer", () => {
     const prepare = twoWrites();
     server.use(prepare.handler);
     const drafts = fakeDrafts();
-    const answers = [
+    const answers: ((id: string) => WriteResult)[] = [
       (id: string) => (id.endsWith("a") ? expiredOne(id) : lostOne(id)),
       (id: string) => ({ kind: "done" as const, id, state: "RELAYING" as const }),
     ];

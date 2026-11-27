@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
+import type { WriteResult } from "@/lib/signing/write-signer";
 import { fakeWriteSigner } from "@/test/registration";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -1371,7 +1372,7 @@ describe("Retry after a signing that did not answer", () => {
       }),
     );
     const lostOne = (id: string) => ({ kind: "failed" as const, id, cause: new TypeError("Failed to fetch") });
-    const answers = [
+    const answers: ((id: string) => WriteResult)[] = [
       (id: string) =>
         id.endsWith("a")
           ? {
