@@ -872,6 +872,28 @@ describe("the hold", () => {
     expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent("+0.10 / +0.10");
   });
 
+  // RowSigning.md:35: "WHEN the hold reaches 500ms -> the ring stays closed AND
+  // the signing begins" — even while the key's answer is still coming, and
+  // whatever the lift does meanwhile.
+  it("keeps the ring closed from 500ms while the key is asked, the finger lifted", async () => {
+    const data = mount();
+    await settle();
+    let keyAnswer: (present: boolean) => void = () => {};
+    data.keyOnDevice = () => new Promise((resolve) => (keyAnswer = resolve));
+    data.commit = () => new Promise(() => {});
+    fireEvent.pointerDown(control(), { pointerId: 1, clientX: 0, clientY: 0 });
+    await settle(LONG_PRESS_MS + 1);
+    await act(async () => {
+      fireEvent.pointerUp(control(), { pointerId: 1 });
+      fireEvent.click(control());
+    });
+    expectClosedRing();
+    await act(async () => keyAnswer(true));
+    await settle();
+    expectClosedRing();
+    expect(control()).toHaveAttribute("aria-busy", "true");
+  });
+
   // RowSigning.md:15: not taken, "the ring goes"; :23: Retry -> "the closed
   // ring stands around the face while it signs, as after the hold".
   it("takes the ring away when the hold does not sign, and closes it again around the Retry's signing", async () => {
