@@ -252,30 +252,51 @@ class StanceRetrySameSigningTest {
     // (e) A Retry under another account runs nothing; under its own it asks again.
 
     @Test
-    fun anotherAccountNeverAsksTheAttemptAndItsOwnAsksItAgainOnceBack() = runTest(dispatcher) {
+    fun aRetryUnderAnotherAccountRunsNothingAndTheAttemptStandsAgainUnderItsOwn() = runTest(dispatcher) {
         host.loseSubmits = 1
         val vm = opened()
         vm.set()
         assertThat(vm.entry().failed).isTrue()
 
-        // acct-b's Set is acct-b's own act: it reads, retires and signs
-        // nothing of acct-a's attempt.
+        // The fault's Retry is acct-a's: under acct-b it reads, retires,
+        // prepares and signs nothing, and the fault stands as it was.
         switchTo("acct-b")
         vm.set()
         assertThat(host.read).isEmpty()
         assertThat(identity.handshakes.keys).contains("w1")
-        assertThat(stances.staged).containsExactly(PICK, PICK)
+        assertThat(stances.staged).containsExactly(PICK)
+        assertThat(vm.entry().failed).isTrue()
+        assertThat(vm.entry().busy).isFalse()
 
-        // Back under acct-a, the same pick asks acct-a's first attempt again.
+        // Back under acct-a, the Retry asks acct-a's first attempt again.
         switchTo("acct-a")
-        vm.onOpenPad(TARGET)
-        settle()
-        vm.onPick(TARGET, PICK)
         vm.set()
 
+        assertThat(stances.staged).containsExactly(PICK)
+        assertThat(host.read).containsExactly("w1")
+        assertThat(host.approved).containsExactly("w1")
+        assertThat(vm.entry().confirmation).isNotNull()
+    }
+
+    @Test
+    fun anotherAccountsOwnGestureNeverAsksOrRetiresTheAttempt() = runTest(dispatcher) {
+        host.loseSubmits = 1
+        val first = opened()
+        first.set()
+
+        // acct-b's own pick on a fresh control is acct-b's act: it reads and
+        // retires nothing of acct-a's attempt.
+        switchTo("acct-b")
+        val other = opened()
+        other.set()
+        assertThat(host.read).isEmpty()
+        assertThat(identity.handshakes.keys).contains("w1")
+        assertThat(stances.staged).containsExactly(PICK, PICK)
+
+        switchTo("acct-a")
+        first.set()
         assertThat(stances.staged).containsExactly(PICK, PICK)
         assertThat(host.read).containsExactly("w1")
-        assertThat(host.approved).contains("w1")
     }
 
     @Test

@@ -659,7 +659,7 @@ class StanceViewModel @Inject constructor(
         // The empty sign is a pick: its Retry asks the pick slot's attempt
         // (EmptySignConfirm.md:35 "Set it anyway reads Retry").
         pressed {
-            when (val signed = sign(target, pick)) {
+            when (val signed = sign(target, pick, retrying = open.failed)) {
                 Signed.Done -> taken(target, pick)
                 is Signed.Landed -> taken(target, signed.first)
                 // The write rule's no is a notice (EmptySignConfirm.md, round 21):
@@ -704,7 +704,7 @@ class StanceViewModel @Inject constructor(
         if (open.fromPick) {
             val pick = _state.value.targets[target]?.pick ?: return
             pressed {
-                when (val signed = sign(target, pick)) {
+                when (val signed = sign(target, pick, retrying = open.failed)) {
                     Signed.Done -> taken(target, pick)
                     is Signed.Landed -> taken(target, signed.first)
                     Signed.WriteRule -> severanceWriteRule(target)
@@ -718,7 +718,7 @@ class StanceViewModel @Inject constructor(
         // walk-back's batch again (SeveranceConfirm.md:33 "Walk it back reads Retry").
         pressed {
             val quote = open.quote
-            when (signWalkBack(target, quote)) {
+            when (signWalkBack(target, quote, retrying = open.failed)) {
                 Signed.WriteRule -> severanceWriteRule(target)
                 is Signed.Failed -> failSeverance(target)
                 Signed.Done, is Signed.Landed -> walkedBackAll(target, quote.records)
@@ -755,9 +755,10 @@ class StanceViewModel @Inject constructor(
      * raw sums shown, in exactly the records its cost stated. The write rule
      * refuses at staging as well as at the signer — a notice, not a fault.
      */
-    private suspend fun signWalkBack(target: StanceTarget, quote: SeveranceQuote): Signed {
+    private suspend fun signWalkBack(target: StanceTarget, quote: SeveranceQuote, retrying: Boolean): Signed {
         val press = signing.press() ?: return Signed.Stood
-        val slotted = signing.sign(StanceSlot.WalkBack(target), severanceIntent(target), press) {
+        val slot = StanceSlot.WalkBack(target)
+        val slotted = signing.sign(slot, severanceIntent(target), press, retrying = retrying) {
             val graphId = (stances.targetGraphId(target) as? Outcome.Success)?.value
                 ?: return@sign Staging.Unreachable
             val expected = Expectation(
@@ -822,18 +823,20 @@ class StanceViewModel @Inject constructor(
     private fun commit(target: StanceTarget, pick: StancePair) {
         val entry = _state.value.targets[target]
         if (entry?.busy == true) return
+        // A press while the fault stands is its Retry (PadFailed.md:3, RowSigning.md:23).
+        val retrying = entry?.failed == true
         // The act sent, kept for the row's Retry once its pad is gone.
         update(target) { it.copy(busy = true, failed = false, needsKey = false, sent = pick) }
         pressed {
-            when (val signed = sign(target, pick)) {
+            when (val signed = sign(target, pick, retrying)) {
                 Signed.Done -> taken(target, pick)
                 // PadFailed.md:15 — the pick moved after a first signing the
                 // server had already approved: that first pick is what lands.
                 is Signed.Landed -> taken(target, signed.first)
                 is Signed.Failed -> fail(target, needsKey = signed.needsKey)
                 Signed.WriteRule -> update(target) { it.copy(busy = false, writeRule = true) }
-                // Another account is active: nothing ran, the control stands.
-                Signed.Stood -> update(target) { it.copy(busy = false) }
+                // Another account is active: nothing ran, the control stands as it was.
+                Signed.Stood -> update(target) { it.copy(busy = false, failed = retrying) }
             }
         }
     }
@@ -858,11 +861,13 @@ class StanceViewModel @Inject constructor(
      * Signs [pick] as one stance record toward [target] — the record carries
      * the pick verbatim — through the target's pick slot: after a signing that
      * did not answer done, the same pick asks that signing again
-     * (PadFailed.md:51, RowSigning.md:23).
+     * (PadFailed.md:51, RowSigning.md:23). [retrying] is a press of the
+     * standing fault's Retry, which only that fault's account may press.
      */
-    private suspend fun sign(target: StanceTarget, pick: StancePair): Signed {
+    private suspend fun sign(target: StanceTarget, pick: StancePair, retrying: Boolean): Signed {
         val press = signing.press() ?: return Signed.Stood
-        val slotted = signing.sign(StanceSlot.Pick(target), stanceIntent(target, pick), press, pick) {
+        val slot = StanceSlot.Pick(target)
+        val slotted = signing.sign(slot, stanceIntent(target, pick), press, pick, retrying) {
             // The record must come back as exactly the pick, toward the node
             // the standing read named (Intent.kt).
             val graphId = when (val read = stances.targetGraphId(target)) {

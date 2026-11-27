@@ -93,20 +93,39 @@ internal class SlottedSigning(
     }
 
     /**
+     * The account each slot's standing fault was answered for. THE FAULT'S
+     * RETRY IS ITS ACCOUNT'S (#704's reply seal, #680): pressed while another
+     * account is active it does nothing, and the attempt waits for its own.
+     */
+    private val faultOwners = mutableMapOf<StanceSlot, String>()
+
+    /**
      * Signs [slot]'s gesture [intent] for [press]: asks the slot's answered
      * attempt again, or stages anew with [stage]. [pick] is what a pick's
-     * attempt signs, kept for a landing.
+     * attempt signs, kept for a landing. [retrying] says the press is the
+     * Retry of the fault the holder shows for [slot].
      */
     suspend fun sign(
         slot: StanceSlot,
         intent: String,
         press: StancePress,
         pick: StancePair? = null,
+        retrying: Boolean = false,
         stage: suspend () -> Staging,
-    ): Slotted = try {
-        slotted(slot, intent, press, pick, stage)
-    } catch (_: NoActorKeyException) {
-        Slotted.NoKey
+    ): Slotted {
+        if (retrying && faultOwners[slot]?.let { it != press.owner } == true) return Slotted.Stood
+        val slotted = try {
+            slotted(slot, intent, press, pick, stage)
+        } catch (_: NoActorKeyException) {
+            Slotted.NoKey
+        }
+        when {
+            slotted == Slotted.Stood -> Unit
+            slotted is Slotted.Landing ||
+                (slotted is Slotted.Answered && WriteResult.allDone(slotted.results)) -> faultOwners.remove(slot)
+            else -> faultOwners[slot] = press.owner
+        }
+        return slotted
     }
 
     private suspend fun slotted(
