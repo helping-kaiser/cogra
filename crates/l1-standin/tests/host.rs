@@ -1557,8 +1557,8 @@ async fn the_tables_refuse_a_numbering_without_an_order_of_record(pool: PgPool) 
     let zero = sqlx::query(
         "INSERT INTO l1_epochs
              (epoch, act_count, theta_charged_micro, closure_cause, marker_policy, marker_edition,
-              target_acts, min_duration_secs)
-         VALUES (0, 0, 50186, 'duration', 'stand-in: the epoch close', 1, 10000, 0)",
+              target_acts, min_duration_secs, approval_form)
+         VALUES (0, 0, 50186, 'duration', 'stand-in: the epoch close', 1, 10000, 0, 2)",
     )
     .execute(&pool)
     .await;
