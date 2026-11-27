@@ -18,6 +18,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { HeaderBar } from "@/lib/ui2/header-bar";
 import { HelpDot } from "@/lib/ui2/help-dot";
+import { useReportProblem } from "@/lib/report/report-problem-layer";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { DialogSurface } from "@/lib/ui2/dialog-surface";
 import { PillButton } from "@/lib/ui2/pill-button";
@@ -192,6 +193,8 @@ export function ComposeWizard({
   // Which explanation is open, if any — the `?`s share one dialog because only
   // one can be open at a time and each names its own topic.
   const [help, setHelp] = useState<HelpTopic | null>(null);
+  /** The bug notice's `Report a problem`: the one report page, over the wizard (ReportProblem.md:3,31). */
+  const { openReport, reportLayer } = useReportProblem();
   // Which picker stands in the details stage's place, if any — `+ Add a tag`
   // and `+ Cite something` open them; Done and the arrow close them, every
   // staged pick already applied (TagPicker.md, ReferencePicker.md).
@@ -1373,9 +1376,7 @@ export function ComposeWizard({
               references: state.references.filter((reference) => reference.targetId !== targetId),
             });
           }}
-          // The report page Settings opens is not built on the web yet
-          // (HAND TO FABLE): the word stands where the board draws it.
-          onReport={() => {}}
+          onReport={openReport}
           onDiscard={() => setDiscarding(true)}
           onDiscardConfirmed={() => {
             // The draft goes, with its pictures, tags and citations; nothing
@@ -1496,6 +1497,7 @@ export function ComposeWizard({
         topic={help ?? HELP_TOPICS.howSigningWorks}
         testId="wizard-help"
       />
+      {reportLayer}
     </main>
   );
 }

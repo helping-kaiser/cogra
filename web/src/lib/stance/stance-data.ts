@@ -139,6 +139,12 @@ export type BorrowedStance = {
 /** What a completed gesture staged — one record for a pick, N for a severance. */
 export type StanceCommit = {
   readonly records: number;
+  /**
+   * The kept batch that landed, when it is not the one asked: a changed
+   * batch's Retry found the first batch landing, and only that batch was
+   * signed (KeptPicksSeal.md:31, "the count of the batch" is the one taken).
+   */
+  readonly landed?: readonly KeptEntry[];
 };
 
 /**

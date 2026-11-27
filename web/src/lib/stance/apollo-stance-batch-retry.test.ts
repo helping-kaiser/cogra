@@ -208,7 +208,7 @@ describe("the kept picks' Retry asks the same batch again", () => {
 
     expect(prepares).toHaveLength(2);
     expect(retired).toEqual([]);
-    expect(retried).toEqual({ kind: "success", value: { records: 2 } });
+    expect(retried).toEqual({ kind: "success", value: { records: 2, landed: BATCH } });
   });
 
   it("a batch whose picks changed retires an unapproved first batch, then signs the new one alone", async () => {
@@ -235,7 +235,8 @@ describe("the kept picks' Retry asks the same batch again", () => {
 
     expect(prepares).toHaveLength(2);
     expect(retired).toEqual([]);
-    expect(retried).toEqual({ kind: "success", value: { records: 2 } });
+    // The first batch is what lands, and the seam names it (KeptPicksSeal.md:31).
+    expect(retried).toEqual({ kind: "success", value: { records: 2, landed: BATCH } });
   });
 
   it("a batch while another is still signing is an act of its own", async () => {
