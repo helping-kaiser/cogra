@@ -109,6 +109,44 @@ function retirable(results: readonly WriteResult[]): boolean {
   );
 }
 
+function isExpired(result: WriteResult): boolean {
+  return (
+    result.kind === "refused" && result.errors.some((error) => error.code === "STAGED_WRITE_EXPIRED")
+  );
+}
+
+/**
+ * Whether a batch that did not go through EXPIRED, for the surface's expiry
+ * notice (ComposeExpired.md:3): a write expired and every write's signing has
+ * ended. While another write is undecided — no answer, held, awaiting its
+ * seal, or already approved — the substrate may still land it on its own
+ * (api-spec.md "A prepare may stage a batch": it "decides each act's landing
+ * alone"), so the attempt is kept and its Retry asks it again.
+ */
+export function expiredWhole(results: readonly WriteResult[]): boolean {
+  return results.some(isExpired) && results.every((result) => decisionOf(result) === "ended");
+}
+
+/**
+ * The results a surface reads its fault from. An expiry beside a write still
+ * undecided is not the batch's answer: the batch reads as what the undecided
+ * write says, so the surface shows the fault line with Retry, never a refusal
+ * no Retry can mend. Order is kept; nothing is dropped from a whole expiry.
+ */
+export function faultReading(results: readonly WriteResult[]): readonly WriteResult[] {
+  return expiredWhole(results) ? results : results.filter((result) => !isExpired(result));
+}
+
+/**
+ * The first write of a batch that did not go through, as the stance seams
+ * read their outcome from (`outcomeOf`): by `faultReading`, else the first
+ * that is not done.
+ */
+export function firstIncomplete(results: readonly WriteResult[]): WriteResult | undefined {
+  const incomplete = (rs: readonly WriteResult[]) => rs.find((result) => result.kind !== "done");
+  return incomplete(faultReading(results)) ?? incomplete(results);
+}
+
 export async function askAgain(
   deps: {
     readonly signer: Pick<WriteSigner, "signAgain">;

@@ -72,7 +72,7 @@ import {
   type StagedWriteView,
   type StanceSelector,
 } from "@/lib/api/writes-api";
-import { askAgain } from "@/lib/compose/same-signing";
+import { askAgain, firstIncomplete } from "@/lib/compose/same-signing";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
 import { tokenStore, type TokenStore } from "@/lib/session/token-store";
@@ -479,7 +479,9 @@ export function createApolloStanceData(deps: {
 
   /** What a batch's results say the gesture did. */
   const outcomeOf = (results: readonly WriteResult[]): Outcome<StanceCommit> => {
-    const incomplete = results.find((result) => result.kind !== "done");
+    // An expiry beside a write still undecided is not the batch's answer
+    // (same-signing.ts `faultReading`): the undecided write's is.
+    const incomplete = firstIncomplete(results);
     // A REFUSAL KEEPS ITS CODES. The write rule's is a notice and not a
     // fault (PadWriteRule.md, RowWriteRule.md): the control says `You can't
     // sign right now` with no Retry, which it can only do if the refusal
