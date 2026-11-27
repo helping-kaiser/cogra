@@ -399,6 +399,12 @@ pub async fn land_promoted(
 /// the current-profile read puts pending first, and nothing else ever
 /// selects it again.
 ///
+/// A landed update that owns no version row at all is promoted here too
+/// (`staged::landed_without_profile_row`): one that landed after its
+/// pending row expired, whose insert never committed, so the profile
+/// never shows a record that stands on L1. Its landing runs the insert
+/// branch ([`Landing::Rebuild`]).
+///
 /// `promoted` is this pass's own confirmations, left out
 /// (`ingest::to_retry`). A failure here rides the outcome like any
 /// promotion's and is retried by the next pass.
@@ -407,10 +413,13 @@ pub async fn land_stranded(
     promoted: &[staged::PromotedWrite],
 ) -> Result<Vec<PromotionFailure>, ProfileError> {
     let stranded = staged::landed_with_pending_profile(pool).await?;
+    let unwritten = staged::landed_without_profile_row(pool).await?;
     let mut failures = Vec::new();
-    for write in to_retry(&stranded, promoted) {
-        if let Err(e) = land_one(pool, write, Landing::Retry).await {
-            failures.push(PromotionFailure::of("profile", write, e));
+    for (writes, landing_by) in [(stranded, Landing::Retry), (unwritten, Landing::Rebuild)] {
+        for write in to_retry(&writes, promoted) {
+            if let Err(e) = land_one(pool, write, landing_by).await {
+                failures.push(PromotionFailure::of("profile", write, e));
+            }
         }
     }
     Ok(failures)
@@ -426,7 +435,11 @@ pub async fn land_stranded(
 /// insert branch is the uncommon path: an update that landed without a
 /// pending row of its own — a mirror rebuild, a write staged before
 /// pending profile rows existed, or one landing after its pending row
-/// expired.
+/// expired. The staged row is locked first, as a redaction locks it, so
+/// two passes promoting one write run one after the other; and since
+/// landed rows are not unique on the authoring instant, the insert first
+/// asks whether a row already carries it — the other pass's — and appends
+/// nothing then.
 ///
 /// The merge is copy-forward (data-model.md "Display-content
 /// versioning"): the newest version row alone renders the profile, so a
@@ -525,6 +538,7 @@ async fn land_one(
         .begin()
         .await
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
+    staged::lock_copy(&mut tx, &write.act_id).await?;
     content_store::insert_act_payload(&mut tx, &write.act_id, carried).await?;
     if content_store::lock_act_payload(&mut tx, &write.act_id)
         .await?
@@ -537,7 +551,8 @@ async fn land_one(
         return Ok(());
     }
     if !profile::land_profile_version(&mut tx, write.actor_id, created_at, landing).await?
-        && landing_by == Landing::Confirm
+        && landing_by.inserts()
+        && !profile::has_version_at(&mut tx, write.actor_id, created_at).await?
     {
         profile::insert_profile_version(
             &mut tx,

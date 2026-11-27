@@ -628,6 +628,13 @@ async fn an_update_landing_after_expiry_left_unwritten_is_written_by_the_next_pa
     assert_eq!(shown.display_name, "Ada L", "the update never shows");
     assert!(!shown.pending);
     assert_eq!(rig.version_count(actor).await, 2);
+    assert!(
+        staged::landed_without_profile_row(&rig.pool)
+            .await
+            .expect("reads")
+            .is_empty(),
+        "a written update is chosen again"
+    );
 
     rig.promote_late(&landed).await;
     assert_eq!(

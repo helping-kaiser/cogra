@@ -3215,6 +3215,13 @@ async fn heal_twice_and_overlap(rig: &Rig, landed: &[staged::PromotedWrite]) {
     rig.close_and_ingest().await;
     let failures = content::land_promoted(&rig.pool, landed).await;
     assert!(failures.is_empty(), "the overlap failed: {failures:?}");
+    assert!(
+        staged::landed_without_content_row(&rig.pool)
+            .await
+            .expect("reads")
+            .is_empty(),
+        "a written write is chosen again"
+    );
 }
 
 /// The version rows one node holds, pending and landed alike.
