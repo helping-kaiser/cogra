@@ -189,8 +189,8 @@ release build is unsigned and unshrunk.
 
 **Queued.** Android: the score readout, the Reel, the detail's
 opinions and cited-by rows, ProfileStances, the tag and reference
-pickers, the kept picks, and the profile's card lists. Both clients:
-the intro, the Report a problem page, the invite-link vantage, the
+pickers, the kept picks, and the profile's card lists. Web: the Report
+a problem page. Both clients: the intro, the invite-link vantage, the
 settings, entry, applicant, About, and What's new conformance
 re-audits, and the W8 copy sweep, last.
 
