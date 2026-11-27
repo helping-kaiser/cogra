@@ -15,7 +15,6 @@ import com.cogra.domain.signing.stanceRecord
 import com.cogra.domain.testing.AnswerLosingWriteRepository
 import com.cogra.domain.testing.SealingWriteRepository
 import com.google.common.truth.Truth.assertThat
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,6 +24,7 @@ import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 /** Invertible and visibly not a no-op. */
 private class CustodyCipher : StoreCipher {
