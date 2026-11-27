@@ -52,7 +52,7 @@ class GoldenVectorsTest {
     // that is the Gradle input's job (build.gradle.kts).
     // 3: the handshake took the original's structure (act identifier and
     // pre-commitment in every pre-digest and commitment, editions, the
-    // approval over the verified act and its seal).
+    // approval over the act alone).
     @Test
     fun theVectorsFileIsTheContractVersionThisClientReads() {
         assertThat(vectors.str("version")).isEqualTo("3")
@@ -279,6 +279,7 @@ class GoldenVectorsTest {
         )
         assertThat(sealed.hostSeal.toHex()).isEqualTo(hs.str("hostSealHex"))
         assertThat(sealed.verifySeal(f.hostPubkey)).isTrue()
+        assertThat(act.approvalMsg().toHex()).isEqualTo(hs.str("approvalMsgHex"))
         assertThat(sealed.approvalDigest().toHex()).isEqualTo(hs.str("approvalDigestHex"))
         assertThat(encodeSealedAct(sealed).toHex()).isEqualTo(hs.str("wireVerifiedActHex"))
         // Every field, not a sample: a decoder that swapped the two

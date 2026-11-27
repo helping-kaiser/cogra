@@ -262,20 +262,34 @@ class HandshakeTest {
     }
 
     @Test
-    fun theApprovalWitnessSignsTheVerifiedActAndItsHostSealTogether() {
+    fun theApprovalDigestCoversTheActAloneNotTheSealOrThePreSignature() {
         val sealed = seal(pre, host)
+        val digest = sealed.approvalDigest()
         val witness = actor.approve(pre, sealed, host.publicKeyBytes())
-        val digest = sha256Tagged(Tags.APPROVAL, listOf(sealed.act.sealMsg(), sealed.hostSeal))
         assertThat(verifyDigest(actor.publicKeyBytes(), digest, witness.approvalSignature)).isTrue()
-        val otherSeal = sha256Tagged(Tags.APPROVAL, listOf(sealed.act.sealMsg(), ByteArray(64)))
-        assertThat(verifyDigest(actor.publicKeyBytes(), otherSeal, witness.approvalSignature)).isFalse()
+
+        val otherHost = seal(pre, ActorKey.generate())
+        assertThat(otherHost.hostSeal.contentEquals(sealed.hostSeal)).isFalse()
+        assertThat(otherHost.approvalDigest().contentEquals(digest)).isTrue()
+        val otherPreSignature = seal(pre, host, preSignature = ByteArray(64))
+        assertThat(otherPreSignature.approvalDigest().contentEquals(digest)).isTrue()
+
+        val otherBody = seal(pre, host, body = pre.proposal.body.copy(seq = 2u))
+        assertThat(otherBody.approvalDigest().contentEquals(digest)).isFalse()
+        val otherContent = seal(pre, host, contentCommitment = ByteArray(32) { 9 })
+        assertThat(otherContent.approvalDigest().contentEquals(digest)).isFalse()
+        val otherDependency = seal(pre, host, dependencyCommitment = ByteArray(32) { 9 })
+        assertThat(otherDependency.approvalDigest().contentEquals(digest)).isFalse()
     }
 
     @Test
-    fun anApprovalOverTheVerifiedActWithoutItsSealDoesNotVerify() {
+    fun anApprovalOverTheActMessageVerifiesAndOneOverTheEarlierSealedFormDoesNot() {
         val sealed = seal(pre, host)
-        val unsealed = actor.signTagged(Tags.APPROVAL, sealed.act.sealMsg())
-        assertThat(verifyDigest(actor.publicKeyBytes(), sealed.approvalDigest(), unsealed)).isFalse()
+        val overAct = actor.signTagged(Tags.APPROVAL, sealed.act.approvalMsg())
+        assertThat(verifyDigest(actor.publicKeyBytes(), sealed.approvalDigest(), overAct)).isTrue()
+        val earlierEpochsTag = "cogra-l1:approval:v2"
+        val earlier = actor.signTagged(earlierEpochsTag, sealed.act.sealMsg() + sealed.hostSeal)
+        assertThat(verifyDigest(actor.publicKeyBytes(), sealed.approvalDigest(), earlier)).isFalse()
     }
 
     @Test
