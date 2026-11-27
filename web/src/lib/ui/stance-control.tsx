@@ -109,7 +109,7 @@ import {
 import { EmptySignConfirm } from "@/lib/ui/empty-sign-confirm";
 import { swallowRestOfGesture } from "@/lib/ui/outside-press";
 import { PendingMarker } from "@/lib/ui/pending-marker";
-import { RowLine, type RowLineState } from "@/lib/ui/row-line";
+import { RowLine, SIGNING_ROW, type RowLineState } from "@/lib/ui/row-line";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
@@ -345,7 +345,11 @@ function useOwned<T>(): readonly [
 const HOLD_RING_PX = 40;
 const HOLD_RING_STROKE_PX = 4;
 
-function HoldRing({ testId }: { testId: string }) {
+/**
+ * The ring: filling over the hold, or — `closed` — standing whole and still
+ * around the face while the row's act signs (the master's `progress={1}`).
+ */
+function HoldRing({ testId, closed = false }: { testId: string; closed?: boolean }) {
   const r = (HOLD_RING_PX - HOLD_RING_STROKE_PX) / 2;
   const circumference = Math.round(2 * Math.PI * r * 1000) / 1000;
   return (
@@ -366,15 +370,17 @@ function HoldRing({ testId }: { testId: string }) {
         strokeWidth={HOLD_RING_STROKE_PX}
         strokeLinecap="round"
         strokeDasharray={circumference}
-        strokeDashoffset={circumference}
+        strokeDashoffset={closed ? 0 : circumference}
       >
-        <animate
-          attributeName="stroke-dashoffset"
-          from={circumference}
-          to="0"
-          dur={`${LONG_PRESS_MS}ms`}
-          fill="freeze"
-        />
+        {!closed && (
+          <animate
+            attributeName="stroke-dashoffset"
+            from={circumference}
+            to="0"
+            dur={`${LONG_PRESS_MS}ms`}
+            fill="freeze"
+          />
+        )}
       </circle>
     </svg>
   );
@@ -569,6 +575,13 @@ export function StanceControl({
   const slow = flight?.slow ?? false;
   /** The face, ringed while a hold is under way. */
   const [holding, setHolding] = useState(false);
+  /**
+   * The hold reached 500ms and its answer — the key's, then the signing's —
+   * is being asked: the ring stays closed (RowSigning.md:35, "the ring stays
+   * closed AND the signing begins"), the lift notwithstanding, until the
+   * row's wait carries it or the hold opens a surface instead.
+   */
+  const [holdReached, setHoldReached] = useState(false);
   /**
    * Where a TAKEN signing put the standing, as the fold projected it. It
    * holds the resting target until a fresh read replaces it — never before
@@ -1312,12 +1325,16 @@ export function StanceControl({
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
       setHolding(false);
+      setHoldReached(true);
       suppressClick.current = true;
       // WITH THE KEY ELSEWHERE THE HOLD OPENS THE PAD, as a tap does, and
       // signs nothing (PadKeyAbsent.md) — a held finger cannot spend a
       // signature this device cannot give.
       void data.keyOnDevice().then((present) => {
         setKeyAbsent(!present);
+        // Batched with what follows: a signing's flight takes the ring over
+        // in the same render, so it never flickers open between the two.
+        setHoldReached(false);
         // A KEPT OPINION NEVER SIGNS FROM A HOLD: with the key here the hold
         // opens the review, as the tap does (PadPendingReview.md:15).
         if (present && kept !== null && family === "opinion") {
@@ -1411,13 +1428,19 @@ export function StanceControl({
   const padSetting = inFlight === "pad" && slow;
   // CANCEL MID-SIGNING CLOSES THE SURFACE, NEVER THE SIGNING (PadFailed.md,
   // round 21): the act was sent and cannot be called back, so its wait passes
-  // to the target's row — `Signing…` under the face, the anchor refusing a
-  // second hold — and it ends there as a hold's would. A dialog closed while
-  // its act signs closes the pad beneath with it, so its wait passes the
-  // same way (SeveranceConfirm.md:53, EmptySignConfirm.md:51).
+  // to the target's row, the anchor refusing a second hold — and it ends
+  // there as a hold's would. A dialog closed while its act signs closes the
+  // pad beneath with it, so its wait passes the same way
+  // (SeveranceConfirm.md:53, EmptySignConfirm.md:51).
+  //
+  // THE ROW'S WAIT IS THE CLOSED RING, NEVER A LINE (RowSigning.md:5-9,
+  // PadFailed.md:41; the master's `holdWaiting`): a hold's, a closed pad's, a
+  // closed dialog's — the ring stands closed around the face, and `Signing…`
+  // is spoken from a visually hidden status once 200ms pass, never drawn.
+  // Only the kept picks' batch draws its wait as a line (KeptPicksSeal.md:59).
   const rowSigning = inFlight === "row" || (inFlight !== null && !considered && !dialogUp);
-  const rowState: RowLineState | null =
-    (rowSigning && slow && confirming === null) || keptBatchSigning ? { kind: "signing" } : rowLine;
+  const rowSpeaksSigning = rowSigning && slow;
+  const rowState: RowLineState | null = keptBatchSigning ? { kind: "signing" } : rowLine;
 
   const inset = variant?.padInset ?? (barBeneath ? PAD_ABOVE_BAR_INSET_PX : PAD_PARK_INSET_PX);
 
@@ -1727,7 +1750,9 @@ export function StanceControl({
                   {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
                 </span>
               )}
-              {holding && <HoldRing testId={`${testIdPrefix}-hold-ring`} />}
+              {(holding || holdReached || rowSigning) && (
+                <HoldRing testId={`${testIdPrefix}-hold-ring`} closed={!holding} />
+              )}
             </span>
             {wide && restingPair === null && phase === "signedIn" && (
               // The wide anchor's words — only where there is no pair to show.
@@ -1823,6 +1848,11 @@ export function StanceControl({
           (PadPendingReview.md:21) — never under a pick still kept. */}
       {anchored && !keptShown && settling && (
         <PendingMarker testId={`${testIdPrefix}-settling`} />
+      )}
+      {anchored && rowSpeaksSigning && (
+        <span role="status" data-testid={`${testIdPrefix}-signing`} className="sr-only">
+          {SIGNING_ROW}
+        </span>
       )}
       {anchored && rowState !== null && !overMedia && (
         <RowLine state={rowState} node={lineNode} testId={`${testIdPrefix}-row-line`} />
