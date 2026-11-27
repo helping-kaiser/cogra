@@ -231,6 +231,9 @@ class ReplyWizardViewModelTest {
         video,
         WriteSigner(sealer, identity),
         com.cogra.domain.testing.ScriptedSearchRepository(),
+        stagedWrites = sealer,
+        identity = identity,
+        tokens = com.cogra.domain.testing.signedInSession(),
     ).apply { start(target) }
 
     private val target = ReplyTarget(

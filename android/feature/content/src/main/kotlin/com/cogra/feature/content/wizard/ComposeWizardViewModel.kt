@@ -29,13 +29,15 @@ import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.settings.SettingsRepository
 import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
-import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.SameSigning
 import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.contentExpectation
 import com.cogra.domain.signing.ledgerFor
 import com.cogra.domain.signing.postExpectation
+import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.TokenStore
 import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.valueOrNull
 import com.cogra.feature.content.ReferencePickerEditor
@@ -46,6 +48,7 @@ import com.cogra.feature.content.TagPickerEditor
 import com.cogra.feature.content.TagPickerHandlers
 import com.cogra.feature.content.TagSectionState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,7 +95,22 @@ class ComposeWizardViewModel @Inject constructor(
     private val settings: SettingsRepository,
     /** The one search read the tag picker's index rides (`#prefix` over topics). */
     search: SearchRepository,
+    /** Where a retired attempt's material is forgotten (`SameSigning`). */
+    identity: IdentityStore,
+    /** Whose press it is: a signing runs only for the account that pressed. */
+    private val tokens: TokenStore,
 ) : ViewModel() {
+
+    /**
+     * THE SEAL'S RETRY ASKS THE SAME SIGNING AGAIN (SealSigning.md:31 "WHEN
+     * press Retry -> the same signing is asked again"): the seal's signing
+     * remembers the batch it prepared until it answers (`PostSealSigning`).
+     */
+    private val signing = PostSealSigning(
+        signer = signer,
+        sameSigning = SameSigning(signer, stagedWrites, identity),
+        moves = SealMoves(::stand, ::fail, ::keepDraft, ::settle, ::landed, ::keyAbsent),
+    )
 
     /**
      * The license a new post starts from — the account's default
@@ -269,6 +287,9 @@ class ComposeWizardViewModel @Inject constructor(
             referenceSection = current.referenceSection,
             license = if (licenseTouched) current.license else startingLicense,
         )
+        // The draft's unanswered signing comes back with it: its seal's next
+        // press asks that signing again.
+        signing.attempt = held.attempt
         // THE STAGED TAG CROSSES THE RESTORE for the citation's reason: the
         // tag card's act opened this composer, and the draft must not undo it.
         prefillTag(prefilledTag)
@@ -344,8 +365,11 @@ class ComposeWizardViewModel @Inject constructor(
         // `submitting` before it emits its outcome, and a write scheduled
         // on that emission outlives the clear.
         if (current.submitting) return null
-        return current.toDraft()
+        return current.kept()
     }
+
+    /** The draft [this] is kept as, carrying the signing its seal still has pending. */
+    private fun ComposeWizardState.kept(): ComposeDraft = toDraft().copy(attempt = signing.attempt)
 
     private suspend fun write(draft: ComposeDraft) {
         if (draft.isEmpty) drafts.clear() else drafts.save(draft)
@@ -896,47 +920,39 @@ class ComposeWizardViewModel @Inject constructor(
         // draft back after it.
         draftSaveJob?.cancel()
         _state.update { it.copy(submitting = true, heldPress = false, fault = null, keyAbsent = false) }
-        val staged = current.referenceSection.references
-        viewModelScope.launch {
+        // UNDISPATCHED (kotlinx.coroutines `CoroutineStart`), as the profile
+        // seal's act starts (#680): the press reads its account at the press
+        // itself, with no dispatch between.
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            // THE SIGNING IS THE PRESSING ACCOUNT'S (auth.md "Multi-account
+            // device custody"): every leg asks first, and a press with another
+            // account active does nothing, leaving any attempt for its own.
+            val owner = tokens.current()?.accountId ?: return@launch stand()
+            // A remembered attempt is never asked under another account; it stands for its own.
+            if (signing.attempt?.let { it.owner != owner } == true) return@launch stand()
             val tags = current.tagSection.tags.map { it.toClaim() }
             val references = current.referenceSection.references.map { it.toClaim() }
             val graphIds = citedGraphIds(references) ?: return@launch
             val sent = current.sentContent()
-            val prepared = when (
-                val outcome = content.preparePost(
-                    title = sent.title,
-                    description = sent.description,
-                    content = sent.content,
-                    license = current.license,
-                    tags = tags,
-                    references = references,
-                    attachments = sent.attachments,
-                    sensitive = sent.sensitive,
-                    sensitiveReason = sent.sensitiveReason,
-                    pDirected = current.pDirected,
-                )
-            ) {
-                is Outcome.Success -> outcome.value
-                is Outcome.Refused -> return@launch fail(sealFaultOf(outcome.errors, staged))
-                is Outcome.Failed -> return@launch fail(SealFault.Offline)
-            }
-            val expected = expectation(current, prepared.node, sent, tags, references, graphIds)
-                ?: return@launch
-
-            val results = try {
-                signer.sign(prepared.writes, expected)
-            } catch (_: NoActorKeyException) {
-                // `ComposeKeyAbsent`: the write waits on the reader
-                // restoring the key, not on time passing. The draft is
-                // kept so restoring loses nothing.
-                keepDraft()
-                _state.update { it.copy(submitting = false, keyAbsent = true) }
-                return@launch
-            }
-
-            settle(results, current, prepared.node, prepared.writes.map { it.id })
+            val press = PostPress(
+                owner = owner,
+                seal = current,
+                intent = current.postIntent(sent, tags, references),
+                prepare = { content.preparePostFrom(current, sent, tags, references) },
+                expectedFor = { node -> expectation(current, node, sent, tags, references, graphIds) },
+                holds = { tokens.current()?.accountId == owner },
+            )
+            signing.press(press)
         }
     }
+
+    /** The press stopped before it ran a leg: the seal stands as it was, nothing said. */
+    private fun stand() = _state.update { it.copy(submitting = false) }
+
+    private fun landed(id: String) = _state.update { it.copy(submitting = false, outcome = WizardOutcome.Landed(id)) }
+
+    /** `ComposeKeyAbsent`: the write waits on the reader restoring the key, not on time passing. */
+    private fun keyAbsent() = _state.update { it.copy(submitting = false, keyAbsent = true) }
 
     /** What the signing's answer makes of the seal: the post, the expiry notice, or a fault. */
     private suspend fun settle(
@@ -956,16 +972,20 @@ class ComposeWizardViewModel @Inject constructor(
                 // its draft should be gone").
                 armed = false
                 draftSaveJob?.cancel()
+                signing.attempt = null
                 retireDraft(current.toDraft(), node, writes, results)
                 _state.update { it.copy(submitting = false, outcome = WizardOutcome.Landed(node)) }
             }
             // A staged act collected before it landed: nothing was spent,
             // and the draft is what the notice promises.
             results.any { it.expired() } -> {
+                // An expired batch is no signing to ask again: the kept draft carries none.
+                signing.attempt = null
                 keepDraft()
                 _state.update { it.copy(submitting = false, outcome = WizardOutcome.Expired(it.draftLabel())) }
             }
             else -> {
+                // The draft keeps the attempt, so the Retry asks THIS signing again.
                 keepDraft()
                 // A refusal reads by its codes; anything else never answered.
                 val refused = results.filterIsInstance<WriteResult.Refused>().firstOrNull()
@@ -981,7 +1001,7 @@ class ComposeWizardViewModel @Inject constructor(
         // A write already in flight would land after this one and undo it.
         draftSaveJob?.cancel()
         viewModelScope.launch {
-            val draft = current.toDraft()
+            val draft = current.kept()
             if (draft.isEmpty) drafts.clear() else drafts.save(draft)
         }
         // The draft is kept but the session is not: nothing can ask the
@@ -1031,7 +1051,7 @@ class ComposeWizardViewModel @Inject constructor(
     }
 
     private suspend fun keepDraft() {
-        val draft = _state.value.toDraft()
+        val draft = _state.value.kept()
         if (!draft.isEmpty) drafts.save(draft)
     }
 

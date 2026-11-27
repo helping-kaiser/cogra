@@ -8,6 +8,7 @@ package com.cogra.domain.compose
 import com.cogra.domain.Outcome
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.WriteState
+import com.cogra.domain.signing.SigningAttempt
 
 /**
  * One picked asset as the draft remembers it.
@@ -46,6 +47,13 @@ data class ComposeDraft(
     val assets: List<DraftAsset> = emptyList(),
     /** The post-wide shape, by [com.cogra.domain.compose.DraftShape] name. */
     val shape: DraftShape = DraftShape.Tall,
+    /**
+     * The signing this draft's seal started and that did not answer — what
+     * its Retry asks again (SealSigning.md:31, `SameSigning`). It rides the
+     * draft so leaving and coming back still asks the same signing, never a
+     * second post. Null once nothing is pending; never part of [isEmpty].
+     */
+    val attempt: SigningAttempt? = null,
 ) {
     /**
      * What the draft card shows as its one line of identity: the title
