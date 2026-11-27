@@ -140,6 +140,20 @@ impl Rig {
         );
     }
 
+    /// One pass of the server loop's driver at `at`: the stranded checks as
+    /// `cadence` decides, the pass recorded back into it.
+    async fn drive(
+        &self,
+        cadence: &mut api::ingest::StrandedCadence,
+        at: std::time::Instant,
+    ) -> api::ingest::IngestOutcome {
+        let outcome = api::ingest::ingest_pass(&self.boundary, &self.pool, GC, cadence.checks_at(at))
+            .await
+            .expect("ingests");
+        cadence.record(at, Some(&outcome));
+        outcome
+    }
+
     /// Drives one prepared content write through signatures and confirm.
     async fn land(&self, prepared: &content::PreparedContent, key: &ActorKey) {
         self.sign_and_relay(prepared.writes[0].id, key).await;
@@ -3059,6 +3073,97 @@ async fn a_post_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPo
         .expect("post");
     assert!(post.order.is_some(), "the post is still pending: {post:?}");
     assert!(!post.version_pending);
+}
+
+/// A stranded draft for the cadence tests: a new post whose write a pass
+/// marked landed and never promoted, outside the driver under test.
+async fn strand_a_post(rig: &Rig, alice: Uuid, alice_key: &ActorKey) -> Uuid {
+    let prepared = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        PostDraft {
+            title: Some("Stranded".into()),
+            description: None,
+            content: Some("Body".into()),
+            license: license(),
+            p_directed: 0.1,
+            tags: vec![],
+            references: vec![],
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("prepares post");
+    rig.land_interrupted(&prepared, alice_key).await;
+    prepared.node
+}
+
+async fn post_is_landed(rig: &Rig, node: Uuid) -> bool {
+    content_store::post(&rig.pool, node)
+        .await
+        .expect("reads")
+        .expect("post")
+        .order
+        .is_some()
+}
+
+/// The server loop's driver runs the stranded checks on its first pass,
+/// skips them on an idle pass inside its interval — the stranded post
+/// stays pending there — and runs them again on the next pass that
+/// ingests an epoch, which promotes it.
+///
+/// The server loop runs the stranded checks on its first pass and on a pass that ingests an epoch, and skips them on an idle pass inside its interval.
+/// ´claim:content:the-loop-checks-stranded-writes-on-epoch-passes´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_loop_skips_stranded_checks_on_idle_passes_and_heals_on_the_next_epoch(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let start = std::time::Instant::now();
+    let mut cadence = api::ingest::StrandedCadence::new(std::time::Duration::from_secs(60));
+
+    rig.drive(&mut cadence, start).await;
+    assert_eq!(cadence.checks_run(), 1, "the first pass checks");
+
+    let node = strand_a_post(&rig, alice, &alice_key).await;
+    let idle = rig
+        .drive(&mut cadence, start + std::time::Duration::from_secs(2))
+        .await;
+    assert_eq!(idle.epochs, 0);
+    assert_eq!(cadence.checks_run(), 1, "an idle pass inside the interval does not check");
+    assert!(!post_is_landed(&rig, node).await, "nothing healed the post yet");
+
+    rig.standin.close_epoch().await.expect("closes");
+    let epoch = rig
+        .drive(&mut cadence, start + std::time::Duration::from_secs(4))
+        .await;
+    assert_eq!(epoch.epochs, 1);
+    assert_eq!(cadence.checks_run(), 2, "an epoch pass checks");
+    assert!(post_is_landed(&rig, node).await, "the epoch pass promoted the post");
+    assert!(epoch.promotion_failures.is_empty(), "{:?}", epoch.promotion_failures);
+}
+
+/// With no epoch at all, the stranded post waits at most the interval:
+/// the first idle pass past it runs the checks and promotes the post.
+///
+/// An idle server loop runs the stranded checks once its interval has passed, so a stranded write waits at most that long.
+/// ´claim:content:an-idle-loop-checks-stranded-writes-within-its-interval´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_idle_loop_heals_a_stranded_post_once_its_interval_passes(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let start = std::time::Instant::now();
+    let interval = std::time::Duration::from_secs(60);
+    let mut cadence = api::ingest::StrandedCadence::new(interval);
+
+    rig.drive(&mut cadence, start).await;
+    let node = strand_a_post(&rig, alice, &alice_key).await;
+    let idle = rig.drive(&mut cadence, start + interval).await;
+    assert_eq!(idle.epochs, 0);
+    assert_eq!(cadence.checks_run(), 2, "the idle pass past the interval checks");
+    assert!(post_is_landed(&rig, node).await, "and promoted the post");
 }
 
 /// A post edit whose write a pass marked landed and never promoted keeps
