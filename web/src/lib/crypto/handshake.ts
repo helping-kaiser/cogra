@@ -306,9 +306,8 @@ export class VerifiedAct {
   }
 
   /**
-   * The encoded verified act — the message the host seal covers, and with
-   * the seal the message the approval witness covers. No epoch index,
-   * position, or logical time.
+   * The encoded verified act — the message the host seal covers. No epoch
+   * index, position, or logical time.
    */
   sealMsg(): Uint8Array<ArrayBuffer> {
     const e = new CborEncoder();
@@ -320,6 +319,22 @@ export class VerifiedAct {
     e.bytes(this.depsCommitment);
     e.uint(this.contentEdition);
     e.uint(this.depsEdition);
+    // Trailing schema version for forward evolution of the frame shape.
+    e.uint(1n);
+    return e.finish();
+  }
+
+  /**
+   * The message the author's approval covers: the act alone — its body,
+   * content commitment and dependency commitment. The pre-commitment, the
+   * pre-signature, the editions and the host seal are not part of it.
+   */
+  approvalMsg(): Uint8Array<ArrayBuffer> {
+    const e = new CborEncoder();
+    e.array(4n);
+    e.bytes(this.body.canonicalBytes());
+    e.bytes(this.contentCommitment);
+    e.bytes(this.depsCommitment);
     // Trailing schema version for forward evolution of the frame shape.
     e.uint(1n);
     return e.finish();
@@ -345,11 +360,11 @@ export class SealedAct {
   }
 
   /**
-   * The digest the author's approval witness signs: the encoded verified
-   * act and its host seal, together.
+   * The digest the author's approval witness signs: the act's approval
+   * message alone — the host seal is not part of it.
    */
   approvalDigest(): Promise<Uint8Array<ArrayBuffer>> {
-    return sha256Tagged(Tags.APPROVAL, [this.act.sealMsg(), this.hostSeal]);
+    return sha256Tagged(Tags.APPROVAL, [this.act.approvalMsg()]);
   }
 }
 

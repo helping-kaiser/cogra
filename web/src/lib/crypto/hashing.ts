@@ -18,7 +18,7 @@ export const Tags = {
   COMMIT_CONTENT: "cogra-l1:commitment:content:v3",
   COMMIT_DEPS: "cogra-l1:commitment:deps:v3",
   HOST_SEAL: "cogra-l1:host-seal:v2",
-  APPROVAL: "cogra-l1:approval:v2",
+  APPROVAL: "cogra-l1:approval:v3",
 } as const;
 
 /** Salt / nonce length — the published entropy floor of the stand-in. */
