@@ -463,6 +463,13 @@ fn linearizes(
 /// duration, empty or not (§11.6, "Final-set closure"), and its controller
 /// steps from the wall in force at the declared width like any other. An
 /// idle close skips the history load, which only a selection reads.
+///
+/// One approval form per epoch. Acts approved in the sealed-act form are
+/// ordered first, in an epoch of that form, while any of them can be
+/// ordered; only a close that orders none of them selects among the acts
+/// approved in the current form. An act of one form waits while an epoch
+/// of the other closes, and its prerequisites stay where they are: an act
+/// is still ordered after every act it follows.
 pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, StandInError> {
     standin.config().check()?;
     let mut tx = standin.pool().begin().await?;
@@ -535,13 +542,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, Stand
         });
     }
 
-    // One approval form per epoch. Acts approved in the sealed-act form
-    // before the approval covered the act alone are ordered first, in an
-    // epoch of that form, while any of them can be ordered; only a close
-    // that orders none of them selects among the acts approved in the
-    // current form. An act of one form waits while an epoch of the other
-    // closes, and its prerequisites stay where they are: an act ordered
-    // later than an act it follows is still ordered after it.
     let config = standin.config();
     let mut chosen = None;
     for (form, set) in [

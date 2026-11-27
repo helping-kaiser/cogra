@@ -292,7 +292,11 @@ pub(crate) async fn sealed_act(
 }
 
 /// Verifies the approval witness over the act, in a form the act takes
-/// (`approval_form_of`), and marks it
+/// (`approval_form_of`, the one rule the relay applies too): the current
+/// form, or, for an act sealed before the approval covered the act alone,
+/// the sealed-act form as well. The form that verified is kept with the
+/// act, and the close orders acts of one form per epoch (`crate::close`).
+/// Then it marks the act
 /// approved. Idempotent once already approved: a repeat call re-checks
 /// nothing and changes nothing.
 pub(crate) async fn approve(
@@ -326,11 +330,6 @@ pub(crate) async fn approve(
     );
     let author_key = crypto::verifying_key_from_bytes(&row.author_pubkey)
         .ok_or_else(|| StandInError::Authentication("stored author key malformed".into()))?;
-    // An act takes an approval in the current form, and an act sealed
-    // before the approval covered the act alone also one in the sealed-act
-    // form (`approval_form_of`, the one rule the relay applies too). The
-    // form is kept with the act: the close orders acts of one form per
-    // epoch (`crate::close`).
     let Some(form) = approval_form_of(
         &header.frame(),
         &row.host_seal,
