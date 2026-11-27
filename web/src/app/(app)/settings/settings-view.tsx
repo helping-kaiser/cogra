@@ -41,6 +41,7 @@ import { sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-dr
 import type { DeviceLockEngine } from "@/lib/identity/device-lock";
 import { KEY_CEREMONY_FROM_SETTINGS, keyMade, YOUR_KEY_ROUTE } from "@/lib/identity/key-custody-routes";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { ReplayIntro } from "@/lib/intro/intro-gate";
 import { useHiddenSet } from "@/lib/hidden/provider";
 import { seenRecord } from "@/lib/history/seen-record";
 import { forgetSeen } from "@/lib/history/seen-sync";
@@ -241,6 +242,7 @@ export function SettingsView({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [eraseOpen, setEraseOpen] = useState(false);
   const [licenseOpen, setLicenseOpen] = useState(false);
+  const [introOpen, setIntroOpen] = useState(false);
   /** A default-license save that did not go through, kept for its Retry. */
   const [licenseFailed, setLicenseFailed] = useState<License | null>(null);
 
@@ -838,10 +840,14 @@ export function SettingsView({
         </SettingsGroup>
 
         <SettingsGroup label="About" node={node("about")}>
-          {/* DRIFT (the intro, Report a problem packets; Privacy and Terms
-              await their documents): rows whose destination is not built yet
-              open nothing. */}
-          <SettingsRow label="Watch the intro again" onOpen={() => {}} node={node("about.intro")} />
+          {/* DRIFT (Report a problem packets; Privacy and Terms await their
+              documents): rows whose destination is not built yet open
+              nothing. The intro re-opens at its first card (Settings.md:135). */}
+          <SettingsRow
+            label="Watch the intro again"
+            onOpen={() => setIntroOpen(true)}
+            node={node("about.intro")}
+          />
           <SettingsRow
             label="About CoGra"
             onOpen={() => router.push("/about?from=settings")}
@@ -927,6 +933,9 @@ export function SettingsView({
           }}
         />
       )}
+
+      {/* The intro over Settings; Skip and Start reading bring Settings back. */}
+      {introOpen && <ReplayIntro onLeave={() => setIntroOpen(false)} />}
 
       {licenseOpen && (
         <SettingsLicenseSheet
