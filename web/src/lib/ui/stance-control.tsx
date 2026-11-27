@@ -86,6 +86,7 @@ import { clearSettling, useSettling } from "@/lib/stance/settling";
 import { useStanceTaught } from "@/lib/stance/stance-coach";
 import type {
   BorrowedStance,
+  CommitSource,
   StanceBundle,
   StanceCommit,
   StanceLanding,
@@ -580,6 +581,10 @@ export function StanceControl({
     () => ({ id: target.id, kind: target.kind }),
     [target.id, target.kind],
   );
+  // THIS SURFACE'S COMMITS ARE ITS OWN (stance-attempts.ts `claim`): two
+  // surfaces can show the same target, and each one's Retry asks the signing
+  // it made, never the other's (SigningAfterClose.md:27).
+  const [commitSource] = useState<{ readonly source: CommitSource }>(() => ({ source: {} }));
 
   // WHAT A PICK KEPT HERE WILL SIGN AS (KeptPicksReview.md:5): a vouch-back
   // or an approval is kept as itself, never as a plain opinion, so the
@@ -976,7 +981,7 @@ export function StanceControl({
         const nothingStands = standing.records === 0 || standing.severed;
         return { kind: nothingStands ? ("empty" as const) : ("severs" as const), landing };
       }
-      const committed = await data.commit(seamTarget, chosen);
+      const committed = await data.commit(seamTarget, chosen, commitSource);
       if (committed.kind === "success") {
         return { kind: "taken" as const, landing, records: committed.value.records };
       }
@@ -1015,7 +1020,7 @@ export function StanceControl({
     if (asked === null || busy) return;
     setEmptyFault(null);
     const answer = await runInFlight("empty", async () =>
-      answerOf(await data.commit(seamTarget, asked.pick)),
+      answerOf(await data.commit(seamTarget, asked.pick, commitSource)),
     );
     if (answer.kind !== "taken") {
       setEmptyFault(answer.kind);
@@ -1043,9 +1048,9 @@ export function StanceControl({
         // The walk-back is checked against the standing the reader
         // confirmed; with none known there is nothing to check against.
         if (bundle === null || bundle === undefined) return { kind: "failed" as const };
-        return answerOf(await data.sever(seamTarget, bundle));
+        return answerOf(await data.sever(seamTarget, bundle, commitSource));
       }
-      return answerOf(await data.commit(seamTarget, asked.pick));
+      return answerOf(await data.commit(seamTarget, asked.pick, commitSource));
     });
     if (answer.kind !== "taken") {
       // The dialog stays up and says so: a fault with Retry in the confirm's
