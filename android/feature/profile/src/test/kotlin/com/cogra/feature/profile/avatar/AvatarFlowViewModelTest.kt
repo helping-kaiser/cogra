@@ -182,6 +182,17 @@ class AvatarFlowViewModelTest {
     }
 
     @Test
+    fun theSamePickHandedInAgainKeepsTheSealWhereItStood() = runTest(dispatcher) {
+        // Back from the report a seal opened, the route re-enters composition
+        // and hands in the pick it already holds: the seal must still stand.
+        val vm = startedAtSeal()
+
+        vm.onPicked("content://pick/1")
+
+        assertThat(vm.state.value.step).isEqualTo(AvatarStep.Seal)
+    }
+
+    @Test
     fun backStepsOnceAndThenReportsUnhandledSoTheRouteLeaves() = runTest(dispatcher) {
         val vm = startedAtSeal()
 

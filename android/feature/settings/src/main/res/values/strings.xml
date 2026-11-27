@@ -111,6 +111,17 @@
     <string name="settings_about_privacy">Privacy</string>
     <string name="settings_about_terms">Terms</string>
 
+    <!-- The report (copy-voice "About"; ReportProblem.jsx). The address is REPORT_ADDRESS. -->
+    <string name="report_title">Report a problem</string>
+    <string name="report_lead">Sending opens your email with everything below filled in — nothing goes until you send it there.</string>
+    <string name="report_what_happened">What happened</string>
+    <string name="report_to">To</string>
+    <string name="report_version">Version</string>
+    <string name="report_running_on">Running on</string>
+    <string name="report_time">Time</string>
+    <string name="report_note">That\'s all that goes with your words — no account, no key, nothing you\'ve posted.</string>
+    <string name="report_send">Send by email</string>
+
     <string name="settings_leaving">Sign out</string>
     <string name="settings_leaving_forget">Don\'t remember this account on this device</string>
     <string name="settings_leaving_forget_status">Your key, your draft, any kept picks and what you\'ve seen are cleared from this app when you sign out.</string>

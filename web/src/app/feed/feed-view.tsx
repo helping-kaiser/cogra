@@ -102,6 +102,8 @@ import {
   rememberFeedPlace,
   rememberFeedSheet,
 } from "./feed-memory";
+import { FirstIntro } from "@/lib/intro/intro-gate";
+
 import { VouchCard } from "./vouch-card";
 import { FROM_FEED, YOUR_TOPICS_HREF } from "@/lib/topics/your-topics";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
@@ -1186,6 +1188,9 @@ export function FeedView({
       <p role="status" aria-live="polite" className="sr-only" data-testid="feed-filter-status">
         {said}
       </p>
+      {/* THE INTRO, full-screen over the feed the first time an account
+          enters it, applicant or member (OnboardingSteps.md:3). */}
+      {phase === "signedIn" && <FirstIntro />}
       {/* THE FILTER SHEET, OVER THE FEED (FeedSheet.md). It stages: the feed
           behind it never moves before Done. Reset stages the reader's default
           (:63); the scrim, a swipe down, Back and Escape drop what is staged

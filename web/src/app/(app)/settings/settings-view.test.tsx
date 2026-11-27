@@ -1463,3 +1463,34 @@ describe("What your feed shows (SettingsReading.md)", () => {
     expect(screen.getByTestId("settings.reading.feed")).toHaveFocus();
   });
 });
+
+describe("Watch the intro again (Settings.md:135, OnboardingSteps.md:7)", () => {
+  it("opens the intro at its first card, and Skip brings Settings back", async () => {
+    renderSettings();
+    fireEvent.click(await screen.findByTestId("settings.about.intro"));
+    expect(screen.getByTestId("intro")).toHaveAttribute("data-card", "steps");
+    fireEvent.click(screen.getByTestId("onboarding.next"));
+    fireEvent.click(screen.getByTestId("onboarding.skip"));
+    expect(screen.queryByTestId("intro")).toBeNull();
+    expect(screen.getByTestId("settings.about.intro")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("Start reading brings Settings back (OnboardingVouch.md:29)", async () => {
+    renderSettings();
+    fireEvent.click(await screen.findByTestId("settings.about.intro"));
+    for (let step = 1; step <= 5; step++) fireEvent.click(screen.getByTestId("onboarding.next"));
+    expect(screen.queryByTestId("intro")).toBeNull();
+    expect(screen.getByTestId("settings.about.intro")).toBeInTheDocument();
+  });
+
+  it("gives focus back to Watch the intro again on leave", async () => {
+    renderSettings();
+    const row = await screen.findByTestId("settings.about.intro");
+    row.focus();
+    fireEvent.click(row);
+    expect(screen.getByTestId("onboarding.title")).toHaveFocus();
+    fireEvent.click(screen.getByTestId("onboarding.skip"));
+    expect(row).toHaveFocus();
+  });
+});

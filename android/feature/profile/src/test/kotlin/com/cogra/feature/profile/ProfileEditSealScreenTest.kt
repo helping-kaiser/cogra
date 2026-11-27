@@ -32,6 +32,7 @@ class ProfileEditSealScreenTest {
     private var backs = 0
     private var leaves = 0
     private var notNows = 0
+    private var reports = 0
 
     private val atRest = ProfileEditUiState(
         loading = false,
@@ -51,6 +52,7 @@ class ProfileEditSealScreenTest {
                     onBack = { backs += 1 },
                     onLeave = { leaves += 1 },
                     onNotNow = { notNows += 1 },
+                    onReport = { reports += 1 },
                 ),
             )
         }
@@ -161,9 +163,12 @@ class ProfileEditSealScreenTest {
         compose.onNodeWithText("This shouldn't have happened").assertExists()
         compose.onNodeWithTag("profile_edit_seal_try_again").assert(hasText("Try again")).performClick()
         compose.onNodeWithTag("profile_edit_seal_report").assert(hasText("Report a problem"))
+            .performScrollTo().performClick()
         compose.onNodeWithTag("profile_edit_seal_not_now").performScrollTo().performClick()
         assertThat(signs).isEqualTo(1)
         assertThat(notNows).isEqualTo(1)
+        // The notice's Report a problem opens the report page (ReportProblem.md:3).
+        assertThat(reports).isEqualTo(1)
     }
 
     /** The device's own refusal reads as an answered refusal (copy-voice:1611-1613), never the bug notice. */

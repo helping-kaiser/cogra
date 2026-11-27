@@ -23,6 +23,7 @@ import com.cogra.feature.settings.DeleteAccountRoute
 import com.cogra.feature.settings.DeletionDoor
 import com.cogra.feature.settings.EmailDoor
 import com.cogra.feature.settings.KeyExportRoute
+import com.cogra.feature.settings.ReportProblemRoute
 import com.cogra.feature.settings.SettingsDoors
 import com.cogra.feature.settings.SettingsRoute
 import com.cogra.feature.settings.WhatsNewRoute
@@ -55,6 +56,14 @@ private fun NavGraphBuilder.settingsPages(shell: ShellScope) = with(shell) {
         WhatsNewRoute(
             onBack = { navController.navigateUp() },
             onUpdateNow = { openStoreListing(context) },
+        )
+    }
+    composable<ReportProblem> {
+        // Back returns to whichever surface opened it, Settings or a seal
+        // (ReportProblem.md:31).
+        ReportProblemRoute(
+            onBack = { navController.navigateUp() },
+            deletionBand = deletionBand(node = null),
         )
     }
     composable<SettingsBackup> {
@@ -175,6 +184,7 @@ private fun ShellScope.SettingsDestination(entry: NavBackStackEntry) {
             },
             onOpenAbout = { navController.navigate(About()) },
             onOpenWhatsNew = { navController.navigate(WhatsNew) },
+            onOpenReport = { navController.navigate(ReportProblem) },
             onOpenKeptPicks = { navController.navigate(KeptPicks) },
             onOpenDeletion = { door ->
                 navController.navigate(
