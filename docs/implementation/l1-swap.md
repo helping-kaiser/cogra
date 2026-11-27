@@ -237,7 +237,19 @@ standard's structure and CoGra's own bytes:
   (`cogra-l1:approval:v2`); the stand-in orders acts of one form into
   an epoch, so an act approved in the earlier form keeps its approval
   and lands in an epoch of that form (`l1-standin/src/close.rs`,
-  `close_epoch`);
+  `close_epoch`). An act the host sealed before the switch also takes
+  a witness in the earlier form — a held admission approval signed
+  before it among them — and the host records which form verified; an
+  act sealed after it takes the current form only. The host and the
+  relay's check before holding apply the one rule
+  (`handshake::approval_form_of`), each with its own mark of a
+  pre-switch act (`l1_acts.sealed_before_switch`,
+  `staged_writes.sealed_before_switch`). An earlier-form epoch can
+  follow a current-form one, when an earlier-form act becomes orderable
+  only later; there is at most one such epoch per earlier-form act, as
+  no new one arises, and its staged write expires with the GC after
+  `gc_after_epochs` epochs (1,200 by default) like any write that does
+  not land;
 - the tags live in `crypto.rs:14-32`, `proposal/mod.rs:32-48`,
   `web/src/lib/crypto/hashing.ts:15-21` and
   `android/core/crypto/.../Hashing.kt:20-26`; "the `PN-*` strings

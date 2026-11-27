@@ -9,7 +9,7 @@
 --
 -- Additive and valid on a non-empty table. Every write whose seal is
 -- recorded now — its dependency commitment is stored from the seal on,
--- and no cleanup clears it — was sealed before; a write sealed later is
--- not.
+-- and only a row the GC kept, already expired or landed, can lack it —
+-- was sealed before; a write sealed later is not.
 ALTER TABLE staged_writes ADD COLUMN sealed_before_switch BOOLEAN NOT NULL DEFAULT FALSE;
 UPDATE staged_writes SET sealed_before_switch = TRUE WHERE deps_commitment IS NOT NULL;

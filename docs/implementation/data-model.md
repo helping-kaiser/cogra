@@ -727,6 +727,11 @@ CREATE TABLE staged_writes (
     content_commitment  BYTEA,
     deps_commitment     BYTEA,
     host_seal           BYTEA,
+    -- Sealed before the approval covered the act alone: the host
+    -- takes an approval over the verified act and its seal for such
+    -- an act too, and the relay checks a witness it holds by the
+    -- same rule (common::l1::handshake::approval_form_of).
+    sealed_before_switch BOOLEAN NOT NULL DEFAULT FALSE,
 
     -- The approval witness of an admission Registration whose
     -- funding has not settled: held here, with the write in
