@@ -45,7 +45,7 @@ import { snapDimension } from "@/lib/stance/model";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
 import type { Expectation } from "@/lib/signing/intent";
 import type { WriteResult } from "@/lib/signing/write-signer";
-import { askAgain, intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
+import { askAgain, expiredWhole, intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
 import {
   advanceGate,
   COVER_FROM_PICTURE,
@@ -888,12 +888,10 @@ export function ComposeWizard({
     // The batch lands together or not at all, so one unlanded write means the
     // post did not land — and nothing was spent. The draft is kept exactly
     // because this screen promises it is.
-    const expired = results.some(
-      (result) =>
-        result.kind === "refused" &&
-        result.errors.some((error) => error.code === "STAGED_WRITE_EXPIRED"),
-    );
-    if (expired) {
+    // EXPIRED IS THE WHOLE BATCH'S ANSWER, never one write's: while another
+    // write is undecided it may still land on its own, so the attempt is kept
+    // and the seal shows the fault line with Retry (same-signing.ts).
+    if (expiredWhole(results)) {
       // An expired batch is no signing to ask again: the kept draft carries none.
       await drafts.save({ ...state, attempt: null });
       setState((current) => ({ ...current, attempt: null }));

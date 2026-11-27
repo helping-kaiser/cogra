@@ -699,4 +699,45 @@ describe("CommentEditor — Retry after a signing that did not answer", () => {
     expect(prepares).toBe(1);
     expect(signer.signAgain).toHaveBeenCalledWith(["w-edit"], expect.anything());
   });
+
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same edit, its re-ask refused
+  // by the device's intent check, over a first edit already relaying.
+  it("a re-ask the device refuses reads the states first: an edit already relaying is taken", async () => {
+    let prepares = 0;
+    prepared(() => {
+      prepares += 1;
+    });
+    server.use(
+      gqlLink.query("StagedWrite", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            stagedWrite: {
+              __typename: "StagedWrite",
+              id: variables.id,
+              state: "RELAYING",
+              carried: false,
+              family: "REVIEW",
+              canonicalProposal: "AA==",
+              verifiedAct: null,
+              record: null,
+            },
+          },
+        }),
+      ),
+    );
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => ({ kind: "failed", id: write.id, cause: new Error("no answer") }),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "rejectedByDevice" as const, id, reason: "intent mismatch" })),
+      ),
+    });
+    const { onSigned } = draw(comment(), signer);
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
+    fireEvent.click(save());
+    fireEvent.click(await screen.findByTestId("comment-edit-retry"));
+
+    await waitFor(() => expect(onSigned).toHaveBeenCalledTimes(1));
+    expect(signer.signAgain).toHaveBeenCalledWith(["w-edit"], expect.anything());
+    expect(prepares).toBe(1);
+  });
 });

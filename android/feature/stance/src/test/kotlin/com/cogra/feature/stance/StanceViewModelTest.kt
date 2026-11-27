@@ -12,6 +12,7 @@ import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.severance
 import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StanceAttempts
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
@@ -25,6 +26,7 @@ import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
+import com.cogra.domain.testing.signedInSession
 import com.cogra.domain.testing.testGraphId
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
@@ -171,6 +173,9 @@ class StanceViewModelTest {
         kept,
         standing,
         FakeBorrowedStanceRepository(),
+        signedInSession(),
+        writes,
+        StanceAttempts(),
     )
 
     private fun entry(vm: StanceViewModel) = vm.state.value.targets.getValue(TARGET)
