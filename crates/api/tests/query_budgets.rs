@@ -475,7 +475,7 @@ async fn a_full_slice_page_with_legs_fits_the_release_budget(pool: PgPool) {
 
 /// A full page of the person's chronicle at the cap fits the release
 /// budget with the Everything view's whole row on every kind: a record's
-/// row as the clients' `AuthorRecords` reads it, and the settling post's
+/// row as the clients' `ProfileChronicle` reads it, and the settling post's
 /// and comment's light rows beside it. A union row prices at the sum of
 /// its kinds, so this is the dearest page a client can ask of it.
 ///

@@ -5,7 +5,10 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { Outcome } from "@/lib/api/outcome";
+import { keptBatchSigning, readKeptBatch, resetKeptBatchForTests } from "@/lib/stance/kept-batch";
 import type { KeptTargetPreview } from "@/lib/stance/kept-preview";
+import type { StanceCommit } from "@/lib/stance/stance-data";
 import { keepPick, listKeptPicks } from "@/lib/stance/kept-picks";
 import { useSettling } from "@/lib/stance/settling";
 import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-stance-data";
@@ -459,8 +462,8 @@ describe("the seal while the signing waits", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
-  it("reads Signing the picks… past 200ms, the ways out refusing a press; the slow line past 5s", async () => {
-    // KeptPicksSeal.md:19-23.
+  it("reads Signing the picks… past 200ms and the slow line past 5s", async () => {
+    // KeptPicksSeal.md:27-29.
     await keepTheBoardsPicks();
     let release: () => void = () => {};
     const data = createStubStanceData({ previews: PREVIEWS });
@@ -476,10 +479,6 @@ describe("the seal while the signing waits", () => {
     });
     expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Signing the picks…");
     expect(screen.getByTestId("keptPicksSeal.foot.sign")).not.toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Back a step" }));
-    fireEvent.click(screen.getByRole("button", { name: "Leave — your picks are kept" }));
-    expect(screen.getByText("What you sign")).toBeInTheDocument();
-    expect(router.replace).not.toHaveBeenCalled();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5000);
     });
@@ -490,5 +489,61 @@ describe("the seal while the signing waits", () => {
       release();
     });
     vi.useRealTimers();
+  });
+});
+
+// KeptPicksSeal.md:57-61: from the press every way out reads Close and only
+// closes the seal; the batch goes on as a whole.
+describe("the seal closed while its batch signs", () => {
+  /** The seal pressed, its batch answering only when the test says. */
+  async function pressAndHold() {
+    await keepTheBoardsPicks();
+    let answer: (outcome: Outcome<StanceCommit>) => void = () => {};
+    const data = createStubStanceData({ previews: PREVIEWS });
+    const commit = vi.fn(
+      () =>
+        new Promise<Outcome<StanceCommit>>((resolve) => {
+          answer = resolve;
+        }),
+    );
+    data.commitBatch = commit;
+    renderWithProviders(
+      <>
+        <KeptPicksView />
+        <CarriedSnackbar />
+      </>,
+      { store: signedIn(), stanceData: data },
+    );
+    await openSeal();
+    fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
+    return { commit, answer: async (outcome: Outcome<StanceCommit>) => act(async () => answer(outcome)) };
+  }
+
+  beforeEach(() => resetKeptBatchForTests());
+
+  it("reads Close in Back's place and names the X Close from the press itself, never dimmed (:57)", async () => {
+    const held = await pressAndHold();
+    expect(screen.getByTestId("keptPicksSeal.foot.back")).toHaveTextContent("Close");
+    expect(screen.getByTestId("keptPicksSeal.foot.back")).not.toBeDisabled();
+    expect(screen.getAllByRole("button", { name: "Close" })).toHaveLength(3);
+    await held.answer({ kind: "success", value: { records: 3 } });
+  });
+
+  it.each([
+    ["Close", () => fireEvent.click(screen.getByTestId("keptPicksSeal.foot.back"))],
+    ["the header X", () => fireEvent.click(screen.getAllByRole("button", { name: "Close" })[1])],
+    ["the header back arrow", () => fireEvent.click(screen.getAllByRole("button", { name: "Close" })[0])],
+  ])("leaves for where the review was opened from on %s, and the batch goes on (:59)", async (_way, close) => {
+    const held = await pressAndHold();
+    close();
+    expect(router.replace).toHaveBeenCalledWith("/feed");
+    expect(readKeptBatch()).toMatchObject({ kind: "signing", closed: true });
+    expect(keptBatchSigning(ADA)).toBe(true);
+    await held.answer({ kind: "failed", cause: new Error("offline") });
+    // Not through after Close: the failed line, never the seal's fault (:61).
+    expect(readKeptBatch()).toMatchObject({ kind: "failed" });
+    expect(screen.queryByTestId("keptPicksSeal.fault")).toBeNull();
+    expect(await listKeptPicks("u1")).toHaveLength(3);
+    expect(held.commit).toHaveBeenCalledTimes(1);
   });
 });

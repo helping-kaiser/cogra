@@ -90,6 +90,12 @@ import { useComfortLine } from "@/lib/saved/comfort-line";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { RowLine } from "@/lib/ui/row-line";
 import { useProfileChange, useProfileChangesLanded } from "@/lib/profile/profile-change";
+import {
+  signedProfileAsked,
+  signedProfileRead,
+  useSignedProfile,
+  withSigned,
+} from "@/lib/profile/signed-profile";
 import { usePicturePick } from "@/app/profile/picture/use-picture-pick";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 import { Snackbar } from "@/lib/ui/snackbar";
@@ -290,6 +296,9 @@ export function ProfileScreen({
 
   const refresh = useCallback((list: ListArrival) => {
     let cancelled = false;
+    // A change this device signed before this read was asked is the read's to
+    // confirm; one signed while it is out waits for the next read.
+    const asked = signedProfileAsked();
     void (async () => {
       const viewer =
         phase === "signedIn" ? await guard.run(() => fetchMe(client)) : null;
@@ -308,6 +317,7 @@ export function ProfileScreen({
         setNotFound(false);
         setTransportFailed(false);
         setProfile(loaded);
+        signedProfileRead(asked, loaded.id);
         const me = viewer?.kind === "success" ? viewer.value : null;
         const mine = me !== null && me.id === loaded.id;
         setViewer(me);
@@ -436,6 +446,14 @@ export function ProfileScreen({
   // A DELETED ACCOUNT READS OFF ITS REDACTED STATUS (ER-G10, design digest
   // item 19): the wire serves null values and the mark.
   const deleted = profile?.displayName.status === "REDACTED";
+  // THE HEAD WEARS A CHANGE THIS DEVICE SIGNED FROM ITS FIRST FRAME
+  // (ProfileEditSeal.md:45, AvatarSeal.md:37, Profile.md:97): a return draws
+  // the head it held — the page as tall as it was left, the list unmoved — and
+  // a change taken since lays what was signed over it until the arrival's read
+  // answers (`signed-profile.ts`), so the values from before the edit never
+  // stand under `Signed — your profile shows it now`.
+  const signedOver = useSignedProfile(profile?.id ?? null);
+  const head = profile === null ? null : withSigned(profile, signedOver);
   const comfort = useComfortLine(profile?.id ?? "");
   const back = backFor(openedFrom);
   // Where a chronicle card's post says it was opened from — this profile, and
@@ -635,16 +653,16 @@ export function ProfileScreen({
           </Button>
         </div>
       )}
-      {profile && (
+      {profile && head && (
         <>
           <div className="px-4">
             <ProfileHeader
               node={IDENTITY}
-              handle={profile.handle}
-              displayName={profile.displayName.value}
-              avatarSrc={profile.avatar?.url}
-              bio={profile.bio.value}
-              website={profile.websiteUrl.value}
+              handle={head.handle}
+              displayName={head.displayName.value}
+              avatarSrc={head.avatar?.url}
+              bio={head.bio.value}
+              website={head.websiteUrl.value}
               redacted={deleted}
               figures={figures}
               // EACH OPINION FIGURE OPENS THE OPINIONS PAGE ON ITS OWN

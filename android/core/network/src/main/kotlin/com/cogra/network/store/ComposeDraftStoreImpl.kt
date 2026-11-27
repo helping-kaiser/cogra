@@ -19,6 +19,7 @@ import com.cogra.domain.compose.SealedDraft
 import com.cogra.domain.compose.SealedDraftStore
 import com.cogra.domain.compose.StagedFate
 import com.cogra.domain.compose.sealVerdict
+import com.cogra.domain.signing.SigningAttempt
 import com.cogra.domain.store.TokenStore
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,6 +29,10 @@ import kotlinx.serialization.json.Json
 @kotlinx.serialization.Serializable
 private data class StoredAsset(val uri: String, val altText: String = "")
 
+/** A pending signing, without its owner: the key it is stored under names the account. */
+@kotlinx.serialization.Serializable
+private data class StoredAttempt(val node: String, val writes: List<String>, val intent: String)
+
 @kotlinx.serialization.Serializable
 private data class StoredDraft(
     val bodyKind: String,
@@ -36,6 +41,7 @@ private data class StoredDraft(
     val description: String = "",
     val assets: List<StoredAsset> = emptyList(),
     val shape: String = "Tall",
+    val attempt: StoredAttempt? = null,
 )
 
 @Singleton
@@ -47,10 +53,14 @@ class ComposeDraftStoreImpl @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
 
     /** Null with no session: a draft belongs to whoever was writing it. */
-    private suspend fun key(): String? = tokens.current()?.accountId?.let(::composeDraftKey)
+    private suspend fun account(): String? = tokens.current()?.accountId
+
+    private suspend fun key(): String? = account()?.let(::composeDraftKey)
 
     override suspend fun draft(): ComposeDraft? {
-        val bytes = store.get(key() ?: return null) ?: return null
+        val account = account() ?: return null
+        val name = composeDraftKey(account)
+        val bytes = store.get(name) ?: return null
         val stored = try {
             json.decodeFromString(StoredDraft.serializer(), bytes.decodeToString())
         } catch (_: SerializationException) {
@@ -58,19 +68,23 @@ class ComposeDraftStoreImpl @Inject constructor(
             // rather than marked as storage loss: losing an unpublished
             // post is worth a quiet clear, not the shell's data-loss
             // dialog, which exists for identity material.
-            store.remove(key() ?: return null)
+            store.remove(name)
             return null
         }
-        return stored.toDomain()
+        return stored.toDomain(owner = account)
     }
 
     override suspend fun save(draft: ComposeDraft) {
-        val name = key() ?: return
+        val account = account() ?: return
+        val name = composeDraftKey(account)
         if (draft.isEmpty) {
             store.remove(name)
             return
         }
-        store.put(name, json.encodeToString(StoredDraft.serializer(), draft.toStored()).encodeToByteArray())
+        store.put(
+            name,
+            json.encodeToString(StoredDraft.serializer(), draft.toStored(owner = account)).encodeToByteArray(),
+        )
     }
 
     override suspend fun clear() {
@@ -82,23 +96,32 @@ class ComposeDraftStoreImpl @Inject constructor(
  * The draft as it goes to disk, and back. A body kind or shape this build
  * cannot name reads as its default rather than crashing the composer
  * open — the same degrade-never-crash rule the generated enums follow.
+ *
+ * THE PENDING SIGNING IS ITS ACCOUNT'S (auth.md "Multi-account device
+ * custody"): it is written only under [owner]'s key, and read back as
+ * [owner]'s, so no account's draft ever carries another's attempt. A sealed
+ * copy ([owner] null) carries none.
  */
-private fun ComposeDraft.toStored() = StoredDraft(
+private fun ComposeDraft.toStored(owner: String? = null) = StoredDraft(
     bodyKind = bodyKind.name,
     body = body,
     title = title,
     description = description,
     assets = assets.map { StoredAsset(it.uri, it.altText) },
     shape = shape.name,
+    attempt = attempt
+        ?.takeIf { owner != null && it.owner == owner }
+        ?.let { StoredAttempt(it.node, it.writes, it.intent) },
 )
 
-private fun StoredDraft.toDomain() = ComposeDraft(
+private fun StoredDraft.toDomain(owner: String? = null) = ComposeDraft(
     bodyKind = runCatching { DraftBodyKind.valueOf(bodyKind) }.getOrDefault(DraftBodyKind.Words),
     body = body,
     title = title,
     description = description,
     assets = assets.map { DraftAsset(it.uri, it.altText) },
     shape = runCatching { DraftShape.valueOf(shape) }.getOrDefault(DraftShape.Tall),
+    attempt = owner?.let { account -> attempt?.let { SigningAttempt(account, it.node, it.writes, it.intent) } },
 )
 
 @kotlinx.serialization.Serializable

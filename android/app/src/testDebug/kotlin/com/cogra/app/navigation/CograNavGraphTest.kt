@@ -16,9 +16,11 @@ import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -206,15 +208,31 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun theSecurityNoticeShowsAboveTheGraphAndDismissesOnce() {
-        // The shell renders the notice wherever navigation stands
-        // (auth.md "Reuse detection"); dismissal consumes it for good.
-        render()
-        notices.post(Instant.parse("2026-08-10T09:30:00Z"))
-        waitForTag("security_notice")
+    fun theSecurityNoticeIsTheFeedsFirstCardAndGotItPutsItAwayForGood() {
+        // Kept before the shell composed — as after a process death between the
+        // sign-in and the first frame (FeedSecurityNotice.md:17).
+        runBlocking { notices.post(Instant.parse("2026-08-10T09:30:00Z"), "u1") }
+        feedWithAPost()
+        waitFor(hasTestTag("security_notice") and hasAnyAncestor(hasTestTag("feed_list")))
+        // A card of the list, not a dialog over the graph.
+        assertThat(compose.onAllNodes(isDialog()).fetchSemanticsNodes()).isEmpty()
         compose.onNodeWithTag("security_notice_dismiss").performClick()
         compose.waitForIdle()
         assertThat(compose.onAllNodesWithTag("security_notice").fetchSemanticsNodes()).isEmpty()
+        assertThat(identity.securityNoticeAt.value).isNull()
+    }
+
+    @Test
+    fun changePasswordOpensTheCredentialScreenAndTheNoticeStillStands() {
+        runBlocking { notices.post(Instant.parse("2026-08-10T09:30:00Z"), "u1") }
+        feedWithAPost()
+        waitForTag("security_notice")
+        compose.onNodeWithTag("security_notice_change_password").performClick()
+        onRoute { it.hasRoute<ChangePassword>() }
+        // Nothing about the notice depends on what the reader does there.
+        assertThat(identity.securityNoticeAt.value).isNotNull()
+        compose.runOnUiThread { navController.popBackStack() }
+        waitForTag("security_notice")
     }
 
     @Test
@@ -810,8 +828,11 @@ class CograNavGraphTest {
 
         compose.onNodeWithTag("profile_edit_bio").performTextInput("Hello from the hand test.")
         compose.onNodeWithTag("profile_edit_save").performScrollTo().performClick()
+        // Save opens the change's seal; its commit signs (ProfileEditSeal.md).
+        waitForTag("profileEditSeal.foot.sign")
+        compose.onNodeWithTag("profileEditSeal.foot.sign").performScrollTo().performClick()
 
-        // The save pops back to the profile, which re-reads.
+        // The signing pops back to the profile, which re-reads.
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Profile>() == true
         }
@@ -826,6 +847,31 @@ class CograNavGraphTest {
         // surface and would follow the reader onto another tab (HT-8).
         compose.waitUntilAtLeastOneExists(hasTestTag("profile.snackbar"), timeoutMillis = 30_000)
         assertThat(compose.onAllNodesWithTag("shell_snackbar").fetchSemanticsNodes()).isEmpty()
+    }
+
+    // ProfileEditSeal.md:61: without the key on this device the seal's notice
+    // stands in the commit's place, and `Restore the key` opens the restore route.
+    @Test
+    fun theProfileSealWithoutTheKeyOpensRestore() {
+        signIn()
+        identity.seed = null
+        account.profile = member()
+        render()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
+        waitForTag("profile.identity.actionRow.edit")
+        compose.onNodeWithTag("profile.identity.actionRow.edit").performScrollTo().performClick()
+        waitForTag("profile_edit_bio")
+        compose.onNodeWithTag("profile_edit_bio").performTextInput("Hello.")
+        compose.onNodeWithTag("profile_edit_save").performScrollTo().performClick()
+        waitForTag("profileEditSeal.foot.sign")
+        compose.onNodeWithTag("profileEditSeal.foot.sign").performScrollTo().performClick()
+
+        waitForTag("profile_edit_seal_restore")
+        assertThat(profiles.updates).isEmpty()
+        compose.onNodeWithTag("profile_edit_seal_restore").performScrollTo().performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Restore>()).isTrue()
     }
 
     @Test

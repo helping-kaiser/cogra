@@ -43,7 +43,8 @@
     <!-- The wide anchor's target on a deleted account (ProfileDeleted.md:23). -->
     <string name="profile_target_account">this account</string>
     <string name="profile_open_settings">Settings</string>
-    <string name="profile_saved">Profile saved</string>
+    <!-- A profile change taken, on the profile (ProfileEditSeal.md:45, AvatarSeal.md:37). -->
+    <string name="profile_saved">Signed — your profile shows it now, still settling.</string>
     <string name="profile_filter_posts">Posts</string>
     <string name="profile_filter_comments">Comments</string>
     <string name="profile_filter_everything">Everything</string>
@@ -53,6 +54,9 @@
     <!-- The page that did not arrive (Profile.md:35; copy-voice.md). -->
     <string name="profile_more_failed">Couldn\'t load more</string>
     <string name="profile_more_retry">Retry</string>
+    <!-- A card tab's first page that did not arrive (ProfilePosts.md:23; ProfileComments.md:27). -->
+    <string name="profile_posts_first_failed">Can\'t reach the server — posts can\'t load right now.</string>
+    <string name="profile_comments_first_failed">Can\'t reach the server — comments can\'t load right now.</string>
 
     <!-- The header's figures (`ProfileHeader.jsx`; copy-voice, the profile):
          each labelled, never merged, the reader's own reading `you`. -->
@@ -129,6 +133,4 @@
     <string name="profile_edit_bio_too_long">Too long — at most %1$d characters.</string>
     <string name="profile_edit_website_too_long">Too long — at most %1$d characters.</string>
     <string name="profile_edit_name_reserved">That name isn\'t available.</string>
-    <string name="profile_edit_refused">That didn\'t work. Check the fields and try again.</string>
-    <string name="profile_edit_signing_failed">Signing didn\'t complete. Try again.</string>
 </resources>

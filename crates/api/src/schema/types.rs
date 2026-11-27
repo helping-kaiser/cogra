@@ -330,7 +330,7 @@ pub(crate) async fn borrowed_vantage(
 
 /// Whether the account's reciprocal Opinion toward the member who vouched
 /// it in exists — confirmed in the mirror (latched on the landed
-/// application row) or in flight as one of its staged writes (auth.md
+/// application row) or in flight as one of its signed staged writes (auth.md
 /// "Reciprocation is the joiner's own act"). True with no admitting voucher
 /// — before landing, or for the genesis account: there is nothing to
 /// reciprocate yet.
@@ -359,7 +359,7 @@ pub(crate) async fn has_reciprocated(
         store::latch_reciprocated(pool, account.id).await?;
         return Ok(true);
     }
-    Ok(staged::has_live_targeting(pool, account.id, Family::Opinion, &target).await?)
+    Ok(staged::has_signed_targeting(pool, account.id, Family::Opinion, &target).await?)
 }
 
 /// Resolves the `viewerStance` field shared by every stance-able node.
@@ -369,26 +369,30 @@ pub(crate) async fn has_reciprocated(
 /// Nothing about the viewer's own stance is an error on a read: a viewer
 /// without an attached actor key has no bundle to read, and an id this
 /// viewer could not stance has none either. Both answer null.
+///
+/// Batched through [`crate::loaders::ViewerStanceLoader`], keyed on the
+/// session's own viewer, so a page of faces costs a constant number of
+/// reads whatever its size.
 pub(crate) async fn viewer_stance(
     ctx: &Context<'_>,
-    target: Uuid,
+    target: crate::stance::FaceTarget,
     pick: Option<StancePickInput>,
     include_pending: bool,
 ) -> async_graphql::Result<Option<StanceBundle>> {
     let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
         return Ok(None);
     };
-    let pool = ctx.data::<PgPool>()?;
-    match crate::stance::bundle(pool, viewer.user_id, target, include_pending).await {
-        Ok(read) => Ok(Some(StanceBundle {
-            target: read.node.to_string(),
-            standing: read.standing,
-            pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
-        })),
-        Err(crate::stance::StanceError::BadInput { .. })
-        | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
-        Err(e) => Err(e.into()),
-    }
+    let loader = ctx.data::<DataLoader<crate::loaders::ViewerStanceLoader>>()?;
+    let key = crate::stance::FaceKey {
+        viewer: viewer.user_id,
+        target,
+        include_pending,
+    };
+    Ok(loader.load_one(key).await?.map(|read| StanceBundle {
+        target: read.node.to_string(),
+        standing: read.standing,
+        pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
+    }))
 }
 
 /// Resolves the `borrowedStance` field shared by every stance-able node:
@@ -2258,7 +2262,13 @@ impl User {
         pick: Option<StancePickInput>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
-        viewer_stance(ctx, self.identity.id, pick, include_pending).await
+        viewer_stance(
+            ctx,
+            crate::stance::FaceTarget::Node(self.identity.id),
+            pick,
+            include_pending,
+        )
+        .await
     }
 
     /// The borrowed view's own landed stance toward this person's
@@ -2275,7 +2285,7 @@ impl User {
 
     /// Whether the viewer's reciprocal Opinion toward invitedBy exists —
     /// confirmed in the record mirror (latched on the landed application
-    /// row) or in flight as one of the viewer's staged writes. Drives
+    /// row) or in flight as one of the viewer's signed staged writes. Drives
     /// the first-login reciprocation prompt (auth.md "Reciprocation is
     /// the joiner's own act"). Vacuously true when invitedBy is null —
     /// and for any viewer but the account's own: the field exists only
@@ -3610,7 +3620,13 @@ impl PostType {
         pick: Option<StancePickInput>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
-        viewer_stance(ctx, self.0.id, pick, include_pending).await
+        viewer_stance(
+            ctx,
+            crate::stance::FaceTarget::Node(self.0.id),
+            pick,
+            include_pending,
+        )
+        .await
     }
 
     /// The borrowed view's own landed stance toward this post, for a
@@ -3974,7 +3990,13 @@ impl CommentType {
         pick: Option<StancePickInput>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
-        viewer_stance(ctx, self.0.id, pick, include_pending).await
+        viewer_stance(
+            ctx,
+            crate::stance::FaceTarget::Node(self.0.id),
+            pick,
+            include_pending,
+        )
+        .await
     }
 
     /// The borrowed view's own landed stance toward this comment, for a
@@ -4095,20 +4117,13 @@ impl HashtagType {
         pick: Option<StancePickInput>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
-        let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
-            return Ok(None);
-        };
-        let pool = ctx.data::<PgPool>()?;
-        match crate::stance::topic_bundle(pool, viewer.user_id, &self.name, include_pending).await {
-            Ok(read) => Ok(Some(StanceBundle {
-                target: read.node.to_string(),
-                standing: read.standing,
-                pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
-            })),
-            Err(crate::stance::StanceError::BadInput { .. })
-            | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
-            Err(e) => Err(e.into()),
-        }
+        viewer_stance(
+            ctx,
+            crate::stance::FaceTarget::Topic(self.name.clone()),
+            pick,
+            include_pending,
+        )
+        .await
     }
 
     /// The borrowed view's own landed Affinity bundle toward this topic,

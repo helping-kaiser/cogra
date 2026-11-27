@@ -295,25 +295,31 @@ export function SavedScreen({
     <main className="mx-auto flex w-full max-w-2xl flex-col">
       {/* THE HEADER AND THE FIELD COLLAPSE ON THE WAY DOWN AND RETURN ON THE
           WAY UP, and a reader three screens down summons Back to top with
-          them; its tap goes up, animated, and never re-reads. */}
-      <CollapsingTop onBackToTop={() => scrollHostToTopAnimated(host)}>
-        <PageHeader
-          title="Saved"
-          backHref="/profile"
-          backLabel="Back to your profile"
-          backScroll={false}
-          backTestId="saved-back"
-          node={{ path: "saved.header" }}
-        />
-        {fielded && (
-          <SearchBar
-            query={query}
-            onChange={setQuery}
-            placeholder={SEARCH_WHAT_YOU_SAVED}
-            ariaLabel={SEARCH_WHAT_YOU_SAVED}
-            node={{ path: "saved.searchField" }}
+          them; its tap goes up, animated, and never re-reads. ONE BLOCK: the
+          board stacks the header and the field with no gap of their own
+          (Saved.jsx), so the region's column gap never opens between them.
+          FLUSH: what stands under it — the list, SavedNone, SavedEmpty — keeps
+          its own 8px top, as the boards draw it. */}
+      <CollapsingTop flush onBackToTop={() => scrollHostToTopAnimated(host)}>
+        <div className="flex flex-col">
+          <PageHeader
+            title="Saved"
+            backHref="/profile"
+            backLabel="Back to your profile"
+            backScroll={false}
+            backTestId="saved-back"
+            node={{ path: "saved.header" }}
           />
-        )}
+          {fielded && (
+            <SearchBar
+              query={query}
+              onChange={setQuery}
+              placeholder={SEARCH_WHAT_YOU_SAVED}
+              ariaLabel={SEARCH_WHAT_YOU_SAVED}
+              node={{ path: "saved.searchField" }}
+            />
+          )}
+        </div>
       </CollapsingTop>
       {loading && entries.length === 0 && (
         <p role="status" aria-live="polite" data-testid="saved-loading" className="px-4 pt-2">
@@ -338,40 +344,47 @@ export function SavedScreen({
       )}
       {empty && (
         // SAVEDEMPTY: words only — no action button, no error colour, and the
-        // save named in words, never drawn as its glyph.
-        <div className="px-6 pt-2" data-testid="saved.empty">
-          <p
-            ref={emptyRef}
-            tabIndex={-1}
-            data-testid="saved.empty.title"
-            className="py-2 text-body-medium text-on-surface-variant outline-none"
-          >
-            {SAVED_EMPTY}
-          </p>
+        // save named in words, never drawn as its glyph. `saved.empty` is the
+        // empty state's own box (EmptyState.jsx); the board's 8px 24px wrapper
+        // around it is the page's, unregistered (SavedEmpty.jsx).
+        <div className="px-6 py-2">
+          <div className="flex flex-col items-start gap-3 py-2" data-testid="saved.empty">
+            <p
+              ref={emptyRef}
+              tabIndex={-1}
+              data-testid="saved.empty.title"
+              className="text-body-medium text-on-surface-variant outline-none"
+            >
+              {SAVED_EMPTY}
+            </p>
+          </div>
         </div>
       )}
       {none && (
         // SAVEDNONE: the reader's own search found nothing — the field keeps
-        // the query, and the one way back clears it.
-        <div className="flex flex-col items-start gap-3 px-6 pt-2" data-testid="saved.empty">
-          <p
-            ref={emptyRef}
-            tabIndex={-1}
-            data-testid="saved.empty.title"
-            className="py-2 text-body-medium text-on-surface-variant outline-none"
-          >
-            {SAVED_NONE}
-          </p>
-          <Button
-            testId="saved-none-action"
-            node={{ path: "saved.empty.action" }}
-            variant="outline"
-            size="sm"
-            selfStart
-            onClick={() => setQuery("")}
-          >
-            {SHOW_EVERYTHING}
-          </Button>
+        // the query, and the one way back clears it. The node and its
+        // wrapper as SavedEmpty's (SavedNone.jsx).
+        <div className="px-6 py-2">
+          <div className="flex flex-col items-start gap-3 py-2" data-testid="saved.empty">
+            <p
+              ref={emptyRef}
+              tabIndex={-1}
+              data-testid="saved.empty.title"
+              className="text-body-medium text-on-surface-variant outline-none"
+            >
+              {SAVED_NONE}
+            </p>
+            <Button
+              testId="saved-none-action"
+              node={{ path: "saved.empty.action" }}
+              variant="outline"
+              size="sm"
+              selfStart
+              onClick={() => setQuery("")}
+            >
+              {SHOW_EVERYTHING}
+            </Button>
+          </div>
         </div>
       )}
       {shown.length > 0 && (

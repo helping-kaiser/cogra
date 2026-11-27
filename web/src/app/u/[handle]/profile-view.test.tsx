@@ -5,11 +5,11 @@ import { join } from "node:path";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { useState } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
 import { heldPicture, releaseHeldPicture } from "@/lib/profile/held-picture";
-import { forgetAllProfileViews } from "@/lib/profile/profile-memory";
+import { forgetAllProfileViews, recallProfileView } from "@/lib/profile/profile-memory";
 import { readerState } from "@/lib/session/reader-state";
 import { createTokenStore } from "@/lib/session/token-store";
 import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
@@ -24,7 +24,16 @@ import { byNode } from "@/test/data-node";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { chroniclePage, settlingCommentEntry, settlingPostEntry } from "@/test/chronicle";
-import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
+import { CarriedSnackbar, carrySnackbar } from "@/lib/ui/carried-snackbar";
+import {
+  closeProfileChangeSeal,
+  PROFILE_SIGNED,
+  resetProfileChangeForTests,
+  signProfileChange,
+  type ProfileChangeOutcome,
+} from "@/lib/profile/profile-change";
+import { readSignedProfile, resetSignedProfileForTests } from "@/lib/profile/signed-profile";
+import { ChangeHandleView } from "@/app/(app)/settings/handle/change-handle-view";
 import { ProfileScreen } from "./profile-view";
 
 const push = vi.fn();
@@ -171,6 +180,7 @@ beforeEach(() => {
   window.localStorage.clear();
   resetSeenQueueForTests();
   forgetAllProfileViews();
+  resetProfileChangeForTests();
   marked = [];
 });
 
@@ -1119,24 +1129,294 @@ describe("ProfileScreen", () => {
   // to the profile from the editor or from settings shows the change on the
   // arrival's own read. That holds only because the arrival asks the server
   // rather than the cache the previous visit filled; the shared cache here is
-  // that previous visit.
+  // that previous visit. The first visit is let settle, so its view is held and
+  // the second arrival is a return (Profile.md:97): what the held head draws
+  // while the read is out is not this test's to say, only that the read's
+  // answer replaces it.
   it("a return to the own profile reads the server, not the last visit's cache", async () => {
     const cache = new InMemoryCache();
     let served = profile("u1", "ada", "Before the edit.");
+    let asked = 0;
     server.use(
       meHandler(),
-      gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: served } })),
+      gqlLink.query("MyProfile", () => {
+        asked += 1;
+        return HttpResponse.json({ data: { me: served } });
+      }),
       recordsHandler([]),
     );
     const store = signedInStore();
     const first = renderWithProviders(<ProfileScreen handle={null} />, { store, cache });
     expect(await screen.findByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Before the edit.");
+    await screen.findByTestId(byNode("profile.posts.empty.title"));
     first.unmount();
+    expect(recallProfileView("u1", null, null)).not.toBeNull();
 
     served = profile("u1", "ada_renamed", "Signed, not landed.");
     renderWithProviders(<ProfileScreen handle={null} />, { store, cache });
-    expect(await screen.findByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Signed, not landed.");
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Signed, not landed."),
+    );
     expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada_renamed");
+    expect(asked).toBe(2);
+  });
+
+  // A SIGNED EDIT SHOWS ON ARRIVAL (ProfileEditSeal.md:45 "WHEN the signing is
+  // taken -> the profile shows the change AND the snackbar reads Signed — your
+  // profile shows it now, still settling."; AvatarSeal.md:37; Profile.md:97 "so
+  // a signed edit or a changed handle shows on arrival, and the list never
+  // moves"). The return draws its held head at once, so the list does not move
+  // — and that first frame must already wear what the device signed, never the
+  // values from before the edit under the snackbar. The arrival's read is held
+  // open here so the frame before it answers is the one asserted.
+  describe("a return after a signed change", () => {
+    const signedBio = "Signed, not landed.";
+    // Every held read is let go after its test, passed or failed, so no request
+    // is left hanging into the next one.
+    const gates: (() => void)[] = [];
+    const hold = () => new Promise<void>((resolve) => gates.push(resolve));
+    afterEach(() => {
+      for (const open of gates.splice(0)) open();
+    });
+
+    /** The own profile, visited once so its view is held; MyProfile answers only when `open` is called. */
+    async function visitThenHold(cache: InMemoryCache) {
+      let served = profile("u1", "ada", "Before the edit.");
+      let gate: Promise<void> | null = null;
+      let asked = 0;
+      server.use(
+        meHandler(),
+        gqlLink.query("MyProfile", async () => {
+          asked += 1;
+          const answering = served;
+          if (gate !== null) await gate;
+          return HttpResponse.json({ data: { me: answering } });
+        }),
+        recordsHandler([]),
+      );
+      const store = signedInStore();
+      const first = renderWithProviders(<ProfileScreen handle={null} />, { store, cache });
+      expect(await screen.findByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Before the edit.");
+      await screen.findByTestId(byNode("profile.posts.empty.title"));
+      first.unmount();
+      expect(recallProfileView("u1", null, null)).not.toBeNull();
+      gate = hold();
+      const open = gates[gates.length - 1];
+      return {
+        store,
+        serve: (next: ReturnType<typeof profile>) => {
+          served = next;
+        },
+        open,
+        asked: () => asked,
+      };
+    }
+
+    const edited = {
+      profileId: "u1",
+      fields: { displayName: "Ada Lovelace", bio: signedBio, websiteUrl: "https://lovelace.example" },
+    };
+
+    it("wears the signed name, bio and website from the first frame, the held list unmoved, and the read confirms them", async () => {
+      const cache = new InMemoryCache();
+      const held = await visitThenHold(cache);
+      await act(async () => {
+        await signProfileChange(async () => ({ kind: "taken" }), { signed: edited });
+      });
+      // The edit's own landing, as `ProfileEditScreen`'s onTaken does it.
+      carrySnackbar(PROFILE_SIGNED);
+      held.serve({
+        ...profile("u1", "ada", signedBio),
+        displayName: moderated("Ada Lovelace"),
+        websiteUrl: moderated("https://lovelace.example"),
+      });
+      renderWithProviders(
+        <>
+          <ProfileScreen handle={null} />
+          <CarriedSnackbar />
+        </>,
+        { store: held.store, cache },
+      );
+      // The first frame: the held page, wearing the change — never the old bio.
+      expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent(signedBio);
+      expect(screen.getByTestId(byNode("profile.identity.name"))).toHaveTextContent("Ada Lovelace");
+      expect(screen.getByTestId(byNode("profile.identity.website"))).toHaveAttribute(
+        "href",
+        "https://lovelace.example",
+      );
+      expect(screen.queryByText("Before the edit.")).toBeNull();
+      // The list stands as it was left — no Loading…, no re-landing.
+      expect(screen.getByTestId(byNode("profile.posts.empty.title"))).toBeInTheDocument();
+      expect(screen.queryByTestId("profile-loading")).toBeNull();
+      expect(screen.getByTestId("carried-snackbar")).toHaveTextContent(PROFILE_SIGNED);
+
+      held.open();
+      await waitFor(() => expect(held.asked()).toBe(2));
+      expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent(signedBio);
+    });
+
+    it("wears the signed picture from the first frame", async () => {
+      const cache = new InMemoryCache();
+      const held = await visitThenHold(cache);
+      const url = "https://media.example/new-face.webp";
+      await act(async () => {
+        await signProfileChange(async () => ({ kind: "taken" }), {
+          signed: { profileId: "u1", fields: { avatar: { id: "m-new", url } } },
+        });
+      });
+      renderWithProviders(<ProfileScreen handle={null} />, { store: held.store, cache });
+      const img = screen.getByTestId(byNode("profile.identity.avatar")).querySelector("img");
+      expect(decodeURIComponent(img?.getAttribute("src") ?? "")).toContain(url);
+      // The fields the picture's own change left alone stand as held.
+      expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Before the edit.");
+      held.open();
+      await waitFor(() => expect(held.asked()).toBe(2));
+    });
+
+    it("keeps the head as it was for a change that did not go through, or is still signing", async () => {
+      const cache = new InMemoryCache();
+      const held = await visitThenHold(cache);
+      // Closed while it signed, then not through: the failure line, the old head.
+      let answer!: (outcome: ProfileChangeOutcome) => void;
+      act(() => {
+        void signProfileChange(() => new Promise((resolve) => (answer = resolve)), { signed: edited });
+        closeProfileChangeSeal();
+      });
+      const view = renderWithProviders(<ProfileScreen handle={null} />, { store: held.store, cache });
+      expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Before the edit.");
+      await act(async () => answer({ kind: "offline" }));
+      expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Before the edit.");
+      expect(screen.getByTestId("profile-change-line")).toHaveTextContent("That didn't sign.");
+      held.open();
+      await waitFor(() => expect(held.asked()).toBe(2));
+      expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Before the edit.");
+      view.unmount();
+    });
+
+    it("lets the read's answer stand over what was signed, whatever it says", async () => {
+      const cache = new InMemoryCache();
+      const held = await visitThenHold(cache);
+      await act(async () => {
+        await signProfileChange(async () => ({ kind: "taken" }), { signed: edited });
+      });
+      // The server answers without the change (its pending row gone): the
+      // server is the truth about the profile, and the head follows it.
+      held.serve(profile("u1", "ada", "What the server holds."));
+      renderWithProviders(<ProfileScreen handle={null} />, { store: held.store, cache });
+      expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent(signedBio);
+      held.open();
+      await waitFor(() =>
+        expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent("What the server holds."),
+      );
+    });
+
+    // A CHANGED HANDLE SHOWS ON ARRIVAL TOO (Profile.md:97). It is no signed
+    // act: Settings' handle flow asks the server, and the change is the
+    // profile's the moment the server takes it.
+    async function changeHandleInSettings(
+      store: ReturnType<typeof signedInStore>,
+      cache: InMemoryCache,
+      answer: Record<string, unknown>,
+    ) {
+      server.use(
+        gqlLink.query("SettingsAccount", () =>
+          HttpResponse.json({
+            data: {
+              me: {
+                __typename: "User",
+                id: "u1",
+                handle: "ada",
+                email: "ada@example.com",
+                emailVerified: true,
+                accountState: "MEMBER",
+                actorPubkey: "pk",
+                passwordChangedAt: null,
+                keyBackupCreatedAt: null,
+                pendingEmailChange: null,
+                preferences: null,
+                sessions: [],
+              },
+            },
+          }),
+        ),
+        gqlLink.mutation("ChangeHandle", () =>
+          HttpResponse.json({ data: { changeHandle: { __typename: "ChangeHandlePayload", ...answer } } }),
+        ),
+      );
+      push.mockClear();
+      const settings = renderWithProviders(<ChangeHandleView />, { store, cache });
+      await waitFor(() => expect(screen.getByTestId("changeHandle.body")).toHaveTextContent("@ada is how"));
+      fireEvent.change(screen.getByTestId("changeHandle.handle.input"), { target: { value: "ada_l" } });
+      fireEvent.click(screen.getByTestId("changeHandle.commit.action"));
+      fireEvent.click(screen.getByTestId("changeHandle.dialog.change"));
+      return settings;
+    }
+
+    it("wears a handle Settings changed from the first frame of the return, and the read replaces it", async () => {
+      resetSignedProfileForTests();
+      const cache = new InMemoryCache();
+      const held = await visitThenHold(cache);
+      const settings = await changeHandleInSettings(held.store, cache, {
+        user: { __typename: "User", id: "u1", handle: "ada_l" },
+        userErrors: [],
+      });
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/settings?done=handle"));
+      settings.unmount();
+      held.serve(profile("u1", "ada_l", "Before the edit."));
+      renderWithProviders(<ProfileScreen handle={null} />, { store: held.store, cache });
+      // The first frame: the held page, wearing the new handle.
+      expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada_l");
+      expect(screen.getByTestId(byNode("profile.posts.empty.title"))).toBeInTheDocument();
+      held.open();
+      await waitFor(() => expect(held.asked()).toBe(2));
+      expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada_l");
+      // The read asked after the change answered: the head reads the server alone.
+      expect(readSignedProfile("u1")).toBeNull();
+    });
+
+    it("keeps the held handle for a change the server refused", async () => {
+      resetSignedProfileForTests();
+      const cache = new InMemoryCache();
+      const held = await visitThenHold(cache);
+      const settings = await changeHandleInSettings(held.store, cache, {
+        user: null,
+        userErrors: [{ __typename: "UserError", code: "HANDLE_TAKEN", message: "taken", field: ["handle"] }],
+      });
+      await waitFor(() =>
+        expect(screen.getByTestId("changeHandle.handle.support")).toHaveTextContent("That handle is taken."),
+      );
+      settings.unmount();
+      renderWithProviders(<ProfileScreen handle={null} />, { store: held.store, cache });
+      expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent(/^@ada$/);
+      held.open();
+      await waitFor(() => expect(held.asked()).toBe(2));
+    });
+
+    it("shows a change taken after its seal closed at once, before the profile's re-read answers", async () => {
+      let served = profile("u1", "ada", "Before the edit.");
+      let gate: Promise<void> | null = null;
+      server.use(
+        meHandler(),
+        gqlLink.query("MyProfile", async () => {
+          const answering = served;
+          if (gate !== null) await gate;
+          return HttpResponse.json({ data: { me: answering } });
+        }),
+        recordsHandler([]),
+      );
+      const store = signedInStore();
+      let answer!: (outcome: ProfileChangeOutcome) => void;
+      act(() => {
+        void signProfileChange(() => new Promise((resolve) => (answer = resolve)), { signed: edited });
+        closeProfileChangeSeal();
+      });
+      renderWithProviders(<ProfileScreen handle={null} />, { store });
+      expect(await screen.findByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Before the edit.");
+      gate = hold();
+      served = profile("u1", "ada", signedBio);
+      await act(async () => answer({ kind: "taken" }));
+      expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent(signedBio);
+    });
   });
 
   it("locks the invites entry for an applicant and explains on tap", async () => {

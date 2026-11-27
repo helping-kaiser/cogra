@@ -2331,3 +2331,235 @@ async fn a_tag_on_content_that_never_lands_expires_with_it(pool: PgPool) {
         "{late}"
     );
 }
+
+/// A finding, pinned as the server answers today (the retry hazard,
+/// audit defect 5): `preparePost` keeps no in-flight guard, so a second
+/// prepare of the same post while the first awaits its approval stages a
+/// second write under a fresh node, and the first stays where it was.
+/// Approving both lands the post twice. No sentence in the docs makes the
+/// server refuse it; the client's Retry is what re-prepares
+/// (SigningAfterClose.md: "the same signing is asked again").
+///
+/// A second post prepare while the first awaits approval stages a second write under a fresh node, and both land as two posts.
+/// ´claim:pending:a-second-post-prepare-stages-a-second-write´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_second_post_prepare_while_the_first_awaits_approval_stages_a_second_write(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let first = rig.prepare_post(&token, "Same post", "Same body").await;
+    let first_node = first["preparePost"]["node"].clone();
+    let first_signed = rig
+        .pre_sign(&token, &key, &first["preparePost"]["writes"])
+        .await;
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "AWAITING_APPROVAL",
+        "the first attempt is sealed and waits for its approval"
+    );
+
+    let second = rig.prepare_post(&token, "Same post", "Same body").await;
+    let second_node = second["preparePost"]["node"].clone();
+    assert_ne!(second_node, first_node, "a fresh node for the same post");
+    let second_ids: Vec<&str> = second["preparePost"]["writes"]
+        .as_array()
+        .expect("writes")
+        .iter()
+        .map(|w| w["id"].as_str().expect("id"))
+        .collect();
+    assert!(
+        !second_ids.contains(&first_signed[0].id.as_str()),
+        "a second staged write, not the first handed back"
+    );
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "AWAITING_APPROVAL",
+        "the first attempt stays parked beside the second"
+    );
+
+    rig.approve(&token, &key, &first_signed).await;
+    rig.land(&token, &key, &second["preparePost"]["writes"])
+        .await;
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "LANDED"
+    );
+    assert_eq!(rig.staged_state(&token, second_ids[0]).await, "LANDED");
+
+    let listing = rig.listed(None, "first: 10").await;
+    let landed: Vec<&Value> = listing
+        .iter()
+        .map(|e| &e["node"])
+        .filter(|n| n["title"]["value"] == "Same post")
+        .collect();
+    assert_eq!(
+        landed.len(),
+        2,
+        "the reader sees the post twice: {listing:?}"
+    );
+    assert!(
+        landed.iter().all(|n| n["landing"]["state"] == "LANDED"),
+        "{landed:?}"
+    );
+    let ids: Vec<&Value> = landed.iter().map(|n| &n["id"]).collect();
+    assert!(ids.contains(&&first_node) && ids.contains(&&second_node));
+}
+
+/// A finding, pinned as the server answers today: `prepareComment` keeps
+/// no in-flight guard either, so a second reply prepare while the first
+/// awaits its approval stages a second comment, and approving both lands
+/// the reply twice under its parent.
+///
+/// A second reply prepare while the first awaits approval stages a second comment, and both land in the thread.
+/// ´claim:pending:a-second-reply-prepare-stages-a-second-write´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_second_reply_prepare_while_the_first_awaits_approval_stages_a_second_write(
+    pool: PgPool,
+) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let host = rig.landed_post(&token, &key, "host", "body").await;
+    let prepare = || {
+        rig.gql(
+            Some(&token),
+            PREPARE_COMMENT,
+            json!({ "input": {
+                "target": host,
+                "content": "Same reply.",
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
+            }}),
+        )
+    };
+
+    let first = prepare().await;
+    assert_eq!(first["prepareComment"]["userErrors"], json!([]), "{first}");
+    let first_signed = rig
+        .pre_sign(&token, &key, &first["prepareComment"]["writes"])
+        .await;
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "AWAITING_APPROVAL"
+    );
+
+    let second = prepare().await;
+    assert_eq!(
+        second["prepareComment"]["userErrors"],
+        json!([]),
+        "{second}"
+    );
+    let second_id = second["prepareComment"]["writes"][0]["id"]
+        .as_str()
+        .expect("id")
+        .to_string();
+    assert_ne!(second_id, first_signed[0].id, "a second staged write");
+    assert_ne!(
+        second["prepareComment"]["node"], first["prepareComment"]["node"],
+        "a fresh comment node"
+    );
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "AWAITING_APPROVAL",
+        "the first attempt stays parked beside the second"
+    );
+
+    rig.approve(&token, &key, &first_signed).await;
+    rig.land(&token, &key, &second["prepareComment"]["writes"])
+        .await;
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "LANDED"
+    );
+    assert_eq!(rig.staged_state(&token, &second_id).await, "LANDED");
+
+    let thread = rig
+        .gql(
+            None,
+            r#"query($id: UUID!) { post(id: $id) {
+                 comments(first: 10) { edges { node { id content { value } } } }
+               } }"#,
+            json!({ "id": host }),
+        )
+        .await;
+    let comments = thread["post"]["comments"]["edges"]
+        .as_array()
+        .expect("edges");
+    let same: Vec<&Value> = comments
+        .iter()
+        .filter(|e| e["node"]["content"]["value"] == "Same reply.")
+        .collect();
+    assert_eq!(same.len(), 2, "the reply reads twice: {thread}");
+}
+
+/// The one content prepare that does hold a second attempt back: edits
+/// are serialized per (node, author) (substrate.md §9), so a second
+/// `preparePostEdit` while the first is sealed and awaits its approval is
+/// refused, and approving the first lands it alone. The unsigned case —
+/// the second supersedes the first — is pinned in `content_path.rs`
+/// (`an_unsigned_edit_is_superseded_by_the_next`).
+///
+/// A second edit prepare while the first is sealed and awaits approval is refused as already in flight, and the first lands alone.
+/// ´claim:pending:a-second-edit-prepare-is-refused-while-one-awaits-approval´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_second_edit_prepare_while_the_first_awaits_approval_is_refused(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post_id = rig.landed_post(&token, &key, "Old title", "Body").await;
+    let edit = |title: &'static str| {
+        rig.gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": { "id": post_id, "title": title, "content": "Body" }}),
+        )
+    };
+
+    let first = edit("First title").await;
+    assert_eq!(first["preparePostEdit"]["userErrors"], json!([]), "{first}");
+    let first_signed = rig
+        .pre_sign(&token, &key, &first["preparePostEdit"]["writes"])
+        .await;
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "AWAITING_APPROVAL"
+    );
+
+    let second = edit("Second title").await;
+    let errors = second["preparePostEdit"]["userErrors"]
+        .as_array()
+        .expect("array");
+    assert_eq!(errors.len(), 1, "{second}");
+    assert_eq!(errors[0]["code"], "BAD_INPUT", "{second}");
+    assert_eq!(
+        errors[0]["message"], "an edit of this content is already in flight",
+        "{second}"
+    );
+    assert!(
+        second["preparePostEdit"]["writes"]
+            .as_array()
+            .is_none_or(Vec::is_empty),
+        "nothing staged: {second}"
+    );
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "AWAITING_APPROVAL",
+        "the refusal leaves the first attempt as it was"
+    );
+
+    rig.approve_and_close(&token, &key, &first_signed).await;
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "LANDED"
+    );
+    let post = rig
+        .gql(
+            None,
+            r#"query($id: UUID!) { post(id: $id) { title { value } } }"#,
+            json!({ "id": post_id }),
+        )
+        .await;
+    assert_eq!(post["post"]["title"]["value"], "First title");
+}

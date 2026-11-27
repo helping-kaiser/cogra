@@ -10,6 +10,7 @@ import com.cogra.crypto.PreSignedProposal
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.stance.StanceInputMode
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 /**
  * What the token store knows about the device's session once it has
@@ -138,6 +139,26 @@ interface IdentityStore {
     suspend fun applicationCardPutAway(): Boolean
 
     suspend fun putApplicationCardAway()
+
+    /**
+     * The security notice waiting for `Got it` (FeedSecurityNotice.md: it
+     * "stands until Got it is pressed … across an app restart"): the
+     * detection time the sign-in carried, kept on this device in its
+     * account's own slot — hidden under another account, never erased by a
+     * switch (auth.md "Multi-account device custody"), and purged with the
+     * slot by a forgetting sign-out. Follows the active account.
+     */
+    val securityNotice: Flow<Instant?>
+
+    /**
+     * Keeps [detectedAt] for [account], the account the sign-in belongs to —
+     * named outright because the notice is kept before that account's tokens
+     * are saved and it becomes the active one.
+     */
+    suspend fun keepSecurityNotice(account: String, detectedAt: Instant)
+
+    /** `Got it`: the active account's notice goes for good. */
+    suspend fun dropSecurityNotice()
 
     /**
      * Which surface the stance control offers, everywhere (design.md

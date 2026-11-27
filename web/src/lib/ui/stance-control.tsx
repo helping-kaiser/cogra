@@ -81,16 +81,18 @@ import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
 import { STANCE_RANGES } from "@/lib/stance/pad-geometry";
 import { useStanceData } from "@/lib/stance/provider";
 import { announceStanceSigned } from "@/lib/stance/signed-events";
+import { useKeptBatchSigning } from "@/lib/stance/kept-batch";
 import { clearSettling, useSettling } from "@/lib/stance/settling";
 import { useStanceTaught } from "@/lib/stance/stance-coach";
 import type {
   BorrowedStance,
+  CommitSource,
   StanceBundle,
   StanceCommit,
   StanceLanding,
   StanceTargetRef,
 } from "@/lib/stance/stance-data";
-import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
+import { useActiveAccountId, useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { OPINION_LOCKED, useReaderIsApplicant } from "@/lib/session/reader-state";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 import { BUTTON_CLASS, buttonClassName } from "@/lib/ui/button";
@@ -107,7 +109,7 @@ import {
 import { EmptySignConfirm } from "@/lib/ui/empty-sign-confirm";
 import { swallowRestOfGesture } from "@/lib/ui/outside-press";
 import { PendingMarker } from "@/lib/ui/pending-marker";
-import { RowLine, type RowLineState } from "@/lib/ui/row-line";
+import { RowLine, SIGNING_ROW, type RowLineState } from "@/lib/ui/row-line";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
@@ -180,6 +182,15 @@ type EmptyAsk = {
   pick: StancePair;
   landing: StanceLanding;
 };
+
+/**
+ * An act a dialog over the pad signs, as it was confirmed — what the row's
+ * Retry asks again once the dialog was closed while it signed: the walk-back
+ * over the standing the reader was shown, or exactly the pick.
+ */
+type DialogAct =
+  | { readonly kind: "walkBack"; readonly shown: StanceBundle }
+  | { readonly kind: "pick"; readonly pick: StancePair; readonly landing: StanceLanding };
 
 /** Where a signed act was made — what re-raises its outcome. */
 type Origin = "pad" | "row" | "confirm" | "empty";
@@ -299,10 +310,46 @@ const OVER_MEDIA_ANCHOR: CSSProperties = {
   filter: "drop-shadow(0 1px 6px rgba(0,0,0,0.75))",
 };
 
+/**
+ * STATE AN ACT KEEPS BESIDE THE ACCOUNT THAT PRESSED IT (auth.md
+ * "Multi-account device custody": bound "to the account it belongs to, never
+ * to a device-global slot"). Several accounts share a tab and a page stays
+ * mounted through another tab's switch, so the control reads only the
+ * active account's entry: another's is hidden, never erased, and stands again
+ * under its own account. Setting null removes the owner's entry alone.
+ */
+function useOwned<T>(): readonly [
+  ReadonlyMap<string | null, T>,
+  (owner: string | null, update: T | null | ((current: T | undefined) => T | null)) => void,
+] {
+  const [owned, setOwned] = useState<ReadonlyMap<string | null, T>>(() => new Map());
+  const setOf = useCallback(
+    (owner: string | null, update: T | null | ((current: T | undefined) => T | null)) =>
+      setOwned((current) => {
+        const value =
+          typeof update === "function"
+            ? (update as (current: T | undefined) => T | null)(current.get(owner))
+            : update;
+        if (value === null && !current.has(owner)) return current;
+        if (value !== null && current.get(owner) === value) return current;
+        const next = new Map(current);
+        if (value === null) next.delete(owner);
+        else next.set(owner, value);
+        return next;
+      }),
+    [],
+  );
+  return [owned, setOf] as const;
+}
+
 const HOLD_RING_PX = 40;
 const HOLD_RING_STROKE_PX = 4;
 
-function HoldRing({ testId }: { testId: string }) {
+/**
+ * The ring: filling over the hold, or — `closed` — standing whole and still
+ * around the face while the row's act signs (the master's `progress={1}`).
+ */
+function HoldRing({ testId, closed = false }: { testId: string; closed?: boolean }) {
   const r = (HOLD_RING_PX - HOLD_RING_STROKE_PX) / 2;
   const circumference = Math.round(2 * Math.PI * r * 1000) / 1000;
   return (
@@ -323,15 +370,17 @@ function HoldRing({ testId }: { testId: string }) {
         strokeWidth={HOLD_RING_STROKE_PX}
         strokeLinecap="round"
         strokeDasharray={circumference}
-        strokeDashoffset={circumference}
+        strokeDashoffset={closed ? 0 : circumference}
       >
-        <animate
-          attributeName="stroke-dashoffset"
-          from={circumference}
-          to="0"
-          dur={`${LONG_PRESS_MS}ms`}
-          fill="freeze"
-        />
+        {!closed && (
+          <animate
+            attributeName="stroke-dashoffset"
+            from={circumference}
+            to="0"
+            dur={`${LONG_PRESS_MS}ms`}
+            fill="freeze"
+          />
+        )}
       </circle>
     </svg>
   );
@@ -463,6 +512,8 @@ export function StanceControl({
   const data = useStanceData();
   const phase = useAuthPhase();
   const accountId = useActiveAccountId();
+  /** The session's token store, read live where a press must know whose it is. */
+  const sessionStore = useTokenStore();
   // AN APPLICANT'S FACE IS LOCKED, NOT GONE (ruling PR-103; ApplicantFeed.md:45-53,
   // ProfileOther.md:45-49; the master's `anchorOpacity`): the disabled
   // opacity, still tappable, a tap or a hold answering OPINION_LOCKED, the
@@ -484,7 +535,12 @@ export function StanceControl({
    * — and so a control that re-reads after its own write outranks the
    * copy its host read before that write.
    */
-  const [own, setOwn] = useState<{ value: BundleState } | null>(null);
+  //
+  // THE READ IS THE READER'S (`useOwned`): each account's own standing is
+  // kept beside it, so another tab's account change never leaves the last
+  // account's standing on the face, not even until the next read answers.
+  const [owns, setOwnOf] = useOwned<{ value: BundleState }>();
+  const own = owns.get(accountId) ?? null;
   const bundle: BundleState = own !== null ? own.value : suppliedBundle;
 
   // A pad-only host is the opening gesture itself, so the control mounts
@@ -498,27 +554,51 @@ export function StanceControl({
   const [pick, setPick] = useState<StancePair>(TAP_DEFAULT);
   /** What did not go through from the open pad or the alternates. */
   const [padFault, setPadFault] = useState<Fault | null>(null);
-  /** What did not go through from the hold, on the target's own row. */
-  const [rowLine, setRowLine] = useState<RowLineState | null>(null);
-  /** A signed act in flight, and where it was made. */
-  const [inFlight, setInFlight] = useState<Origin | null>(null);
-  /** The act in flight has waited past [SETTING_AFTER_MS]. */
-  const [slow, setSlow] = useState(false);
+  /**
+   * What did not go through from the hold, on the target's own row — kept
+   * beside the account that pressed (`useOwned`): never erased by a switch,
+   * since it "stands until Retry is pressed, another act is made on the same
+   * anchor, or the surface's next fresh load" (RowSigning.md), and an account
+   * change is none of these.
+   */
+  const [rowLines, setRowLineOf] = useOwned<RowLineState>();
+  const rowLine = rowLines.get(accountId) ?? null;
+  /**
+   * A signed act in flight, where it was made, and whether it has waited past
+   * [SETTING_AFTER_MS] — the pressing account's (`useOwned`): its wait and its
+   * inert anchor stand only under that account, and another account's anchor
+   * is its own to use meanwhile.
+   */
+  const [flights, setFlightOf] = useOwned<{ readonly origin: Origin; readonly slow: boolean }>();
+  const flight = flights.get(accountId) ?? null;
+  const inFlight = flight?.origin ?? null;
+  const slow = flight?.slow ?? false;
   /** The face, ringed while a hold is under way. */
   const [holding, setHolding] = useState(false);
+  /**
+   * The hold reached 500ms and its answer — the key's, then the signing's —
+   * is being asked: the ring stays closed (RowSigning.md:35, "the ring stays
+   * closed AND the signing begins"), the lift notwithstanding, until the
+   * row's wait carries it or the hold opens a surface instead.
+   */
+  const [holdReached, setHoldReached] = useState(false);
   /**
    * Where a TAKEN signing put the standing, as the fold projected it. It
    * holds the resting target until a fresh read replaces it — never before
    * the signature is taken (RowSigning.md: "NEVER the face moves before").
+   * The signing account's (`useOwned`): another account's face never wears it.
    */
-  const [pending, setPending] = useState<Pending | null>(null);
+  const [pendings, setPendingOf] = useOwned<Pending>();
+  const pending = pendings.get(accountId) ?? null;
   const [confirming, setConfirming] = useState<Confirming | null>(null);
   /** What did not go through from the walk-back's dialog, if anything. */
   const [confirmFault, setConfirmFault] = useState<Fault | null>(null);
   const [emptyAsk, setEmptyAsk] = useState<EmptyAsk | null>(null);
   /** What did not go through from the empty sign's ask, if anything. */
   const [emptyFault, setEmptyFault] = useState<Fault | null>(null);
-  const [signed, setSigned] = useState<ReactNode | null>(null);
+  /** The snackbar confirming a taken signing — the signing account's (`useOwned`). */
+  const [signeds, setSignedOf] = useOwned<ReactNode>();
+  const signed = signeds.get(accountId) ?? null;
   const [joinPrompt, setJoinPrompt] = useState(false);
   /** The dialog a notice's own "?" opens over the pad, if any. */
   const [noticeHelp, setNoticeHelp] = useState<HelpTopic | null>(null);
@@ -532,7 +612,8 @@ export function StanceControl({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const padRef = useRef<HTMLDivElement>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Each pressing account's [SETTING_AFTER_MS] timer. */
+  const slowTimers = useRef(new Map<string | null, ReturnType<typeof setTimeout>>());
   const suppressClick = useRef(false);
   /** The element holding the pointer capture, and the pointer it holds. */
   const captured = useRef<{ element: HTMLElement; pointerId: number } | null>(null);
@@ -544,6 +625,13 @@ export function StanceControl({
   useEffect(() => {
     openRef.current = considered;
   }, [considered]);
+  /** A dialog over the pad is up — the walk-back's or the empty sign's. */
+  const dialogUp = confirming !== null || emptyAsk !== null;
+  /** Whether it is up right now — read when the act it sent answers. */
+  const dialogUpRef = useRef(dialogUp);
+  useEffect(() => {
+    dialogUpRef.current = dialogUp;
+  }, [dialogUp]);
 
   // THE OPINION PAD PAUSES, IT DOES NOT SUSPEND (Feed.md:39/41,
   // PostDetailVideo.md:39/41): opening it pauses the playing clip on its
@@ -559,6 +647,10 @@ export function StanceControl({
     () => ({ id: target.id, kind: target.kind }),
     [target.id, target.kind],
   );
+  // THIS SURFACE'S COMMITS ARE ITS OWN (stance-attempts.ts `claim`): two
+  // surfaces can show the same target, and each one's Retry asks the signing
+  // it made, never the other's (SigningAfterClose.md:27).
+  const [commitSource] = useState<{ readonly source: CommitSource }>(() => ({ source: {} }));
 
   // WHAT A PICK KEPT HERE WILL SIGN AS (KeptPicksReview.md:5): a vouch-back
   // or an approval is kept as itself, never as a plain opinion, so the
@@ -601,10 +693,14 @@ export function StanceControl({
   // `Still settling` until a read that leaves pending records out counts them
   // all — the record is ordered.
   const settling = useSettling(seamTarget);
+  // THE KEPT PICKS' SEAL CLOSED WHILE ITS BATCH SIGNS (KeptPicksSeal.md:59,
+  // :63): each target's row reads `Signing…` under its face until the batch
+  // answers; its failure stands on Settings' row, never here.
+  const keptBatchSigning = useKeptBatchSigning(seamTarget);
 
   const readBundle = useCallback(
     (options: { fresh?: boolean } = {}) => {
-      if (phase !== "signedIn") return;
+      if (phase !== "signedIn" || accountId === null) return;
       // A supplied bundle is the host's to keep current, except right
       // after this control wrote — then the control has to see its own
       // work rather than the copy the host read before it.
@@ -612,6 +708,10 @@ export function StanceControl({
       // Every signed gesture re-reads; the generation drops an older read
       // that answers after a newer one, so the standing never goes back.
       const generation = ++bundleRead.current;
+      // The read is the session's account's — the live one, which a taken
+      // act's re-read may meet changed — so it answers that account's own
+      // standing and projection only.
+      const by = sessionStore.activeAccountId();
       void data.bundle(seamTarget, { fresh: options.fresh }).then((outcome) => {
         if (generation !== bundleRead.current) return;
         // A failed standing read leaves the control usable: it degrades to
@@ -621,14 +721,16 @@ export function StanceControl({
         if (outcome.kind !== "success") {
           // Never trade a standing that is known for one that is not: a
           // transient fault on a re-read must not blank a good reading.
-          setOwn((current) => current ?? { value: suppliedBundle ?? null });
+          setOwnOf(by, (current) => current ?? { value: suppliedBundle ?? null });
           return;
         }
-        setOwn({ value: outcome.value });
-        setPending(null);
+        setOwnOf(by, { value: outcome.value });
+        setPendingOf(by, null);
       });
     },
-    [data, phase, suppliedBundle, seamTarget],
+    // `accountId`: another tab's account change reads the next account's
+    // standing at once (the effect below re-runs on a new read).
+    [data, phase, accountId, suppliedBundle, seamTarget, sessionStore, setOwnOf, setPendingOf],
   );
 
   useEffect(() => {
@@ -724,16 +826,16 @@ export function StanceControl({
   // Nothing this control started may answer after it is gone: an armed
   // hold would sign on nothing, and an in-flight standing read would set
   // state on an unmounted tree. Bumping the generation drops every read.
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    const timers = slowTimers.current;
+    return () => {
       if (holdTimer.current !== null) clearTimeout(holdTimer.current);
-      if (slowTimer.current !== null) clearTimeout(slowTimer.current);
+      for (const timer of timers.values()) clearTimeout(timer);
       holdTimer.current = null;
-      slowTimer.current = null;
+      timers.clear();
       bundleRead.current += 1;
-    },
-    [],
-  );
+    };
+  }, []);
 
   /**
    * Where the pick lands the bundle, folded locally against the SERVED raw
@@ -815,6 +917,28 @@ export function StanceControl({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, confirming, emptyAsk, noticeHelp]);
 
+  // AN ACCOUNT CHANGE CLOSES THE CONSIDERED SURFACES, as `Close` closes them
+  // (PadFailed.md: "WHEN tap Close GIVEN Set is waiting on its signing -> the
+  // pad closes AND the act goes on"; SeveranceConfirm.md, EmptySignConfirm.md
+  // the same): the pad and its dialogs carry the account's pick, so they are
+  // never another account's to press. An act they started goes on, carried by
+  // its own account's row. A first account arriving (a guest signing in, a
+  // hydration) is no change.
+  const onAccountChanged = useEffectEvent(() => {
+    setConfirming(null);
+    setConfirmFault(null);
+    setEmptyAsk(null);
+    setEmptyFault(null);
+    setNoticeHelp(null);
+    if (openRef.current) closeAll();
+  });
+  const shownAccount = useRef(accountId);
+  useEffect(() => {
+    const previous = shownAccount.current;
+    shownAccount.current = accountId;
+    if (previous !== null && previous !== accountId) onAccountChanged();
+  }, [accountId]);
+
   // THE PAD IS MODAL FOR ASSISTIVE TECH (PadStanding.md): opening moves
   // focus into it — a pad-only host's first paint included — and closing
   // returns it to the face that opened it.
@@ -852,33 +976,45 @@ export function StanceControl({
   };
 
   /**
-   * Runs one signed act: inert at once, saying so past [SETTING_AFTER_MS].
+   * Runs one signed act of `by`'s: inert at once, saying so past
+   * [SETTING_AFTER_MS] — under `by` only.
    */
-  const runInFlight = async <T,>(origin: Origin, work: () => Promise<T>): Promise<T> => {
-    setInFlight(origin);
-    setSlow(false);
-    slowTimer.current = setTimeout(() => setSlow(true), SETTING_AFTER_MS);
+  const runInFlight = async <T,>(origin: Origin, by: string | null, work: () => Promise<T>): Promise<T> => {
+    const timers = slowTimers.current;
+    const prior = timers.get(by);
+    if (prior !== undefined) clearTimeout(prior);
+    setFlightOf(by, { origin, slow: false });
+    timers.set(
+      by,
+      setTimeout(() => setFlightOf(by, { origin, slow: true }), SETTING_AFTER_MS),
+    );
     try {
       return await work();
     } finally {
-      if (slowTimer.current !== null) clearTimeout(slowTimer.current);
-      slowTimer.current = null;
-      setSlow(false);
-      setInFlight(null);
+      clearTimeout(timers.get(by));
+      timers.delete(by);
+      setFlightOf(by, null);
     }
   };
 
-  /** A signing was taken: the surfaces close and the face moves. */
-  const taken = (landed: StanceLanding, records: number) => {
+  /** Whether the tab is still signed in as `by` — the account an act was pressed as. */
+  const stillAs = (by: string | null) => sessionStore.activeAccountId() === by;
+
+  /**
+   * A signing of `by`'s was taken: the face moves and the snackbar confirms
+   * it, under `by` only; the surfaces close if they are still `by`'s (an
+   * account change closed `by`'s already, and another's are its own).
+   */
+  const taken = (landed: StanceLanding, records: number, by: string | null) => {
     announceStanceSigned();
     readBundle({ fresh: true });
     if (variant !== undefined) {
       variant.onTaken(landed.landing);
       return;
     }
-    setPending({ pair: landed.landing, severed: landed.severed });
-    closeSurfaces();
-    setSigned(signedLine(landed.landing, records, landed.severed, target.label, axes));
+    setPendingOf(by, { pair: landed.landing, severed: landed.severed });
+    if (stillAs(by)) closeSurfaces();
+    setSignedOf(by, signedLine(landed.landing, records, landed.severed, target.label, axes));
   };
 
   /**
@@ -888,19 +1024,35 @@ export function StanceControl({
    * it signed (PadFailed.md: "NEVER the hold's +0.10 / +0.10 is signed in its
    * place").
    */
-  const notTaken = (origin: "pad" | "row", fault: Fault, sent: StancePair) => {
+  const notTaken = (origin: "pad" | "row", fault: Fault, sent: StancePair, by: string | null) => {
     // A pad closed while its act was in flight has no surface left to
-    // re-raise: the target's row carries it, as a hold's would.
-    if (origin === "pad" && openRef.current) setPadFault(fault);
-    else
-      // The row draws no not-through form of its own (RowSigning.md), so a
-      // FORBIDDEN on a row reads as a hold's fault does.
-      setRowLine(
-        fault === "writeRule"
-          ? { kind: "writeRule" }
-          : { kind: "didntSign", onRetry: () => void signPick(sent, "row") },
-      );
+    // re-raise: the target's row carries it, as a hold's would. An account
+    // change closed the presser's pad, so a pad open now is another's.
+    if (origin === "pad" && openRef.current && stillAs(by)) setPadFault(fault);
+    else raiseRow(fault, by, () => void signPick(sent, "row"));
   };
+
+  /**
+   * The target's row says an act of `by`'s did not go through — a hold's, or
+   * one whose surface was closed while it signed. The row draws no
+   * not-through form of its own (RowSigning.md), so a FORBIDDEN on a row
+   * reads as a hold's fault does. The line is the pressing account's, and its
+   * Retry asks that account's act again (`retry`): pressed once another
+   * account is active, it does nothing.
+   */
+  const raiseRow = (fault: Fault, by: string | null, retry: () => void) =>
+    setRowLineOf(
+      by,
+      fault === "writeRule"
+        ? { kind: "writeRule" }
+        : {
+            kind: "didntSign",
+            onRetry: () => {
+              if (sessionStore.activeAccountId() !== by) return;
+              retry();
+            },
+          },
+    );
 
   /** What a dialog's own signing answered: taken, a fault, or the write rule's no. */
   const answerOf = (
@@ -919,18 +1071,22 @@ export function StanceControl({
    */
   const signPick = async (chosen: StancePair, origin: "pad" | "row") => {
     if (busy) return;
-    setSigned(null);
+    // The act is the account the tab is signed in as at the press: its own
+    // line is the one it replaces, and the one its failure raises.
+    const by = sessionStore.activeAccountId();
+    setSignedOf(by, null);
     setPadFault(null);
-    setRowLine(null);
+    setRowLineOf(by, null);
     setConfirmFault(null);
     setEmptyFault(null);
-    const answer = await runInFlight(origin, async () => {
+    const answer = await runInFlight(origin, by, async () => {
       const landed = await data.project(seamTarget, chosen);
       if (landed.kind !== "success") return { kind: "failed" as const };
       const { standing, ...landing } = landed.value;
       // CANCEL DURING THE READ STAGED NOTHING: the pad that asked is gone,
-      // and no dialog may rise over a pad that is no longer there.
-      if (origin === "pad" && !openRef.current) return { kind: "dropped" as const };
+      // and no dialog may rise over a pad that is no longer there — nor over
+      // another account's anchor, the account change having closed it.
+      if ((origin === "pad" && !openRef.current) || !stillAs(by)) return { kind: "dropped" as const };
       if (landing.severed) {
         // THE LANDING'S `severed` IS THE PAIR ALONE (StanceProjection.severed):
         // whether it walks something back is the standing's to say, read on
@@ -939,7 +1095,7 @@ export function StanceControl({
         const nothingStands = standing.records === 0 || standing.severed;
         return { kind: nothingStands ? ("empty" as const) : ("severs" as const), landing };
       }
-      const committed = await data.commit(seamTarget, chosen);
+      const committed = await data.commit(seamTarget, chosen, commitSource);
       if (committed.kind === "success") {
         return { kind: "taken" as const, landing, records: committed.value.records };
       }
@@ -949,7 +1105,7 @@ export function StanceControl({
       case "dropped":
         return;
       case "taken":
-        taken(answer.landing, answer.records);
+        taken(answer.landing, answer.records, by);
         return;
       case "severs":
         // Confirmed, never refused — one record, asked over the pad.
@@ -961,7 +1117,7 @@ export function StanceControl({
         setEmptyAsk({ pick: chosen, landing: { ...answer.landing, severed: false } });
         return;
       default:
-        notTaken(origin, answer.kind, chosen);
+        notTaken(origin, answer.kind, chosen, by);
     }
   };
 
@@ -977,20 +1133,70 @@ export function StanceControl({
     const asked = emptyAsk;
     if (asked === null || busy) return;
     setEmptyFault(null);
-    const answer = await runInFlight("empty", async () =>
-      answerOf(await data.commit(seamTarget, asked.pick)),
+    await signDialogAct(
+      { kind: "pick", pick: asked.pick, landing: asked.landing },
+      "empty",
+      sessionStore.activeAccountId(),
     );
+  };
+
+  /**
+   * Signs one act a dialog over the pad asked about — the walk-back over the
+   * standing the reader confirmed (`shown`), or the pick the walk-back's
+   * dialog or the empty sign's ask raised — as `by`, from that dialog or from
+   * the row's Retry.
+   *
+   * A DIALOG CLOSED WHILE ITS ACT SIGNS LEAVES THE ACT TO THE ROW
+   * (SeveranceConfirm.md:53, EmptySignConfirm.md:51, RowSigning.md:7): Close,
+   * the scrim, Back, Escape — or an account change, which closes it as Close
+   * does — and the act ends on the target's row as a hold's does. Taken, the
+   * face moves and the snackbar confirms; not, the row says `That didn't
+   * sign.` with a Retry that asks THIS act again — the same walk-back, the
+   * same pick, from this surface (SigningAfterClose.md:27: "NEVER anything
+   * else is signed"), never the dialog again: it was confirmed once.
+   */
+  const signDialogAct = async (act: DialogAct, from: "confirm" | "empty" | "row", by: string | null) => {
+    if (from === "row") {
+      setSignedOf(by, null);
+      setRowLineOf(by, null);
+    }
+    const answer = await runInFlight(from, by, async () =>
+      answerOf(
+        act.kind === "walkBack"
+          ? await data.sever(seamTarget, act.shown, commitSource)
+          : await data.commit(seamTarget, act.pick, commitSource),
+      ),
+    );
+    const onDialog = from !== "row" && stillAs(by) && dialogUpRef.current;
     if (answer.kind !== "taken") {
-      setEmptyFault(answer.kind);
+      // On its dialog: a fault with Retry in the act's slot, or the write
+      // rule's quiet line with the act dimmed and no Retry (round 21).
+      if (!onDialog) raiseRow(answer.kind, by, () => void signDialogAct(act, "row", by));
+      else if (from === "confirm") setConfirmFault(answer.kind);
+      else setEmptyFault(answer.kind);
       return;
     }
-    setEmptyAsk(null);
-    taken(asked.landing, answer.records);
+    if (onDialog) {
+      setConfirming(null);
+      setEmptyAsk(null);
+    }
+    if (act.kind === "pick") {
+      taken(act.landing, answer.records, by);
+      return;
+    }
+    announceStanceSigned();
+    readBundle({ fresh: true });
+    if (variant !== undefined) {
+      variant.onTaken(SEVERED.landing);
+      return;
+    }
+    if (stillAs(by)) closeSurfaces();
+    setSignedOf(by, signedLine(SEVERED.landing, answer.records, true, target.label, axes));
   };
 
   /** The explicit walk-back asks over the parked pad, and costs what it stages. */
   const openSeverance = () => {
-    setSigned(null);
+    setSignedOf(sessionStore.activeAccountId(), null);
     setPadFault(null);
     setConfirmFault(null);
     const records = bundle === null || bundle === undefined ? 0 : bundle.severance.records;
@@ -1001,35 +1207,21 @@ export function StanceControl({
     const asked = confirming;
     if (asked === null || busy) return;
     setConfirmFault(null);
-    const answer = await runInFlight("confirm", async () => {
-      if (asked.pick === null) {
-        // The walk-back is checked against the standing the reader
-        // confirmed; with none known there is nothing to check against.
-        if (bundle === null || bundle === undefined) return { kind: "failed" as const };
-        return answerOf(await data.sever(seamTarget, bundle));
-      }
-      return answerOf(await data.commit(seamTarget, asked.pick));
-    });
-    if (answer.kind !== "taken") {
-      // The dialog stays up and says so: a fault with Retry in the confirm's
-      // slot, or the write rule's quiet line with the act dimmed and no
-      // Retry (SeveranceConfirm.md, round 21).
-      setConfirmFault(answer.kind);
-      return;
-    }
-    setConfirming(null);
     if (asked.pick === null) {
-      announceStanceSigned();
-      readBundle({ fresh: true });
-      if (variant !== undefined) {
-        variant.onTaken(SEVERED.landing);
+      // The walk-back is checked against the standing the reader confirmed;
+      // with none known there is nothing to check against.
+      if (bundle === null || bundle === undefined) {
+        setConfirmFault("failed");
         return;
       }
-      closeSurfaces();
-      setSigned(signedLine(SEVERED.landing, answer.records, true, target.label, axes));
+      await signDialogAct({ kind: "walkBack", shown: bundle }, "confirm", sessionStore.activeAccountId());
       return;
     }
-    taken(asked.landing, answer.records);
+    await signDialogAct(
+      { kind: "pick", pick: asked.pick, landing: asked.landing },
+      "confirm",
+      sessionStore.activeAccountId(),
+    );
   };
 
   /**
@@ -1039,9 +1231,9 @@ export function StanceControl({
    */
   const openConsidered = (surface: "pad" | "alternates", from: StancePair = TAP_DEFAULT) => {
     setPick(from);
-    setSigned(null);
+    setSignedOf(sessionStore.activeAccountId(), null);
     setPadFault(null);
-    setRowLine(null);
+    setRowLineOf(sessionStore.activeAccountId(), null);
     setExplaining(false);
     if (surface === "pad") {
       setCoaching(!taught);
@@ -1133,12 +1325,16 @@ export function StanceControl({
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
       setHolding(false);
+      setHoldReached(true);
       suppressClick.current = true;
       // WITH THE KEY ELSEWHERE THE HOLD OPENS THE PAD, as a tap does, and
       // signs nothing (PadKeyAbsent.md) — a held finger cannot spend a
       // signature this device cannot give.
       void data.keyOnDevice().then((present) => {
         setKeyAbsent(!present);
+        // Batched with what follows: a signing's flight takes the ring over
+        // in the same render, so it never flickers open between the two.
+        setHoldReached(false);
         // A KEPT OPINION NEVER SIGNS FROM A HOLD: with the key here the hold
         // opens the review, as the tap does (PadPendingReview.md:15).
         if (present && kept !== null && family === "opinion") {
@@ -1232,11 +1428,19 @@ export function StanceControl({
   const padSetting = inFlight === "pad" && slow;
   // CANCEL MID-SIGNING CLOSES THE SURFACE, NEVER THE SIGNING (PadFailed.md,
   // round 21): the act was sent and cannot be called back, so its wait passes
-  // to the target's row — `Signing…` under the face, the anchor refusing a
-  // second hold — and it ends there as a hold's would.
-  const rowSigning = inFlight === "row" || (inFlight === "pad" && !considered);
-  const rowState: RowLineState | null =
-    rowSigning && slow && confirming === null ? { kind: "signing" } : rowLine;
+  // to the target's row, the anchor refusing a second hold — and it ends
+  // there as a hold's would. A dialog closed while its act signs closes the
+  // pad beneath with it, so its wait passes the same way
+  // (SeveranceConfirm.md:53, EmptySignConfirm.md:51).
+  //
+  // THE ROW'S WAIT IS THE CLOSED RING, NEVER A LINE (RowSigning.md:5-9,
+  // PadFailed.md:41; the master's `holdWaiting`): a hold's, a closed pad's, a
+  // closed dialog's — the ring stands closed around the face, and `Signing…`
+  // is spoken from a visually hidden status once 200ms pass, never drawn.
+  // Only the kept picks' batch draws its wait as a line (KeptPicksSeal.md:59).
+  const rowSigning = inFlight === "row" || (inFlight !== null && !considered && !dialogUp);
+  const rowSpeaksSigning = rowSigning && slow;
+  const rowState: RowLineState | null = keptBatchSigning ? { kind: "signing" } : rowLine;
 
   const inset = variant?.padInset ?? (barBeneath ? PAD_ABOVE_BAR_INSET_PX : PAD_PARK_INSET_PX);
 
@@ -1546,7 +1750,9 @@ export function StanceControl({
                   {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
                 </span>
               )}
-              {holding && <HoldRing testId={`${testIdPrefix}-hold-ring`} />}
+              {(holding || holdReached || rowSigning) && (
+                <HoldRing testId={`${testIdPrefix}-hold-ring`} closed={!holding} />
+              )}
             </span>
             {wide && restingPair === null && phase === "signedIn" && (
               // The wide anchor's words — only where there is no pair to show.
@@ -1643,6 +1849,11 @@ export function StanceControl({
       {anchored && !keptShown && settling && (
         <PendingMarker testId={`${testIdPrefix}-settling`} />
       )}
+      {anchored && rowSpeaksSigning && (
+        <span role="status" data-testid={`${testIdPrefix}-signing`} className="sr-only">
+          {SIGNING_ROW}
+        </span>
+      )}
       {anchored && rowState !== null && !overMedia && (
         <RowLine state={rowState} node={lineNode} testId={`${testIdPrefix}-row-line`} />
       )}
@@ -1721,6 +1932,10 @@ export function StanceControl({
           onCancel={() => {
             setConfirming(null);
             setConfirmFault(null);
+            // CLOSE WHILE IT SIGNS CLOSES THE PAD BENEATH TOO, and the whole
+            // walk-back goes on, carried by the target's row
+            // (SeveranceConfirm.md:53, :55); `Keep it` returns to the pick.
+            if (inFlight === "confirm") closeAll();
           }}
           onConfirm={() => void onConfirmSeverance()}
         />
@@ -1740,6 +1955,8 @@ export function StanceControl({
           onCancel={() => {
             setEmptyAsk(null);
             setEmptyFault(null);
+            // The same close while it signs (EmptySignConfirm.md:51, :53).
+            if (inFlight === "empty") closeAll();
           }}
           onConfirm={() => void onConfirmEmpty()}
         />
@@ -1761,7 +1978,7 @@ export function StanceControl({
       {/* Out of the column's flow: an empty live region is still a flex item,
           and the column's gap stood 4px under every anchor for it. */}
       <div className="absolute">
-        <Snackbar message={signed} onDismiss={() => setSigned(null)} testId={`${testIdPrefix}-signed`} />
+        <Snackbar message={signed} onDismiss={() => setSignedOf(accountId, null)} testId={`${testIdPrefix}-signed`} />
       </div>
 
       {/* Mounted only when asked for: a read surface renders many of

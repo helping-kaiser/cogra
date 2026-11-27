@@ -130,10 +130,12 @@ class ProfileScreensTest {
         assertThat(opened).isEqualTo(1)
     }
 
+    // A change taken reads the seal's line (ProfileEditSeal.md:45, AvatarSeal.md:37).
     @Test
     fun aSavedEditConfirmsOnTheProfilesOwnSnackbar() {
         render(loaded(own = true), profileSavedResult = true)
-        compose.onNodeWithTag("profile.snackbar.message").assertTextEquals("Profile saved")
+        compose.onNodeWithTag("profile.snackbar.message")
+            .assertTextEquals("Signed — your profile shows it now, still settling.")
     }
 
     @Test
@@ -573,13 +575,6 @@ class ProfileScreensTest {
         compose.onNodeWithTag("profile_edit_display_name").assertExists()
         // The supporting text rides the field's semantics; the save
         // still submits (the refusal is the ViewModel's).
-    }
-
-    @Test
-    fun refusalAndSigningErrorsRender() {
-        renderEdit(ProfileEditUiState(loading = false, refused = true, signingFailed = true))
-        compose.onNodeWithTag("profile_edit_refused").assertExists()
-        compose.onNodeWithTag("profile_edit_signing_failed").assertExists()
     }
 
     @Test

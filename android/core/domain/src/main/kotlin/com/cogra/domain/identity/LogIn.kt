@@ -66,13 +66,15 @@ class LogIn @Inject constructor(
         }
         held = null
         // The notices post before the token save: saving flips auth-driven
-        // navigation, and the shell dialog must already be pending when
-        // Home renders (auth.md "Reuse detection" — delivered exactly once,
-        // so a dropped notice never comes back).
-        grant.reuseDetectedAt?.let(notices::post)
+        // navigation, and the shell's notice must already be pending when
+        // the feed renders (auth.md "Reuse detection" — delivered exactly
+        // once, so a dropped notice never comes back). Both are kept for the
+        // account the sign-in belongs to, not yet the active one.
+        val account = grant.tokens.accountId
+        grant.reuseDetectedAt?.let { notices.post(it, account) }
         if (lockLost) {
             lockLost = false
-            notices.postLockLost()
+            notices.postLockLost(account)
         }
         // Saving first makes the account active, so the flag lands in the
         // right slot.

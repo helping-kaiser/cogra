@@ -288,6 +288,13 @@ async fn wire_borrowed(rig: &WireRig, token: &str) -> Option<String> {
     data["borrowedView"]["handle"].as_str().map(str::to_owned)
 }
 
+async fn wire_reciprocated(rig: &WireRig, token: &str) -> Value {
+    let data = rig
+        .gql(Some(token), "{ me { hasReciprocated } }", json!({}))
+        .await;
+    data["me"]["hasReciprocated"].clone()
+}
+
 /// Prepares a stance and returns its staged writes; refusals fail the test.
 async fn prepare_stance(rig: &WireRig, token: &str, target: Value) -> Value {
     let mut input = json!({ "pDirected": 0.1, "pInterest": 0.1 });
@@ -763,9 +770,16 @@ async fn an_expired_first_opinion_returns_the_borrowing(pool: PgPool) {
     pre_sign_only(&rig, &token, &key, &writes).await;
     assert_eq!(wire_borrowed(&rig, &token).await, None);
 
+    walk_until_expired(&rig, &token, &writes[0]["id"]).await;
+    assert_eq!(wire_borrowed(&rig, &token).await.as_deref(), Some("mira"));
+}
+
+/// Steps the clock with another member's posts until the GC collects the
+/// member's signed, unapproved write — an epoch closed under one approval
+/// lands nothing of theirs.
+async fn walk_until_expired(rig: &WireRig, token: &str, id: &Value) {
     let (_, walker_key) = rig.seed_member("walker", "walker@example.com").await;
     let walker = rig.log_in("walker@example.com").await;
-    let id = &writes[0]["id"];
     let mut state = Value::Null;
     for n in 0..6 {
         let walk = rig
@@ -782,7 +796,7 @@ async fn an_expired_first_opinion_returns_the_borrowing(pool: PgPool) {
         rig.sign_prepared(&walker, &walker_key, &walk["preparePost"]["writes"])
             .await;
         rig.close_and_ingest_under(1).await;
-        state = staged_state(&rig, &token, id).await;
+        state = staged_state(rig, token, id).await;
         if state == "EXPIRED" || state.is_null() {
             break;
         }
@@ -791,7 +805,6 @@ async fn an_expired_first_opinion_returns_the_borrowing(pool: PgPool) {
         state == "EXPIRED" || state.is_null(),
         "the GC collected the signed, unapproved opinion: {state}"
     );
-    assert_eq!(wire_borrowed(&rig, &token).await.as_deref(), Some("mira"));
 }
 
 /// An opinion staged during the application is carried with it and signs
@@ -912,6 +925,70 @@ async fn the_vouch_back_ends_the_borrowing(pool: PgPool) {
             .await
             .expect("query")
             .is_some()
+    );
+}
+
+/// The vouch card leaves at the signature, not at the prepare, and comes
+/// back when a signed vouch-back expires instead of landing
+/// (VouchBack.md:66): `hasReciprocated` counts a staged Opinion toward the
+/// voucher only once the member signed it — in flight as one of their
+/// signed staged writes (auth.md "Reciprocation is the joiner's own act"),
+/// the same moment the borrowing beside it ends (VouchBack.md:30).
+///
+/// An unsigned vouch-back prepare does not read as reciprocated, a signed one does, and an expired signed one no longer does.
+/// ´claim:vouch:a-vouch-back-reads-as-reciprocated-from-its-signature-until-it-expires´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_vouch_back_reads_as_reciprocated_from_its_signature_until_it_expires(pool: PgPool) {
+    let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
+    let (mira, _) = rig.seed_member("mira", "mira@example.com").await;
+    let (account, key, token) = wire_member(&rig, mira, "noa").await;
+    let before = rig
+        .gql(
+            Some(&token),
+            "{ me { invitedBy { id } hasReciprocated } }",
+            json!({}),
+        )
+        .await;
+    assert_eq!(before["me"]["invitedBy"]["id"], mira.to_string());
+    assert_eq!(
+        before["me"]["hasReciprocated"], false,
+        "the pair starts incomplete"
+    );
+
+    let writes = prepare_stance(&rig, &token, json!({ "target": mira })).await;
+    assert_eq!(writes.as_array().expect("writes").len(), 1, "{writes}");
+    assert_eq!(writes[0]["family"], "OPINION");
+    assert_eq!(
+        staged_state(&rig, &token, &writes[0]["id"]).await,
+        "AWAITING_PRE_SIGN",
+        "the vouch-back is prepared and nothing of it is signed"
+    );
+    assert_eq!(
+        wire_reciprocated(&rig, &token).await,
+        false,
+        "an unsigned prepare does not answer the prompt"
+    );
+    assert_eq!(wire_borrowed(&rig, &token).await.as_deref(), Some("mira"));
+
+    pre_sign_only(&rig, &token, &key, &writes).await;
+    assert_eq!(
+        wire_reciprocated(&rig, &token).await,
+        true,
+        "the signature answers the prompt"
+    );
+    assert_eq!(wire_borrowed(&rig, &token).await, None);
+    assert!(
+        !store::reciprocation_latched(&rig.pool, account)
+            .await
+            .expect("query"),
+        "the in-flight answer never latches"
+    );
+
+    walk_until_expired(&rig, &token, &writes[0]["id"]).await;
+    assert_eq!(
+        wire_reciprocated(&rig, &token).await,
+        false,
+        "a signed vouch-back that expired hands the card back"
     );
 }
 

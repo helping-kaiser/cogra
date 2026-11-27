@@ -162,6 +162,34 @@ fun UploadGateFailedLine(
 }
 
 /**
+ * THE GATE'S REFUSED READING (`UploadStatusLine` `refused`, round 51 act 2):
+ * the server refused the picture at upload, so the failure's fact stands alone
+ * in the error ink — no `Signing waits for it.`, which would wait for ever, and
+ * no `Retry`, which cannot change the answer. The commit stays disabled and the
+ * way out is one stage back. The fact is the whole line, so the gate's node
+ * names it; there is no separate `message` part to tag.
+ */
+@Composable
+fun UploadGateRefusedLine(
+    modifier: Modifier = Modifier,
+    media: UploadMedia = UploadMedia.Pictures,
+    testTag: String? = null,
+    /** The gate's data-node on a registered screen, worn by the line. */
+    node: DataNode? = null,
+) {
+    Text(
+        text = gateFaultLines(media, failed = 1).first,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.error,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+            .then(if (node == null && testTag != null) Modifier.testTag(testTag) else Modifier)
+            .dataNode(node)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+    )
+}
+
+/**
  * The failure's words and its ways out.
  *
  * **Direction by words, never by colour alone**: the `error` tint marks the

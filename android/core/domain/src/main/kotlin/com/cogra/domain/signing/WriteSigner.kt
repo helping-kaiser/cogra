@@ -70,6 +70,9 @@ sealed interface WriteResult {
 /** Thrown when signing is requested with no actor key on the device. */
 class NoActorKeyException : Exception("no actor key on this device")
 
+/** Why [WriteSigner.signAgain] signed nothing for a write that did read: another id of its batch did not. */
+class NotReadWholeException : Exception("the batch was not read whole; nothing signed")
+
 /**
  * Refusal codes that end a handshake for good — the material is spent.
  * Anything else (RATE_LIMITED backoff, INTERNAL fault, UNAUTHENTICATED,
@@ -125,7 +128,56 @@ class WriteSigner @Inject constructor(
         val key = actorKey()
         val refusal = intentRefusal(key.address(), prepared.map { it.canonicalProposal }, expected)
         if (refusal != null) return prepared.map { write -> rejected(write.id, refusal) }
-        return prepared.map { write -> if (write.carried) keepCarried(write) else signOne(key, write) }
+        return prepared.map { write ->
+            if (write.carried) keepCarried(write.id, write.canonicalProposal) else signOne(key, write)
+        }
+    }
+
+    /**
+     * Asks ONE earlier signing again: the batch a surface already prepared,
+     * by its staged-write ids, against the same expectation — a Retry's "the
+     * same signing is asked again … AND NEVER anything else is signed"
+     * (SealSigning.md:31, SigningAfterClose.md:27). Nothing is prepared. web's
+     * twin is `write-signer.ts` `signAgain`.
+     *
+     * Every id is read back first, and the batch is then checked exactly as
+     * [sign] checks it — the whole-batch intent check before anything is
+     * signed — and each write signs from the state it is in now, with the
+     * material this device stored for it ([signChecked], the step [signStaged]
+     * and the landing use): an approved write answers Done, a pre-committed one
+     * is approved from its stored nonces, an unsubmitted one re-sends them, and
+     * one that never reached its pre-signature is pre-signed for the first time.
+     *
+     * A batch not read whole is not signed: an id that did not answer keeps its
+     * result (Failed or a read refusal, material kept), one that is gone answers
+     * NOT_FOUND (material spent), and every other id answers Failed with nothing
+     * decided.
+     */
+    suspend fun signAgain(ids: List<String>, expected: Expectation): List<WriteResult> {
+        val reads = ids.map { id -> current(id) }
+        if (reads.any { it is Current.Ended }) {
+            return reads.mapIndexed { i, read ->
+                when (read) {
+                    is Current.Ended -> read.result
+                    is Current.Served -> WriteResult.Failed(ids[i], NotReadWholeException())
+                }
+            }
+        }
+        val batch = reads.map { (it as Current.Served).staged }
+        if (batch.isEmpty()) return emptyList()
+        if (batch.any { it.family == Family.UNKNOWN }) {
+            return batch.map { staged -> unsupported(staged.id, "record family") }
+        }
+        val key = actorKey()
+        val refusal = intentRefusal(key.address(), batch.map { it.canonicalProposal }, expected)
+        if (refusal != null) return batch.map { staged -> rejected(staged.id, refusal) }
+        return batch.map { staged ->
+            if (staged.state == WriteState.CARRIED) {
+                keepCarried(staged.id, staged.canonicalProposal)
+            } else {
+                signChecked(key, staged)
+            }
+        }
     }
 
     /**
@@ -170,16 +222,16 @@ class WriteSigner @Inject constructor(
      * its digest, dependencies excluded — for the landing to sign against.
      * Nothing is pre-signed.
      */
-    private suspend fun keepCarried(write: PreparedWriteView): WriteResult {
+    private suspend fun keepCarried(id: String, canonicalProposal: ByteArray): WriteResult {
         val proposal = try {
-            decodeProposal(write.canonicalProposal)
+            decodeProposal(canonicalProposal)
         } catch (e: WireException) {
             // Unreachable after the check decoded the same bytes; refused
             // rather than assumed.
-            return WriteResult.RejectedByDevice(write.id, e.message ?: "malformed proposal")
+            return WriteResult.RejectedByDevice(id, e.message ?: "malformed proposal")
         }
-        identity.saveCarriedExpectation(write.id, carriedDigest(proposal))
-        return WriteResult.Carried(write.id)
+        identity.saveCarriedExpectation(id, carriedDigest(proposal))
+        return WriteResult.Carried(id)
     }
 
     /**
@@ -312,18 +364,37 @@ class WriteSigner @Inject constructor(
         }
     }
 
+    /** The staged write as the server holds it now, or the result that ends [id] when it cannot be read. */
+    private sealed interface Current {
+        data class Served(val staged: StagedWriteView) : Current
+
+        data class Ended(val result: WriteResult) : Current
+    }
+
+    /**
+     * Reads [id] back: a read-leg refusal or fault keeps the material, a write
+     * that is gone spends it.
+     */
+    private suspend fun current(id: String): Current = when (val read = writes.stagedWrite(id)) {
+        is Outcome.Failed -> Current.Ended(WriteResult.Failed(id, read.cause))
+        is Outcome.Refused -> Current.Ended(refusedKeeping(id, read.errors))
+        is Outcome.Success -> when (val staged = read.value) {
+            // Gone entirely — collected long ago; nothing to continue.
+            null -> {
+                identity.clearHandshake(id)
+                Current.Ended(WriteResult.Refused(id, listOf(UserError(ErrorCode.NOT_FOUND, "staged write is gone"))))
+            }
+            else -> Current.Served(staged)
+        }
+    }
+
     private suspend fun resumeOne(key: ActorKey, id: String): WriteResult {
         val pre = identity.handshake(id) ?: return WriteResult.Failed(id, IllegalStateException("no material"))
-        return when (val read = writes.stagedWrite(id)) {
-            is Outcome.Failed -> WriteResult.Failed(id, read.cause)
-            is Outcome.Refused -> refusedKeeping(id, read.errors)
-            is Outcome.Success -> when (val staged = read.value) {
-                // Gone entirely — collected long ago; nothing to continue.
-                null -> {
-                    identity.clearHandshake(id)
-                    WriteResult.Refused(id, listOf(UserError(ErrorCode.NOT_FOUND, "staged write is gone")))
-                }
-                else -> if (staged.family == Family.UNKNOWN) {
+        return when (val read = current(id)) {
+            is Current.Ended -> read.result
+            is Current.Served -> {
+                val staged = read.staged
+                if (staged.family == Family.UNKNOWN) {
                     unsupported(id, "record family")
                 } else {
                     when (staged.state) {

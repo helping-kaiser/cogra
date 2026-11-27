@@ -14,6 +14,9 @@
 //   then the device signs the approver's Opinion it returns, checked against
 //   the applicant the row named (intent.ts). A refusal keeps its codes, so
 //   the write rule stays a notice and not a fault.
+// - AN APPROVAL IS SENT ONCE. The server marks the row approved at the
+//   prepare, so once `approveApplicants` has answered, a Retry asks the
+//   vouch's signing again and never the approval (landed-approvals.ts).
 // - THE ASK LINK STAGES FIRST (api-spec.md "The ask link": `stageApplicant`
 //   then the ordinary approval). The staged row is HELD, so a Retry after a
 //   fault retries the approval only — a second stage would answer
@@ -27,10 +30,14 @@ import {
   type ApplicationView,
 } from "@/lib/api/invites-api";
 import { failed, refused, success, type Outcome } from "@/lib/api/outcome";
+import { fetchStagedWrite } from "@/lib/api/writes-api";
+import { askAgain, firstIncomplete, intentOf } from "@/lib/compose/same-signing";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { DeviceRefusalError } from "@/lib/signing/device-refusal";
 import type { AuthGuard } from "@/lib/session/guard";
+import { tokenStore, type TokenStore } from "@/lib/session/token-store";
 import { expectation, stanceRecord } from "@/lib/signing/intent";
-import type { WriteSigner } from "@/lib/signing/write-signer";
+import type { WriteResult, WriteSigner } from "@/lib/signing/write-signer";
 import type { StancePair } from "@/lib/stance/model";
 import type {
   StanceBundle,
@@ -38,6 +45,7 @@ import type {
   StanceData,
   StanceProjection,
 } from "@/lib/stance/stance-data";
+import { forgetLandedApproval, landedApproval, rememberLandedApproval } from "./landed-approvals";
 import { approvable } from "./queue";
 
 /** No record ever signed toward an applicant: the standing every approval opens on. */
@@ -51,6 +59,11 @@ export const NO_STANDING: StanceBundle = {
 };
 
 /** Where a pick lands over nothing standing: the pick itself, as the fold reports it. */
+/** The tab's account changed under the approval: stopped, answered as a failure. */
+function accountChanged(): Outcome<never> {
+  return failed(new Error("the tab's account changed before the approval was signed"));
+}
+
 export function landingOver(pick: StancePair): StanceProjection {
   return {
     landing: pick,
@@ -79,6 +92,10 @@ type Deps = {
   readonly client: ApolloClient;
   readonly guard: AuthGuard;
   readonly signer: WriteSigner;
+  /** Where a spent vouch's device material is forgotten; tests inject a double. */
+  readonly store?: Pick<IdentityStore, "clearHandshake">;
+  /** Whose landed approvals a commit reads (landed-approvals.ts); tests inject a double. */
+  readonly accounts?: Pick<TokenStore, "activeAccountId">;
 };
 
 function approvalData(
@@ -86,10 +103,19 @@ function approvalData(
   resolve: () => Promise<Outcome<ApplicationView> | "detoured">,
 ): StanceData {
   const { client, guard, signer } = deps;
+  const store = deps.store ?? identityStore;
+  const accounts = deps.accounts ?? tokenStore;
   return {
     bundle: async () => success(NO_STANDING),
     project: async (_target, pick) => success(landingOver(pick)),
     async commit(_target, pick): Promise<Outcome<StanceCommit>> {
+      // THE APPROVAL IS THE PRESSING ACCOUNT'S (auth.md "Multi-account device
+      // custody"): the pad closes mid-signing and the act goes on, so the
+      // tab's account can change before the approval or before its vouch
+      // signs. An approval asked under the next account's session vouches the
+      // applicant in as that account, so a change stops the act there.
+      const account = accounts.activeAccountId();
+      const still = () => accounts.activeAccountId() === account;
       const resolved = await resolve();
       // A detour was taken: nothing to sign, and the host routes on.
       if (resolved === "detoured") return success({ records: 0 });
@@ -100,27 +126,66 @@ function approvalData(
       if (application.graphId === null || application.graphId === undefined) {
         return failed(new Error("the application names no node to vouch for"));
       }
+      if (!still()) return accountChanged();
+      const intent = intentOf(pick);
+      // AN APPROVAL THAT LANDED IS NEVER SENT AGAIN (landed-approvals.ts):
+      // the same pick asks the vouch it staged to sign again. A changed pick
+      // keeps today's road — the approval is asked, and the server refuses
+      // it — since the vouch staged carries the first pick (PadFailed.md:15
+      // against the staged vouch: the moment is not drawn for an approval).
+      const parked = landedApproval(account, application.id);
+      if (parked !== null && parked.intent === intent) {
+        const asked = await askAgain(
+          {
+            signer,
+            read: (id) => guard.run(() => fetchStagedWrite(client, id)),
+            retire: (id) => store.clearHandshake(id),
+          },
+          parked,
+          intent,
+          expectation([stanceRecord(parked.node, parked.pick.pDirected, parked.pick.pInterest)]),
+        );
+        if (asked.kind === "unread") {
+          return asked.outcome.kind === "refused"
+            ? refused(asked.outcome.errors)
+            : failed(asked.outcome.kind === "failed" ? asked.outcome.cause : undefined);
+        }
+        if (asked.kind === "signed") {
+          const outcome = outcomeOf(asked.results);
+          if (outcome.kind === "success") forgetLandedApproval(account, application.id);
+          return outcome;
+        }
+        if (asked.kind === "landing") {
+          // The vouch's first signing was approved, its answer lost: it is
+          // what lands, and nothing else is asked (SigningAfterClose.md:27).
+          forgetLandedApproval(account, application.id);
+          return success({ records: parked.writes.length });
+        }
+        // Every write of the vouch ended: nothing of it can land, and the
+        // approval is the server's to take again once its vouch is gone.
+        forgetLandedApproval(account, application.id);
+      }
       const prepared = await guard.run(() =>
         approveApplicant(client, application.id, pick.pDirected, pick.pInterest),
       );
       if (prepared.kind !== "success") return prepared;
-      const results = await signer.sign(
-        prepared.value,
-        expectation([stanceRecord(application.graphId, pick.pDirected, pick.pInterest)]),
+      // The approval is taken: from here a Retry signs its vouch, never it.
+      rememberLandedApproval(account, application.id, {
+        node: application.graphId,
+        writes: prepared.value.map((write) => write.id),
+        intent,
+        pick,
+      });
+      // Taken for the owner, and remembered for the owner's Retry: signed only under it.
+      if (!still()) return accountChanged();
+      const outcome = outcomeOf(
+        await signer.sign(
+          prepared.value,
+          expectation([stanceRecord(application.graphId, pick.pDirected, pick.pInterest)]),
+        ),
       );
-      const incomplete = results.find((result) => result.kind !== "done");
-      if (incomplete !== undefined && incomplete.kind === "refused") {
-        return refused(incomplete.errors);
-      }
-      // A failed leg keeps its cause: an answered INTERNAL is not no answer.
-      if (incomplete !== undefined && incomplete.kind === "failed") return failed(incomplete.cause);
-      if (incomplete !== undefined && incomplete.kind === "rejectedByDevice") {
-        return failed(new DeviceRefusalError(incomplete.reason));
-      }
-      if (incomplete !== undefined) {
-        return failed(new Error(`staged write ${incomplete.id} did not complete: ${incomplete.kind}`));
-      }
-      return success({ records: prepared.value.length });
+      if (outcome.kind === "success") forgetLandedApproval(account, application.id);
+      return outcome;
     },
     // No walk-back stands on an approval pad (ApprovePad.md:9), and over
     // nothing standing the control never asks for one.
@@ -137,6 +202,24 @@ function approvalData(
     commitBatch: async () => failed(new Error("an approval never signs in the kept picks' batch")),
     preview: async () => failed(new Error("an approval is never previewed in the kept picks' review")),
   };
+}
+
+/** What a vouch's results say the approval did. */
+function outcomeOf(results: readonly WriteResult[]): Outcome<StanceCommit> {
+  // An expiry beside a write still undecided is not the vouch's answer.
+  const incomplete = firstIncomplete(results);
+  if (incomplete !== undefined && incomplete.kind === "refused") {
+    return refused(incomplete.errors);
+  }
+  // A failed leg keeps its cause: an answered INTERNAL is not no answer.
+  if (incomplete !== undefined && incomplete.kind === "failed") return failed(incomplete.cause);
+  if (incomplete !== undefined && incomplete.kind === "rejectedByDevice") {
+    return failed(new DeviceRefusalError(incomplete.reason));
+  }
+  if (incomplete !== undefined) {
+    return failed(new Error(`staged write ${incomplete.id} did not complete: ${incomplete.kind}`));
+  }
+  return success({ records: results.length });
 }
 
 /** The approval pad on Invites: one application already in the reader's queue. */

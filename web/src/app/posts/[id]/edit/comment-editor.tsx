@@ -28,7 +28,10 @@ import { fetchCommentSelfMark, prepareCommentEdit } from "@/lib/api/content-api"
 import { firstRefusalMessage, NO_ANSWER_LINE, outcomeFaultLine, wholeActLine } from "@/lib/ui/error-messages";
 import { sealFaultOfResults } from "@/lib/compose/seal-fault";
 import type { Outcome } from "@/lib/api/outcome";
-import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchStagedWrite, type StagedWriteView } from "@/lib/api/writes-api";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { askAgain, intentOf, type SigningAttempt } from "@/lib/compose/same-signing";
+import type { WriteResult } from "@/lib/signing/write-signer";
 import type { UserError } from "@/lib/api/outcome";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
 import { fetchKnownMedia } from "@/lib/api/media-api";
@@ -177,6 +180,8 @@ type CommentEditorProps = {
   onLeave: () => void;
   /** The signing was taken: the host it was opened from shows the edit settling. */
   onSigned: () => void;
+  /** Test injection: the custody that holds this edit's handshake material. */
+  store?: IdentityStore;
 };
 
 /**
@@ -210,21 +215,14 @@ function LoadedCommentEditor({
   targetLabel,
   onLeave,
   onSigned,
-}: {
-  comment: EditedComment;
-  /** The comment this one hangs under, or null at the top level — the node it answers. */
-  parentId: string | null;
-  postId: string;
-  /** What the comment is on, for the editor's lede. */
-  targetLabel: string;
-  /** Back to where the edit was opened — the thread, or a card's host — nothing kept. */
-  onLeave: () => void;
-  /** The signing was taken: the host it was opened from shows the edit settling. */
-  onSigned: () => void;
-}) {
+  store = identityStore,
+}: Omit<CommentEditorProps, "comment"> & { comment: EditedComment }) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const signer = useWriteSigner();
+  // The batch this edit prepared and that did not answer: what Retry asks
+  // again. In memory only — an edit keeps no draft (SigningAfterClose.md:45).
+  const attempt = useRef<SigningAttempt | null>(null);
 
   const [editing, setEditing] = useState<Editing>(() => editingOf(comment));
   const [describing, setDescribing] = useState<string | null>(null);
@@ -477,7 +475,52 @@ function LoadedCommentEditor({
       { tags: changes, references: referenceChangeList },
       graphIds.value,
     );
+    const intent = intentOf({
+      record: editing.recordStaged ? sent : null,
+      tags: changes,
+      references: referenceChangeList,
+    });
 
+    // RETRY ASKS THE SAME SIGNING AGAIN (SigningAfterClose.md:27,
+    // CommentEdit.md:133): the batch this edit prepared, never a second
+    // prepare beside it — the server refuses a second edit while the first is
+    // in flight, and a second citation would be summed with the first.
+    const remembered = attempt.current;
+    if (remembered !== null) {
+      const asked = await askAgain(
+        {
+          signer,
+          read: (id) => guard.run(() => fetchStagedWrite(client, id)),
+          retire: (id) => store.clearHandshake(id),
+        },
+        remembered,
+        intent,
+        expected,
+      );
+      if (asked.kind === "unread") {
+        end();
+        unanswered(asked.outcome);
+        return;
+      }
+      if (asked.kind === "landing") {
+        // The FIRST version was approved and is landing; an edit keeps no
+        // draft (SigningAfterClose.md:45), so the edit finishes as taken.
+        end();
+        attempt.current = null;
+        onSigned();
+        return;
+      }
+      if (asked.kind === "signed") {
+        settle(asked.results);
+        return;
+      }
+      // Retired: nothing of it can land, and a fresh prepare may run.
+      attempt.current = null;
+    }
+
+    // THE RECORD IS PREPARED FIRST, and a refused record stops the batch: no
+    // tag or citation is staged for an edit the server will not take.
+    let recordRefused = false;
     if (editing.recordStaged) {
       const prepared = await guard.run(() => prepareCommentEdit(client, sent));
       if (prepared.kind === "failed") {
@@ -486,6 +529,7 @@ function LoadedCommentEditor({
         return;
       }
       if (prepared.kind === "refused") {
+        recordRefused = true;
         if (writeRuleIn(prepared.errors)) nextFault = { kind: "writeRule" };
         else if (wholeActLine(prepared.errors) !== null) notThrough = notThrough ?? wholeActLine(prepared.errors);
         else general = firstRefusalMessage(prepared.errors, "The server refused this write.");
@@ -494,7 +538,7 @@ function LoadedCommentEditor({
       }
     }
 
-    for (const change of changes) {
+    for (const change of recordRefused ? [] : changes) {
       const prepared = await guard.run(() =>
         prepareTag(client, {
           target: comment.id,
@@ -535,7 +579,7 @@ function LoadedCommentEditor({
 
     // One Reference act per added or re-tuned reference; a removal is a
     // WITHDRAWAL, whose counter-records the server assembles (D11).
-    for (const change of referenceChangeList) {
+    for (const change of recordRefused ? [] : referenceChangeList) {
       const prepared = await guard.run(() =>
         change.kind === "reference"
           ? prepareReference(client, {
@@ -611,9 +655,17 @@ function LoadedCommentEditor({
       return;
     }
 
-    const results = await signer.sign(writes, expected);
-    end();
+    // The batch is remembered BEFORE it is signed, so a press after a signing
+    // that did not answer asks this one again (same-signing.ts).
+    attempt.current = { node: comment.id, writes: writes.map((write) => write.id), intent };
+    settle(await signer.sign(writes, expected));
+  };
+
+  /** What one signing of the batch answered, read onto the edit. */
+  const settle = (results: readonly WriteResult[]) => {
+    setBusy(false);
     if (results.every((result) => result.kind === "done")) {
+      attempt.current = null;
       // The edit settles IN THE THREAD (`CommentEdit` → the thread).
       onSigned();
       return;

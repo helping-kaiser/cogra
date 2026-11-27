@@ -7,6 +7,7 @@
 package com.cogra.feature.content.edit
 
 import com.cogra.core.designsystem.BackingValue
+import com.cogra.core.designsystem.v2.compose.actsFooterLine
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode

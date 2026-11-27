@@ -10,10 +10,9 @@ package com.cogra.network.repo
 
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
-import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
-import com.cogra.domain.UserError
+import com.cogra.domain.di.ApplicationScope
 import com.cogra.domain.flatMap
 import com.cogra.domain.map
 import com.cogra.domain.repo.StanceRepository
@@ -24,78 +23,42 @@ import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.domain.store.TokenStore
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
-import com.cogra.network.graphql.CommentStanceQuery
 import com.cogra.network.graphql.HashtagStanceQuery
-import com.cogra.network.graphql.PostStanceQuery
 import com.cogra.network.graphql.PrepareSeveranceMutation
-import com.cogra.network.graphql.ProfileStanceQuery
 import com.cogra.network.graphql.fragment.StanceBundleFields
 import com.cogra.network.graphql.type.PrepareSeveranceInput
 import com.cogra.network.graphql.type.StancePickInput
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
-import com.cogra.network.unauthenticatedRefusal
+import kotlinx.coroutines.CoroutineScope
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-
-/**
- * Which stance-able root answered for a target id. The declaration
- * order is the probe order: a post is what a feed is made of, so it is
- * asked first.
- *
- * A topic is deliberately absent. This enum answers "which root holds
- * this OPAQUE id", and a topic has no id in the question — it is
- * addressed by name, which names its root outright.
- */
-private enum class TargetKind { POST, COMMENT, USER }
-
-/**
- * What one root said about a target.
- *
- * The absent case — no answer at all — is `null` rather than a member
- * here, because "this root does not hold that id" and "this root holds
- * it but there is no viewer" are answered differently: the first moves
- * the probe on, the second is a refusal the guard can act on.
- */
-private class RootAnswer(val bundle: StanceBundleFields?)
-
-/**
- * A root that answered with a null bundle has an unauthenticated reader
- * behind it, or one with no actor on the graph. The first is the common
- * case and the guard refreshes and replays on it; the second costs that
- * one wasted refresh and then reports the same refusal.
- */
-private fun StanceBundleFields?.orRefusal(): Outcome<StanceBundleFields> =
-    this?.let { Outcome.Success(it) } ?: unauthenticatedRefusal()
-
-/** No root holds it — the id names nothing stance-able, or the name is unusable. */
-private fun <T> notFound(): Outcome<T> =
-    Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "no such stance target", listOf("target"))))
 
 @Singleton
 class StanceRepositoryImpl @Inject constructor(
     private val client: ApolloClient,
     private val guard: AuthGuard,
     private val writes: WriteRepository,
+    tokens: TokenStore,
+    @ApplicationScope scope: CoroutineScope,
 ) : StanceRepository {
 
-    // A node never changes class, so the first read's answer holds for
-    // the rest of the process. Without it every drag-time projection
-    // would ask all three roots to learn what the first read already
-    // knew.
-    private val kinds = ConcurrentHashMap<String, TargetKind>()
+    // The node reads: a page's standings in one request (NodeStanceReads.kt).
+    private val nodes = NodeStanceReads(client, guard, tokens, scope)
 
     // The node each target's last bundle read named — what a stance or
-    // severance signed from that read must point at (Intent.kt).
+    // severance signed from that read must point at (Intent.kt). A node
+    // fact, not the reader's: the same node under every account.
     private val graphIds = ConcurrentHashMap<StanceTarget, String>()
 
-    // What the probe learned, as a kept pick names it — no read of its own.
+    // What a read learned, as a kept pick names it — no read of its own.
     override suspend fun kindOf(target: StanceTarget): StanceKind? = when (target) {
         is StanceTarget.Topic -> StanceKind.TOPIC
-        is StanceTarget.Node -> when (kinds[target.id]) {
+        is StanceTarget.Node -> when (nodes.kindOf(target.id)) {
             TargetKind.POST -> StanceKind.POST
             TargetKind.COMMENT -> StanceKind.COMMENT
             TargetKind.USER -> StanceKind.PERSON
@@ -194,28 +157,32 @@ class StanceRepositoryImpl @Inject constructor(
 
     /**
      * The one read behind all of them, and the split the two addresses
-     * make: a name carries its own root, an opaque id does not.
+     * make: a name carries its own root; an opaque id read without a pick
+     * joins its page's batch, whose answer names the node's class; a pick
+     * asks the one root that holds the id.
      */
     private suspend fun bundle(
         target: StanceTarget,
         pick: StancePair?,
         includePending: Boolean,
-    ): Outcome<StanceBundleFields> = guard.run {
-        val picked = Optional.presentIfNotNull(
-            pick?.let { StancePickInput(it.pDirected, it.pInterest) },
-        )
+    ): Outcome<StanceBundleFields> {
+        val picked = pick?.let { StancePickInput(it.pDirected, it.pInterest) }
         val read = when (target) {
-            is StanceTarget.Topic -> topicBundle(target.name, picked, includePending)
-            is StanceTarget.Node -> nodeBundle(target.id, picked, includePending)
+            is StanceTarget.Topic -> guard.run { topicBundle(target.name, picked.asInput(), includePending) }
+            is StanceTarget.Node -> if (picked == null) {
+                nodes.standing(target.id, includePending)
+            } else {
+                nodes.projected(target.id, picked, includePending)
+            }
         }
         (read as? Outcome.Success)?.let { graphIds[target] = it.value.targetGraphId }
-        read
+        return read
     }
 
     /**
-     * The topic read: one document, never a probe. The probe is a
-     * consequence of an OPAQUE id, not of stance-ability, and
-     * `hashtag(name:)` is told outright which root to ask.
+     * The topic read: one document, never a page. A topic is not a `Node`
+     * ("Hashtag is not a Node"), and `hashtag(name:)` is told outright
+     * which root to ask.
      */
     private suspend fun topicBundle(
         name: String,
@@ -233,52 +200,5 @@ class StanceRepositoryImpl @Inject constructor(
             is Outcome.Refused -> Outcome.Refused(read.errors)
             is Outcome.Success -> read.value?.let { it.bundle.orRefusal() } ?: notFound()
         }
-    }
-
-    /**
-     * The node read.
-     *
-     * A target whose class is already known asks its own root and
-     * nothing else; an unclassified one is probed in [TargetKind]'s
-     * order and stops at the first root that answers. That probe is
-     * why the memo above exists — it happens once per target, and
-     * every read after it is a single document.
-     */
-    private suspend fun nodeBundle(
-        id: String,
-        pick: Optional<StancePickInput?>,
-        includePending: Boolean,
-    ): Outcome<StanceBundleFields> {
-        for (kind in kinds[id]?.let { listOf(it) } ?: TargetKind.entries) {
-            when (val read = ask(kind, id, pick, includePending)) {
-                is Outcome.Failed -> return Outcome.Failed(read.cause)
-                is Outcome.Refused -> return Outcome.Refused(read.errors)
-                is Outcome.Success -> {
-                    val answer = read.value ?: continue
-                    kinds[id] = kind
-                    return answer.bundle.orRefusal()
-                }
-            }
-        }
-        // Either the id names nothing stance-able, or a remembered
-        // class went stale under a vanished node — forget it so the
-        // next read probes again.
-        kinds.remove(id)
-        return notFound()
-    }
-
-    /** One root's answer, or null where that root does not hold the id. */
-    private suspend fun ask(
-        kind: TargetKind,
-        target: String,
-        pick: Optional<StancePickInput?>,
-        includePending: Boolean,
-    ): Outcome<RootAnswer?> = when (kind) {
-        TargetKind.POST -> client.query(PostStanceQuery(target, pick, includePending)).fetch()
-            .map { data -> data.post?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
-        TargetKind.COMMENT -> client.query(CommentStanceQuery(target, pick, includePending)).fetch()
-            .map { data -> data.comment?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
-        TargetKind.USER -> client.query(ProfileStanceQuery(target, pick, includePending)).fetch()
-            .map { data -> data.user?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
     }
 }

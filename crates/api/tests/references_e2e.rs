@@ -690,6 +690,73 @@ async fn a_standalone_citation_lands_its_parameters_as_signed(pool: PgPool) {
     assert_eq!(row["support"], json!(0.1));
 }
 
+/// A finding, pinned as the server answers today (the retry hazard,
+/// audit defect 5): `prepareReference` keeps no in-flight guard, so a
+/// second identical citation prepare while the first is sealed and awaits
+/// its approval stages a second Reference, and both land. The fold sums
+/// the author's (artifact, target) bundle before the clip, so the reader
+/// still sees one citation, but at twice the signed pair: one choice of
+/// (0.1, 0.1) reads back as (0.2, 0.2).
+///
+/// A second identical citation prepare while the first awaits approval stages a second Reference, and the row reads the sum of both once they land.
+/// ´claim:references:a-second-prepare-in-flight-sums-the-citation-twice´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_second_citation_prepare_while_the_first_awaits_approval_sums_twice(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    let pair = json!({ "relevance": 0.1, "support": 0.1 });
+
+    let first = rig.cite_from(&token, &carrier, &cited, pair.clone()).await;
+    assert_eq!(refusals(&first, "prepareReference"), Vec::<Value>::new());
+    let first_signed = rig
+        .pre_sign(&token, &key, &first["prepareReference"]["writes"])
+        .await;
+    assert_eq!(first_signed.len(), 1);
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "AWAITING_APPROVAL"
+    );
+
+    let second = rig.cite_from(&token, &carrier, &cited, pair).await;
+    assert_eq!(refusals(&second, "prepareReference"), Vec::<Value>::new());
+    let second_writes = &second["prepareReference"]["writes"];
+    assert_eq!(second_writes.as_array().expect("writes").len(), 1);
+    assert_eq!(second_writes[0]["family"], "REFERENCE");
+    let second_id = second_writes[0]["id"].as_str().expect("id").to_string();
+    assert_ne!(second_id, first_signed[0].id, "a second staged Reference");
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "AWAITING_APPROVAL",
+        "the first attempt stays parked beside the second"
+    );
+
+    rig.approve(&token, &key, &first_signed).await;
+    rig.land(&token, &key, second_writes).await;
+    assert_eq!(
+        rig.staged_state(&token, &first_signed[0].id).await,
+        "LANDED"
+    );
+    assert_eq!(rig.staged_state(&token, &second_id).await, "LANDED");
+
+    let rows = rig.references_of_post(None, &carrier).await;
+    let rows = rows.as_array().expect("rows");
+    assert_eq!(rows.len(), 1, "one citation row: {rows:?}");
+    assert_eq!(rows[0]["target"]["id"], cited);
+    assert_eq!(rows[0]["relevance"], json!(0.2), "the pair summed twice");
+    assert_eq!(rows[0]["support"], json!(0.2));
+    let count = rig
+        .gql(
+            None,
+            r#"query($id: UUID!) { post(id: $id) { referenceCount } }"#,
+            json!({ "id": carrier }),
+        )
+        .await;
+    assert_eq!(count["post"]["referenceCount"], 1, "{count}");
+}
+
 /// The user signs only values they chose, so a citation missing either
 /// parameter — standalone or in a creation batch — is refused by the
 /// schema before any resolver runs, and nothing is staged.

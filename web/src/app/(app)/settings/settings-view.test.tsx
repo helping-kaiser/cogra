@@ -4,7 +4,10 @@ import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
+import type { Outcome } from "@/lib/api/outcome";
+import { closeKeptBatchSeal, resetKeptBatchForTests, signKeptBatch } from "@/lib/stance/kept-batch";
 import { keepPick, listKeptPicks } from "@/lib/stance/kept-picks";
+import type { StanceCommit } from "@/lib/stance/stance-data";
 import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { createTokenStore } from "@/lib/session/token-store";
 import { accountFilterLevel, setAccountFilterLevel } from "@/lib/settings/sensitive-content";
@@ -845,6 +848,7 @@ describe("signing out", () => {
   it("sign_out_remembered_keeps_the_key_and_offers_the_account — and keeps the draft (F4)", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
     const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings();
+    window.localStorage.setItem("cogra.securityNotice.acct-1", "2026-08-10T09:30:00Z");
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
@@ -854,14 +858,22 @@ describe("signing out", () => {
     expect(seals.forget).not.toHaveBeenCalled();
     // a_remembered_sign_out_keeps_the_record
     expect(forgetSeenRecord).not.toHaveBeenCalled();
+    // a_remembered_sign_out_keeps_a_pending_security_notice
+    expect(window.localStorage.getItem("cogra.securityNotice.acct-1")).toBe("2026-08-10T09:30:00Z");
   });
 
   it("sign_out_forgotten_with_a_backup_clears_without_asking", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
     const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
+    window.localStorage.setItem("cogra.securityNotice.acct-1", "2026-08-10T09:30:00Z");
+    window.localStorage.setItem("cogra.securityNotice.acct-2", "2026-08-11T00:00:00Z");
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
+    // a_dont_remember_sign_out_purges_its_pending_security_notice — and no other account's
+    // (auth.md "Sign-out": device-local flags are purged).
+    expect(window.localStorage.getItem("cogra.securityNotice.acct-1")).toBeNull();
+    expect(window.localStorage.getItem("cogra.securityNotice.acct-2")).toBe("2026-08-11T00:00:00Z");
     expect(screen.queryByTestId("settings.dialog")).not.toBeInTheDocument();
     expect(await identity.actorKey()).toBeNull();
     expect(drafts.clear).toHaveBeenCalled();
@@ -1268,6 +1280,43 @@ describe("the kept picks in settings", () => {
     await keepPick("acct-1", POST, PICK);
     renderSettings();
     expect(await screen.findByTestId("settings.backup.kept")).toHaveTextContent("1 kept pick waiting");
+  });
+
+  // Settings.md:205-207, KeptPicksSeal.md:61-63: the batch closed on while it
+  // signed and not through stands on this row, with Retry for the whole batch.
+  it("reads That didn't sign. with Retry on the row when the closed seal's batch did not go through", async () => {
+    resetKeptBatchForTests();
+    await keepPick("acct-1", POST, PICK);
+    await keepPick("acct-1", { kind: "post", id: "post-2" }, PICK);
+    renderSettings();
+    await screen.findByTestId("settings.backup.kept");
+    const batch = [
+      { target: POST, pick: PICK },
+      { target: { kind: "post" as const, id: "post-2" }, pick: PICK },
+    ];
+    const answers: ((outcome: Outcome<StanceCommit>) => void)[] = [];
+    const commit = vi.fn(
+      () => new Promise<Outcome<StanceCommit>>((resolve) => answers.push(resolve)),
+    );
+    await act(async () => {
+      void signKeptBatch(commit, batch);
+      closeKeptBatchSeal();
+    });
+    // While it signs the row stands as it was: the wait is on the targets' rows.
+    expect(screen.queryByTestId("settings.backup.kept.status")).toBeNull();
+    await act(async () => answers.shift()?.({ kind: "failed", cause: new Error("offline") }));
+    const status = await screen.findByTestId("settings.backup.kept.status");
+    expect(status).toHaveTextContent("That didn't sign.");
+    expect(status).toHaveAttribute("role", "alert");
+    expect(screen.getByTestId("settings.backup.kept")).toHaveTextContent("2 kept picks waiting");
+    // Inert apart from its Retry.
+    fireEvent.click(screen.getByTestId("settings.backup.kept"));
+    expect(push).not.toHaveBeenCalledWith("/kept-picks?from=%2Fsettings");
+    fireEvent.click(screen.getByTestId("settings-kept-retry"));
+    expect(commit).toHaveBeenCalledTimes(2);
+    expect(screen.queryByTestId("settings.backup.kept.status")).toBeNull();
+    await act(async () => answers.shift()?.({ kind: "failed", cause: new Error("offline") }));
+    expect(await screen.findByTestId("settings.backup.kept.status")).toHaveTextContent("That didn't sign.");
   });
 
   it("stands no kept-picks row while the key is elsewhere, nor when none waits", async () => {

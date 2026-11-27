@@ -21,7 +21,7 @@ use common::l1::identifier::{ActId, NodeId};
 use postgres_store::{PgPool, content as content_store, mirror, profile, staged};
 use uuid::Uuid;
 
-use crate::ingest::PromotionFailure;
+use crate::ingest::{Landing, PromotionFailure, to_retry};
 use crate::l1::L1Boundary;
 use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
 use crate::ratelimit::SigningClass;
@@ -226,10 +226,7 @@ pub async fn prepare_profile_update<B: L1Boundary>(
     )
     .await?;
     if staged::has_pending_targeting(pool, viewer, Family::Registration, &prof_string).await? {
-        return Err(ProfileError::BadInput {
-            field: "input",
-            message: "a profile update is already in flight".into(),
-        });
+        return Err(update_in_flight());
     }
     let head = mirror::chain_head(pool, &address, Family::Registration, &prof_string)
         .await?
@@ -259,7 +256,7 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         &[(SigningClass::Edit, 1)],
     )
     .await?;
-    let prepared = prepare::prepare(
+    let prepared = prepare::prepare_chained(
         boundary,
         pool,
         staging.gc_after_epochs,
@@ -279,8 +276,22 @@ pub async fn prepare_profile_update<B: L1Boundary>(
             node: Some(viewer),
         },
     )
-    .await?;
+    .await
+    .map_err(|e| match e {
+        PrepareError::EditInFlight => update_in_flight(),
+        e => e.into(),
+    })?;
     Ok(prepared)
+}
+
+/// The refusal a second profile update meets while the first is in
+/// flight — the same answer from the early guard and from the one on the
+/// staging transaction (`prepare::prepare_chained`).
+fn update_in_flight() -> ProfileError {
+    ProfileError::BadInput {
+        field: "input",
+        message: "a profile update is already in flight".into(),
+    }
 }
 
 /// Pre-commitment materialization of a profile update (substrate.md §6;
@@ -288,12 +299,17 @@ pub async fn prepare_profile_update<B: L1Boundary>(
 /// the merged version row exists and every reader is served it, marked
 /// pending — the profile-side branch of `content::stage_pending`.
 ///
-/// The row is the update merged onto the **landed** profile: an update is
-/// a delta, and the graph has accepted only what landed. The one update
-/// that could be pending beside it is this write's own — the backend
-/// serializes profile updates per author ([`prepare_profile_update`]) —
-/// so a retried pre-sign merges onto the same base, and its row collides
-/// with the one already written rather than adding a second.
+/// The row is the update merged onto the **current** profile, its pending
+/// version included: an update is a delta along its chain, and the fold is
+/// newest-wins per field (user.md §3). The backend serializes profile
+/// updates per author ([`prepare_profile_update`]), so a pending row
+/// beside this write's own can only be its predecessor's, whose write
+/// has landed but whose row the ingestion pass has not promoted yet — the
+/// record this update chains behind, whose fields stand until this one
+/// replaces them. Merging onto the landed profile instead would restate
+/// what that predecessor changed. A retried pre-sign merges onto its own
+/// row, which yields the same fields, and collides with it rather than
+/// adding a second.
 ///
 /// An unchained Registration is the admission (or a genesis cast): its
 /// payload is not a profile update and onboarding owns it, so there is
@@ -322,7 +338,8 @@ pub async fn stage_pending(
     }
     let update = CograProfile::decode_payload(&write.proposal.payload)
         .map_err(|e| ProfileError::Internal(format!("staged payload not admissible: {e}")))?;
-    let merged = merge_update(pool, write.actor_id, update).await?;
+    let base = profile::current_profile(pool, write.actor_id).await?;
+    let merged = merge_update(pool, write.actor_id, update, base).await?;
     let mut tx = pool
         .begin()
         .await
@@ -353,9 +370,10 @@ pub async fn stage_pending(
 /// payload into permanent carriage and land its version row. The
 /// admission Registration (and the genesis casts) are unchained and
 /// handled by onboarding; their payloads still move into carriage here.
-/// A failure leaves the record un-promoted — the mirror governs, and a
-/// later rebuild can re-run promotion — and is returned rather than
-/// swallowed, so the ingestion pass reports what did not follow.
+/// A failure leaves the record un-promoted — the mirror governs, and the
+/// next pass re-runs the promotion ([`land_stranded`]) — and is returned
+/// rather than swallowed, so the ingestion pass reports what did not
+/// follow.
 pub async fn land_promoted(
     pool: &PgPool,
     promoted: &[staged::PromotedWrite],
@@ -365,16 +383,46 @@ pub async fn land_promoted(
         if write.family != Family::Registration.as_str() {
             continue;
         }
-        if let Err(e) = land_one(pool, write).await {
-            failures.push(PromotionFailure {
-                stage: "profile",
-                staged: write.id,
-                act_id: write.act_id.clone(),
-                error: e.to_string(),
-            });
+        if let Err(e) = land_one(pool, write, Landing::Confirm).await {
+            failures.push(PromotionFailure::of("profile", write, e));
         }
     }
     failures
+}
+
+/// Re-runs the promotion of every landed profile update whose version row
+/// is still pending — one an earlier pass marked landed and never
+/// promoted, because the promotion failed or the pass ended first
+/// (`staged::landed_with_pending_profile`). Confirm drops the mark and
+/// stamps the record's coordinates (data-model.md "Actor profiles"); a row
+/// left pending would instead outrank every later landed version, since
+/// the current-profile read puts pending first, and nothing else ever
+/// selects it again.
+///
+/// A landed update that owns no version row at all is promoted here too
+/// (`staged::landed_without_profile_row`): one that landed after its
+/// pending row expired, whose insert never committed, so the profile
+/// never shows a record that stands on L1. Its landing runs the insert
+/// branch ([`Landing::Rebuild`]).
+///
+/// `promoted` is this pass's own confirmations, left out
+/// (`ingest::to_retry`). A failure here rides the outcome like any
+/// promotion's and is retried by the next pass.
+pub async fn land_stranded(
+    pool: &PgPool,
+    promoted: &[staged::PromotedWrite],
+) -> Result<Vec<PromotionFailure>, ProfileError> {
+    let stranded = staged::landed_with_pending_profile(pool).await?;
+    let unwritten = staged::landed_without_profile_row(pool).await?;
+    let mut failures = Vec::new();
+    for (writes, landing_by) in [(stranded, Landing::Retry), (unwritten, Landing::Rebuild)] {
+        for write in to_retry(&writes, promoted) {
+            if let Err(e) = land_one(pool, write, landing_by).await {
+                failures.push(PromotionFailure::of("profile", write, e));
+            }
+        }
+    }
+    Ok(failures)
 }
 
 /// Promotes one landed profile update.
@@ -387,7 +435,12 @@ pub async fn land_promoted(
 /// insert branch is the uncommon path: an update that landed without a
 /// pending row of its own — a mirror rebuild, a write staged before
 /// pending profile rows existed, or one landing after its pending row
-/// expired.
+/// expired. The carriage row's lock, taken before any version row is
+/// touched, makes two passes promoting one write run one after the other
+/// — an update always has its carriage row by then — and since
+/// landed rows are not unique on the authoring instant, the insert first
+/// asks whether a row already carries it — the other pass's — and appends
+/// nothing then.
 ///
 /// The merge is copy-forward (data-model.md "Display-content
 /// versioning"): the newest version row alone renders the profile, so a
@@ -422,7 +475,11 @@ pub async fn land_promoted(
 ///
 /// The update is read under the read/ingest admission
 /// ([`CograProfile::read_payload`]), as content's landing reads its payload.
-async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
+async fn land_one(
+    pool: &PgPool,
+    write: &staged::PromotedWrite,
+    landing_by: Landing,
+) -> Result<(), ProfileError> {
     let staged_row = match staged::load_promotable(pool, write.id).await? {
         staged::Promotable::Full(row) => row
             .into_landing()
@@ -476,7 +533,8 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         .await?
         .ok_or_else(|| ProfileError::Internal("promoted record missing from mirror".into()))?;
     let landing = meta.landing();
-    let merged = merge_update(pool, write.actor_id, update).await?;
+    let base = profile::landed_profile(pool, write.actor_id).await?;
+    let merged = merge_update(pool, write.actor_id, update, base).await?;
     let mut tx = pool
         .begin()
         .await
@@ -492,7 +550,10 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
             .map_err(|e| ProfileError::Internal(e.to_string()))?;
         return Ok(());
     }
-    if !profile::land_profile_version(&mut tx, write.actor_id, created_at, landing).await? {
+    if !profile::land_profile_version(&mut tx, write.actor_id, created_at, landing).await?
+        && landing_by.inserts()
+        && !profile::has_version_at(&mut tx, write.actor_id, created_at).await?
+    {
         profile::insert_profile_version(
             &mut tx,
             write.actor_id,
@@ -511,8 +572,8 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
     Ok(())
 }
 
-/// A profile update merged onto the actor's landed profile — the full
-/// field set its version row carries.
+/// A profile update merged onto a base version — the full field set its
+/// version row carries.
 struct MergedProfile {
     display_name: String,
     bio: Option<String>,
@@ -520,9 +581,11 @@ struct MergedProfile {
     website_url: Option<String>,
 }
 
-/// Merges an update onto the actor's landed profile
-/// ([`profile::landed_profile`]), copy-forward: what the update leaves
-/// absent keeps the landed value.
+/// Merges an update onto the version its caller builds it on, copy-forward:
+/// what the update leaves absent keeps the base's value. The pre-commitment
+/// builds on the current profile ([`stage_pending`]); the landing's insert
+/// branch on the landed one ([`land_one`]), since the pending row it would
+/// otherwise find is never its own.
 ///
 /// The update must name its own actor: the payload's node is the binding,
 /// and a version row written under another actor would put one person's
@@ -531,14 +594,14 @@ async fn merge_update(
     pool: &PgPool,
     actor_id: Uuid,
     update: CograProfile,
+    base: Option<profile::ProfileVersion>,
 ) -> Result<MergedProfile, ProfileError> {
     if update.node != actor_id {
         return Err(ProfileError::Internal(
             "profile payload names a different actor".into(),
         ));
     }
-    let base = profile::landed_profile(pool, actor_id)
-        .await?
+    let base = base
         .ok_or_else(|| ProfileError::Internal("actor without a seeded profile version".into()))?;
     let display_name = match update.display_name {
         None => base.display_name,

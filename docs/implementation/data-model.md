@@ -624,7 +624,10 @@ rows appear earlier, at the pre-commitment signature, carrying a
 pending mark ("Content nodes" below); promotion on confirm drops that mark and drives the
 flows built on landing (an applicant's Registration and a
 vouch-Opinion both confirming flip their account to member —
-[auth.md](auth.md)). Staged state
+[auth.md](auth.md)). A landed write whose promotion did not complete
+— it failed, or the pass ended before it — is promoted by the next
+ingestion pass, whether its display rows are still pending or, for a
+write that landed with them already gone, missing. Staged state
 is L2-operational: it is exempt from append-only history, and a
 write the host can no longer order leaves no trace once reaped —
 nothing existed on the graph.
@@ -833,6 +836,13 @@ CREATE TABLE author_seq_counters (
     next_seq BIGINT NOT NULL
 );
 ```
+
+The allocation holds the author's counter row until the staging
+transaction ends, and an edit's or profile update's in-flight check
+runs on that transaction after it: a second prepare by the author
+reads the first one's staged write, so concurrent prepares never
+stage two edits on one chain head
+([api-spec.md "Content authoring"](api-spec.md#content-authoring)).
 
 ---
 

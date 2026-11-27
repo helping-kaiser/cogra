@@ -5,7 +5,7 @@
 // rides the screen's collapsing top, and the vouch card is the feed's own
 // first card (`feed/vouch-card.tsx`) — neither lives in this stack.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useWriteSigner } from "@/lib/signing/provider";
@@ -23,8 +23,20 @@ export function MemberStatus({
   const [pendingCount, setPendingCount] = useState<number | null>(null);
   const [resuming, setResuming] = useState(false);
 
+  // The device's read can answer after the card has gone; React schedules even
+  // a dropped update through `window`, which a torn-down page no longer has.
+  const live = useRef(true);
+  useEffect(() => {
+    live.current = true;
+    return () => {
+      live.current = false;
+    };
+  }, []);
+
   const readDevice = useCallback(() => {
-    return store.handshakeIds().then((pending) => setPendingCount(pending.length));
+    return store.handshakeIds().then((pending) => {
+      if (live.current) setPendingCount(pending.length);
+    });
   }, [store]);
 
   useEffect(() => {
@@ -36,9 +48,17 @@ export function MemberStatus({
   const onResume = async () => {
     if (resuming) return;
     setResuming(true);
-    await signer.resume();
-    setResuming(false);
-    await readDevice();
+    // resume() answers a missing or foreign key with per-write results and
+    // keeps the material; what still rejects is the device itself — a custody
+    // read that failed. Nothing signed and nothing was spent, so the card
+    // stands as it was and Resume answers again ("Degrade, never crash").
+    try {
+      await signer.resume();
+    } catch {
+      // The parked material is untouched; the re-read below shows it.
+    }
+    if (live.current) setResuming(false);
+    await readDevice().catch(() => {});
   };
 
   return (

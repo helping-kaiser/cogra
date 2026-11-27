@@ -17,13 +17,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +34,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -64,6 +63,8 @@ fun StatusBannersRoute(
     snackbarHostState: SnackbarHostState,
     /** The screen the banners ride: the application card says it in that screen's words. */
     surface: ApplicationSurface = ApplicationSurface.FEED,
+    /** The security notice's `Change password`: the credential screen (FeedSecurityNotice.md). */
+    onChangePassword: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -102,6 +103,7 @@ fun StatusBannersRoute(
             },
             onPutAway = viewModel::onPutCardAway,
         ),
+        securityNotice = { SecurityNoticeCardRoute(onChangePassword = onChangePassword) },
     )
 }
 
@@ -198,9 +200,9 @@ fun KeyRestoreBanner(state: HomeUiState, onRestoreActor: () -> Unit, node: DataN
 }
 
 /**
- * The banner stack. Ambient by design: nothing renders while the
- * account state loads, and a settled member with nothing pending
- * contributes no UI at all.
+ * The banner stack. Ambient by design: nothing but the security notice
+ * renders while the account state loads, and a settled member with
+ * nothing pending contributes no UI at all.
  */
 @Composable
 fun StatusBanners(
@@ -212,14 +214,20 @@ fun StatusBanners(
     application: ApplicationCardActions = ApplicationCardActions(),
     /** `Retry` on the key that did not attach (ApplicantFeed.md:39). */
     onRetryAttach: () -> Unit = {},
+    /**
+     * The security notice, the stack's first row: the top of the column,
+     * above an applicant's cards too (FeedSecurityNotice.md:3, :5). It owes
+     * nothing to the account state, so it stands while that loads.
+     */
+    securityNotice: @Composable () -> Unit = {},
 ) {
-    if (state.loading) return
-    // The host pads horizontally — the feed's list padding, the
-    // profile's item wrap — so the cards line up with its content.
+    val layout = StackLayout.of(application.surface)
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(layout.gap),
     ) {
+        securityNotice()
+        if (state.loading) return@Column
         if (state.applicant) {
             ApplicantStatus(
                 state = state,
@@ -228,6 +236,7 @@ fun StatusBanners(
                 onStartKeyCeremony = onStartKeyCeremony,
                 onRetryAttach = onRetryAttach,
                 application = application,
+                inset = layout.lineInset,
             )
         } else {
             // The member husk warning rides the screen's collapsing top
@@ -236,7 +245,7 @@ fun StatusBanners(
             // The vouch card is the feed's own first card (`VouchCardRoute`),
             // never this stack — which the own profile carries too.
             if (state.pendingHandshakes > 0) {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(modifier = Modifier.padding(horizontal = layout.lineInset).fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             stringResource(R.string.home_pending, state.pendingHandshakes),
@@ -269,16 +278,21 @@ private fun ApplicantStatus(
     onStartKeyCeremony: () -> Unit,
     application: ApplicationCardActions,
     onRetryAttach: () -> Unit,
+    inset: Dp,
 ) {
     when (val progress = state.progress) {
-        null -> CircularProgressIndicator(modifier = Modifier.testTag("home_status_loading"))
+        null -> Line(inset) { ApplicantChecking() }
         is RegistrationProgress.AwaitingApproval -> {
             if (!progress.emailVerified) {
-                VerifyCard(state, onResendEmailChange, onResend)
+                VerifyCard(state, onResendEmailChange, onResend, feedNode(application.surface, "verifyCard"))
             }
             when {
                 // The two proofs are independent — both cards can show.
-                !progress.keyAttached && !progress.keyOnDevice -> CeremonyCard(onStartKeyCeremony)
+                !progress.keyAttached && !progress.keyOnDevice -> CeremonyCard(
+                    onStartKeyCeremony = onStartKeyCeremony,
+                    approver = state.application?.application?.approver?.handle,
+                    node = feedNode(application.surface, "keyCard"),
+                )
                 // The applicant's own key, here, did not reach the
                 // application (ApplicantFeed.md:37): attach it again,
                 // never a fresh key, never "another account".
@@ -286,8 +300,8 @@ private fun ApplicantStatus(
                     AttachKeyCard(onRetryAttach, application.surface)
                 // A key sits on the device but the attach was refused —
                 // it belongs to another account (ACTOR_KEY_IN_USE). No
-                // board draws this card yet.
-                !progress.keyAttached && progress.keyOnDevice -> KeyElsewhereCard(onStartKeyCeremony)
+                // board draws this card yet, so it keeps the gutter.
+                !progress.keyAttached && progress.keyOnDevice -> Line(inset) { KeyElsewhereCard(onStartKeyCeremony) }
                 // keyAttached && !keyOnDevice: the restore ask rides the
                 // screen's collapsing top (KeyRestoreBanner), not this
                 // stack.
@@ -301,44 +315,87 @@ private fun ApplicantStatus(
                 actions = application,
             )
         }
+        // THE LANDING CARD (ApplicantLanding.jsx:47; ApplicantLanding.md:5-11):
+        // `TaskCard` on the feed card's own ground, its title alone with the
+        // key here, no control and no way to put it away.
         RegistrationProgress.AwaitingLanding ->
-            Text(
-                text = stringResource(R.string.home_approved),
-                modifier = Modifier.testTag("home_landing"),
+            TaskCard(
+                title = stringResource(R.string.home_landing_title),
+                body = null,
+                node = feedNode(application.surface, "application"),
+                notice = false,
+                fallbackTag = "home_landing",
             )
         // The restore ask rides the screen's collapsing top.
         RegistrationProgress.AwaitingSigningKey -> Unit
-        RegistrationProgress.Member ->
+        RegistrationProgress.Member -> Line(inset) {
             // Momentary: the refresh re-reads the member shape.
             Text(
                 text = stringResource(R.string.home_welcome),
                 modifier = Modifier.testTag("home_landed"),
             )
-        is RegistrationProgress.RejectedByDevice ->
+        }
+        is RegistrationProgress.RejectedByDevice -> Line(inset) {
             ErrorLine(R.string.home_application_rejected, testTag = "home_application_rejected")
-        is RegistrationProgress.Refused ->
+        }
+        is RegistrationProgress.Refused -> Line(inset) {
             ErrorLine(R.string.error_generic, testTag = "home_application_refused")
-        is RegistrationProgress.Failed ->
+        }
+        is RegistrationProgress.Failed -> Line(inset) {
             ErrorLine(R.string.error_transport, testTag = "home_application_offline")
+        }
     }
 }
 
-/** The key proof: mint and attach on this device (auth.md step 3). */
+/**
+ * Where the stack's rows stand on their host. ON THE FEED the drawn task
+ * cards are cards of the list (`ApplicantFeed.jsx:64-114` inside `FeedList`,
+ * `_shared.jsx:531-537`; seam 464): full width, 8dp apart, and every row that
+ * is not one of them keeps the list's 16dp gutter. ELSEWHERE (the own
+ * profile) the host pads the whole stack, its rows 16dp apart.
+ */
+private data class StackLayout(val gap: Dp, val lineInset: Dp) {
+    companion object {
+        fun of(surface: ApplicationSurface): StackLayout = when (surface) {
+            ApplicationSurface.FEED -> StackLayout(gap = Space.x2, lineInset = Space.x4)
+            ApplicationSurface.PROFILE -> StackLayout(gap = 16.dp, lineInset = 0.dp)
+        }
+    }
+}
+
+/** A row of the stack that is not a drawn task card: it keeps [inset] at each side. */
 @Composable
-private fun CeremonyCard(onStartKeyCeremony: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.home_create_key_title),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(stringResource(R.string.home_create_key_body))
-            Button(
+private fun Line(inset: Dp, content: @Composable () -> Unit) {
+    Box(Modifier.padding(horizontal = inset)) { content() }
+}
+
+/** The board registers the applicant's cards on the feed; elsewhere they stand unnamed. */
+private fun feedNode(surface: ApplicationSurface, card: String): DataNode? =
+    if (surface == ApplicationSurface.FEED) DataNode("feed") / card else null
+
+/**
+ * THE KEY PROOF, NOT YET MADE (`ApplicantFeed.jsx` `keyCard` = `create`,
+ * `wording` = app; ApplicantFeed.md:13-17, :49): the notice task card titled
+ * `Create your key`, its body naming the member whose approval is in play, and
+ * `Create my key` filled in `inverse` opening the ceremony (auth.md step 3).
+ * Before that member is read the card stands its title alone — never a
+ * placeholder name (no board draws that moment).
+ */
+@Composable
+private fun CeremonyCard(onStartKeyCeremony: () -> Unit, approver: String?, node: DataNode?) {
+    TaskCard(
+        title = stringResource(R.string.home_create_key_title),
+        body = approver?.let { stringResource(R.string.home_create_key_body, "@$it") },
+        node = node,
+    ) {
+        // The board names the button (`create`); the tag the nav graph drives stays on it.
+        Box(Modifier.dataNode(node?.div("create"))) {
+            CograButton(
+                text = stringResource(R.string.home_create_key_button),
                 onClick = onStartKeyCeremony,
-                modifier = Modifier.testTag("home_create_key"),
-            ) {
-                Text(stringResource(R.string.home_create_key_button))
-            }
+                kind = ButtonKind.Inverse,
+                testTag = "home_create_key",
+            )
         }
     }
 }
@@ -354,9 +411,8 @@ private fun CeremonyCard(onStartKeyCeremony: () -> Unit) {
  */
 @Composable
 private fun AttachKeyCard(onRetry: () -> Unit, surface: ApplicationSurface) {
-    // The board registers the card on the feed; elsewhere it stands unnamed.
-    val node = if (surface == ApplicationSurface.FEED) DataNode("feed") / "keyCard" else null
-    NoticeTaskCard(
+    val node = feedNode(surface, "keyCard")
+    TaskCard(
         title = stringResource(R.string.home_attach_key_title),
         body = stringResource(R.string.home_attach_key_body),
         node = node,
@@ -397,12 +453,12 @@ private fun KeyElsewhereCard(onStartKeyCeremony: () -> Unit) {
 
 /**
  * The actor key lives elsewhere — restore brings it to this device
- * (KeyElsewhere): the notice [NoticeTaskCard], `Restore the key` filled in
+ * (KeyElsewhere): the notice [TaskCard], `Restore the key` filled in
  * `inverse` at the small rung.
  */
 @Composable
 private fun RestoreCard(onRestoreActor: () -> Unit, node: DataNode?) {
-    NoticeTaskCard(
+    TaskCard(
         title = stringResource(R.string.home_husk_title),
         body = stringResource(R.string.home_husk_body),
         node = node,
@@ -418,21 +474,40 @@ private fun RestoreCard(onRestoreActor: () -> Unit, node: DataNode?) {
 }
 
 /**
- * `TaskCard` on the account-notice register (`tone="notice"`, the olive
- * split): the task ring around the `tertiaryContainer` ground, every ink the
- * panel's own, the title beside the mark, the body under it, then [content].
+ * `TaskCard` (`_shared.jsx:622-671`): the task ring around the card's ground,
+ * the title beside the mark, the body under it where there is one, then
+ * [content]. [notice] puts it on the account-notice register (`tone="notice"`,
+ * the olive split): the `tertiaryContainer` ground, and every ink inside the
+ * panel's own — the board scopes `--primary`, `--outline`, `--on-surface` and
+ * `--on-surface-variant` to `on-tertiary-container` (`_shared.jsx:633-641`), so
+ * an outlined button, a field or a retry drawn inside reads in that pair.
+ * Without it, the feed card's own ground (a card that only says how things
+ * stand). [fallbackTag] names the card where no registered [node] does.
  */
 @Composable
-private fun NoticeTaskCard(title: String, body: String, node: DataNode?, content: @Composable () -> Unit) {
+internal fun TaskCard(
+    title: String,
+    body: String?,
+    node: DataNode?,
+    notice: Boolean = true,
+    fallbackTag: String? = null,
+    content: @Composable () -> Unit = {},
+) {
     val colors = MaterialTheme.colorScheme
-    val ink = colors.onTertiaryContainer
+    val ink = if (notice) colors.onTertiaryContainer else colors.onSurface
+    val scoped = if (notice) {
+        colors.copy(primary = ink, outline = ink, onSurface = ink, onSurfaceVariant = ink)
+    } else {
+        colors
+    }
+    val named = node ?: fallbackTag?.let { DataNode(it) }
     Column(
         verticalArrangement = Arrangement.spacedBy(Space.x3),
         modifier = Modifier
             .fillMaxWidth()
-            .dataNode(node)
+            .dataNode(named)
             .clip(MaterialTheme.shapes.medium)
-            .background(colors.tertiaryContainer)
+            .background(if (notice) colors.tertiaryContainer else colors.surfaceContainerHighest)
             .taskRing(taskRingColors(), MaterialTheme.shapes.medium)
             // The ring's 2dp stands inside the card's own 16 (`--ring-task-width`).
             .padding(Space.x4 + 2.dp),
@@ -444,55 +519,71 @@ private fun NoticeTaskCard(title: String, body: String, node: DataNode?, content
                 color = ink,
                 modifier = Modifier.weight(1f).dataNode(node?.div("title")),
             )
-            CograMark(size = 20.dp, tint = ink)
+            CograMark(size = 20.dp, tint = if (notice) ink else colors.primary)
         }
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyMedium,
-            color = ink,
-            modifier = Modifier.dataNode(node?.div("body")),
-        )
-        content()
+        body?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (notice) ink else colors.onSurfaceVariant,
+                modifier = Modifier.dataNode(node?.div("body")),
+            )
+        }
+        MaterialTheme(colorScheme = scoped) { content() }
     }
 }
 
+/**
+ * THE EMAIL PROOF (`ApplicantFeed.jsx:65-100`; ApplicantFeed.md:11, :29, :43):
+ * the notice task card `Verify your email`, its title alone, the seven-day
+ * consequence once as `note`, and `Resend the link` outlined as `resend`. The
+ * app holds no address to print (`address`) nor a way to the change
+ * (`wrongAddress`), so the typed address keeps the address row's place — no
+ * board draws the field. The link the mail carries is opened on the web
+ * (`/verify`); the app takes no pasted token (jakob, round-3 answer 7).
+ */
 @Composable
 private fun VerifyCard(
     state: HomeUiState,
     onResendEmailChange: (String) -> Unit,
     onResend: () -> Unit,
+    node: DataNode?,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // The link the mail carries is opened on the web (`/verify`); the app
-            // takes no pasted token (jakob, round-3 answer 7). The title is the
-            // board's (`feed.verifyCard.title`).
-            Text(
-                text = stringResource(R.string.home_verify_title),
-                modifier = Modifier.testTag("home_verify"),
-            )
-            OutlinedTextField(
-                value = state.resendEmail,
-                onValueChange = onResendEmailChange,
-                label = { Text(stringResource(R.string.home_verify_email)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("resend_email"),
-            )
-            TextButton(
+    TaskCard(
+        title = stringResource(R.string.home_verify_title),
+        body = null,
+        node = node,
+        fallbackTag = "home_verify",
+    ) {
+        OutlinedTextField(
+            value = state.resendEmail,
+            onValueChange = onResendEmailChange,
+            label = { Text(stringResource(R.string.home_verify_email)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("resend_email"),
+        )
+        Text(
+            text = stringResource(R.string.home_verify_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.dataNode(node?.div("note")),
+        )
+        Box(Modifier.dataNode(node?.div("resend"))) {
+            CograButton(
+                text = stringResource(R.string.home_verify_resend),
                 onClick = onResend,
+                kind = ButtonKind.Outlined,
                 enabled = state.resendEmail.isNotBlank() && !state.resending,
-                modifier = Modifier.testTag("verify_resend"),
-            ) {
-                Text(stringResource(R.string.home_verify_resend))
-            }
-            // The re-send's confirmation is the shell's snackbar too; the
-            // refusal below it stays on the card, where it happened.
-            state.resendError?.let {
-                ErrorLine(it.resendMessage(), testTag = "resend_error")
-            }
+                testTag = "verify_resend",
+            )
+        }
+        // The re-send's confirmation is the shell's snackbar; the refusal
+        // stays on the card, where it happened.
+        state.resendError?.let {
+            ErrorLine(it.resendMessage(), testTag = "resend_error")
         }
     }
 }

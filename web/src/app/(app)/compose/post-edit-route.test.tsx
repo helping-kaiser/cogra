@@ -383,7 +383,9 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
                 __typename: "AuthSession",
                 accessToken: "access-2",
                 refreshToken: "refresh-2",
-                user: { __typename: "User", id: "u1" },
+                // The account the stored pair names: a refresh rotates a
+                // session, it never hands the tab another account.
+                user: { __typename: "User", id: "acct-1" },
               },
               userErrors: [],
             },
@@ -1645,5 +1647,127 @@ describe("PostEditRoute — opening", () => {
     draw();
     const heading = await screen.findByRole("heading", { name: "Edit post" });
     await waitFor(() => expect(document.activeElement).toBe(heading));
+  });
+});
+
+// RETRY ASKS THE SAME SIGNING AGAIN (SigningAfterClose.md:27, EditCompose.md:79):
+// the batch this edit prepared, never a second prepare — which the server
+// would refuse while the first is in flight.
+describe("PostEditRoute — Retry after a signing that did not answer", () => {
+  beforeEach(() => push.mockClear());
+
+  it("asks the first batch again: preparePostEdit runs once and the post opens", async () => {
+    let prepares = 0;
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () => {
+        prepares += 1;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+    );
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => ({ kind: "failed", id: write.id, cause: new Error("no answer") }),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "done" as const, id, state: "RELAYING" as const })),
+      ),
+    });
+    draw({ signer });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    fireEvent.click(await screen.findByTestId("post-edit-retry"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(prepares).toBe(1);
+    expect(signer.signAgain).toHaveBeenCalledWith(["w0"], expect.anything());
+  });
+
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same edit, its re-ask refused
+  // by the device's intent check, over a first edit whose approval went out
+  // with its answer lost: it is landing, and nothing is prepared again.
+  it("a re-ask the device refuses reads the states first: an edit already relaying finishes as taken", async () => {
+    let prepares = 0;
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () => {
+        prepares += 1;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+      gqlLink.query("StagedWrite", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            stagedWrite: {
+              __typename: "StagedWrite",
+              id: variables.id,
+              state: "RELAYING",
+              carried: false,
+              family: "PUBLISH",
+              canonicalProposal: "AA==",
+              verifiedAct: null,
+              record: null,
+            },
+          },
+        }),
+      ),
+    );
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => ({ kind: "failed", id: write.id, cause: new Error("no answer") }),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "rejectedByDevice" as const, id, reason: "intent mismatch" })),
+      ),
+    });
+    draw({ signer });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(sign());
+    fireEvent.click(await screen.findByTestId("post-edit-retry"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(signer.signAgain).toHaveBeenCalledWith(["w0"], expect.anything());
+    expect(prepares).toBe(1);
+  });
+
+  it("a refused edit record stages nothing else: no tag is prepared for it", async () => {
+    let tagPrepares = 0;
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", () =>
+        HttpResponse.json({
+          data: {
+            preparePostEdit: {
+              __typename: "PrepareContentPayload",
+              node: null,
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  code: "BAD_INPUT",
+                  message: "an edit of this content is already in flight",
+                  field: ["id"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+      gqlLink.mutation("PrepareTag", () => {
+        tagPrepares += 1;
+        return HttpResponse.json({
+          data: { prepareTag: { __typename: "PreparePayload", writes: writes(1, "TAG"), userErrors: [] } },
+        });
+      }),
+    );
+    const signer = draw();
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
+    fireEvent.click(await screen.findByTestId("postEdit.tags.add"));
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Name a tag" }), {
+      target: { value: "saltmaps" },
+    });
+    fireEvent.click(await screen.findByTestId(byNode("tagPicker.tag", "saltmaps")));
+    fireEvent.click(screen.getByTestId("tagPicker.done"));
+    await screen.findByTestId("postEdit.header");
+    fireEvent.click(sign());
+
+    await screen.findByTestId("post-edit-refused");
+    expect(tagPrepares).toBe(0);
+    expect(signer.signStaged).not.toHaveBeenCalled();
   });
 });

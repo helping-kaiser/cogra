@@ -310,9 +310,10 @@ replies (Q49): the reader unfolds a branch with its own
 `CommentReplies` read, so a post-detail read prices its comments
 once, not its comments times a reply page. A standing test
 replays the whole corpus under both postures and fails by
-operation name, and re-measures it by bisection so a document
-growing *into* the headroom fails before it grows past the
-ceiling. Both postures carry the *same* ceilings: a looser dev
+operation name on any validation error, a tripped budget or a
+document the schema refuses, and re-measures it by bisection
+so a document growing *into* the headroom fails before it grows
+past the ceiling. Both postures carry the *same* ceilings: a looser dev
 budget stops being a preview of release, and a document refused
 only in production is the failure this rule exists to prevent.
 
@@ -1435,7 +1436,7 @@ type User implements Node & Actor {
   invitedBy: Actor
   "Whether the viewer's reciprocal Opinion toward invitedBy exists —
    confirmed in the record mirror (latched on the landed application
-   row) or in flight as one of the viewer's staged writes. Drives
+   row) or in flight as one of the viewer's signed staged writes. Drives
    the first-login reciprocation prompt (auth.md \"Reciprocation is
    the joiner's own act\"). Vacuously true when invitedBy is null —
    and for any viewer but the account's own: the field exists only
@@ -4033,7 +4034,9 @@ reader chooses the **L1 view** — only what has landed — or the
 **L2 view**, which also counts the viewer's own acts in flight
 from the pre-commitment onward. Severance computes its batch
 against the L2 view, so severing and refetching reads `(0, 0)` at
-once rather than an epoch later.
+once rather than an epoch later. The faces at one depth of a
+document share one batch, a constant number of reads whatever the
+page's size.
 
 **The borrowed view's stance.** `borrowedStance: BorrowedStance`
 sits beside `viewerStance` on every stance-able node and serves a
@@ -4336,7 +4339,12 @@ input PreparePostInput {
  takes no edit: the edit would become its newest version and put
  words back where its author took them away, so it is refused
  BAD_INPUT at `id` — at prepare, and again at the pre-sign leg
- for an edit prepared while the removal ran."
+ for an edit prepared while the removal ran. One edit per post and
+ author is in flight (substrate.md §9), prepares arriving at the
+ same instant included: an earlier edit the author has not signed
+ is superseded — it expires, and its pre-signature answers
+ STAGED_WRITE_EXPIRED — and a signed one refuses this edit
+ BAD_INPUT at `id`."
 input PreparePostEditInput {
   id: UUID!
   title: String
@@ -4378,9 +4386,9 @@ input PrepareCommentInput {
   actAs: UUID
 }
 
-"Edit a Comment — the same complete-state edit a post's is, and the
- same refusal: a removed comment takes no edit (BAD_INPUT at
- `id`)."
+"Edit a Comment — the same complete-state edit a post's is, with the
+ same refusals: a removed comment takes no edit, and one edit per
+ comment and author is in flight (both BAD_INPUT at `id`)."
 input PrepareCommentEditInput {
   id: UUID!
   content: String!
@@ -4482,7 +4490,10 @@ actually carries. Each is refused field-level at its own path
  displayName included — a profile with no name written is
  presented by its handle. For a Collective's profile, actAs routes
  through its governed edit flow. The handle is L2 account state,
- not profile payload — see changeHandle."
+ not profile payload — see changeHandle. One update per author is
+ in flight, under the post edit's rule: an unsigned earlier update
+ is superseded, and a signed one refuses this update BAD_INPUT at
+ `input`."
 input PrepareProfileUpdateInput {
   displayName: String
   bio: String

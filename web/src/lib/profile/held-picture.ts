@@ -13,8 +13,17 @@
 // The flow RELEASES the pick through its own ways out rather than taking it
 // on arrival: React runs a state initialiser twice in development's strict
 // mode, and a take-once read would hand the second run nothing.
+//
+// The pick is the picking account's: when the tab's active account ends or
+// changes it is let go, so no other account is ever handed it to sign.
+
+import { onAccountChange } from "@/lib/session/account-change";
 
 let held: File | null = null;
+
+onAccountChange(() => {
+  held = null;
+});
 
 /** Holds the badge's pick for the flow that is about to open. */
 export function holdPicture(file: File): void {

@@ -693,6 +693,30 @@ describe("SavedScreen — search what you saved", () => {
     expect(screen.getByTestId("saved.searchField")).toBeInTheDocument();
   });
 
+  it("the_header_and_the_field_stand_as_one_gapless_block_in_the_collapsing_top", async () => {
+    // Saved.jsx stacks PageHeader and SearchBar with no gap of their own: the
+    // field's pill at 48 + 4 = 52, never pushed down by the region's column gap.
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    const top = screen.getByTestId("collapsing-top");
+    expect(top.children).toHaveLength(1);
+    const block = top.children[0]!;
+    expect(block).toContainElement(screen.getByTestId("saved.header"));
+    expect(block).toContainElement(screen.getByTestId("saved.searchField"));
+    expect(block.className).not.toMatch(/\bgap-/);
+  });
+
+  it("the_list_stands_8px_under_the_field_by_its_own_top_and_the_region_adds_none", async () => {
+    // FeedList's `padding: 8px 0 0` (_shared.jsx) is the list's own; a region
+    // `pb-2` on top of it doubled the step to 16.
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    const list = await screen.findByTestId("saved-list");
+    expect(list).toHaveClass("pt-2");
+    expect(screen.getByTestId("collapsing-top")).not.toHaveClass("pb-2");
+  });
+
   it("the_whole_list_is_read_with_no_query", async () => {
     const reads = serveSaved(() => page(THREE));
     renderWithProviders(<SavedScreen />, { store: signedIn() });
@@ -842,6 +866,29 @@ describe("SavedScreen — states", () => {
     expect(screen.getByTestId("saved.empty.title").className).not.toContain("text-error");
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     expect(screen.queryByTestId("saved.searchField")).not.toBeInTheDocument();
+  });
+
+  // THE NODE IS EmptyState's OWN BOX (EmptyState.jsx: `data-node` on the div
+  // padded `--space-2 0`), inside the board's unregistered `8px 24px` wrapper
+  // (SavedEmpty.jsx, SavedNone.jsx). jsdom has no layout; the harness measures.
+  it.each([
+    ["the empty state", [] as const, null],
+    ["the none state", THREE, "brackish cartography"],
+  ])("saved_empty_is_the_empty_states_own_box_in_%s", async (_, items, query) => {
+    serveSaved(({ query: asked }) => page(asked === null ? items : []));
+    renderWithProviders(<SavedScreen searchDebounceMs={0} />, { store: signedIn() });
+    if (query !== null) {
+      await screen.findByTestId("saved-list");
+      search(query);
+    }
+    const title = await screen.findByTestId("saved.empty.title");
+    const node = screen.getByTestId("saved.empty");
+    expect(title.parentElement).toBe(node);
+    expect(node.className.split(" ")).toEqual(expect.arrayContaining(["flex", "flex-col", "items-start", "gap-3", "py-2"]));
+    expect(node.className).not.toMatch(/\bp[xtl]-/);
+    expect(node.parentElement!.className.split(" ")).toEqual(expect.arrayContaining(["px-6", "py-2"]));
+    expect(node.parentElement!.hasAttribute("data-testid")).toBe(false);
+    expect(title.className).not.toMatch(/\bp[ytb]?-/);
   });
 
   it("a_failed_next_page_uses_the_load_more_fault", async () => {

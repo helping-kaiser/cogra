@@ -62,9 +62,8 @@ pub async fn current_profile(
 }
 
 /// The actor's current *landed* profile — [`current_profile`] with
-/// pending versions left out. An update is a delta, so its version row is
-/// merged onto this: what the graph has already accepted, never another
-/// update still in flight.
+/// pending versions left out: what an update landing without a pending
+/// row of its own is merged onto, and the name an author already holds.
 pub async fn landed_profile(
     pool: &PgPool,
     actor_id: Uuid,
@@ -125,6 +124,25 @@ pub async fn insert_profile_version(
     .await?
     .rows_affected()
         == 1)
+}
+
+/// Whether a version row of `actor_id` carries the authoring instant
+/// `created_at`, pending or landed. Only pending rows are unique on the
+/// instant, so the landing's insert branch asks this before appending a
+/// landed one.
+pub async fn has_version_at(
+    tx: &mut Transaction<'_, Postgres>,
+    actor_id: Uuid,
+    created_at: Timestamp,
+) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS (SELECT 1 FROM actor_profile_versions
+                          WHERE actor_id = $1 AND created_at = $2) AS "exists!""#,
+        actor_id,
+        created_at,
+    )
+    .fetch_one(&mut **tx)
+    .await
 }
 
 /// Confirm: writes the update record's landing coordinates onto the

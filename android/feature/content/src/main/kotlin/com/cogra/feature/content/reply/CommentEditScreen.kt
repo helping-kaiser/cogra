@@ -46,6 +46,7 @@ import com.cogra.core.designsystem.v2.atom.NoticePanel
 import com.cogra.core.designsystem.v2.atom.QuietNote
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.WizardHeader
+import com.cogra.core.designsystem.v2.compose.ActsFooter
 import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.DescribeSheet
 import com.cogra.core.designsystem.v2.compose.HelpTopic
@@ -67,7 +68,6 @@ import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.ReferencePickerHandlers
 import com.cogra.feature.content.TagPickerHandlers
 import com.cogra.feature.content.TopicEntry
-import com.cogra.feature.content.edit.ActsFooter
 import com.cogra.feature.content.edit.ActsSheet
 import com.cogra.feature.content.edit.ClipField
 import com.cogra.feature.content.edit.CoverField

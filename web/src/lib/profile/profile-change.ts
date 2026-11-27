@@ -16,12 +16,26 @@
 //
 // One change at a time: a profile is one record, and the seal's commit refuses
 // a second press while one signs.
+//
+// The change is the changing account's: several accounts share a tab
+// (auth.md "Multi-account device custody": material bound "to the account it
+// belongs to, never to a device-global slot"), so the line is kept beside the
+// account the tab was signed in as at the press, and stands only under that
+// account's head — hidden under any other, never erased by a switch, since
+// it "stands until Retry or the next change" (Profile.md:101) — read again
+// whenever the active account changes. Its Retry keeps that ORIGINAL owner and
+// does nothing while another account is active; an act whose owner is not
+// the active account when it would sign is not run, and ends as the owner's
+// failed line; an answer arriving after a switch settles the owner's line and
+// lays nothing. Its landing's snackbar confirms it only to that account.
 
 import { useSyncExternalStore } from "react";
 
 import { sealFaultOf, sealFaultOfResults } from "@/lib/compose/seal-fault";
+import { tokenStore } from "@/lib/session/token-store";
 import type { WriteResult } from "@/lib/signing/write-signer";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
+import { laySignedProfile, type SignedProfileChange } from "./signed-profile";
 
 /** What one signing of a profile change came to. */
 export type ProfileChangeOutcome =
@@ -60,10 +74,16 @@ export type ProfileChangeState =
 export const PROFILE_SIGNED = "Signed — your profile shows it now, still settling.";
 
 let state: ProfileChangeState | null = null;
+/** The account the tab was signed in as when the change was pressed. */
+let owner: string | null = null;
 let closed = false;
 /** Counts changes taken after their seal closed, so the profile reads itself again. */
 let landed = 0;
+/** Counts signings begun, so only the latest one answers into the slot. */
+let signings = 0;
 const listeners = new Set<() => void>();
+
+const isOwners = () => tokenStore.activeAccountId() === owner;
 
 function publish(next: ProfileChangeState | null): void {
   state = next;
@@ -72,7 +92,11 @@ function publish(next: ProfileChangeState | null): void {
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  const unsubscribeAccounts = tokenStore.subscribe(listener);
+  return () => {
+    listeners.delete(listener);
+    unsubscribeAccounts();
+  };
 }
 
 /**
@@ -84,12 +108,51 @@ function subscribe(listener: () => void): () => void {
  */
 export async function signProfileChange(
   run: () => Promise<ProfileChangeOutcome>,
-  { fromHead = false }: { fromHead?: boolean } = {},
+  { fromHead = false, signed }: { fromHead?: boolean; signed?: SignedProfileChange } = {},
+): Promise<ProfileChangeOutcome> {
+  return signFor(tokenStore.activeAccountId(), run, fromHead, signed);
+}
+
+/**
+ * The head's Retry of a change `by` pressed: the same change, for that same
+ * account, whichever account is active when it runs (the owner guard below).
+ */
+export function signProfileChangeFor(
+  by: string | null,
+  run: () => Promise<ProfileChangeOutcome>,
+  { signed }: { signed?: SignedProfileChange } = {},
+): Promise<ProfileChangeOutcome> {
+  return signFor(by, run, true, signed);
+}
+
+async function signFor(
+  by: string | null,
+  run: () => Promise<ProfileChangeOutcome>,
+  fromHead: boolean,
+  signed: SignedProfileChange | undefined,
 ): Promise<ProfileChangeOutcome> {
   // A Retry under the head has no seal to answer to.
   closed = fromHead;
+  owner = by;
+  const mine = ++signings;
   publish({ kind: "signing" });
-  const outcome = await run().catch((): ProfileChangeOutcome => ({ kind: "offline" }));
+  // THE OWNER GUARD, before the signing: an act whose account is no longer
+  // the active one is not run — it did not sign, and ends as its owner's
+  // failed line, standing under that account's head only.
+  const outcome =
+    tokenStore.activeAccountId() === by
+      ? await run().catch((): ProfileChangeOutcome => ({ kind: "offline" }))
+      : ({ kind: "offline" } as const);
+  // A change taken is the profile's from now on (ProfileEditSeal.md:45): the
+  // head wears what was signed until a read asked after it answers — laid
+  // only while the tab is still the signing account's, whichever seal or
+  // head is listening, and in the order the changes were signed.
+  if (outcome.kind === "taken" && signed !== undefined && by !== null && tokenStore.activeAccountId() === by) {
+    laySignedProfile(by, signed, mine);
+  }
+  // A later change was pressed meanwhile — another account's, it may be:
+  // the slot is that change's now.
+  if (mine !== signings) return outcome;
   if (!closed) {
     // The seal is still there: its own states say what happened.
     publish(null);
@@ -98,11 +161,16 @@ export async function signProfileChange(
   if (outcome.kind === "taken") {
     landed += 1;
     publish(null);
-    carrySnackbar(PROFILE_SIGNED);
+    if (isOwners()) carrySnackbar(PROFILE_SIGNED);
   } else {
     publish({
       kind: "failed",
-      retry: () => void signProfileChange(run, { fromHead: true }),
+      // The same change, for the same account: pressed once another
+      // account is active, it does nothing — nothing signed, laid or drawn.
+      retry: () => {
+        if (tokenStore.activeAccountId() !== by) return;
+        void signProfileChangeFor(by, run, { signed });
+      },
     });
   }
   return outcome;
@@ -113,9 +181,14 @@ export function closeProfileChangeSeal(): void {
   if (state?.kind === "signing") closed = true;
 }
 
+/** The head's line now, outside React; null where nothing stands there. */
+export function readProfileChange(): ProfileChangeState | null {
+  return isOwners() ? state : null;
+}
+
 /** The head's line, null where nothing stands there. */
 export function useProfileChange(): ProfileChangeState | null {
-  return useSyncExternalStore(subscribe, () => state, () => null);
+  return useSyncExternalStore(subscribe, readProfileChange, () => null);
 }
 
 /** Bumps each time a closed seal's change is taken — the profile's cue to read itself again. */
@@ -125,6 +198,7 @@ export function useProfileChangesLanded(): number {
 
 export function resetProfileChangeForTests(): void {
   state = null;
+  owner = null;
   closed = false;
   landed = 0;
 }

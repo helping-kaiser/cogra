@@ -5,9 +5,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import com.cogra.domain.media.CropWindow
 
 /**
@@ -27,13 +24,13 @@ fun AvatarFlowRoute(
     onSigned: () -> Unit,
     onLeave: () -> Unit,
     onFramed: ((CropWindow?) -> Unit)? = null,
+    /** The seal's key-absent notice opens the app's restore route (AvatarSeal.md:53). */
+    onRestoreKey: () -> Unit = {},
     viewModel: AvatarFlowViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var helpOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(uri) {
-        viewModel.start()
         viewModel.onPicked(uri)
     }
 
@@ -50,14 +47,17 @@ fun AvatarFlowRoute(
             if (onFramed != null) onFramed(state.crop?.window) else viewModel.onNext()
         },
         // The arrow steps a stage; from the first there is nowhere to step
-        // to, and the gesture leaves — the draft here is only the pick.
+        // to, and the gesture leaves — the draft here is only the pick. From
+        // the press it closes the seal, and the change goes on (AvatarSeal.md:65).
         onBack = { if (!viewModel.onBack()) onLeave() },
-        onLeave = onLeave,
+        onLeave = {
+            viewModel.seal.onLeave()
+            onLeave()
+        },
         onCropCommitted = viewModel::onCropCommitted,
-        onSign = viewModel::onSign,
-        onRetryUpload = viewModel::onRetryUpload,
-        onOpenHelp = { helpOpen = true },
-        helpOpen = helpOpen,
-        onCloseHelp = { helpOpen = false },
+        onSign = viewModel.seal::onSign,
+        onRetryUpload = viewModel.seal::onRetryUpload,
+        onNotNow = viewModel.seal::onNotNow,
+        onRestoreKey = onRestoreKey,
     )
 }

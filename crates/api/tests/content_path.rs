@@ -100,6 +100,61 @@ impl Rig {
         );
     }
 
+    /// The first half of an ingestion pass alone (`ingest::ingest_pending`
+    /// up to its promotions): every epoch since the cursor mirrored and its
+    /// staged writes marked landed, and then the pass stops — as one does
+    /// when a later epoch's step fails, or the process ends, before the
+    /// confirm-side promotions run.
+    async fn close_and_mirror_unpromoted(&self) -> Vec<staged::PromotedWrite> {
+        self.standin.close_epoch().await.expect("closes");
+        let cursor = mirror::last_ingested_epoch(&self.pool)
+            .await
+            .expect("reads cursor");
+        let packages = self
+            .boundary
+            .epochs_since(cursor)
+            .await
+            .expect("reads epochs");
+        let mut promoted = Vec::new();
+        for package in &packages {
+            mirror::ingest_epoch(&self.pool, package)
+                .await
+                .expect("mirrors");
+            promoted.extend(
+                staged::promote_landed(&self.pool, package.epoch)
+                    .await
+                    .expect("promotes"),
+            );
+        }
+        promoted
+    }
+
+    /// Signs and relays one prepared content write, then runs a pass that
+    /// marks it landed and stops before its promotion.
+    async fn land_interrupted(&self, prepared: &content::PreparedContent, key: &ActorKey) {
+        self.sign_and_relay(prepared.writes[0].id, key).await;
+        let landed = self.close_and_mirror_unpromoted().await;
+        assert!(
+            landed.iter().any(|w| w.id == prepared.writes[0].id),
+            "the interrupted pass marked the write landed"
+        );
+    }
+
+    /// One pass of the server loop's driver at `at`: the stranded checks as
+    /// `cadence` decides, the pass recorded back into it.
+    async fn drive(
+        &self,
+        cadence: &mut api::ingest::StrandedCadence,
+        at: std::time::Instant,
+    ) -> api::ingest::IngestOutcome {
+        let outcome =
+            api::ingest::ingest_pass(&self.boundary, &self.pool, GC, cadence.checks_at(at))
+                .await
+                .expect("ingests");
+        cadence.record(at, Some(&outcome));
+        outcome
+    }
+
     /// Drives one prepared content write through signatures and confirm.
     async fn land(&self, prepared: &content::PreparedContent, key: &ActorKey) {
         self.sign_and_relay(prepared.writes[0].id, key).await;
@@ -1383,6 +1438,191 @@ async fn an_unsigned_edit_is_superseded_by_the_next(pool: PgPool) {
         .expect("reads")
         .expect("post");
     assert_eq!(post.title.as_deref(), Some("Two"));
+}
+
+/// Holds the author's sequence-counter row in a transaction of the
+/// test's own. Every prepare's transaction updates that row before it
+/// stages anything, so two prepares started while it is held both stop at
+/// the start of their write: after everything they check outside it,
+/// before anything they check inside it. Releasing it lets them write one
+/// after the other — the interleaving "A checks, B checks, A writes, B
+/// writes", stepped by a lock instead of by timing.
+async fn hold_author_counter(
+    pool: &PgPool,
+    address: &str,
+) -> sqlx::Transaction<'static, sqlx::Postgres> {
+    let mut gate = pool.begin().await.expect("gate");
+    sqlx::query("SELECT 1 FROM author_seq_counters WHERE author = $1 FOR UPDATE")
+        .bind(address)
+        .fetch_one(&mut *gate)
+        .await
+        .expect("the author has prepared before, so the row exists");
+    gate
+}
+
+/// Releases the gate once both prepares wait on a lock, read from
+/// PostgreSQL's own view. A race that only slept could fall into the
+/// serial order and pass whatever the code does; this fails instead when
+/// the two never meet.
+async fn release_when_both_wait(pool: &PgPool, gate: sqlx::Transaction<'static, sqlx::Postgres>) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    loop {
+        let waiting: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pg_stat_activity
+             WHERE datname = current_database() AND wait_event_type = 'Lock'",
+        )
+        .fetch_one(pool)
+        .await
+        .expect("reads pg_stat_activity");
+        if waiting >= 2 {
+            break;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "the two prepares never both waited at the gate; the race ran serially"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+    gate.rollback().await.expect("releases the gate");
+}
+
+/// Of two staged writes prepared at once toward one chain head, the one
+/// left live and the one superseded. Both live is two signable records
+/// declaring the same parent: a branch, which neither advances the head
+/// (substrate.md §9).
+async fn live_and_superseded(rig: &Rig, ids: [Uuid; 2]) -> (Uuid, Uuid) {
+    let first = staged::load(&rig.pool, ids[0]).await.expect("loads").state;
+    let second = staged::load(&rig.pool, ids[1]).await.expect("loads").state;
+    match (first, second) {
+        (staged::StagedState::AwaitingPreSign, staged::StagedState::Expired) => (ids[0], ids[1]),
+        (staged::StagedState::Expired, staged::StagedState::AwaitingPreSign) => (ids[1], ids[0]),
+        other => panic!("one prepare live and the other superseded, got {other:?}"),
+    }
+}
+
+/// The superseded staging can no longer be signed — the answer an edit
+/// prepared and then overtaken by a later one meets today.
+async fn assert_unsignable(rig: &Rig, id: Uuid, key: &ActorKey) {
+    let write = staged::load(&rig.pool, id).await.expect("loads");
+    let pre = common::l1::proposal::PreSigned::sign(key, write.proposal);
+    assert!(
+        matches!(
+            staged::record_pre_signed(&rig.pool, id, &PreSignedParts::from(&pre)).await,
+            Err(staged::StagedError::WrongState { actual, .. }) if actual == "expired"
+        ),
+        "a superseded staging can no longer be signed"
+    );
+}
+
+/// Two edits of one post prepared at the same moment meet the
+/// serialization one after the other (substrate.md §9; post.md §4): the
+/// second to write supersedes the first, unsigned, exactly as an edit
+/// arriving after an unsigned one does, so the two can never both be
+/// signed against the same parent.
+///
+/// Two edits of one post prepared at once leave one live and the other superseded, as if the second arrived after the first, so the chain never branches.
+/// ´claim:content:concurrent-post-edits-serialize´
+#[sqlx::test(migrations = "../../migrations")]
+async fn two_post_edits_prepared_at_once_leave_one_live(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let edit = |title: &'static str| PostEditDraft {
+        id: post_id,
+        title: Some(title.into()),
+        description: None,
+        content: Some("Body".into()),
+        attachments: vec![],
+        sensitive: Default::default(),
+        p_directed: 0.0,
+    };
+
+    let gate = hold_author_counter(&rig.pool, &alice_key.address()).await;
+    let (one, two, ()) = tokio::join!(
+        content::prepare_post_edit(&rig.pool, &rig.boundary, STAGING, alice, edit("One")),
+        content::prepare_post_edit(&rig.pool, &rig.boundary, STAGING, alice, edit("Two")),
+        release_when_both_wait(&rig.pool, gate),
+    );
+    let one = one.expect("the first edit prepares");
+    let two = two.expect("the second edit prepares");
+    let (live, superseded) = live_and_superseded(&rig, [one.writes[0].id, two.writes[0].id]).await;
+    assert_unsignable(&rig, superseded, &alice_key).await;
+
+    let landing = if live == one.writes[0].id { &one } else { &two };
+    rig.land(landing, &alice_key).await;
+    let title = if live == one.writes[0].id {
+        "One"
+    } else {
+        "Two"
+    };
+    let post = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert_eq!(post.title.as_deref(), Some(title));
+}
+
+/// The same serialization holds for a comment's edit chain: two edits of
+/// one comment prepared at once leave one live and the other superseded.
+///
+/// Two edits of one comment prepared at once leave one live and the other superseded, so the comment's chain never branches.
+/// ´claim:content:concurrent-comment-edits-serialize´
+#[sqlx::test(migrations = "../../migrations")]
+async fn two_comment_edits_prepared_at_once_leave_one_live(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let (bob, bob_key) = rig.funded_actor("bob").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let comment = content::prepare_comment(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        bob,
+        CommentDraft {
+            target: post_id,
+            content: "First!".into(),
+            license: license(),
+            p_directed: 0.3,
+            tags: vec![],
+            references: vec![],
+            p_interest: 0.6,
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("prepares comment");
+    rig.land(&comment, &bob_key).await;
+    let edit = |content: &'static str| CommentEditDraft {
+        id: comment.node,
+        content: content.into(),
+        attachments: vec![],
+        sensitive: Default::default(),
+    };
+
+    let gate = hold_author_counter(&rig.pool, &bob_key.address()).await;
+    let (one, two, ()) = tokio::join!(
+        content::prepare_comment_edit(&rig.pool, &rig.boundary, STAGING, bob, edit("One")),
+        content::prepare_comment_edit(&rig.pool, &rig.boundary, STAGING, bob, edit("Two")),
+        release_when_both_wait(&rig.pool, gate),
+    );
+    let one = one.expect("the first edit prepares");
+    let two = two.expect("the second edit prepares");
+    let (live, superseded) = live_and_superseded(&rig, [one.writes[0].id, two.writes[0].id]).await;
+    assert_unsignable(&rig, superseded, &bob_key).await;
+
+    let landing = if live == one.writes[0].id { &one } else { &two };
+    rig.land(landing, &bob_key).await;
+    let content = if live == one.writes[0].id {
+        "One"
+    } else {
+        "Two"
+    };
+    let row = content_store::comment(&rig.pool, comment.node)
+        .await
+        .expect("reads")
+        .expect("comment");
+    assert_eq!(row.content, content);
 }
 
 /// Bob comments on Alice's post — a genesis Review minting the Comment on
@@ -2765,4 +3005,531 @@ mod galleries {
             other => panic!("expected a body refusal, got {other}"),
         }
     }
+}
+
+/// The edit draft every stranded-landing test below prepares.
+fn titled_edit(id: Uuid, title: &str) -> PostEditDraft {
+    PostEditDraft {
+        id,
+        title: Some(title.into()),
+        description: None,
+        content: Some("Body".into()),
+        attachments: vec![],
+        sensitive: Default::default(),
+        p_directed: 0.0,
+    }
+}
+
+/// A reply draft toward `target`.
+fn reply(target: Uuid, content: &str) -> CommentDraft {
+    CommentDraft {
+        target,
+        content: content.into(),
+        license: license(),
+        p_directed: 0.1,
+        tags: vec![],
+        references: vec![],
+        p_interest: 0.1,
+        attachments: vec![],
+        sensitive: Default::default(),
+    }
+}
+
+/// A new post whose write a pass marked landed and never promoted has no
+/// landing order, so every listing serves it in the pending band above
+/// every landed post, for ever. Confirm drops that mark (data-model.md
+/// "Staged writes", "Content nodes"), so the next pass promotes it.
+///
+/// A new post left unpromoted by an interrupted pass is promoted by the next pass, so it leaves the pending band.
+/// ´claim:content:a-stranded-post-is-promoted-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let prepared = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        PostDraft {
+            title: Some("Stranded".into()),
+            description: None,
+            content: Some("Body".into()),
+            license: license(),
+            p_directed: 0.1,
+            tags: vec![],
+            references: vec![],
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("prepares post");
+    rig.land_interrupted(&prepared, &alice_key).await;
+    rig.close_and_ingest().await;
+
+    let post = content_store::post(&rig.pool, prepared.node)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert!(post.order.is_some(), "the post is still pending: {post:?}");
+    assert!(!post.version_pending);
+}
+
+/// A stranded draft for the cadence tests: a new post whose write a pass
+/// marked landed and never promoted, outside the driver under test.
+async fn strand_a_post(rig: &Rig, alice: Uuid, alice_key: &ActorKey) -> Uuid {
+    let prepared = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        PostDraft {
+            title: Some("Stranded".into()),
+            description: None,
+            content: Some("Body".into()),
+            license: license(),
+            p_directed: 0.1,
+            tags: vec![],
+            references: vec![],
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("prepares post");
+    rig.land_interrupted(&prepared, alice_key).await;
+    prepared.node
+}
+
+async fn post_is_landed(rig: &Rig, node: Uuid) -> bool {
+    content_store::post(&rig.pool, node)
+        .await
+        .expect("reads")
+        .expect("post")
+        .order
+        .is_some()
+}
+
+/// The server loop's driver runs the stranded checks on its first pass,
+/// skips them on an idle pass inside its interval — the stranded post
+/// stays pending there — and runs them again on the next pass that
+/// ingests an epoch, which promotes it.
+///
+/// The server loop runs the stranded checks on its first pass and on a pass that ingests an epoch, and skips them on an idle pass inside its interval.
+/// ´claim:content:the-loop-checks-stranded-writes-on-epoch-passes´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_loop_skips_stranded_checks_on_idle_passes_and_heals_on_the_next_epoch(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let start = std::time::Instant::now();
+    let mut cadence = api::ingest::StrandedCadence::new(std::time::Duration::from_secs(60));
+
+    rig.drive(&mut cadence, start).await;
+    assert_eq!(cadence.checks_run(), 1, "the first pass checks");
+
+    let node = strand_a_post(&rig, alice, &alice_key).await;
+    let idle = rig
+        .drive(&mut cadence, start + std::time::Duration::from_secs(2))
+        .await;
+    assert_eq!(idle.epochs, 0);
+    assert_eq!(
+        cadence.checks_run(),
+        1,
+        "an idle pass inside the interval does not check"
+    );
+    assert!(
+        !post_is_landed(&rig, node).await,
+        "nothing healed the post yet"
+    );
+
+    rig.standin.close_epoch().await.expect("closes");
+    let epoch = rig
+        .drive(&mut cadence, start + std::time::Duration::from_secs(4))
+        .await;
+    assert_eq!(epoch.epochs, 1);
+    assert_eq!(cadence.checks_run(), 2, "an epoch pass checks");
+    assert!(
+        post_is_landed(&rig, node).await,
+        "the epoch pass promoted the post"
+    );
+    assert!(
+        epoch.promotion_failures.is_empty(),
+        "{:?}",
+        epoch.promotion_failures
+    );
+}
+
+/// With no epoch at all, the stranded post waits at most the interval:
+/// the first idle pass past it runs the checks and promotes the post.
+///
+/// An idle server loop runs the stranded checks once its interval has passed, so a stranded write waits at most that long.
+/// ´claim:content:an-idle-loop-checks-stranded-writes-within-its-interval´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_idle_loop_heals_a_stranded_post_once_its_interval_passes(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let start = std::time::Instant::now();
+    let interval = std::time::Duration::from_secs(60);
+    let mut cadence = api::ingest::StrandedCadence::new(interval);
+
+    rig.drive(&mut cadence, start).await;
+    let node = strand_a_post(&rig, alice, &alice_key).await;
+    let idle = rig.drive(&mut cadence, start + interval).await;
+    assert_eq!(idle.epochs, 0);
+    assert_eq!(
+        cadence.checks_run(),
+        2,
+        "the idle pass past the interval checks"
+    );
+    assert!(post_is_landed(&rig, node).await, "and promoted the post");
+}
+
+/// A post edit whose write a pass marked landed and never promoted keeps
+/// its version pending, and the post read puts a pending version first —
+/// so it would outrank every later landed edit for ever. The next pass
+/// promotes it, and the later edit stands.
+///
+/// A post edit left unpromoted by an interrupted pass is promoted by the next pass, so a later landed edit is not outranked by it.
+/// ´claim:content:a-stranded-post-edit-is-promoted-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_edit_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let first = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        titled_edit(post_id, "Stranded"),
+    )
+    .await
+    .expect("prepares the first edit");
+    rig.land_interrupted(&first, &alice_key).await;
+    let later = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        titled_edit(post_id, "Later"),
+    )
+    .await
+    .expect("the landed edit no longer holds the chain");
+    rig.land(&later, &alice_key).await;
+
+    let post = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert!(!post.version_pending, "a version stays pending: {post:?}");
+    assert_eq!(post.title.as_deref(), Some("Later"));
+    let pending: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM post_versions WHERE post_id = $1 AND pending")
+            .bind(post_id)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("counts");
+    assert_eq!(pending, 0);
+}
+
+/// A new comment whose write a pass marked landed and never promoted has
+/// no landing order, so the thread serves it among the pending replies
+/// for ever. The next pass promotes it.
+///
+/// A new comment left unpromoted by an interrupted pass is promoted by the next pass, so it leaves the pending replies.
+/// ´claim:content:a-stranded-comment-is-promoted-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_comment_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let comment = content::prepare_comment(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        reply(post_id, "Stranded"),
+    )
+    .await
+    .expect("prepares comment");
+    rig.land_interrupted(&comment, &alice_key).await;
+    rig.close_and_ingest().await;
+
+    let row = content_store::comment(&rig.pool, comment.node)
+        .await
+        .expect("reads")
+        .expect("comment");
+    assert!(row.order.is_some(), "the comment is still pending: {row:?}");
+    assert!(!row.version_pending);
+}
+
+/// A comment edit whose write a pass marked landed and never promoted
+/// keeps its version pending, outranking every later landed edit, until
+/// the next pass promotes it.
+///
+/// A comment edit left unpromoted by an interrupted pass is promoted by the next pass, so a later landed edit is not outranked by it.
+/// ´claim:content:a-stranded-comment-edit-is-promoted-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_comment_edit_left_pending_by_an_interrupted_pass_lands_on_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let comment = content::prepare_comment(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        reply(post_id, "First"),
+    )
+    .await
+    .expect("prepares comment");
+    rig.land(&comment, &alice_key).await;
+    let edit = |content: &str| CommentEditDraft {
+        id: comment.node,
+        content: content.into(),
+        attachments: vec![],
+        sensitive: Default::default(),
+    };
+    let first =
+        content::prepare_comment_edit(&rig.pool, &rig.boundary, STAGING, alice, edit("Stranded"))
+            .await
+            .expect("prepares the first edit");
+    rig.land_interrupted(&first, &alice_key).await;
+    let later =
+        content::prepare_comment_edit(&rig.pool, &rig.boundary, STAGING, alice, edit("Later"))
+            .await
+            .expect("the landed edit no longer holds the chain");
+    rig.land(&later, &alice_key).await;
+
+    let row = content_store::comment(&rig.pool, comment.node)
+        .await
+        .expect("reads")
+        .expect("comment");
+    assert!(!row.version_pending, "a version stays pending: {row:?}");
+    assert_eq!(row.content, "Later");
+}
+
+/// Expires a signed content write, taking its pending display rows with
+/// it, then runs a pass that marks its late-landing record landed and
+/// stops before the promotion's insert branch writes the rows again.
+/// Returns that pass's landed writes, for an overlapping confirm.
+async fn land_after_expiry_interrupted(
+    rig: &Rig,
+    prepared: &content::PreparedContent,
+    key: &ActorKey,
+) -> Vec<staged::PromotedWrite> {
+    let id = prepared.writes[0].id;
+    rig.sign_and_relay(id, key).await;
+    staged::expire_one(&rig.pool, id, 0).await.expect("expires");
+    let landed = rig.close_and_mirror_unpromoted().await;
+    assert!(
+        landed.iter().any(|w| w.id == id),
+        "the interrupted pass marked the write landed"
+    );
+    landed
+}
+
+/// Two full passes, then a confirm of `landed` overlapping them — the
+/// dev CLI's pass beside the live loop. The passes must write the node's
+/// missing version, leaving it `rows` rows, and the overlap none more.
+async fn heal_twice_and_overlap(
+    rig: &Rig,
+    landed: &[staged::PromotedWrite],
+    (table, column, node): (&str, &str, Uuid),
+    rows: i64,
+) {
+    let [write] = landed else {
+        panic!("the interrupted pass landed one write: {landed:?}");
+    };
+    rig.close_and_ingest().await;
+    rig.close_and_ingest().await;
+    assert_eq!(
+        version_rows(&rig.pool, table, column, node).await,
+        rows,
+        "the next passes leave the landed write unwritten"
+    );
+    let failures = content::land_promoted(&rig.pool, landed).await;
+    assert!(failures.is_empty(), "the overlap failed: {failures:?}");
+    assert_eq!(
+        version_rows(&rig.pool, table, column, node).await,
+        rows,
+        "a confirm overlapping the passes appends a row"
+    );
+    assert!(
+        staged::landed_without_content_row(&rig.pool)
+            .await
+            .expect("reads")
+            .is_empty(),
+        "a written write is chosen again"
+    );
+    assert_landed_as_its_record(&rig.pool, (table, column, node), write).await;
+}
+
+/// Asserts the version row `write` owns stands under its own record's
+/// landing coordinates, keyed by its authoring instant, not pending —
+/// the key every read orders versions by.
+async fn assert_landed_as_its_record(
+    pool: &PgPool,
+    (table, column, node): (&str, &str, Uuid),
+    write: &staged::PromotedWrite,
+) {
+    let authored = staged::load(pool, write.id)
+        .await
+        .expect("loads")
+        .pre_signed_at
+        .expect("signed");
+    let record = mirror::record_meta(pool, &write.act_id)
+        .await
+        .expect("reads")
+        .expect("mirrored")
+        .landing();
+    let row: (Option<i64>, Option<i64>, bool) = sqlx::query_as(&format!(
+        "SELECT landed_epoch, position, pending FROM {table} WHERE {column} = $1 AND created_at = $2"
+    ))
+    .bind(node)
+    .bind(authored)
+    .fetch_one(pool)
+    .await
+    .expect("the write's own version row");
+    assert_eq!(
+        row,
+        (Some(record.landed_epoch), Some(record.position), false),
+        "the written row stands under its record's coordinates"
+    );
+}
+
+/// The version rows one node holds, pending and landed alike.
+async fn version_rows(pool: &PgPool, table: &str, column: &str, node: Uuid) -> i64 {
+    sqlx::query_scalar(&format!("SELECT COUNT(*) FROM {table} WHERE {column} = $1"))
+        .bind(node)
+        .fetch_one(pool)
+        .await
+        .expect("counts")
+}
+
+/// A post landing after its pending rows expired is promoted by the
+/// insert branch alone. A pass that marks the write landed and stops
+/// before that insert leaves no display row at all — nothing pending to
+/// retry, and no later pass marks the write landed again — so the record
+/// stands on L1 and in the mirror while the post never shows. The next
+/// pass writes the rows, once.
+///
+/// A post landing after its expiry whose promotion never ran is written by the next pass, once.
+/// ´claim:content:an-unwritten-late-post-is-written-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let prepared = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        PostDraft {
+            title: Some("Late".into()),
+            description: None,
+            content: Some("Body".into()),
+            license: license(),
+            p_directed: 0.1,
+            tags: vec![],
+            references: vec![],
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("prepares post");
+    let landed = land_after_expiry_interrupted(&rig, &prepared, &alice_key).await;
+    assert!(
+        content_store::post(&rig.pool, prepared.node)
+            .await
+            .expect("reads")
+            .is_none(),
+        "expiry took the pending rows"
+    );
+
+    heal_twice_and_overlap(
+        &rig,
+        &landed,
+        ("post_versions", "post_id", prepared.node),
+        1,
+    )
+    .await;
+
+    let post = content_store::post(&rig.pool, prepared.node)
+        .await
+        .expect("reads")
+        .expect("the landed post has no display row");
+    assert!(post.order.is_some());
+    assert!(!post.version_pending);
+    assert_eq!(post.title.as_deref(), Some("Late"));
+}
+
+/// The edit twin: an edit landing after its pending version expired,
+/// whose insert never ran, leaves the post showing the text before it.
+/// The next pass appends the edit's version, once.
+///
+/// A post edit landing after its expiry whose promotion never ran is written by the next pass, once.
+/// ´claim:content:an-unwritten-late-post-edit-is-written-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_edit_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let edit = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        titled_edit(post_id, "Late"),
+    )
+    .await
+    .expect("prepares the edit");
+    let landed = land_after_expiry_interrupted(&rig, &edit, &alice_key).await;
+
+    heal_twice_and_overlap(&rig, &landed, ("post_versions", "post_id", post_id), 2).await;
+
+    let post = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert_eq!(post.title.as_deref(), Some("Late"), "the edit never shows");
+    assert!(!post.version_pending);
+}
+
+/// The comment twin of the post case.
+///
+/// A comment landing after its expiry whose promotion never ran is written by the next pass, once.
+/// ´claim:content:an-unwritten-late-comment-is-written-by-the-next-pass´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_comment_landing_after_expiry_left_unwritten_is_written_by_the_next_pass(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let comment = content::prepare_comment(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        reply(post_id, "Late"),
+    )
+    .await
+    .expect("prepares comment");
+    let landed = land_after_expiry_interrupted(&rig, &comment, &alice_key).await;
+
+    heal_twice_and_overlap(
+        &rig,
+        &landed,
+        ("comment_versions", "comment_id", comment.node),
+        1,
+    )
+    .await;
+
+    let row = content_store::comment(&rig.pool, comment.node)
+        .await
+        .expect("reads")
+        .expect("the landed comment has no display row");
+    assert!(row.order.is_some());
+    assert_eq!(row.content, "Late");
 }

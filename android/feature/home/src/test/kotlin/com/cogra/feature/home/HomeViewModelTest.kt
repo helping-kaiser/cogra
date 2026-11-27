@@ -356,6 +356,25 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun resumeWithoutTheKeyNeverCrashesAndKeepsTheMaterialParked() = homeTest {
+        val pre = actor.preSign(
+            com.cogra.crypto.decodeProposal(com.cogra.domain.testing.testProposalBytes(actor, 9u)),
+        )
+        identity.saveHandshake("w9", pre)
+        identity.seed = null
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.pendingHandshakes).isEqualTo(1)
+
+        // The key is elsewhere (KeyElsewhere.md): nothing signs, and the
+        // handshake stays parked for the key's return.
+        vm.onResumePending()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.pendingHandshakes).isEqualTo(1)
+        assertThat(identity.handshakeIds()).containsExactly("w9")
+    }
+
+    @Test
     fun pullToRefreshRereadsTheProfile() = homeTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()

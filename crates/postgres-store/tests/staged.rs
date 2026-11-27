@@ -912,37 +912,50 @@ async fn a_record_landing_after_expiry_still_promotes(pool: PgPool) {
     );
 }
 
-/// A staged write answers as live for its own actor and only at its own
-/// target; once expired it is a tombstone and answers no longer.
+/// A staged write answers only once its author signed it — pre-signed, or
+/// carried to sign with the vouch-in batch — for its own actor at its own
+/// target; a prepare nobody signed is no act in flight, and once expired a
+/// signed one is a tombstone and answers no longer.
 ///
-/// A staged write answers as live only for its own actor at its own target, and never once expired.
-/// ´claim:staged:a-live-write-answers-only-for-its-author-at-its-target´
+/// A staged write answers only once signed or carried, only for its own actor at its own target, and never once expired.
+/// ´claim:staged:a-signed-write-answers-only-for-its-author-at-its-target´
 #[sqlx::test(migrations = "../../migrations")]
-async fn has_live_targeting_sees_only_live_writes_at_the_target(pool: PgPool) {
+async fn has_signed_targeting_sees_only_signed_writes_at_the_target(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
     let other_id = actor(&pool, "carol", "carol").await;
+    let signed = |who: Uuid, target: &'static str| {
+        let pool = pool.clone();
+        async move {
+            staged::has_signed_targeting(&pool, who, Family::Opinion, target)
+                .await
+                .expect("query")
+        }
+    };
     let id = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
+    assert!(
+        !signed(actor_id, "prof:bob").await,
+        "a prepare nobody signed is not in flight"
+    );
 
-    let hit = staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:bob")
+    staged::record_pre_signed(&pool, id, &pre_parts())
         .await
-        .expect("query");
-    assert!(hit);
-    assert!(
-        !staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:carol")
-            .await
-            .expect("query")
-    );
-    assert!(
-        !staged::has_live_targeting(&pool, other_id, Family::Opinion, "prof:bob")
-            .await
-            .expect("query")
-    );
+        .expect("pre-sign");
+    assert!(signed(actor_id, "prof:bob").await);
+    assert!(!signed(actor_id, "prof:carol").await);
+    assert!(!signed(other_id, "prof:bob").await);
 
     staged::expire_one(&pool, id, 0).await.expect("expires");
+    assert!(!signed(actor_id, "prof:bob").await);
+
+    let carried = stage(&pool, actor_id, &proposal("alice", 1), 0).await;
+    sqlx::query("UPDATE staged_writes SET carried = true WHERE id = $1")
+        .bind(carried)
+        .execute(&pool)
+        .await
+        .expect("carry");
     assert!(
-        !staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:bob")
-            .await
-            .expect("query")
+        signed(actor_id, "prof:bob").await,
+        "a carried act signs with the vouch-in batch, so it is in flight"
     );
 }
 
@@ -1021,6 +1034,125 @@ async fn superseding_expires_only_unsigned_chained_writes(pool: PgPool) {
     );
     assert_eq!(state(signed).await, StagedState::Sealing);
     assert!(pending(pool.clone(), actor_id).await);
+}
+
+/// Waits until `n` backends of this test's database wait on a lock, read
+/// from PostgreSQL's own view, and fails when they never do.
+async fn wait_for_lock_waiters(pool: &PgPool, n: i64) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    loop {
+        let waiting: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pg_stat_activity
+             WHERE datname = current_database() AND wait_event_type = 'Lock'",
+        )
+        .fetch_one(pool)
+        .await
+        .expect("reads pg_stat_activity");
+        if waiting >= n {
+            return;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "no backend ever waited; the race ran serially"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+}
+
+/// The guard on the staging transaction answers as the two pool-side
+/// steps do in sequence: an unsigned predecessor is superseded and the
+/// way is free, a signed one is in flight.
+///
+/// The staging-transaction guard supersedes an unsigned predecessor and reports a signed one in flight, exactly as the pool-side steps answer in sequence.
+/// ´claim:staged:the-staging-guard-answers-as-the-pool-steps´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_staging_guard_answers_as_the_pool_steps_do(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let guard = |pool: PgPool| async move {
+        let mut tx = pool.begin().await.expect("tx");
+        staged::allocate_seq(&mut tx, "alice").await.expect("seq");
+        let in_flight =
+            staged::chained_edit_in_flight(&mut tx, actor_id, Family::Opinion, "prof:bob", 7)
+                .await
+                .expect("guard");
+        tx.commit().await.expect("commit");
+        in_flight
+    };
+
+    let abandoned = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
+    assert!(
+        !guard(pool.clone()).await,
+        "an unsigned staging holds nothing"
+    );
+    assert_eq!(
+        staged::load(&pool, abandoned).await.expect("loads").state,
+        StagedState::Expired
+    );
+
+    let signed = stage(&pool, actor_id, &proposal("alice", 1), 0).await;
+    staged::record_pre_signed(&pool, signed, &pre_parts())
+        .await
+        .expect("pre-sign");
+    assert!(guard(pool.clone()).await, "a signed staging is in flight");
+    assert_eq!(
+        staged::load(&pool, signed).await.expect("loads").state,
+        StagedState::Sealing
+    );
+}
+
+/// Two staging transactions of one author run their guards one after the
+/// other: the second waits at the counter row until the first commits its
+/// staged write, then sees it and supersedes it. Without that wait both
+/// guards pass before either write lands and two writes stand on one
+/// chain head.
+///
+/// A second staging transaction's guard waits for the first to commit and then sees its write, so two writes never both stand on one chain head.
+/// ´claim:staged:concurrent-staging-guards-serialize´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_second_staging_guard_waits_for_the_first_write(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let mut first = pool.begin().await.expect("tx");
+    let seq = staged::allocate_seq(&mut first, "alice")
+        .await
+        .expect("seq");
+    assert!(
+        !staged::chained_edit_in_flight(&mut first, actor_id, Family::Opinion, "prof:bob", 7)
+            .await
+            .expect("guard")
+    );
+    let first_id = Uuid::new_v4();
+    staged::insert(
+        &mut first,
+        first_id,
+        actor_id,
+        &proposal("alice", seq as u64),
+        0,
+        None,
+    )
+    .await
+    .expect("insert");
+
+    let second = async {
+        let mut tx = pool.begin().await.expect("tx");
+        staged::allocate_seq(&mut tx, "alice").await.expect("seq");
+        let in_flight =
+            staged::chained_edit_in_flight(&mut tx, actor_id, Family::Opinion, "prof:bob", 7)
+                .await
+                .expect("guard");
+        tx.commit().await.expect("commit");
+        in_flight
+    };
+    let commit_first = async {
+        wait_for_lock_waiters(&pool, 1).await;
+        first.commit().await.expect("commit");
+    };
+    let (in_flight, ()) = tokio::join!(second, commit_first);
+    assert!(!in_flight, "the unsigned first write is superseded");
+    assert_eq!(
+        staged::load(&pool, first_id).await.expect("loads").state,
+        StagedState::Expired,
+        "the second guard saw the first write once it committed"
+    );
 }
 
 /// A content nonce is its author's once (layer1-interface.md §8.2,

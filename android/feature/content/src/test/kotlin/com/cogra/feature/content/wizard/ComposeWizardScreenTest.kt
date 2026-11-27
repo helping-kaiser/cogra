@@ -57,6 +57,7 @@ import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
+import com.cogra.domain.testing.signedInSession
 import com.cogra.feature.content.RecordingReferencePicker
 import com.cogra.feature.content.RecordingTagPicker
 import com.cogra.feature.content.ReferencePickerState
@@ -224,6 +225,7 @@ class ComposeWizardScreenTest {
     private fun viewModel(): ComposeWizardViewModel {
         val actor = ActorKey.generate()
         val writes = SealingWriteRepository(actor)
+        val identity = FakeIdentityStore().apply { seed = actor.seed() }
         return ComposeWizardViewModel(
             content = ThrowingContentRepository(),
             references = ThrowingReferenceRepository(),
@@ -233,16 +235,15 @@ class ComposeWizardScreenTest {
             deviceMedia = roll,
             drafts = drafts,
             seals = InMemorySealedDraftStore(drafts),
-            signer = WriteSigner(
-                writes,
-                FakeIdentityStore().apply { seed = actor.seed() },
-            ),
+            signer = WriteSigner(writes, identity),
             stagedWrites = writes,
             settings = object : com.cogra.domain.testing.ThrowingSettingsRepository() {
                 override suspend fun defaultLicense(): com.cogra.domain.Outcome<com.cogra.domain.LicenseChoice?> =
                     com.cogra.domain.Outcome.Success(null)
             },
             search = com.cogra.domain.testing.ScriptedSearchRepository(),
+            identity = identity,
+            tokens = signedInSession(),
         )
     }
 

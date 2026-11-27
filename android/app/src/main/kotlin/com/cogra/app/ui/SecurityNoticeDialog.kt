@@ -1,9 +1,10 @@
-// The app-shell notices, rendered above the NavHost. The login security
-// notice (auth.md "Reuse detection") rides the SecurityNotices holder —
-// login navigates away the moment the tokens land, so it shows wherever
-// the user lands. The storage-loss notice surfaces the StorageHealth
-// mark: secure-store data was lost, never silently. Dialogs, not
-// snackbars — a security warning is dismissed, never timed out.
+// The app-shell notices, rendered above the NavHost. The dead device lock's
+// notice (PR-62) rides the SecurityNotices holder — login navigates away the
+// moment the tokens land, so it shows wherever the user lands, to the account
+// whose lock it was. The storage-loss notice surfaces the StorageHealth mark:
+// secure-store data was lost, never silently. Dialogs, not snackbars — a
+// security warning is dismissed, never timed out. The reuse notice is the
+// feed's own first card (feature:home `SecurityNoticeCard`).
 
 package com.cogra.app.ui
 
@@ -12,7 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -24,32 +24,30 @@ import com.cogra.app.R
 import com.cogra.domain.identity.SecurityNotices
 import com.cogra.domain.store.StorageHealth
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+/** How long a collected notice stays hot without a collector (a configuration change). */
+private const val STOP_TIMEOUT_MS = 5_000L
 
 @HiltViewModel
 class SecurityNoticeViewModel @Inject constructor(
     private val notices: SecurityNotices,
     private val storageHealth: StorageHealth,
 ) : ViewModel() {
-    val reuseDetectedAt: StateFlow<Instant?> = notices.reuseDetectedAt
-
-    /** PR-62: a dead device lock's ciphertext was deleted at sign-in — said once. */
+    /** PR-62: a dead device lock's ciphertext was deleted at sign-in — said once, to its account. */
     val lockLost: StateFlow<Boolean> = notices.lockLost
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), false)
 
     val storageLost: StateFlow<Boolean> = storageHealth.storageLost
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), false)
 
-    fun dismiss() = notices.dismiss()
-
-    fun dismissLockLost() = notices.dismissLockLost()
+    fun dismissLockLost() {
+        viewModelScope.launch { notices.dismissLockLost() }
+    }
 
     fun acknowledgeStorageLoss() {
         viewModelScope.launch { storageHealth.acknowledge() }
@@ -59,12 +57,8 @@ class SecurityNoticeViewModel @Inject constructor(
 @Composable
 fun SecurityNoticeHost() {
     val viewModel: SecurityNoticeViewModel = hiltViewModel()
-    val detectedAt by viewModel.reuseDetectedAt.collectAsStateWithLifecycle()
     val storageLost by viewModel.storageLost.collectAsStateWithLifecycle()
     val lockLost by viewModel.lockLost.collectAsStateWithLifecycle()
-    detectedAt?.let {
-        SecurityNoticeDialog(detectedAt = it, onDismiss = viewModel::dismiss)
-    }
     if (lockLost) {
         LockLostDialog(onDismiss = viewModel::dismissLockLost)
     }
@@ -111,28 +105,5 @@ fun StorageLossDialog(onAcknowledge: () -> Unit) {
             }
         },
         modifier = Modifier.testTag("storage_notice"),
-    )
-}
-
-@Composable
-fun SecurityNoticeDialog(detectedAt: Instant, onDismiss: () -> Unit) {
-    val formatted = remember(detectedAt) {
-        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-            .withZone(ZoneId.systemDefault())
-            .format(detectedAt)
-    }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.security_notice_title)) },
-        text = { Text(stringResource(R.string.security_notice_reuse, formatted)) },
-        confirmButton = {
-            TextButton(
-                onClick = onDismiss,
-                modifier = Modifier.testTag("security_notice_dismiss"),
-            ) {
-                Text(stringResource(R.string.security_notice_confirm))
-            }
-        },
-        modifier = Modifier.testTag("security_notice"),
     )
 }

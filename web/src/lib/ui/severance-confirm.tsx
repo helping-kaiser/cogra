@@ -63,7 +63,7 @@ export function SeveranceConfirm({
   records: number;
   /** The fold reports nothing left to walk back — the one true refusal. */
   alreadySevered?: boolean;
-  /** The signing is in flight: the confirm and the ways out are inert. */
+  /** The signing is in flight: the confirm is inert, and `Keep it` reads `Close`. */
   busy?: boolean;
   /** …and has waited past 200ms: the confirm says what is happening. */
   slow?: boolean;
@@ -82,6 +82,7 @@ export function SeveranceConfirm({
   /** The record family's words, its way out included. */
   axes?: StanceAxes;
   onConfirm: () => void;
+  /** `Keep it`, the scrim, Escape and Back — and, while `busy`, `Close`. */
   onCancel: () => void;
 }) {
   const sever = severanceWords(axes);
@@ -100,7 +101,6 @@ export function SeveranceConfirm({
   return (
     <DialogSurface
       title={sever.title(targetLabel)}
-      locked={busy}
       onDismiss={onCancel}
       testId="severance-confirm"
       body={[
@@ -168,19 +168,18 @@ export function SeveranceConfirm({
           >
             {slow ? sever.busy : failed ? "Retry" : sever.control}
           </button>
-          {/* THE WAYS OUT ARE LOCKED WHILE IT SIGNS: the act was sent from
-              this dialog, so `Keep it`, the scrim, Escape and Back wait for
-              the answer — locked, never dimmed. */}
+          {/* ONCE `Walk it back` IS PRESSED NOTHING CANCELS IT
+              (SeveranceConfirm.md:47-55): from the press itself `Keep it`
+              reads `Close`, filled and live, and it — the scrim, Escape and
+              Back too — leaves; the host closes the pad beneath and the
+              walk-back goes on, carried by the target's row. */}
           <button
             type="button"
             data-testid="severance-cancel"
-            aria-disabled={busy || undefined}
-            onClick={() => {
-              if (!busy) onCancel();
-            }}
+            onClick={onCancel}
             className={buttonClassName({ variant: "primary" })}
           >
-            Keep it
+            {busy ? "Close" : "Keep it"}
           </button>
         </>
       }

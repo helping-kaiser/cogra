@@ -24,6 +24,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReaderStanding
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.StanceAttempts
 import com.cogra.domain.stance.StanceKind
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceSignals
@@ -35,6 +36,7 @@ import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
+import com.cogra.domain.testing.signedInSession
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -88,6 +90,9 @@ class StanceControlRouteLockTest {
             InMemoryKeptPickStore(),
             standing,
             FakeBorrowedStanceRepository(),
+            signedInSession(),
+            writes,
+            StanceAttempts(),
         )
         compose.setContent {
             CompositionLocalProvider(LocalSnackbarHostState provides host) {

@@ -600,11 +600,17 @@ async fn load_row(pool: &PgPool, id: Uuid) -> Result<(Promotable, bool), StagedE
     Ok((Promotable::Full(Box::new(write)), kept))
 }
 
-/// Whether the actor has a live staged write of the family toward the
-/// target — the in-flight half of a graph-derived read (auth.md
-/// "Reciprocation is the joiner's own act"). Expired stagings are
-/// ignored; a landed one is fine — its record is in the mirror anyway.
-pub async fn has_live_targeting(
+/// Whether the actor has signed a staged write of the family toward the
+/// target that has not expired — the in-flight half of a graph-derived
+/// read (auth.md "Reciprocation is the joiner's own act").
+///
+/// Signed is the test every pending read uses: the pre-commitment reached
+/// the server, or the act is carried and signs with the vouch-in batch.
+/// A prepare nobody signed is no act in flight (see
+/// [`supersede_unsigned_targeting`]); the vouch card leaves at the
+/// signature and returns when a signed one expires (VouchBack.md:66). A
+/// landed row still counts — its record is in the mirror anyway.
+pub async fn has_signed_targeting(
     pool: &PgPool,
     actor_id: Uuid,
     family: Family,
@@ -614,6 +620,7 @@ pub async fn has_live_targeting(
         r#"SELECT EXISTS(
                SELECT 1 FROM staged_writes
                WHERE actor_id = $1 AND family = $2 AND target = $3
+                 AND (pre_signed_at IS NOT NULL OR carried)
                  AND state <> 'expired'
            ) AS "exists!""#,
         actor_id,
@@ -627,10 +634,52 @@ pub async fn has_live_targeting(
 /// Whether the actor has an unlanded, unexpired staged write of the
 /// family toward the target — the edit-serialization guard (post.md §4:
 /// the backend serializes edits per (node, author)). Unlike
-/// `has_live_targeting`, a landed row does not count: its record is in
+/// [`has_signed_targeting`], a landed row does not count: its record is in
 /// the mirror and the next edit chains behind it.
+///
+/// On the pool this is the early answer only: a concurrent prepare can
+/// stage its write after this read. The answer that holds is
+/// [`chained_edit_in_flight`], on the staging transaction itself.
 pub async fn has_pending_targeting(
     pool: &PgPool,
+    actor_id: Uuid,
+    family: Family,
+    target: &str,
+) -> Result<bool, StagedError> {
+    let mut conn = pool.acquire().await?;
+    pending_targeting(&mut conn, actor_id, family, target).await
+}
+
+/// The edit-serialization guard on the staging transaction: supersedes
+/// the actor's unsigned chained writes of the family toward the target
+/// (as [`supersede_unsigned_targeting`]), then answers whether one is
+/// still in flight (as [`has_pending_targeting`]) — so a prepare that
+/// meets a predecessor here gets exactly the answer it would have got
+/// arriving after that predecessor committed.
+///
+/// Run it after [`allocate_seq`] on the same transaction. That `UPDATE`
+/// holds the author's counter row until the transaction ends, so a second
+/// prepare by the author waits there until this one commits or rolls back
+/// (PostgreSQL "Explicit Locking", row-level locks), and its own guard
+/// then reads under a fresh snapshot that includes this one's staged row
+/// (Read Committed: each statement sees what committed before it began).
+/// The check and the write it guards are one step per author, and with
+/// them per (node, author): two prepares can no longer both pass and
+/// stage two records declaring the same parent — a branch, which never
+/// advances the head (substrate.md §9).
+pub async fn chained_edit_in_flight(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    actor_id: Uuid,
+    family: Family,
+    target: &str,
+    current_epoch: i64,
+) -> Result<bool, StagedError> {
+    supersede_unsigned_on(tx, actor_id, family, target, current_epoch).await?;
+    pending_targeting(tx, actor_id, family, target).await
+}
+
+async fn pending_targeting(
+    conn: &mut PgConnection,
     actor_id: Uuid,
     family: Family,
     target: &str,
@@ -645,14 +694,15 @@ pub async fn has_pending_targeting(
         family.as_str(),
         target,
     )
-    .fetch_one(pool)
+    .fetch_one(conn)
     .await?)
 }
 
 /// Expires the actor's unsigned chained writes of the family toward the
 /// target, returning how many — what the edit-serialization guard runs
 /// before it asks [`has_pending_targeting`], so a staging nobody signed
-/// does not hold the next edit until GC.
+/// does not hold the next edit until GC. [`chained_edit_in_flight`] runs
+/// the same step on the staging transaction.
 ///
 /// Unsigned means the pre-commitment never reached the server: the write
 /// carries no signature of the author's, as `stance::has_live_opinion_from` reads
@@ -677,6 +727,18 @@ pub async fn supersede_unsigned_targeting(
     current_epoch: i64,
 ) -> Result<u64, StagedError> {
     let mut tx = pool.begin().await?;
+    let count = supersede_unsigned_on(&mut tx, actor_id, family, target, current_epoch).await?;
+    tx.commit().await?;
+    Ok(count)
+}
+
+async fn supersede_unsigned_on(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    actor_id: Uuid,
+    family: Family,
+    target: &str,
+    current_epoch: i64,
+) -> Result<u64, StagedError> {
     let expired = sqlx::query_as!(
         StagedRows,
         "UPDATE staged_writes
@@ -690,11 +752,10 @@ pub async fn supersede_unsigned_targeting(
         target,
         current_epoch,
     )
-    .fetch_all(&mut *tx)
+    .fetch_all(&mut **tx)
     .await?;
     let count = expired.len() as u64;
-    discard_pending_content(&mut tx, expired.into_iter()).await?;
-    tx.commit().await?;
+    discard_pending_content(tx, expired.into_iter()).await?;
     Ok(count)
 }
 
@@ -1182,6 +1243,167 @@ pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWri
            AND act_id IN (SELECT record_id FROM mirror_records WHERE epoch = $1)
          RETURNING id, actor_id, act_id, family",
         epoch,
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| PromotedWrite {
+            id: r.id,
+            actor_id: r.actor_id,
+            act_id: r.act_id,
+            family: r.family,
+        })
+        .collect())
+}
+
+/// Landed profile updates whose version row is still pending: writes
+/// [`promote_landed`] marked `landed` whose confirm-side promotion never
+/// completed — it failed, or the pass that marked them ended before it
+/// ran. No later [`promote_landed`] returns them again, since they are
+/// already landed, so this is how the landing pass finds them.
+///
+/// Driven from the pending side, which holds only in-flight updates: the
+/// row is named by the write's actor and authoring instant, as
+/// `profile::land_profile_version` names it.
+pub async fn landed_with_pending_profile(pool: &PgPool) -> Result<Vec<PromotedWrite>, StagedError> {
+    let rows = sqlx::query!(
+        "SELECT s.id, s.actor_id, s.act_id, s.family
+         FROM actor_profile_versions v
+         JOIN staged_writes s
+           ON s.actor_id = v.actor_id AND s.pre_signed_at = v.created_at
+         WHERE v.pending
+           AND s.state = 'landed'
+           AND s.family = $1
+           AND cardinality(s.asserted_parents) > 0
+         ORDER BY s.act_id",
+        Family::Registration.as_str(),
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| PromotedWrite {
+            id: r.id,
+            actor_id: r.actor_id,
+            act_id: r.act_id,
+            family: r.family,
+        })
+        .collect())
+}
+
+/// Landed content writes whose display row is still pending: a new post
+/// or comment, or an edit of one, that [`promote_landed`] marked `landed`
+/// and whose confirm-side promotion never completed — the twin of
+/// [`landed_with_pending_profile`]. Every such write owns a pending
+/// version row: a new node's genesis version and an edit's version are
+/// both named by the node and the write's authoring instant, as
+/// `content::land_post_version` / `land_comment_version` name them, and a
+/// new node's entity row lands in the same transaction as that version.
+///
+/// Driven from the pending versions, joined to the write on its node
+/// (`staged_writes_node_idx`), each version table paired with the family
+/// that writes it.
+pub async fn landed_with_pending_content(pool: &PgPool) -> Result<Vec<PromotedWrite>, StagedError> {
+    let rows = sqlx::query!(
+        r#"SELECT s.id AS "id!", s.actor_id AS "actor_id!",
+                  s.act_id AS "act_id!", s.family AS "family!"
+           FROM (SELECT post_id AS node_id, created_at, $1::text AS family
+                 FROM post_versions WHERE pending
+                 UNION ALL
+                 SELECT comment_id, created_at, $2::text
+                 FROM comment_versions WHERE pending) v
+           JOIN staged_writes s
+             ON s.node_id = v.node_id
+            AND s.pre_signed_at = v.created_at
+            AND s.family = v.family
+           WHERE s.state = 'landed'
+           ORDER BY s.act_id"#,
+        Family::Publish.as_str(),
+        Family::Review.as_str(),
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| PromotedWrite {
+            id: r.id,
+            actor_id: r.actor_id,
+            act_id: r.act_id,
+            family: r.family,
+        })
+        .collect())
+}
+
+/// Landed profile updates that own no version row at all: a write that
+/// landed after expiry took its pending row ([`expire_due`]), so only the
+/// promotion's insert branch writes one, and that insert never committed.
+/// [`landed_with_pending_profile`] cannot see them, having no pending row
+/// to start from.
+///
+/// A write whose carriage is reduced is left out: its landing builds no
+/// row ([`load_promotable`]'s reaped case, or a redaction during the
+/// promotion), so nothing is missing.
+///
+/// Driven from the landed writes, which no index narrows: the read scans
+/// `staged_writes` and probes each landed update's instant.
+pub async fn landed_without_profile_row(pool: &PgPool) -> Result<Vec<PromotedWrite>, StagedError> {
+    let rows = sqlx::query!(
+        "SELECT s.id, s.actor_id, s.act_id, s.family
+         FROM staged_writes s
+         WHERE s.state = 'landed'
+           AND s.family = $1
+           AND cardinality(s.asserted_parents) > 0
+           AND s.pre_signed_at IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM actor_profile_versions v
+                           WHERE v.actor_id = s.actor_id
+                             AND v.created_at = s.pre_signed_at)
+           AND NOT EXISTS (SELECT 1 FROM act_payloads c
+                           WHERE c.act_id = s.act_id AND c.payload_state = 'reduced')
+         ORDER BY s.act_id",
+        Family::Registration.as_str(),
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| PromotedWrite {
+            id: r.id,
+            actor_id: r.actor_id,
+            act_id: r.act_id,
+            family: r.family,
+        })
+        .collect())
+}
+
+/// Landed content writes that own no version row at all — the content
+/// twin of [`landed_without_profile_row`]: a new post or comment, or an
+/// edit, whose version is named by the write's node and authoring instant
+/// as in [`landed_with_pending_content`], and whose pending row was gone
+/// when it landed — expiry took it, or the expiry of the node it replies
+/// to (`content::discard_pending_many`) — so that only the promotion's
+/// insert writes one, and the insert never committed.
+pub async fn landed_without_content_row(pool: &PgPool) -> Result<Vec<PromotedWrite>, StagedError> {
+    let rows = sqlx::query!(
+        "SELECT s.id, s.actor_id, s.act_id, s.family
+         FROM staged_writes s
+         WHERE s.state = 'landed'
+           AND s.family IN ($1, $2)
+           AND s.node_id IS NOT NULL
+           AND s.pre_signed_at IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM post_versions v
+                           WHERE s.family = $1
+                             AND v.post_id = s.node_id
+                             AND v.created_at = s.pre_signed_at)
+           AND NOT EXISTS (SELECT 1 FROM comment_versions v
+                           WHERE s.family = $2
+                             AND v.comment_id = s.node_id
+                             AND v.created_at = s.pre_signed_at)
+           AND NOT EXISTS (SELECT 1 FROM act_payloads c
+                           WHERE c.act_id = s.act_id AND c.payload_state = 'reduced')
+         ORDER BY s.act_id",
+        Family::Publish.as_str(),
+        Family::Review.as_str(),
     )
     .fetch_all(pool)
     .await?;

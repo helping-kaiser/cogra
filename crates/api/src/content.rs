@@ -19,7 +19,7 @@ use postgres_store::content::LandingOrder;
 use postgres_store::{PgPool, content as content_store, mirror, staged};
 use uuid::Uuid;
 
-use crate::ingest::PromotionFailure;
+use crate::ingest::{Landing, PromotionFailure, to_retry};
 use crate::l1::L1Boundary;
 use crate::media::{
     self, AttachmentDraft, GalleryError, GalleryKind, GalleryPlanError, PlannedGallery,
@@ -667,6 +667,25 @@ fn removed_takes_no_edit() -> ContentError {
     }
 }
 
+/// The refusal a second edit of one node meets while the first is in
+/// flight — the same answer from the early guard and from the one on the
+/// staging transaction (`prepare::prepare_chained`).
+fn edit_in_flight() -> ContentError {
+    ContentError::BadInput {
+        field: "id",
+        message: "an edit of this content is already in flight".into(),
+    }
+}
+
+/// Maps a chained edit's prepare refusal, giving the in-flight one its
+/// field-level answer.
+fn edit_prepare_refusal(e: PrepareError) -> ContentError {
+    match e {
+        PrepareError::EditInFlight => edit_in_flight(),
+        e => e.into(),
+    }
+}
+
 async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentError> {
     nodes::required_address(pool, viewer)
         .await
@@ -913,7 +932,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     }
     .encode_for_prepare()
     .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
-    let prepared = prepare::prepare(
+    let prepared = prepare::prepare_chained(
         boundary,
         pool,
         staging.gc_after_epochs,
@@ -933,7 +952,8 @@ pub async fn prepare_post_edit<B: L1Boundary>(
             node: Some(post.id),
         },
     )
-    .await?;
+    .await
+    .map_err(edit_prepare_refusal)?;
     Ok(PreparedContent::single(post.id, prepared))
 }
 
@@ -1085,7 +1105,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     }
     .encode_for_prepare()
     .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
-    let prepared = prepare::prepare(
+    let prepared = prepare::prepare_chained(
         boundary,
         pool,
         staging.gc_after_epochs,
@@ -1105,7 +1125,8 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
             node: Some(comment.id),
         },
     )
-    .await?;
+    .await
+    .map_err(edit_prepare_refusal)?;
     Ok(PreparedContent::single(comment.id, prepared))
 }
 
@@ -1136,10 +1157,7 @@ async fn chained_edit_target(
     let current_epoch = mirror::last_ingested_epoch(pool).await?;
     staged::supersede_unsigned_targeting(pool, viewer, family, l1_node_id, current_epoch).await?;
     if staged::has_pending_targeting(pool, viewer, family, l1_node_id).await? {
-        return Err(ContentError::BadInput {
-            field: "id",
-            message: "an edit of this content is already in flight".into(),
-        });
+        return Err(edit_in_flight());
     }
     let head = mirror::chain_head(pool, author, family, l1_node_id)
         .await?
@@ -1494,30 +1512,72 @@ async fn comment_parent(
 /// Confirm-side promotion (architecture.md "The write path" step 5):
 /// for every landed content record, move the payload into permanent
 /// carriage and drop the display rows' pending mark. A failure leaves
-/// the record un-promoted — the mirror governs, and a later rebuild can
-/// re-run promotion — and is returned rather than swallowed, so the
-/// ingestion pass reports what did not follow.
+/// the record un-promoted — the mirror governs, and the next pass re-runs
+/// the promotion ([`land_stranded`]) — and is returned rather than
+/// swallowed, so the ingestion pass reports what did not follow.
 pub async fn land_promoted(
     pool: &PgPool,
     promoted: &[staged::PromotedWrite],
 ) -> Vec<PromotionFailure> {
     let mut failures = Vec::new();
     for write in promoted {
-        let family = match common::l1::census::Family::parse(&write.family) {
-            Some(Family::Publish) => ContentFamily::Post,
-            Some(Family::Review) => ContentFamily::Comment,
-            _ => continue,
+        let Some(family) = content_family(write) else {
+            continue;
         };
-        if let Err(e) = land_one(pool, write, family).await {
-            failures.push(PromotionFailure {
-                stage: "content",
-                staged: write.id,
-                act_id: write.act_id.clone(),
-                error: e.to_string(),
-            });
+        if let Err(e) = land_one(pool, write, family, Landing::Confirm).await {
+            failures.push(PromotionFailure::of("content", write, e));
         }
     }
     failures
+}
+
+/// Re-runs the promotion of every landed content write whose display row
+/// is still pending — a new post or comment, or an edit, that an earlier
+/// pass marked landed and never promoted, because the promotion failed or
+/// the pass ended first (`staged::landed_with_pending_content`). Promotion
+/// on confirm drops the pending mark (data-model.md "Staged writes"); a
+/// row left pending would instead sit in the pending band of every
+/// listing, or, for an edit, outrank every later landed version, since the
+/// reads put pending first — and nothing else ever selects it again.
+///
+/// A landed write that owns no display row at all is promoted here too
+/// (`staged::landed_without_content_row`): one that landed with its
+/// pending rows already gone, whose insert never committed. Its record
+/// stands on L1 and in the mirror while no reader ever sees it, and
+/// nothing else selects it again. Its landing runs the insert branch
+/// ([`Landing::Rebuild`]), which keys on the node and the authoring
+/// instant and so never writes a second row.
+///
+/// `promoted` is this pass's own confirmations, left out
+/// (`ingest::to_retry`). A failure here rides the outcome like any
+/// promotion's and is retried by the next pass.
+pub async fn land_stranded(
+    pool: &PgPool,
+    promoted: &[staged::PromotedWrite],
+) -> Result<Vec<PromotionFailure>, ContentError> {
+    let stranded = staged::landed_with_pending_content(pool).await?;
+    let unwritten = staged::landed_without_content_row(pool).await?;
+    let mut failures = Vec::new();
+    for (writes, landing_by) in [(stranded, Landing::Retry), (unwritten, Landing::Rebuild)] {
+        for write in to_retry(&writes, promoted) {
+            let Some(family) = content_family(write) else {
+                continue;
+            };
+            if let Err(e) = land_one(pool, write, family, landing_by).await {
+                failures.push(PromotionFailure::of("content", write, e));
+            }
+        }
+    }
+    Ok(failures)
+}
+
+/// The content family a landed write promotes as, if it is content.
+fn content_family(write: &staged::PromotedWrite) -> Option<ContentFamily> {
+    match Family::parse(&write.family) {
+        Some(Family::Publish) => Some(ContentFamily::Post),
+        Some(Family::Review) => Some(ContentFamily::Comment),
+        _ => None,
+    }
 }
 
 /// Promotes one landed content record into carriage and display rows.
@@ -1535,7 +1595,10 @@ pub async fn land_promoted(
 /// writes the causal key onto them, and the `land_*` guard below is what
 /// tries that first. An insert means a record landed without a pending
 /// row of its own — a mirror rebuild, or a write staged before pending
-/// rows existed.
+/// rows existed. A retry ([`Landing::Retry`]) never takes one: it was
+/// chosen for a pending row it still owned, so finding none means another
+/// pass promoted it, and appending would only duplicate that. A rebuild
+/// ([`Landing::Rebuild`]) takes it like a confirm.
 ///
 /// The authoring instant, like `sealed`, is set by the pre-sign leg, so a
 /// landed write missing it is the same internal fault its sibling is:
@@ -1557,6 +1620,7 @@ async fn land_one(
     pool: &PgPool,
     write: &staged::PromotedWrite,
     family: ContentFamily,
+    landing_by: Landing,
 ) -> Result<(), ContentError> {
     let staged_row = match staged::load_promotable(pool, write.id).await? {
         staged::Promotable::Full(row) => row
@@ -1641,7 +1705,7 @@ async fn land_one(
             }
         }
     };
-    if let Some(shape) = shape {
+    if let Some(shape) = shape.filter(|_| landing_by.inserts()) {
         write_display_rows(
             &mut tx,
             pool,

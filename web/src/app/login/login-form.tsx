@@ -92,8 +92,8 @@ export function LoginForm({
   const [transportFailed, setTransportFailed] = useState(false);
   /** A session the leg did not finish with — the retry runs the leg again on it. */
   const held = useRef<LoginGrant | null>(null);
-  /** PR-62's dead lock, seen on an earlier press of this sign-in and not yet said. */
-  const lockLost = useRef(false);
+  /** PR-62's dead locks seen on an earlier press and not yet said, by account. */
+  const lockLost = useRef(new Set<string>());
 
   /** SignInExpired: this sign-in opened because the session ended mid-use. */
   const [signedOut, setSignedOut] = useState(false);
@@ -149,7 +149,7 @@ export function LoginForm({
     } catch {
       leg = { ready: false, lockLost: false };
     }
-    if (leg.lockLost) lockLost.current = true;
+    if (leg.lockLost) lockLost.current.add(accountId);
     if (!leg.ready) {
       held.current = grant;
       setInProgress(false);
@@ -161,12 +161,11 @@ export function LoginForm({
     // The notices post before the token save: saving flips the auth phase
     // and this form unmounts on the redirect, so the shell's banner must
     // already be pending (auth.md "Reuse detection" — delivered exactly
-    // once, a dropped notice never comes back).
-    if (grant.reuseDetectedAt !== null) notices.post(grant.reuseDetectedAt);
-    if (lockLost.current) {
-      lockLost.current = false;
-      notices.postLockLost();
-    }
+    // once, a dropped notice never comes back). The reuse notice is kept on
+    // this device for the account signing in, not the one still active.
+    if (grant.reuseDetectedAt !== null) notices.post(grant.reuseDetectedAt, accountId);
+    lockLost.current.forEach((account) => notices.postLockLost(account));
+    lockLost.current.clear();
     // Over the join layer the signed-in phase does not flip, so the switch
     // is done here: the cache read as the other account is emptied before
     // this one renders, nothing is revoked, and the app opens where app-open

@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { echoedMedia } from "@/test/media-echo";
+import type { WriteResult } from "@/lib/signing/write-signer";
 import { fakeWriteSigner } from "@/test/registration";
 import { settleFetches } from "@/test/fetch";
 import { gqlLink, startMswServer } from "@/test/msw";
@@ -1284,6 +1285,28 @@ describe("the compose wizard", () => {
       expect(screen.getByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
     });
 
+    // A fast double tap on the arrow: the second press comes before the
+    // first press's pop has landed. One stage per press — the reader stands
+    // on the words, and the late pop never puts the details back under them.
+    it("two presses of the arrow without a wait step two stages back", async () => {
+      render();
+      await toSeal();
+      const arrow = () =>
+        screen.getByTestId(byAnyTestId("header-back", "composeDetails.header.back", "composeCrop.header.back"));
+
+      fireEvent.click(arrow());
+      // The details stand at once; the first press's pop has not landed.
+      expect(screen.getByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
+      expect(stageDepth()).toBe(2);
+      fireEvent.click(arrow());
+      await screen.findByTestId("wizard-words");
+      await waitFor(() => expect(stageDepth()).toBe(0));
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      expect(screen.getByTestId("wizard-words")).toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("composeDetails.title.input"))).toBeNull();
+      expect(push).not.toHaveBeenCalled();
+    });
+
     it("re-advances on Forward, through the stage's own gate", async () => {
       render();
       await toSeal();
@@ -1887,5 +1910,360 @@ describe("the pick step's round-22 laws", () => {
     const row = screen.getByLabelText("Remove picture 1").closest("ul")!.parentElement!;
     expect(row.className).toContain("overflow-x-clip");
     expect(row.className).not.toContain("overflow-x-auto");
+  });
+});
+
+// RETRY ASKS THE SAME SIGNING AGAIN (SigningAfterClose.md:27). A press after a
+// signing that did not answer continues THAT batch instead of preparing a
+// second post beside it — the double the retry characterisation proved
+// (lib/signing/write-signer.retry.test.ts).
+describe("Retry after a signing that did not answer", () => {
+  const failedOnce = () => {
+    let failed = false;
+    return fakeWriteSigner({
+      signStaged: async (write) => {
+        if (failed) return { kind: "done", id: write.id, state: "RELAYING" };
+        failed = true;
+        return { kind: "failed", id: write.id, cause: new Error("no answer") };
+      },
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "done" as const, id, state: "RELAYING" as const })),
+      ),
+    });
+  };
+
+  const counting = () => {
+    let prepares = 0;
+    const handler = gqlLink.mutation("PreparePost", () => {
+      prepares += 1;
+      return HttpResponse.json({
+        data: {
+          preparePost: {
+            __typename: "PrepareContentPayload",
+            node: `post-${prepares}`,
+            writes: [
+              {
+                __typename: "PreparedWrite",
+                id: `w${prepares}`,
+                family: "PUBLISH",
+                canonicalProposal: "AA==",
+                gcAfterEpochs: 3,
+              },
+            ],
+            userErrors: [],
+          },
+        },
+      });
+    });
+    return { handler, count: () => prepares };
+  };
+
+  const stagedAt = (state: string) =>
+    gqlLink.query("StagedWrite", ({ variables }) =>
+      HttpResponse.json({
+        data: {
+          stagedWrite: {
+            __typename: "StagedWrite",
+            id: variables.id,
+            state,
+            carried: false,
+            family: "PUBLISH",
+            canonicalProposal: "AA==",
+            verifiedAct: null,
+            record: null,
+          },
+        },
+      }),
+    );
+
+  function mount(
+    drafts: ReturnType<typeof fakeDrafts>,
+    signer: ReturnType<typeof fakeWriteSigner>,
+    store = fakeIdentityStore({ keyOnDevice: true }),
+  ) {
+    return renderWithProviders(
+      <ComposeWizard
+        store={store}
+        drafts={drafts}
+        seals={createSealedDraftStore({ activeAccountId: () => "acct-1" })}
+      />,
+      { store: signedInStore(), writeSigner: signer },
+    );
+  }
+
+  /**
+   * The seal's arrow, twice, back to the words — each press waiting for its
+   * own history pop to land, so the helper returns with the history settled.
+   * (Presses without the wait are pinned by "two presses of the arrow
+   * without a wait step two stages back".)
+   */
+  const stageDepth = () =>
+    (window.history.state as { cograStage?: { depth: number } } | null)?.cograStage?.depth ?? 0;
+
+  async function backToTheWords() {
+    fireEvent.click(screen.getByRole("button", { name: "Back a step" }));
+    await waitFor(() => expect(stageDepth()).toBe(1));
+    fireEvent.click(await screen.findByRole("button", { name: "Back a step" }));
+    await waitFor(() => expect(stageDepth()).toBe(0));
+    await screen.findByTestId("wizard-words");
+  }
+
+  async function signWords(words: string) {
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: words } });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+    fireEvent.click(await screen.findByTestId("wizard-sign"));
+  }
+
+  it("does not prepare a second post: Retry asks the first batch again and the post is taken", async () => {
+    const prepare = counting();
+    server.use(prepare.handler);
+    const signer = failedOnce();
+    mount(fakeDrafts(), signer);
+    await signWords("Low tide.");
+
+    fireEvent.click(await screen.findByTestId("wizard-retry"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    expect(prepare.count()).toBe(1);
+    expect(signer.signAgain).toHaveBeenCalledWith(["w1"], expect.anything());
+  });
+
+  it("keeps the unanswered signing with the draft, so a reload and a press ask the same one", async () => {
+    const prepare = counting();
+    server.use(prepare.handler);
+    const drafts = fakeDrafts();
+    const first = mount(drafts, failedOnce());
+    await signWords("Low tide.");
+    await screen.findByTestId("wizard-retry");
+    expect(drafts.held()?.attempt).toEqual(expect.objectContaining({ node: "post-1", writes: ["w1"] }));
+    first.unmount();
+
+    const signer = failedOnce();
+    mount(drafts, signer);
+    fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+    fireEvent.click(await screen.findByTestId("wizard-sign"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    expect(prepare.count()).toBe(1);
+    expect(signer.signAgain).toHaveBeenCalledWith(["w1"], expect.anything());
+  });
+
+  it("a press after the words changed retires the unapproved first attempt and prepares the new words", async () => {
+    const prepare = counting();
+    server.use(prepare.handler, stagedAt("AWAITING_APPROVAL"));
+    const store = fakeIdentityStore({ keyOnDevice: true, handshakeIds: ["w1"] });
+    const signer = failedOnce();
+    mount(fakeDrafts(), signer, store);
+    await signWords("Low tide.");
+    await screen.findByTestId("wizard-retry");
+
+    // Back to the words, changed, and signed again.
+    await backToTheWords();
+    fireEvent.change(await screen.findByTestId("wizard-words"), { target: { value: "High tide." } });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+    fireEvent.click(await screen.findByTestId("wizard-sign"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-2?published=1"));
+    expect(prepare.count()).toBe(2);
+    expect(signer.signAgain).not.toHaveBeenCalled();
+    // The first attempt's material is gone: Home's Resume cannot land it.
+    expect(await store.handshakeIds()).not.toContain("w1");
+  });
+
+  // K-ASKED-AGAIN-MIXED-EXPIRY: a batch in which one write answers EXPIRED
+  // while another is still undecided has not expired whole — the substrate
+  // decides each act's landing alone (api-spec.md "A prepare may stage a
+  // batch"), so the undecided write may still land. The attempt is kept and
+  // the seal shows what it shows for a signing that did not answer
+  // (SealSigning.md:57), never the expiry notice (ComposeExpired.md:3).
+  const twoWrites = () => {
+    let prepares = 0;
+    const handler = gqlLink.mutation("PreparePost", () => {
+      prepares += 1;
+      const write = (id: string) => ({
+        __typename: "PreparedWrite",
+        id,
+        family: "PUBLISH",
+        canonicalProposal: "AA==",
+        gcAfterEpochs: 3,
+      });
+      return HttpResponse.json({
+        data: {
+          preparePost: {
+            __typename: "PrepareContentPayload",
+            node: `post-${prepares}`,
+            writes: [write(`w${prepares}a`), write(`w${prepares}b`)],
+            userErrors: [],
+          },
+        },
+      });
+    });
+    return { handler, count: () => prepares };
+  };
+  const expiredOne = (id: string) => ({
+    kind: "refused" as const,
+    id,
+    errors: [{ code: "STAGED_WRITE_EXPIRED" as const, message: "garbage-collected unlanded", field: null }],
+  });
+  const lostOne = (id: string) => ({ kind: "failed" as const, id, cause: new TypeError("Failed to fetch") });
+
+  it("a first signing with one write expired and one unanswered keeps the attempt and shows the fault line with Retry", async () => {
+    const prepare = twoWrites();
+    server.use(prepare.handler);
+    const drafts = fakeDrafts();
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => (write.id.endsWith("a") ? expiredOne(write.id) : lostOne(write.id)),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "done" as const, id, state: "RELAYING" as const })),
+      ),
+    });
+    mount(drafts, signer);
+    await signWords("Low tide.");
+
+    expect(await screen.findByTestId("wizard-retry")).toBeInTheDocument();
+    expect(screen.getByTestId("wizard-transport-error")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalledWith("/feed?compose=expired");
+    expect(drafts.held()?.attempt).toEqual(expect.objectContaining({ node: "post-1", writes: ["w1a", "w1b"] }));
+
+    fireEvent.click(screen.getByTestId("wizard-retry"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    expect(signer.signAgain).toHaveBeenCalledWith(["w1a", "w1b"], expect.anything());
+    expect(prepare.count()).toBe(1);
+  });
+
+  it("a re-ask with one write expired and one still unanswered keeps the attempt: the next press asks it again", async () => {
+    const prepare = twoWrites();
+    server.use(prepare.handler);
+    const drafts = fakeDrafts();
+    const answers: ((id: string) => WriteResult)[] = [
+      (id: string) => (id.endsWith("a") ? expiredOne(id) : lostOne(id)),
+      (id: string) => ({ kind: "done" as const, id, state: "RELAYING" as const }),
+    ];
+    const signer = fakeWriteSigner({
+      signStaged: async (write) => lostOne(write.id),
+      signAgain: vi.fn(async (ids: readonly string[]) => ids.map(answers.shift()!)),
+    });
+    mount(drafts, signer);
+    await signWords("Low tide.");
+
+    fireEvent.click(await screen.findByTestId("wizard-retry"));
+    await waitFor(() => expect(signer.signAgain).toHaveBeenCalledTimes(1));
+    expect(await screen.findByTestId("wizard-retry")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalledWith("/feed?compose=expired");
+    expect(drafts.held()?.attempt).toEqual(expect.objectContaining({ writes: ["w1a", "w1b"] }));
+
+    fireEvent.click(screen.getByTestId("wizard-retry"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    expect(signer.signAgain).toHaveBeenCalledTimes(2);
+    expect(prepare.count()).toBe(1);
+  });
+
+  it("a batch every write of which expired still takes the expiry notice, the draft kept without its attempt", async () => {
+    const prepare = twoWrites();
+    server.use(prepare.handler);
+    const drafts = fakeDrafts();
+    mount(drafts, fakeWriteSigner({ signStaged: async (write) => expiredOne(write.id) }));
+    await signWords("Low tide.");
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed?compose=expired"));
+    expect(drafts.held()?.attempt).toBeNull();
+    expect(drafts.held()?.words).toBe("Low tide.");
+  });
+
+  it("a press after the words changed, over a first attempt already approved, opens that post, prepares nothing, and keeps the new words as the draft", async () => {
+    const prepare = counting();
+    server.use(prepare.handler, stagedAt("RELAYING"));
+    const signer = failedOnce();
+    const drafts = fakeDrafts();
+    mount(drafts, signer);
+    await signWords("Low tide.");
+    await screen.findByTestId("wizard-retry");
+
+    await backToTheWords();
+    fireEvent.change(await screen.findByTestId("wizard-words"), { target: { value: "High tide." } });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
+    fireEvent.click(await screen.findByTestId("wizard-sign"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    expect(prepare.count()).toBe(1);
+    // Nothing the reader wrote is lost: the changed words stay the working
+    // draft, with no signing of their own, neither sealed nor cleared.
+    await waitFor(() => expect(drafts.held()?.words).toBe("High tide."));
+    expect(drafts.held()?.attempt).toBeNull();
+  });
+
+  // K-REJECTED-SAME-INTENT-SKIPS-STATE-READ: the same post, its re-ask refused
+  // by the device's intent check (the expectation rebuilt for the unchanged
+  // gesture no longer matches the staged proposal — a cited node's L1 id or a
+  // media digest the server reads moved between the presses).
+  const refusedOnReask = () =>
+    fakeWriteSigner({
+      signStaged: async (write) => ({ kind: "failed", id: write.id, cause: new Error("no answer") }),
+      signAgain: vi.fn(async (ids: readonly string[]) =>
+        ids.map((id) => ({ kind: "rejectedByDevice" as const, id, reason: "intent mismatch" })),
+      ),
+    });
+
+  it("a re-ask the device refuses reads the states first: a first post already relaying opens, and nothing is prepared again", async () => {
+    const prepare = counting();
+    server.use(prepare.handler, stagedAt("RELAYING"));
+    const signer = refusedOnReask();
+    mount(fakeDrafts(), signer);
+    await signWords("Low tide.");
+
+    fireEvent.click(await screen.findByTestId("wizard-retry"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    expect(signer.signAgain).toHaveBeenCalledWith(["w1"], expect.anything());
+    expect(prepare.count()).toBe(1);
+  });
+
+  it("a re-ask the device refuses over a first post never approved retires it and prepares afresh", async () => {
+    const prepare = counting();
+    server.use(prepare.handler, stagedAt("AWAITING_APPROVAL"));
+    const signer = refusedOnReask();
+    mount(fakeDrafts(), signer);
+    await signWords("Low tide.");
+
+    fireEvent.click(await screen.findByTestId("wizard-retry"));
+    await waitFor(() => expect(prepare.count()).toBe(2));
+    expect(push).not.toHaveBeenCalledWith("/posts/post-1?published=1");
+  });
+
+  it("puts the attempt on the draft before the first pre-signature: a late save holds the signing back", async () => {
+    const prepare = counting();
+    server.use(prepare.handler);
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const drafts = fakeDrafts();
+    const attemptSaves: WizardState[] = [];
+    const slow: ReturnType<typeof fakeDrafts> = {
+      ...drafts,
+      save: async (state) => {
+        if (state.attempt !== null) {
+          attemptSaves.push(state);
+          await gate;
+        }
+        await drafts.save(state);
+      },
+    };
+    const signStaged = vi.fn(async (write: { id: string }) => ({
+      kind: "done" as const,
+      id: write.id,
+      state: "RELAYING" as const,
+    }));
+    mount(slow, fakeWriteSigner({ signStaged }));
+    await signWords("Low tide.");
+
+    await waitFor(() => expect(attemptSaves).toHaveLength(1));
+    // The save has not settled: nothing is pre-signed yet.
+    await act(async () => {});
+    expect(signStaged).not.toHaveBeenCalled();
+    release();
+    await waitFor(() => expect(signStaged).toHaveBeenCalledTimes(1));
+    expect(attemptSaves[0]!.attempt).toEqual(expect.objectContaining({ node: "post-1", writes: ["w1"] }));
   });
 });

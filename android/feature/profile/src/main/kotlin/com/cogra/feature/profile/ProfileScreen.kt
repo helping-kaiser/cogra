@@ -150,8 +150,16 @@ fun ProfileRoute(
     onMention: (profileId: String) -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
     shareModel: ProfileShareViewModel = hiltViewModel(),
+    changeModel: ProfileChangeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val changeLine by changeModel.line.collectAsStateWithLifecycle()
+    val changeLanded by changeModel.landed.collectAsStateWithLifecycle()
+    // A closed seal's change was taken: the head re-reads, quietly, as a
+    // return from the edit does (ProfileEditSeal.md:45, Profile.md:97).
+    LaunchedEffect(changeLanded, state.own) {
+        if (changeLanded && state.own) viewModel.onReturn()
+    }
     val context = LocalContext.current
     LaunchedEffect(handle) { viewModel.start(handle) }
     // Settings confirmed the handle change; the edit screen confirmed
@@ -159,7 +167,7 @@ fun ProfileRoute(
     LaunchedEffect(handleChangedResult) {
         if (handleChangedResult) {
             onHandleChangedResultConsumed()
-            viewModel.refresh()
+            viewModel.onReturn()
         }
     }
     // The re-read is separated from the confirmation on purpose. The
@@ -169,15 +177,21 @@ fun ProfileRoute(
     // replaced for the whole four seconds — and drop the refetch
     // entirely whenever the snackbar was cancelled early. One read is
     // enough: a signed edit is served from its signature on, pending
-    // until it lands (substrate.md §6).
+    // until it lands (substrate.md §6). The read is quiet: no refresh
+    // indicator stands over a return (Profile.md:93, :97).
     LaunchedEffect(profileSavedResult) {
-        if (profileSavedResult) viewModel.refresh()
+        if (profileSavedResult) viewModel.onReturn()
     }
     ProfileScreen(
-        state = state,
+        state = state.copy(changeLine = changeLine),
         reselectSignal = reselectSignal,
-        profileSavedResult = profileSavedResult,
-        onProfileSavedResultConsumed = onProfileSavedResultConsumed,
+        // ONE CONFIRMATION FOR A CHANGE TAKEN, whichever way it came: back from
+        // the edit, or landing after its seal closed — on one's own profile only.
+        profileSavedResult = profileSavedResult || (changeLanded && state.own),
+        onProfileSavedResultConsumed = {
+            onProfileSavedResultConsumed()
+            changeModel.onLandedConsumed()
+        },
         onTabChange = viewModel::onTabChange,
         onLoadMore = viewModel::onLoadMore,
         onRetryPage = viewModel::onRetryPage,
@@ -641,7 +655,10 @@ private fun ProfileColumn(
                         OtherActions(state, profile, savedHost, snackbarHostState, actions, identity, stanceControl)
                     }
                 },
-                under = { savedHost?.comfortLine(profile.id)?.let { RowLine(it, "profile_row_line") } },
+                under = {
+                    if (state.own) ProfileChangeHeadLine(state.changeLine)
+                    savedHost?.comfortLine(profile.id)?.let { RowLine(it, "profile_row_line") }
+                },
                 figures = state.figures,
                 own = state.own,
                 onFigures = actions.onOpenOpinions,
@@ -663,6 +680,8 @@ private fun ProfileColumn(
                 paging = state.rowsLoading,
                 failed = state.pageFailed,
                 onRetry = actions.onRetryPage,
+                read = state.tab,
+                firstPage = firstPageOf(state, view),
             )
         }
     }
@@ -707,6 +726,18 @@ private fun viewNode(tab: ProfileTab): DataNode = when (tab) {
     ProfileTab.POSTS -> PROFILE / "posts"
     ProfileTab.COMMENTS -> PROFILE / "comments"
     ProfileTab.EVERYTHING -> PROFILE / "chronicle"
+}
+
+/**
+ * The card tab still waiting for its first page (`ProfileTabFirstPage`,
+ * ProfilePosts.md:21-27, ProfileComments.md:25-31). Everything's first page
+ * is drawn by no board, so it keeps the next page's tail.
+ */
+private fun firstPageOf(state: ProfileUiState, view: DataNode): TabFirstPage? = when {
+    state.listed > 0 -> null
+    state.tab == ProfileTab.POSTS -> TabFirstPage(view, R.string.profile_posts_first_failed)
+    state.tab == ProfileTab.COMMENTS -> TabFirstPage(view, R.string.profile_comments_first_failed)
+    else -> null
 }
 
 /** A post card's list key, apart from a comment's and an act's. */
