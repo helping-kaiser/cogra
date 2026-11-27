@@ -840,9 +840,9 @@ export function SettingsView({
         </SettingsGroup>
 
         <SettingsGroup label="About" node={node("about")}>
-          {/* DRIFT (Report a problem packets; Privacy and Terms await their
-              documents): rows whose destination is not built yet open
-              nothing. The intro re-opens at its first card (Settings.md:135). */}
+          {/* DRIFT (Privacy and Terms await their documents): rows whose
+              destination is not built yet open nothing. The intro re-opens
+              at its first card (Settings.md:135). */}
           <SettingsRow
             label="Watch the intro again"
             onOpen={() => setIntroOpen(true)}
@@ -859,7 +859,7 @@ export function SettingsView({
             onOpen={() => router.push("/settings/whats-new")}
             node={node("about.whatsNew")}
           />
-          <SettingsRow label="Report a problem" onOpen={() => {}} node={node("about.report")} />
+          <SettingsRow label="Report a problem" onOpen={() => router.push("/settings/report")} node={node("about.report")} />
           <SettingsRow
             label="Contact"
             value={CONTACT_ADDRESS}

@@ -41,7 +41,8 @@ export function HeaderBar({
   node,
   focusTitle = false,
 }: {
-  title: string;
+  /** Omitted where the page heads itself below the band (a task page: ReportProblem). */
+  title?: string;
   /**
    * Hands focus to the title the moment the band mounts — the edits' "WHEN
    * the stage opens -> focus lands on the stage's heading AND NEVER the
@@ -92,14 +93,16 @@ export function HeaderBar({
             <Icon name="arrow_back" />
           </button>
         )}
-        <h1
-          ref={heading}
-          tabIndex={focusTitle ? -1 : undefined}
-          className="m-0 min-w-0 truncate whitespace-nowrap text-title-large outline-none"
-          {...testAttributes(part(node, "title"))}
-        >
-          {title}
-        </h1>
+        {title !== undefined && (
+          <h1
+            ref={heading}
+            tabIndex={focusTitle ? -1 : undefined}
+            className="m-0 min-w-0 truncate whitespace-nowrap text-title-large outline-none"
+            {...testAttributes(part(node, "title"))}
+          >
+            {title}
+          </h1>
+        )}
       </div>
       {(onLeave || stageLabel || help || action) && (
         <span className="flex flex-none items-center gap-2">

@@ -40,6 +40,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { hasCode, type Outcome } from "@/lib/api/outcome";
+import { useReportProblem } from "@/lib/report/report-problem-layer";
 import { useActiveAccountId } from "@/lib/session/provider";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import { closeKeptBatchSeal, signKeptBatch } from "@/lib/stance/kept-batch";
@@ -148,6 +149,8 @@ export function KeptPicksView() {
   const [signing, setSigning] = useState(false);
   const [fault, setFault] = useState<SealFault | null>(null);
   const retryLine = retryLineOf(fault);
+  /** The bug notice's `Report a problem`: the one report page, over this seal (ReportProblem.md:3,31). */
+  const { openReport, reportLayer } = useReportProblem();
   const [help, setHelp] = useState<HelpTopic | null>(null);
   /** The batch landed; the view is leaving and must not read its emptiness as a last drop. */
   const leaving = useRef(false);
@@ -454,8 +457,7 @@ export function KeptPicksView() {
               </PillButton>
             </NoticePanel>
             <div className="flex flex-col">
-              {/* No report surface exists on the web yet; the word stands as drawn. */}
-              <PillButton testId="keptPicksSeal.report" variant="text" full onClick={() => {}}>
+              <PillButton testId="keptPicksSeal.report" variant="text" full onClick={openReport}>
                 Report a problem
               </PillButton>
               <PillButton testId="keptPicksSeal.notNow" variant="text" full onClick={backToReview}>
@@ -490,6 +492,7 @@ export function KeptPicksView() {
         )}
       </div>
       {help !== null && <HelpDialog open onClose={() => setHelp(null)} topic={help} testId="keptPicksSeal.help-dialog" />}
+      {reportLayer}
     </main>
   );
 }

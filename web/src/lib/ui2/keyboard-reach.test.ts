@@ -52,6 +52,7 @@ const CLASSES: Record<string, Record<string, string>> = {
     "app/posts/[id]/edit/comment-edit-view.tsx": "rides only while a picker (one search field, Done) stands over the edit",
     "app/posts/[id]/reply/reply-wizard-view.tsx": "rides: the reply's words are one field; its pickers one search field",
     "lib/intro/intro.tsx": "inert: no field",
+    "lib/report/report-problem-layer.tsx": "rides: one field, What happened; Send by email follows it in the scrolled column",
     "lib/ui2/media/media-viewer.tsx": "inert: no field",
   },
   SCREEN_LAYER_STILL: {
